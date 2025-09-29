@@ -3,14 +3,14 @@
 import { useApp } from '@/context/AppContext';
 import { isChordLine, transposeText } from '@/utils/chords';
 import {
-    ArrowLeftIcon,
-    MinusIcon,
-    MusicalNoteIcon,
-    PauseIcon,
-    PencilIcon,
-    PlayIcon,
-    PlusIcon,
-    TrashIcon
+  ArrowLeftIcon,
+  MinusIcon,
+  MusicalNoteIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { useEffect, useRef, useState } from 'react';
 import ChordDiagram from './ChordDiagram';
@@ -474,7 +474,7 @@ function ChordLyricPair({ chordLine, lyricLine, onChordClick }: ChordLyricPairPr
           <span key={index}>
             {char === ' ' ? '\u00A0' : char}
           </span>
-        )).join('')}
+        ))}
       </div>
     </div>
   );
