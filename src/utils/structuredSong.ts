@@ -115,6 +115,16 @@ function renderChordOnlyLine(
 function renderSimpleChordLine(chords: ChordPosition[]): string {
   if (chords.length === 0) return '';
   
+  // Check if this looks like concatenated chords (positions very close together)
+  const isConcatenated = chords.length > 1 && 
+    chords.every((chord, i) => i === 0 || chord.position <= chords[i-1].position + chords[i-1].chord.length + 1);
+  
+  if (isConcatenated) {
+    // For concatenated chords, just join them without spaces
+    return chords.map(c => c.chord).join('');
+  }
+  
+  // Original logic for spaced chords
   let line = '';
   
   chords.forEach(chordPos => {
