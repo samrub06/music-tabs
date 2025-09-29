@@ -310,14 +310,58 @@ interface SongContentProps {
 function SongContent({ content, onChordClick }: SongContentProps) {
   const lines = content.split('\n');
   
+  // Group lines into chord-lyric pairs
+  const groupedLines: Array<{
+    type: 'chord-lyric-pair';
+    chordLine: string;
+    lyricLine: string;
+    index: number;
+  } | {
+    type: 'single-line';
+    line: string;
+    index: number;
+  }> = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const currentLine = lines[i];
+    const nextLine = lines[i + 1];
+    
+    if (currentLine.trim() && isChordLine(currentLine) && nextLine && !isChordLine(nextLine) && !nextLine.match(/^\[.*\]$/)) {
+      // This is a chord line followed by a lyric line
+      groupedLines.push({
+        type: 'chord-lyric-pair',
+        chordLine: currentLine,
+        lyricLine: nextLine,
+        index: i
+      });
+      i++; // Skip the next line since we've processed it
+    } else {
+      groupedLines.push({
+        type: 'single-line',
+        line: currentLine,
+        index: i
+      });
+    }
+  }
+  
   return (
     <div className="font-mono text-sm leading-relaxed space-y-2">
-      {lines.map((line, index) => (
-        <div key={index} className="min-h-[1.5rem]">
-          {line.trim() ? (
-            <ContentLine line={line} onChordClick={onChordClick} />
+      {groupedLines.map((group, index) => (
+        <div key={index}>
+          {group.type === 'chord-lyric-pair' ? (
+            <ChordLyricPair 
+              chordLine={group.chordLine} 
+              lyricLine={group.lyricLine} 
+              onChordClick={onChordClick}
+            />
           ) : (
-            <div className="h-4" /> // Empty line
+            <div className="min-h-[1.5rem]">
+              {group.line.trim() ? (
+                <ContentLine line={group.line} onChordClick={onChordClick} />
+              ) : (
+                <div className="h-4" /> // Empty line
+              )}
+            </div>
           )}
         </div>
       ))}
@@ -347,6 +391,122 @@ function ContentLine({ line, onChordClick }: ContentLineProps) {
 
   // Regular lyrics line
   return <div className="text-gray-900">{line}</div>;
+}
+
+interface ChordLyricPairProps {
+  chordLine: string;
+  lyricLine: string;
+  onChordClick: (chord: string) => void;
+}
+
+function ChordLyricPair({ chordLine, lyricLine, onChordClick }: ChordLyricPairProps) {
+  // Parse chord positions and create aligned display
+  const chordPattern = /\b([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
+  const chordMatches: Array<{
+    chord: string;
+    position: number;
+    length: number;
+  }> = [];
+  let match: RegExpExecArray | null;
+
+  // Reset regex lastIndex
+  chordPattern.lastIndex = 0;
+  
+  while ((match = chordPattern.exec(chordLine)) !== null) {
+    chordMatches.push({
+      chord: match[1],
+      position: match.index,
+      length: match[0].length
+    });
+  }
+
+  // Create segments based on chord positions
+  const segments: Array<{
+    type: 'text';
+    chordText: string;
+    lyricText: string;
+  } | {
+    type: 'chord';
+    chord: string;
+    lyricText: string;
+    position: number;
+  }> = [];
+  let lastPos = 0;
+
+  chordMatches.forEach((chordMatch, index) => {
+    // Add text before chord
+    if (chordMatch.position > lastPos) {
+      const textBefore = chordLine.slice(lastPos, chordMatch.position);
+      const lyricBefore = lyricLine.slice(lastPos, chordMatch.position);
+      segments.push({
+        type: 'text',
+        chordText: textBefore,
+        lyricText: lyricBefore
+      });
+    }
+
+    // Add chord segment
+    const nextChordPos = index < chordMatches.length - 1 ? chordMatches[index + 1].position : chordLine.length;
+    const chordSpace = chordMatch.chord.length;
+    const lyricEnd = Math.min(chordMatch.position + Math.max(chordSpace, 3), nextChordPos);
+    const lyricText = lyricLine.slice(chordMatch.position, lyricEnd);
+
+    segments.push({
+      type: 'chord',
+      chord: chordMatch.chord,
+      lyricText: lyricText,
+      position: chordMatch.position
+    });
+
+    lastPos = lyricEnd;
+  });
+
+  // Add remaining text
+  if (lastPos < Math.max(chordLine.length, lyricLine.length)) {
+    segments.push({
+      type: 'text',
+      chordText: chordLine.slice(lastPos),
+      lyricText: lyricLine.slice(lastPos)
+    });
+  }
+
+  return (
+    <div className="mb-4">
+      {/* Chord line */}
+      <div className="text-blue-600 font-semibold leading-tight mb-1 min-h-[1.2rem]">
+        {segments.map((segment, index) => (
+          <span key={index} className="inline-block relative">
+            {segment.type === 'chord' ? (
+              <button
+                onClick={() => onChordClick(segment.chord)}
+                className="hover:bg-blue-100 hover:text-blue-800 px-1 rounded transition-colors cursor-pointer underline relative z-10"
+                title={`Voir le diagramme de ${segment.chord}`}
+              >
+                {segment.chord}
+              </button>
+            ) : (
+              <span className="text-transparent select-none">{segment.chordText}</span>
+            )}
+            {/* Spacer for alignment */}
+            {segment.lyricText && (
+              <span className="absolute top-0 left-0 text-transparent pointer-events-none">
+                {segment.type === 'chord' ? segment.chord : segment.chordText}
+              </span>
+            )}
+          </span>
+        ))}
+      </div>
+      
+      {/* Lyric line */}
+      <div className="text-gray-900 leading-tight">
+        {segments.map((segment, index) => (
+          <span key={index} className="inline-block">
+            {segment.type === 'chord' ? segment.lyricText : segment.lyricText || segment.chordText}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 interface ChordLineProps {

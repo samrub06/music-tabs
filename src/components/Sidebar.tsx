@@ -17,6 +17,7 @@ export default function Sidebar() {
     songs, 
     currentFolder, 
     setCurrentFolder,
+    setCurrentSong,
     addFolder,
     updateFolder,
     deleteFolder
@@ -68,7 +69,10 @@ export default function Sidebar() {
         {/* All Songs */}
         <div className="space-y-1">
           <button
-            onClick={() => setCurrentFolder(null)}
+            onClick={() => {
+              setCurrentFolder(null);
+              setCurrentSong(null); // Close song view when changing folder
+            }}
             className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
               currentFolder === null
                 ? 'bg-blue-100 text-blue-700'
@@ -85,7 +89,10 @@ export default function Sidebar() {
           {/* Unorganized Songs */}
           {unorganizedSongs > 0 && (
             <button
-              onClick={() => setCurrentFolder('unorganized')}
+              onClick={() => {
+                setCurrentFolder('unorganized');
+                setCurrentSong(null); // Close song view when changing folder
+              }}
               className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                 currentFolder === 'unorganized'
                   ? 'bg-blue-100 text-blue-700'
@@ -188,7 +195,10 @@ export default function Sidebar() {
                 ) : (
                   <>
                     <button
-                      onClick={() => setCurrentFolder(folder.id)}
+                      onClick={() => {
+                        setCurrentFolder(folder.id);
+                        setCurrentSong(null); // Close song view when changing folder
+                      }}
                       className="flex-1 flex items-center text-left"
                     >
                       {currentFolder === folder.id ? (
