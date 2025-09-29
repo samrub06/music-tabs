@@ -165,33 +165,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Load data from localStorage or sample data
+  // Load sample data from JSON
   useEffect(() => {
-    const savedData = localStorage.getItem('music-tabs-data');
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        dispatch({ type: 'LOAD_DATA', payload: parsedData });
-      } catch (error) {
-        console.error('Error loading saved data:', error);
-        // Load sample data as fallback
-        dispatch({ type: 'LOAD_DATA', payload: sampleData as any });
-      }
-    } else {
-      // Load sample data
-      dispatch({ type: 'LOAD_DATA', payload: sampleData as any });
-    }
+    dispatch({ type: 'LOAD_DATA', payload: sampleData as any });
   }, []);
-
-  // Save data to localStorage whenever state changes
-  useEffect(() => {
-    if (state.songs.length > 0 || state.folders.length > 0) {
-      localStorage.setItem('music-tabs-data', JSON.stringify({
-        songs: state.songs,
-        folders: state.folders
-      }));
-    }
-  }, [state.songs, state.folders]);
 
   const generateId = () => `id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
