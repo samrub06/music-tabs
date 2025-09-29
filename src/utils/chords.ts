@@ -113,8 +113,8 @@ export function transposeChord(chord: string, semitones: number): string {
 export function transposeText(text: string, semitones: number): string {
   if (semitones === 0) return text;
   
-  // Ultra-robust chord regex - handles ALL chord formats perfectly
-  const chordPattern = /(?<![A-Za-z])([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?![A-Za-z])/g;
+  // More aggressive regex to capture concatenated chords like GAm, DEm, etc.
+  const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
   
   return text.replace(chordPattern, (match, chord, offset) => {
     // Additional validation to avoid false positives in lyrics
