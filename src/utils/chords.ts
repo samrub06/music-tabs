@@ -58,17 +58,28 @@ export function transposeChord(chord: string, semitones: number): string {
   const parsed = parseChord(chord);
   if (!parsed) return chord;
   
+  // Normalize semitones to be between -11 and +11
+  let normalizedSemitones = semitones;
+  while (normalizedSemitones > 11) normalizedSemitones -= 12;
+  while (normalizedSemitones < -11) normalizedSemitones += 12;
+  
   const noteIndex = NOTES.indexOf(parsed.root);
   if (noteIndex === -1) {
     // Try flat notes
     const flatIndex = FLAT_NOTES.indexOf(parsed.root);
     if (flatIndex === -1) return chord;
     
-    const newIndex = (flatIndex + semitones + 12) % 12;
+    // Calculate new index with proper wrapping for negative values
+    let newIndex = (flatIndex + normalizedSemitones) % 12;
+    if (newIndex < 0) newIndex += 12;
+    
     return FLAT_NOTES[newIndex] + parsed.quality;
   }
   
-  const newIndex = (noteIndex + semitones + 12) % 12;
+  // Calculate new index with proper wrapping for negative values
+  let newIndex = (noteIndex + normalizedSemitones) % 12;
+  if (newIndex < 0) newIndex += 12;
+  
   return NOTES[newIndex] + parsed.quality;
 }
 

@@ -173,8 +173,8 @@ export default function SongViewer() {
               <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
                 <span className="text-xs text-gray-600">Tonalité:</span>
                 <button
-                  onClick={() => setTransposeValue(Math.max(transposeValue - 1, -6))}
-                  disabled={transposeValue <= -6}
+                  onClick={() => setTransposeValue(Math.max(transposeValue - 1, -11))}
+                  disabled={transposeValue <= -11}
                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
                 >
                   <MinusIcon className="h-4 w-4" />
@@ -183,8 +183,8 @@ export default function SongViewer() {
                   {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
                 </span>
                 <button
-                  onClick={() => setTransposeValue(Math.min(transposeValue + 1, 6))}
-                  disabled={transposeValue >= 6}
+                  onClick={() => setTransposeValue(Math.min(transposeValue + 1, 11))}
+                  disabled={transposeValue >= 11}
                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
                 >
                   <PlusIcon className="h-4 w-4" />
@@ -277,8 +277,8 @@ export default function SongViewer() {
             {/* Transpose Controls */}
             <div className="flex items-center space-x-1">
               <button
-                onClick={() => setTransposeValue(Math.max(transposeValue - 1, -6))}
-                disabled={transposeValue <= -6}
+                onClick={() => setTransposeValue(Math.max(transposeValue - 1, -11))}
+                disabled={transposeValue <= -11}
                 className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
               >
                 <MinusIcon className="h-4 w-4" />
@@ -287,8 +287,8 @@ export default function SongViewer() {
                 {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
               </span>
               <button
-                onClick={() => setTransposeValue(Math.min(transposeValue + 1, 6))}
-                disabled={transposeValue >= 6}
+                onClick={() => setTransposeValue(Math.min(transposeValue + 1, 11))}
+                disabled={transposeValue >= 11}
                 className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
               >
                 <PlusIcon className="h-4 w-4" />
