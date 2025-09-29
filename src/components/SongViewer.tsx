@@ -2,7 +2,7 @@
 
 import { useApp } from '@/context/AppContext';
 import { isChordLine, transposeText } from '@/utils/chords';
-import { transposeStructuredSong, renderStructuredSong, parseToStructuredFormat, type StructuredSong } from '@/utils/structuredSong';
+import { renderStructuredSong, transposeStructuredSong, type StructuredSong } from '@/utils/structuredSong';
 import {
   ArrowLeftIcon,
   MinusIcon,

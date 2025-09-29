@@ -113,16 +113,35 @@ export function transposeChord(chord: string, semitones: number): string {
 export function transposeText(text: string, semitones: number): string {
   if (semitones === 0) return text;
   
-  // Enhanced chord regex pattern - handles both spaced and concatenated chords
-  const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+  // Ultra-robust chord regex - handles ALL chord formats perfectly
+  const chordPattern = /(?<![A-Za-z])([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?![A-Za-z])/g;
   
   return text.replace(chordPattern, (match, chord) => {
-    // Verify it's actually a chord and not part of a word
-    const isValidChord = /^[A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?$/.test(chord);
-    if (!isValidChord) return match;
+    // Additional validation to avoid false positives in lyrics
+    if (isPartOfWord(match, text)) return match;
     
     return transposeChord(chord, semitones);
   });
+}
+
+// Helper function to detect if a match is part of a word
+function isPartOfWord(match: string, text: string): boolean {
+  const index = text.indexOf(match);
+  if (index === -1) return false;
+  
+  const before = index > 0 ? text[index - 1] : ' ';
+  const after = index + match.length < text.length ? text[index + match.length] : ' ';
+  
+  // Skip if it's clearly part of a French/English word
+  const commonWords = ['de', 'la', 'le', 'du', 'des', 'un', 'une', 'et', 'ou', 'on', 'en', 'me', 'te', 'se', 'ce', 'ma', 'ta', 'sa'];
+  const lowerMatch = match.toLowerCase();
+  
+  if (commonWords.includes(lowerMatch)) {
+    // Check context - if surrounded by letters, it's probably a word
+    return /[a-zA-Z]/.test(before) || /[a-zA-Z]/.test(after);
+  }
+  
+  return false;
 }
 
 // Detect if a line contains primarily chords

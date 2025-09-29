@@ -21,42 +21,6 @@
   ],
   "songs": [
     {
-      "id": "song-1",
-      "title": "Someone You Loved",
-      "author": "Lewis Capaldi",
-      "folderId": "folder-2",
-      "content": "[Intro]\nC   G   Am  F\n\n[Verse 1]\nC                          G                              Am     F\nI'm going under and this time I fear there's no one to save me\nC                        G                                Am        F\nThis all or nothing really got a way of driving me crazy\nC                          G                              Am       F\nI need somebody to heal, somebody to know, somebody to have\nC                          G                              Am       F\nSomebody to hold, it's easy to say, but it's never the same\n\n[Pre-Chorus]\nAm                        F                    C              G\nI guess I kinda liked the way you numbed all the pain\n\n[Chorus]\nC                    G                    Am                F\nNow the day bleeds into nightfall, and you're not here\nC                    G                         Am              F\nTo get me through it all, I let my guard down, and then you pulled the rug\nC                    G                    Am                F\nI was getting kinda used to being someone you loved",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "song-2",
-      "title": "Wonderwall",
-      "author": "Oasis",
-      "folderId": "folder-1",
-      "content": "[Intro]\nEm7  G  D  C\n\n[Verse 1]\nEm7                G              D                C\nToday is gonna be the day that they're gonna throw it back to you\nEm7               G                D                   C\nBy now you should've somehow realized what you gotta do\nEm7               G           D                    C                G    C\nI don't believe that anybody feels the way I do about you now\n\n[Verse 2]\nEm7               G             D                 C\nBackbeat the word was on the street that fire in your heart is out\nEm7               G               D                     C\nI'm sure you've heard it all before but you never really had a doubt\nEm7               G           D                    C                G    C\nI don't believe that anybody feels the way I do about you now\n\n[Pre-Chorus]\nC         D         Em7\nAnd all the roads we have to walk are winding\nC         D              Em7\nAnd all the lights that lead us there are blinding\nC         D         G      Em7      C\nThere are many things that I would like to say to you\nD        G\nBut I don't know how\n\n[Chorus]\nC      Em7    G        Em7\nBecause maybe, you're gonna be the one that saves me\nC    Em7  G     Em7\nAnd after all, you're my wonderwall",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "song-3",
-      "title": "La Vie En Rose",
-      "author": "Édith Piaf",
-      "folderId": "folder-3",
-      "content": "[Verse 1]\nC                    Em              F                 G\nQuand il me prend dans ses bras, il me parle tout bas\nC                    Em              F        G        C\nJe vois la vie en rose, il me dit des mots d'amour\n\n[Verse 2]\nC                    Em              F                 G\nDes mots de tous les jours, et ça me fait quelque chose\nC                    Em              F        G        C\nIl est entré dans mon cœur, une part de bonheur\n\n[Chorus]\nF                    C               F                 C\nDont je connais la cause, c'est lui pour moi, moi pour lui\nF                    C               Dm       G        C\nDans la vie, il me l'a dit, l'a juré pour la vie",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "song-4",
-      "title": "Mais t'es pas là",
-      "author": "Exemple Français",
-      "folderId": "folder-3",
-      "content": "Capo 2\n\n[Intro]\nG  C  C  D\n\n[Verse 1]\n            Em\nJe suis une cruche,\n              Am\npercée de plus,\n            D\nj'ai la peau craquelée\n          Em\ndepuis toi, desséchée\n               Em\nQuand vient la lune\n             Am\net le vent frais,\n        D\npar habitude,\n                       Em\nj'te cherche sur le canapé\n\n[Verse 2]\n                     G\nDieu qu'elle est loin\n              Am\nla nuit de liesse\n           D\noù j'ai trouvé ta main\n                  Em\nbien avant la tristesse\n            G\nTu me traquais,\n            Am\ntu m'avais vu,\n          D\ntu m'as pris pour collier\n                      G\net mon cou tu l'as tendu (pas là)\n\n[Chorus]\nG                           Am\nmais t'es pas là, mais t'es où ? (pas là)\n                            D\nmais t'es pas là, mais t'es où ? (pas là)\n                            Em\nmais t'es pas là, mais t'es où - - - -\n          G\nmais t'es où ? (pas là)  mais t'es pas là\n          Am\nmais t'es où ? (pas là) mais t'es pas là\n          D                  Em\nmais t'es où où où mais t'es où où où",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    {
       "id": "song-5",
       "title": "Test Transposition",
       "author": "Test",
