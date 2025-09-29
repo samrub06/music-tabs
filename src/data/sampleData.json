@@ -61,7 +61,65 @@
       "title": "Test Transposition",
       "author": "Test",
       "folderId": "folder-1",
-      "content": "[Intro]\nC    C#   D    D#   E    F\nF#   G    G#   A    A#   B\n\n[Verse]\nC        F        G        Am\nTest de transposition complète\nDm       G        C        C\nTous les tons et demi-tons\n\n[Chorus]\nAm       F        C        G\nC C# D D# E F F# G G# A A# B\nF        G        Am       Am\nLa gamme chromatique complète",
+      "format": "structured",
+      "sections": [
+        {
+          "type": "intro",
+          "name": "Intro",
+          "lines": [
+            {
+              "type": "chords_only",
+              "chords": [
+                {"chord": "C", "position": 0},
+                {"chord": "C#", "position": 5},
+                {"chord": "D", "position": 10},
+                {"chord": "D#", "position": 15},
+                {"chord": "E", "position": 20},
+                {"chord": "F", "position": 25}
+              ],
+              "lyrics": ""
+            },
+            {
+              "type": "chords_only",
+              "chords": [
+                {"chord": "F#", "position": 0},
+                {"chord": "G", "position": 5},
+                {"chord": "G#", "position": 10},
+                {"chord": "A", "position": 15},
+                {"chord": "A#", "position": 20},
+                {"chord": "B", "position": 25}
+              ],
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "name": "Verse",
+          "lines": [
+            {
+              "type": "chord_lyric_pair",
+              "chords": [
+                {"chord": "C", "position": 0},
+                {"chord": "F", "position": 9},
+                {"chord": "G", "position": 18},
+                {"chord": "Am", "position": 27}
+              ],
+              "lyrics": "Test de transposition complète"
+            },
+            {
+              "type": "chord_lyric_pair",
+              "chords": [
+                {"chord": "Dm", "position": 0},
+                {"chord": "G", "position": 9},
+                {"chord": "C", "position": 18},
+                {"chord": "C", "position": 27}
+              ],
+              "lyrics": "Tous les tons et demi-tons"
+            }
+          ]
+        }
+      ],
       "createdAt": "2024-01-15T11:00:00.000Z",
       "updatedAt": "2024-01-15T11:00:00.000Z"
     }

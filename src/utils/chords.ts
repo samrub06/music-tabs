@@ -113,10 +113,14 @@ export function transposeChord(chord: string, semitones: number): string {
 export function transposeText(text: string, semitones: number): string {
   if (semitones === 0) return text;
   
-  // Enhanced chord regex pattern - matches chords with proper boundaries
-  const chordPattern = /(?<![A-Za-z])([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?![A-Za-z#b])/g;
+  // Enhanced chord regex pattern - handles both spaced and concatenated chords
+  const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
   
   return text.replace(chordPattern, (match, chord) => {
+    // Verify it's actually a chord and not part of a word
+    const isValidChord = /^[A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?$/.test(chord);
+    if (!isValidChord) return match;
+    
     return transposeChord(chord, semitones);
   });
 }

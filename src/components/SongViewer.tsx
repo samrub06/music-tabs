@@ -2,6 +2,7 @@
 
 import { useApp } from '@/context/AppContext';
 import { isChordLine, transposeText } from '@/utils/chords';
+import { transposeStructuredSong, renderStructuredSong, parseToStructuredFormat, type StructuredSong } from '@/utils/structuredSong';
 import {
   ArrowLeftIcon,
   MinusIcon,
@@ -111,8 +112,24 @@ export default function SongViewer() {
     }
   };
 
-  // Transpose the content
-  const transposedContent = transposeText(currentSong.content, transposeValue);
+  // Handle both old and new song formats
+  const isStructuredSong = (currentSong as any).format === 'structured';
+  
+  let transposedContent: string;
+  
+  if (isStructuredSong) {
+    // New structured format - 100% reliable transposition
+    const structuredSong = currentSong as any as StructuredSong;
+    const transposedSong = transposeStructuredSong(structuredSong, transposeValue);
+    transposedContent = renderStructuredSong(transposedSong, {
+      maxWidth: 80,
+      wordWrap: true,
+      isMobile: window.innerWidth < 768
+    });
+  } else {
+    // Legacy format - use old method
+    transposedContent = transposeText(currentSong.content, transposeValue);
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-white min-h-0">
