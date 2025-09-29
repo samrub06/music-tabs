@@ -269,11 +269,14 @@ export default function SongViewer() {
             <div 
               ref={contentRef}
               className="flex-1 overflow-y-auto p-6 bg-gray-50"
+              style={{ maxHeight: 'calc(100vh - 200px)' }}
             >
-              <SongContent 
-                content={transposedContent} 
-                onChordClick={handleChordClick}
-              />
+              <div className="max-w-4xl">
+                <SongContent 
+                  content={transposedContent} 
+                  onChordClick={handleChordClick}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -375,10 +378,19 @@ interface ContentLineProps {
 }
 
 function ContentLine({ line, onChordClick }: ContentLineProps) {
+  // Check if this is a capo indication
+  if (line.match(/^Capo\s+\d+/i)) {
+    return (
+      <div className="font-semibold text-amber-700 bg-amber-50 px-3 py-2 rounded-md text-sm border border-amber-200 mb-4">
+        🎸 {line}
+      </div>
+    );
+  }
+
   // Check if this is a section header (e.g., [Verse], [Chorus])
   if (line.match(/^\[.*\]$/)) {
     return (
-      <div className="font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded text-sm">
+      <div className="font-bold text-blue-700 bg-blue-50 px-3 py-2 rounded-md text-sm border border-blue-200 mb-2 mt-4">
         {line}
       </div>
     );
@@ -390,7 +402,7 @@ function ContentLine({ line, onChordClick }: ContentLineProps) {
   }
 
   // Regular lyrics line
-  return <div className="text-gray-900">{line}</div>;
+  return <div className="text-gray-900 font-mono text-sm leading-relaxed">{line}</div>;
 }
 
 interface ChordLyricPairProps {
@@ -400,110 +412,69 @@ interface ChordLyricPairProps {
 }
 
 function ChordLyricPair({ chordLine, lyricLine, onChordClick }: ChordLyricPairProps) {
-  // Parse chord positions and create aligned display
+  // Utiliser une approche basée sur la position des caractères pour un alignement précis
+  const maxLength = Math.max(chordLine.length, lyricLine.length);
+  const chordArray = chordLine.padEnd(maxLength, ' ').split('');
+  const lyricArray = lyricLine.padEnd(maxLength, ' ').split('');
+  
+  // Trouver tous les accords et leurs positions
   const chordPattern = /\b([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
   const chordMatches: Array<{
     chord: string;
-    position: number;
-    length: number;
+    start: number;
+    end: number;
   }> = [];
+  
   let match: RegExpExecArray | null;
-
-  // Reset regex lastIndex
   chordPattern.lastIndex = 0;
   
   while ((match = chordPattern.exec(chordLine)) !== null) {
     chordMatches.push({
       chord: match[1],
-      position: match.index,
-      length: match[0].length
-    });
-  }
-
-  // Create segments based on chord positions
-  const segments: Array<{
-    type: 'text';
-    chordText: string;
-    lyricText: string;
-  } | {
-    type: 'chord';
-    chord: string;
-    lyricText: string;
-    position: number;
-  }> = [];
-  let lastPos = 0;
-
-  chordMatches.forEach((chordMatch, index) => {
-    // Add text before chord
-    if (chordMatch.position > lastPos) {
-      const textBefore = chordLine.slice(lastPos, chordMatch.position);
-      const lyricBefore = lyricLine.slice(lastPos, chordMatch.position);
-      segments.push({
-        type: 'text',
-        chordText: textBefore,
-        lyricText: lyricBefore
-      });
-    }
-
-    // Add chord segment
-    const nextChordPos = index < chordMatches.length - 1 ? chordMatches[index + 1].position : chordLine.length;
-    const chordSpace = chordMatch.chord.length;
-    const lyricEnd = Math.min(chordMatch.position + Math.max(chordSpace, 3), nextChordPos);
-    const lyricText = lyricLine.slice(chordMatch.position, lyricEnd);
-
-    segments.push({
-      type: 'chord',
-      chord: chordMatch.chord,
-      lyricText: lyricText,
-      position: chordMatch.position
-    });
-
-    lastPos = lyricEnd;
-  });
-
-  // Add remaining text
-  if (lastPos < Math.max(chordLine.length, lyricLine.length)) {
-    segments.push({
-      type: 'text',
-      chordText: chordLine.slice(lastPos),
-      lyricText: lyricLine.slice(lastPos)
+      start: match.index,
+      end: match.index + match[1].length
     });
   }
 
   return (
-    <div className="mb-4">
-      {/* Chord line */}
-      <div className="text-blue-600 font-semibold leading-tight mb-1 min-h-[1.2rem]">
-        {segments.map((segment, index) => (
-          <span key={index} className="inline-block relative">
-            {segment.type === 'chord' ? (
+    <div className="mb-3 font-mono text-sm">
+      {/* Ligne d'accords avec alignement parfait */}
+      <div className="text-blue-600 font-bold leading-none mb-1 min-h-[1.2rem] whitespace-pre">
+        {chordArray.map((char, index) => {
+          const chordMatch = chordMatches.find(c => index >= c.start && index < c.end);
+          if (chordMatch && index === chordMatch.start) {
+            // Début d'un accord - créer un bouton cliquable
+            return (
               <button
-                onClick={() => onChordClick(segment.chord)}
-                className="hover:bg-blue-100 hover:text-blue-800 px-1 rounded transition-colors cursor-pointer underline relative z-10"
-                title={`Voir le diagramme de ${segment.chord}`}
+                key={index}
+                onClick={() => onChordClick(chordMatch.chord)}
+                className="hover:bg-blue-100 hover:text-blue-800 px-0.5 -mx-0.5 rounded transition-colors cursor-pointer underline decoration-1"
+                title={`Voir le diagramme de ${chordMatch.chord}`}
               >
-                {segment.chord}
+                {chordMatch.chord}
               </button>
-            ) : (
-              <span className="text-transparent select-none">{segment.chordText}</span>
-            )}
-            {/* Spacer for alignment */}
-            {segment.lyricText && (
-              <span className="absolute top-0 left-0 text-transparent pointer-events-none">
-                {segment.type === 'chord' ? segment.chord : segment.chordText}
+            );
+          } else if (chordMatch && index > chordMatch.start) {
+            // Partie d'un accord déjà affichée - ne rien afficher
+            return null;
+          } else {
+            // Espace ou autre caractère
+            return (
+              <span key={index} className="text-transparent select-none">
+                {char === ' ' ? '\u00A0' : char}
               </span>
-            )}
-          </span>
-        ))}
+            );
+          }
+        })}
       </div>
       
-      {/* Lyric line */}
-      <div className="text-gray-900 leading-tight">
-        {segments.map((segment, index) => (
-          <span key={index} className="inline-block">
-            {segment.type === 'chord' ? segment.lyricText : segment.lyricText || segment.chordText}
+      {/* Ligne de paroles */}
+      <div className="text-gray-900 leading-none whitespace-pre">
+        {lyricArray.map((char, index) => (
+          <span key={index}>
+            {char === ' ' ? '\u00A0' : char}
           </span>
-        ))}
+        )).join('')}
       </div>
     </div>
   );
