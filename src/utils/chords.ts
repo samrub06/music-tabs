@@ -116,21 +116,20 @@ export function transposeText(text: string, semitones: number): string {
   // Ultra-robust chord regex - handles ALL chord formats perfectly
   const chordPattern = /(?<![A-Za-z])([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?![A-Za-z])/g;
   
-  return text.replace(chordPattern, (match, chord) => {
+  return text.replace(chordPattern, (match, chord, offset) => {
     // Additional validation to avoid false positives in lyrics
-    if (isPartOfWord(match, text)) return match;
+    if (isPartOfWord(match, text, offset)) return match;
     
     return transposeChord(chord, semitones);
   });
 }
 
 // Helper function to detect if a match is part of a word
-function isPartOfWord(match: string, text: string): boolean {
-  const index = text.indexOf(match);
-  if (index === -1) return false;
+function isPartOfWord(match: string, text: string, offset: number): boolean {
+  if (offset === undefined) return false;
   
-  const before = index > 0 ? text[index - 1] : ' ';
-  const after = index + match.length < text.length ? text[index + match.length] : ' ';
+  const before = offset > 0 ? text[offset - 1] : ' ';
+  const after = offset + match.length < text.length ? text[offset + match.length] : ' ';
   
   // Skip if it's clearly part of a French/English word
   const commonWords = ['de', 'la', 'le', 'du', 'des', 'un', 'une', 'et', 'ou', 'on', 'en', 'me', 'te', 'se', 'ce', 'ma', 'ta', 'sa'];
