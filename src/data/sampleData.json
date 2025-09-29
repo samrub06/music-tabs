@@ -62,23 +62,33 @@
           "name": "Verse",
           "lines": [
             {
-              "type": "chord_lyric_pair",
+              "type": "chords_only",
               "chords": [
                 {"chord": "C", "position": 0},
-                {"chord": "F", "position": 9},
-                {"chord": "G", "position": 18},
-                {"chord": "Am", "position": 27}
+                {"chord": "F", "position": 1},
+                {"chord": "G", "position": 2},
+                {"chord": "Am", "position": 4}
               ],
+              "lyrics": ""
+            },
+            {
+              "type": "lyrics_only",
+              "chords": [],
               "lyrics": "Test de transposition complète"
             },
             {
-              "type": "chord_lyric_pair",
+              "type": "chords_only",
               "chords": [
                 {"chord": "Dm", "position": 0},
-                {"chord": "G", "position": 9},
-                {"chord": "C", "position": 18},
-                {"chord": "C", "position": 27}
+                {"chord": "G", "position": 2},
+                {"chord": "C", "position": 3},
+                {"chord": "C", "position": 4}
               ],
+              "lyrics": ""
+            },
+            {
+              "type": "lyrics_only",
+              "chords": [],
               "lyrics": "Tous les tons et demi-tons"
             }
           ]
