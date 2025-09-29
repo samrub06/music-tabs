@@ -151,7 +151,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="ex: Someone You Loved"
+                  placeholder="ex: Ma chanson préférée"
                   required
                 />
               </div>
@@ -165,7 +165,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="ex: Lewis Capaldi"
+                  placeholder="ex: Mon Artiste"
                 />
               </div>
 
@@ -200,10 +200,10 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 C   G   Am  F
 
 [Verse 1]
-C                          G
-I'm going under and this time
-Am                         F
-I fear there's no one to save me...`}
+C                    G
+Voici un exemple de chanson
+Am                   F
+Avec les accords alignés...`}
                   required
                 />
               </div>
