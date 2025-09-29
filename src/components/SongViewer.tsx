@@ -127,22 +127,18 @@ export default function SongViewer() {
             >
               <ArrowLeftIcon className="h-6 w-6" />
             </button>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                title="Éditer"
-              >
-                <PencilIcon className="h-5 w-5" />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
-                title="Supprimer"
-              >
-                <TrashIcon className="h-5 w-5" />
-              </button>
+            <div className="flex-1 text-center px-2">
+              <h1 className="text-lg font-bold text-gray-900 truncate">{currentSong.title}</h1>
+              {currentSong.author && (
+                <p className="text-sm text-gray-600 truncate">Par {currentSong.author}</p>
+              )}
             </div>
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            >
+              <PencilIcon className="h-5 w-5" />
+            </button>
           </div>
           
           {/* Mobile Controls */}

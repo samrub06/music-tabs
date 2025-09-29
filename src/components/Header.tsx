@@ -29,53 +29,48 @@ export default function Header() {
     : 'Toutes les chansons';
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo and Title */}
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <span className="text-2xl">🎸</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                Ma Bibliothèque de Chansons
-              </h1>
-              <p className="text-sm text-gray-600 hidden sm:block">
-                Gérez vos partitions et tablatures
-              </p>
-            </div>
+    <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 md:h-16">
+          {/* Logo - Mobile & Desktop */}
+          <div className="flex items-center space-x-2">
+            <span className="text-xl md:text-2xl">🎸</span>
+            <span className="hidden md:block text-lg font-semibold text-gray-900">
+              Music Tabs
+            </span>
           </div>
 
-          {/* Search and Navigation */}
-          <div className="flex items-center space-x-4">
-            {/* Search Bar */}
+          {/* Search Bar - Responsive */}
+          <div className="flex-1 max-w-md mx-4">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                <MagnifyingGlassIcon className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Rechercher une chanson..."
+                placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full pl-9 md:pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
+          </div>
 
-            {/* Current Folder Display */}
-            <div className="hidden md:flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-md">
+          {/* Right Actions */}
+          <div className="flex items-center space-x-2">
+            {/* Current Folder Display - Desktop Only */}
+            <div className="hidden lg:flex items-center space-x-2 px-3 py-1.5 bg-gray-50 rounded-md">
               <FolderIcon className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">{currentFolderName}</span>
+              <span className="text-sm text-gray-700 max-w-32 truncate">{currentFolderName}</span>
             </div>
 
             {/* Add Folder Button */}
             <button
               onClick={() => setShowAddFolder(true)}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-2 md:px-3 py-1.5 md:py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Dossier</span>
+              <PlusIcon className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Nouveau dossier</span>
             </button>
           </div>
         </div>

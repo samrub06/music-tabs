@@ -46,7 +46,7 @@ function AppContent() {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
           <div className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 lg:hidden">
-            <span className="text-lg font-semibold">Navigation</span>
+            <span className="text-lg font-semibold">Menu</span>
             <button
               onClick={() => setSidebarOpen(false)}
               className="p-2 rounded-md text-gray-400 hover:text-gray-600"

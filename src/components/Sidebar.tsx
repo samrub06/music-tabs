@@ -2,12 +2,12 @@
 
 import { useApp } from '@/context/AppContext';
 import {
-    FolderIcon,
-    FolderOpenIcon,
-    MusicalNoteIcon,
-    PencilIcon,
-    PlusIcon,
-    TrashIcon
+  FolderIcon,
+  FolderOpenIcon,
+  MusicalNoteIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 
@@ -64,7 +64,6 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Navigation</h2>
         
         {/* All Songs */}
         <div className="space-y-1">
