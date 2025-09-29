@@ -53,45 +53,71 @@ export function parseChord(chord: string): { root: string; quality: string } | n
   };
 }
 
+// Normalize note to use standard notation (no double sharps/flats)
+export function normalizeNote(note: string): string {
+  // Convert enharmonic equivalents to standard sharp notation
+  const enharmonicMap: { [key: string]: string } = {
+    'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
+    'C##': 'D', 'D##': 'E', 'E##': 'F#', 'F##': 'G', 'G##': 'A', 'A##': 'B', 'B##': 'C',
+    'Cb': 'B', 'Fb': 'E'
+  };
+  
+  return enharmonicMap[note] || note;
+}
+
+// Post-process transposed note to avoid double sharps/flats
+export function cleanTransposedNote(note: string): string {
+  const cleanMap: { [key: string]: string } = {
+    'C##': 'D', 'D##': 'E', 'E##': 'F#', 'F##': 'G', 'G##': 'A', 'A##': 'B', 'B##': 'C',
+    'Dbb': 'C', 'Ebb': 'D', 'Fbb': 'D#', 'Gbb': 'F', 'Abb': 'G', 'Bbb': 'A', 'Cbb': 'A#'
+  };
+  
+  return cleanMap[note] || note;
+}
+
 // Transpose a single chord by semitones
 export function transposeChord(chord: string, semitones: number): string {
   const parsed = parseChord(chord);
   if (!parsed) return chord;
+  
+  // Normalize the root note to avoid double sharps/flats
+  const normalizedRoot = normalizeNote(parsed.root);
   
   // Normalize semitones to be between -11 and +11
   let normalizedSemitones = semitones;
   while (normalizedSemitones > 11) normalizedSemitones -= 12;
   while (normalizedSemitones < -11) normalizedSemitones += 12;
   
-  const noteIndex = NOTES.indexOf(parsed.root);
+  // Try to find the note in our standard sharp notes first
+  let noteIndex = NOTES.indexOf(normalizedRoot);
+  let useFlats = false;
+  
   if (noteIndex === -1) {
     // Try flat notes
-    const flatIndex = FLAT_NOTES.indexOf(parsed.root);
-    if (flatIndex === -1) return chord;
-    
-    // Calculate new index with proper wrapping for negative values
-    let newIndex = (flatIndex + normalizedSemitones) % 12;
-    if (newIndex < 0) newIndex += 12;
-    
-    return FLAT_NOTES[newIndex] + parsed.quality;
+    noteIndex = FLAT_NOTES.indexOf(normalizedRoot);
+    useFlats = true;
+    if (noteIndex === -1) return chord; // Note not found
   }
   
   // Calculate new index with proper wrapping for negative values
   let newIndex = (noteIndex + normalizedSemitones) % 12;
   if (newIndex < 0) newIndex += 12;
   
-  return NOTES[newIndex] + parsed.quality;
+  // Use the same notation system (sharps or flats) as the original, but prefer sharps for consistency
+  const newNote = NOTES[newIndex];
+  const cleanedNote = cleanTransposedNote(newNote);
+  return cleanedNote + parsed.quality;
 }
 
 // Transpose all chords in a text
 export function transposeText(text: string, semitones: number): string {
   if (semitones === 0) return text;
   
-  // Chord regex pattern
-  const chordPattern = /\b([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
+  // Enhanced chord regex pattern - matches chords with proper boundaries
+  const chordPattern = /(?<![A-Za-z])([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?![A-Za-z#b])/g;
   
-  return text.replace(chordPattern, (match) => {
-    return transposeChord(match, semitones);
+  return text.replace(chordPattern, (match, chord) => {
+    return transposeChord(chord, semitones);
   });
 }
 
