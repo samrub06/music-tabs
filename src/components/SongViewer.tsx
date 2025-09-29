@@ -115,124 +115,241 @@ export default function SongViewer() {
   const transposedContent = transposeText(currentSong.content, transposeValue);
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setCurrentSong(null)}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">{currentSong.title}</h1>
-            {currentSong.author && (
-              <p className="text-sm text-gray-600">Par {currentSong.author}</p>
-            )}
+    <div className="flex-1 flex flex-col bg-white min-h-0">
+      {/* Header - Mobile Responsive */}
+      <div className="flex-shrink-0 border-b border-gray-200">
+        {/* Mobile Header */}
+        <div className="block md:hidden">
+          <div className="flex items-center justify-between p-3">
+            <button
+              onClick={() => setCurrentSong(null)}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            >
+              <ArrowLeftIcon className="h-6 w-6" />
+            </button>
+            <div className="flex-1 text-center px-2">
+              <h1 className="text-lg font-bold text-gray-900 truncate">{currentSong.title}</h1>
+              {currentSong.author && (
+                <p className="text-sm text-gray-600 truncate">Par {currentSong.author}</p>
+              )}
+            </div>
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            >
+              <PencilIcon className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* Mobile Controls */}
+          <div className="px-3 pb-3 space-y-3">
+            {/* Instrument Toggle - Mobile */}
+            <div className="flex rounded-md shadow-sm w-full">
+              <button
+                onClick={() => setSelectedInstrument('piano')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border ${
+                  selectedInstrument === 'piano'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                🎹 Piano
+              </button>
+              <button
+                onClick={() => setSelectedInstrument('guitar')}
+                className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b ${
+                  selectedInstrument === 'guitar'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                🎸 Guitare
+              </button>
+            </div>
+
+            {/* Controls Row - Mobile */}
+            <div className="flex items-center justify-between">
+              {/* Transpose Controls */}
+              <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                <span className="text-xs text-gray-600">Tonalité:</span>
+                <button
+                  onClick={() => setTransposeValue(Math.max(transposeValue - 1, -6))}
+                  disabled={transposeValue <= -6}
+                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                >
+                  <MinusIcon className="h-4 w-4" />
+                </button>
+                <span className="text-sm font-medium min-w-[2.5rem] text-center">
+                  {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                </span>
+                <button
+                  onClick={() => setTransposeValue(Math.min(transposeValue + 1, 6))}
+                  disabled={transposeValue >= 6}
+                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Auto-scroll Controls */}
+              <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                <button
+                  onClick={toggleAutoScroll}
+                  className={`p-2 rounded-full ${
+                    autoScroll.isActive
+                      ? 'bg-green-100 text-green-600'
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-white'
+                  }`}
+                  title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}
+                >
+                  {autoScroll.isActive ? (
+                    <PauseIcon className="h-4 w-4" />
+                  ) : (
+                    <PlayIcon className="h-4 w-4" />
+                  )}
+                </button>
+                
+                <input
+                  type="range"
+                  min="0.5"
+                  max="4"
+                  step="0.1"
+                  value={autoScroll.speed}
+                  onChange={(e) => setAutoScrollSpeed(parseFloat(e.target.value))}
+                  className="w-20"
+                  title="Vitesse"
+                />
+                
+                <button
+                  onClick={resetScroll}
+                  className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded bg-white"
+                  title="Haut"
+                >
+                  ↑
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {/* Instrument Toggle */}
-          <div className="flex rounded-md shadow-sm">
+        {/* Desktop Header */}
+        <div className="hidden md:flex items-center justify-between p-4">
+          <div className="flex items-center space-x-4">
             <button
-              onClick={() => setSelectedInstrument('piano')}
-              className={`px-3 py-2 text-sm font-medium rounded-l-md border ${
-                selectedInstrument === 'piano'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
+              onClick={() => setCurrentSong(null)}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
             >
-              🎹 Piano
+              <ArrowLeftIcon className="h-5 w-5" />
             </button>
-            <button
-              onClick={() => setSelectedInstrument('guitar')}
-              className={`px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b ${
-                selectedInstrument === 'guitar'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              🎸 Guitare
-            </button>
-          </div>
-
-          {/* Transpose Controls */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => setTransposeValue(Math.max(transposeValue - 1, -6))}
-              disabled={transposeValue <= -6}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-            >
-              <MinusIcon className="h-4 w-4" />
-            </button>
-            <span className="text-sm font-medium min-w-[3rem] text-center">
-              {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-            </span>
-            <button
-              onClick={() => setTransposeValue(Math.min(transposeValue + 1, 6))}
-              disabled={transposeValue >= 6}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-            >
-              <PlusIcon className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Auto-scroll Controls */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={toggleAutoScroll}
-              className={`p-2 rounded-full ${
-                autoScroll.isActive
-                  ? 'bg-green-100 text-green-600'
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-              }`}
-              title={autoScroll.isActive ? 'Arrêter le défilement' : 'Démarrer le défilement'}
-            >
-              {autoScroll.isActive ? (
-                <PauseIcon className="h-5 w-5" />
-              ) : (
-                <PlayIcon className="h-5 w-5" />
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{currentSong.title}</h1>
+              {currentSong.author && (
+                <p className="text-sm text-gray-600">Par {currentSong.author}</p>
               )}
-            </button>
-            
-            <input
-              type="range"
-              min="0.5"
-              max="3"
-              step="0.1"
-              value={autoScroll.speed}
-              onChange={(e) => setAutoScrollSpeed(parseFloat(e.target.value))}
-              className="w-16"
-              title="Vitesse de défilement"
-            />
-            
-            <button
-              onClick={resetScroll}
-              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
-              title="Remonter en haut"
-            >
-              ↑ Haut
-            </button>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-            title="Éditer"
-          >
-            <PencilIcon className="h-5 w-5" />
-          </button>
-          
-          <button
-            onClick={handleDelete}
-            className="p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
-            title="Supprimer"
-          >
-            <TrashIcon className="h-5 w-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Instrument Toggle */}
+            <div className="flex rounded-md shadow-sm">
+              <button
+                onClick={() => setSelectedInstrument('piano')}
+                className={`px-3 py-2 text-sm font-medium rounded-l-md border ${
+                  selectedInstrument === 'piano'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                🎹 Piano
+              </button>
+              <button
+                onClick={() => setSelectedInstrument('guitar')}
+                className={`px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b ${
+                  selectedInstrument === 'guitar'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                🎸 Guitare
+              </button>
+            </div>
+
+            {/* Transpose Controls */}
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setTransposeValue(Math.max(transposeValue - 1, -6))}
+                disabled={transposeValue <= -6}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <MinusIcon className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-medium min-w-[3rem] text-center">
+                {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+              </span>
+              <button
+                onClick={() => setTransposeValue(Math.min(transposeValue + 1, 6))}
+                disabled={transposeValue >= 6}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <PlusIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Auto-scroll Controls */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={toggleAutoScroll}
+                className={`p-2 rounded-full ${
+                  autoScroll.isActive
+                    ? 'bg-green-100 text-green-600'
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                }`}
+                title={autoScroll.isActive ? 'Arrêter le défilement' : 'Démarrer le défilement'}
+              >
+                {autoScroll.isActive ? (
+                  <PauseIcon className="h-5 w-5" />
+                ) : (
+                  <PlayIcon className="h-5 w-5" />
+                )}
+              </button>
+              
+              <input
+                type="range"
+                min="0.5"
+                max="4"
+                step="0.1"
+                value={autoScroll.speed}
+                onChange={(e) => setAutoScrollSpeed(parseFloat(e.target.value))}
+                className="w-16"
+                title="Vitesse de défilement"
+              />
+              
+              <button
+                onClick={resetScroll}
+                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                title="Remonter en haut"
+              >
+                ↑ Haut
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+              title="Éditer"
+            >
+              <PencilIcon className="h-5 w-5" />
+            </button>
+            
+            <button
+              onClick={handleDelete}
+              className="p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+              title="Supprimer"
+            >
+              <TrashIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -268,10 +385,13 @@ export default function SongViewer() {
           ) : (
             <div 
               ref={contentRef}
-              className="flex-1 overflow-y-auto p-6 bg-gray-50"
-              style={{ maxHeight: 'calc(100vh - 200px)' }}
+              className="flex-1 overflow-y-auto p-3 md:p-6 bg-gray-50"
+              style={{ 
+                height: 'calc(100vh - 200px)',
+                WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+              }}
             >
-              <div className="max-w-4xl">
+              <div className="max-w-4xl mx-auto">
                 <SongContent 
                   content={transposedContent} 
                   onChordClick={handleChordClick}
@@ -281,24 +401,47 @@ export default function SongViewer() {
           )}
         </div>
 
-        {/* Chord Diagram Sidebar */}
+        {/* Chord Diagram Sidebar/Modal */}
         {showChordDiagram && selectedChord && (
-          <div className="w-80 border-l border-gray-200 bg-white">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Diagramme d&apos;accord
-              </h3>
-              <button
-                onClick={() => setShowChordDiagram(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
+          <>
+            {/* Mobile Modal */}
+            <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+              <div className="bg-white w-full rounded-t-xl max-h-[80vh] overflow-y-auto">
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Diagramme d&apos;accord
+                  </h3>
+                  <button
+                    onClick={() => setShowChordDiagram(false)}
+                    className="text-gray-400 hover:text-gray-600 p-2"
+                  >
+                    <span className="text-2xl">×</span>
+                  </button>
+                </div>
+                <div className="p-4">
+                  <ChordDiagram chord={selectedChord} instrument={selectedInstrument} />
+                </div>
+              </div>
             </div>
-            <div className="p-4">
-              <ChordDiagram chord={selectedChord} instrument={selectedInstrument} />
+
+            {/* Desktop Sidebar */}
+            <div className="hidden md:block w-80 border-l border-gray-200 bg-white">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Diagramme d&apos;accord
+                </h3>
+                <button
+                  onClick={() => setShowChordDiagram(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-4">
+                <ChordDiagram chord={selectedChord} instrument={selectedInstrument} />
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -437,7 +580,7 @@ function ChordLyricPair({ chordLine, lyricLine, onChordClick }: ChordLyricPairPr
   }
 
   return (
-    <div className="mb-3 font-mono text-sm">
+    <div className="mb-3 font-mono text-xs md:text-sm">
       {/* Ligne d'accords avec alignement parfait */}
       <div className="text-blue-600 font-bold leading-none mb-1 min-h-[1.2rem] whitespace-pre">
         {chordArray.map((char, index) => {
@@ -448,7 +591,7 @@ function ChordLyricPair({ chordLine, lyricLine, onChordClick }: ChordLyricPairPr
               <button
                 key={index}
                 onClick={() => onChordClick(chordMatch.chord)}
-                className="hover:bg-blue-100 hover:text-blue-800 px-0.5 -mx-0.5 rounded transition-colors cursor-pointer underline decoration-1"
+                className="hover:bg-blue-100 hover:text-blue-800 px-0.5 -mx-0.5 rounded transition-colors cursor-pointer underline decoration-1 touch-manipulation"
                 title={`Voir le diagramme de ${chordMatch.chord}`}
               >
                 {chordMatch.chord}
