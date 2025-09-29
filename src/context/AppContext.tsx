@@ -49,7 +49,7 @@ const initialState: AppState = {
   selectedInstrument: 'piano',
   transposeValue: 0,
   autoScroll: {
-    speed: 1,
+    speed: 2.5,
     isActive: false
   }
 };
