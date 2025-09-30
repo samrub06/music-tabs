@@ -19,15 +19,15 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   });
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.content.trim()) {
       alert('Le titre et le contenu sont obligatoires.');
       return;
     }
 
-    addSong({
+    await addSong({
       title: formData.title.trim(),
       author: formData.author.trim(),
       content: formData.content.trim(),
@@ -41,7 +41,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       content: '',
       folderId: ''
     });
-    
+
     onClose();
   };
 

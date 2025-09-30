@@ -1,32 +1,4 @@
-// Utilities for structured song format - 100% reliable transposition & word wrap
-
-export interface ChordPosition {
-  chord: string;
-  position: number;
-}
-
-export interface SongLine {
-  type: 'chords_only' | 'chord_lyric_pair' | 'lyrics_only';
-  chords: ChordPosition[];
-  lyrics: string;
-}
-
-export interface SongSection {
-  type: string;
-  name: string;
-  lines: SongLine[];
-}
-
-export interface StructuredSong {
-  id: string;
-  title: string;
-  author: string;
-  folderId?: string;
-  format: 'structured';
-  sections: SongSection[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { ChordPosition, SongLine, SongSection, StructuredSong } from '@/types';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -59,9 +31,11 @@ export function transposeStructuredSong(song: StructuredSong, semitones: number)
   
   transposedSong.sections.forEach((section: SongSection) => {
     section.lines.forEach((line: SongLine) => {
-      line.chords.forEach((chordPos: ChordPosition) => {
-        chordPos.chord = transposeChord(chordPos.chord, semitones);
-      });
+      if (line.chords) {
+        line.chords.forEach((chordPos: ChordPosition) => {
+          chordPos.chord = transposeChord(chordPos.chord, semitones);
+        });
+      }
     });
   });
   
@@ -87,7 +61,7 @@ export function renderStructuredSong(
     section.lines.forEach(line => {
       if (line.type === 'chords_only') {
         output += renderChordOnlyLine(line, { maxWidth, wordWrap, isMobile }) + '\n';
-      } else if (line.type === 'chord_lyric_pair') {
+      } else if (line.type === 'chord_over_lyrics') {
         output += renderChordLyricPair(line, { maxWidth, wordWrap, isMobile }) + '\n';
       } else if (line.type === 'lyrics_only') {
         output += renderLyricsLine(line, { maxWidth, wordWrap, isMobile }) + '\n';
@@ -100,10 +74,41 @@ export function renderStructuredSong(
   return output;
 }
 
+// Extract all unique chords from a song for diagram display
+export function extractAllChords(song: StructuredSong): string[] {
+  const chords = new Set<string>();
+  
+  song.sections.forEach(section => {
+    section.lines.forEach(line => {
+      if (line.chords) {
+        line.chords.forEach(chordPos => {
+          chords.add(chordPos.chord);
+        });
+      }
+      // Also check chord_line for chords_only type
+      if (line.chord_line) {
+        const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+        const matches = line.chord_line.match(chordPattern) || [];
+        matches.forEach(chord => chords.add(chord));
+      }
+    });
+  });
+  
+  return Array.from(chords).sort();
+}
+
 function renderChordOnlyLine(
   line: SongLine, 
   options: { maxWidth: number; wordWrap: boolean; isMobile: boolean }
 ): string {
+  if (line.chord_line) {
+    return line.chord_line;
+  }
+  
+  if (!line.chords || line.chords.length === 0) {
+    return '';
+  }
+  
   if (!options.wordWrap) {
     return renderSimpleChordLine(line.chords);
   }
@@ -140,7 +145,7 @@ function renderSimpleChordLine(chords: ChordPosition[]): string {
 
 function renderChordLineWithWrap(chords: ChordPosition[], maxWidth: number): string {
   // Smart word wrap that keeps chords together
-  let lines = [];
+  const lines = [];
   let currentLine = '';
   let currentPos = 0;
   
@@ -171,6 +176,12 @@ function renderChordLyricPair(
   line: SongLine,
   options: { maxWidth: number; wordWrap: boolean; isMobile: boolean }
 ): string {
+  if (!line.lyrics) return '';
+  
+  if (!line.chords || line.chords.length === 0) {
+    return line.lyrics;
+  }
+  
   if (!options.wordWrap || line.lyrics.length <= options.maxWidth) {
     // Simple rendering without word wrap
     const chordLine = renderChordsForLyrics(line.chords, line.lyrics);
@@ -211,6 +222,8 @@ function renderChordsForLyrics(chords: ChordPosition[], lyrics: string): string 
 }
 
 function renderChordLyricWithWrap(line: SongLine, maxWidth: number): string {
+  if (!line.lyrics || !line.chords) return line.lyrics || '';
+  
   // Advanced algorithm for word wrapping while preserving chord alignment
   const words = line.lyrics.split(' ');
   const lines = [];
@@ -232,7 +245,7 @@ function renderChordLyricWithWrap(line: SongLine, maxWidth: number): string {
       
       // Start new line
       currentLyricLine = word;
-      currentChords = line.chords.filter(c => c.position >= wordStart);
+      currentChords = line.chords!.filter(c => c.position >= wordStart);
       // Adjust chord positions for new line
       currentChords = currentChords.map(c => ({
         ...c,
@@ -249,7 +262,7 @@ function renderChordLyricWithWrap(line: SongLine, maxWidth: number): string {
       currentPos += word.length + spaceAfter;
       
       // Add relevant chords for this word
-      const wordChords = line.chords.filter(c => 
+      const wordChords = line.chords!.filter(c => 
         c.position >= wordStart && c.position < wordEnd + spaceAfter
       );
       currentChords.push(...wordChords);
@@ -270,6 +283,8 @@ function renderLyricsLine(
   line: SongLine,
   options: { maxWidth: number; wordWrap: boolean; isMobile: boolean }
 ): string {
+  if (!line.lyrics) return '';
+  
   if (!options.wordWrap || line.lyrics.length <= options.maxWidth) {
     return line.lyrics;
   }
@@ -296,115 +311,4 @@ function renderLyricsLine(
   }
   
   return lines.join('\n');
-}
-
-// Parse old format to new structured format (for the 3 existing songs)
-export function parseToStructuredFormat(content: string): SongSection[] {
-  const lines = content.split('\n');
-  const sections: SongSection[] = [];
-  let currentSection: SongSection | null = null;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    // Section headers
-    const sectionMatch = line.match(/^\[([^\]]+)\]$/);
-    if (sectionMatch) {
-      if (currentSection) {
-        sections.push(currentSection);
-      }
-      currentSection = {
-        type: sectionMatch[1].toLowerCase().replace(/\s+/g, '_'),
-        name: sectionMatch[1],
-        lines: []
-      };
-      continue;
-    }
-    
-    if (!currentSection) {
-      currentSection = {
-        type: 'unknown',
-        name: 'Unknown',
-        lines: []
-      };
-    }
-    
-    if (line === '') continue;
-    
-    // Parse line
-    const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
-    const parsedLine = parseLineToStructured(line, nextLine);
-    
-    if (parsedLine) {
-      currentSection.lines.push(parsedLine);
-      // Skip next line if it was consumed as lyrics
-      if (parsedLine.type === 'chord_lyric_pair' && nextLine && !isChordLine(nextLine)) {
-        i++; // Skip the lyrics line as it's already processed
-      }
-    }
-  }
-  
-  if (currentSection) {
-    sections.push(currentSection);
-  }
-  
-  return sections;
-}
-
-function parseLineToStructured(currentLine: string, nextLine: string): SongLine | null {
-  const isCurrentChords = isChordLine(currentLine);
-  const isNextLyrics = nextLine && !isChordLine(nextLine) && !nextLine.match(/^\[/);
-  
-  if (isCurrentChords && isNextLyrics) {
-    // Chord-lyric pair
-    return {
-      type: 'chord_lyric_pair',
-      chords: extractChordsWithPositions(currentLine),
-      lyrics: nextLine
-    };
-  } else if (isCurrentChords) {
-    // Chords only
-    return {
-      type: 'chords_only',
-      chords: extractChordsWithPositions(currentLine),
-      lyrics: ''
-    };
-  } else {
-    // Lyrics only
-    return {
-      type: 'lyrics_only',
-      chords: [],
-      lyrics: currentLine
-    };
-  }
-}
-
-function isChordLine(line: string): boolean {
-  if (!line.trim()) return false;
-  
-  // Check for spaced chords (C   G   Am   F)
-  const spaceRatio = (line.match(/\s/g) || []).length / line.length;
-  if (spaceRatio > 0.4) {
-    const words = line.trim().split(/\s+/).filter(w => w.length > 0);
-    const chordCount = words.filter(w => /^[A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?$/.test(w)).length;
-    return chordCount / words.length >= 0.7;
-  }
-  
-  // Check for concatenated chords (CGAmF)
-  return /^[A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:[A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*)+$/.test(line);
-}
-
-function extractChordsWithPositions(line: string): ChordPosition[] {
-  const chords: ChordPosition[] = [];
-  const chordRegex = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
-  let match;
-  
-  while ((match = chordRegex.exec(line)) !== null) {
-    chords.push({
-      chord: match[1],
-      position: match.index
-    });
-  }
-  
-  return chords;
 }

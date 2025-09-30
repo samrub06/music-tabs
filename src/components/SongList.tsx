@@ -37,7 +37,14 @@ export default function SongList() {
       filtered = filtered.filter(song => 
         song.title.toLowerCase().includes(query) ||
         song.author.toLowerCase().includes(query) ||
-        song.content.toLowerCase().includes(query)
+        // Search in all sections and lines for structured songs
+        song.sections?.some(section => 
+          section.name.toLowerCase().includes(query) ||
+          section.lines.some(line => 
+            line.lyrics.toLowerCase().includes(query) ||
+            line.chords.some(chord => chord.chord.toLowerCase().includes(query))
+          )
+        )
       );
     }
 

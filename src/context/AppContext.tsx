@@ -1,15 +1,15 @@
 'use client';
 
-import sampleData from '@/data/sampleData.json';
+// Backend API will provide data
 import { AppState, Folder, InstrumentType, Song } from '@/types';
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 
 interface AppContextType extends AppState {
   // Actions
-  addSong: (song: Omit<Song, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addSong: (song: Omit<Song, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateSong: (id: string, updates: Partial<Song>) => void;
   deleteSong: (id: string) => void;
-  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateFolder: (id: string, updates: Partial<Folder>) => void;
   deleteFolder: (id: string) => void;
   setCurrentSong: (song: Song | null) => void;
@@ -165,22 +165,47 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Load sample data from JSON
+  // Load data from backend API
   useEffect(() => {
-    dispatch({ type: 'LOAD_DATA', payload: sampleData as any });
+    const loadData = async () => {
+      try {
+        const response = await fetch('/api/songs');
+        if (response.ok) {
+          const data = await response.json();
+          dispatch({ type: 'LOAD_DATA', payload: data });
+        } else {
+          console.error('Failed to load data from API');
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+
+    loadData();
   }, []);
 
   const generateId = () => `id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   const actions: Omit<AppContextType, keyof AppState> = {
-    addSong: (songData) => {
-      const song: Song = {
-        ...songData,
-        id: generateId(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      dispatch({ type: 'ADD_SONG', payload: song });
+    addSong: async (songData) => {
+      try {
+        const response = await fetch('/api/songs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(songData),
+        });
+
+        if (response.ok) {
+          const newSong = await response.json();
+          dispatch({ type: 'ADD_SONG', payload: newSong });
+        } else {
+          console.error('Failed to add song');
+        }
+      } catch (error) {
+        console.error('Error adding song:', error);
+      }
     },
 
     updateSong: (id, updates) => {
@@ -191,14 +216,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'DELETE_SONG', payload: id });
     },
 
-    addFolder: (folderData) => {
-      const folder: Folder = {
-        ...folderData,
-        id: generateId(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      dispatch({ type: 'ADD_FOLDER', payload: folder });
+    addFolder: async (folderData) => {
+      try {
+        const response = await fetch('/api/folders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(folderData),
+        });
+
+        if (response.ok) {
+          const newFolder = await response.json();
+          dispatch({ type: 'ADD_FOLDER', payload: newFolder });
+        } else {
+          console.error('Failed to add folder');
+        }
+      } catch (error) {
+        console.error('Error adding folder:', error);
+      }
     },
 
     updateFolder: (id, updates) => {

@@ -1,12 +1,5 @@
-export interface Song {
-  id: string;
-  title: string;
-  author: string;
-  content: string;
-  folderId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Song is now always structured - no more legacy format
+export type Song = StructuredSong;
 
 export interface Folder {
   id: string;
@@ -32,6 +25,36 @@ export interface AutoScrollOptions {
 }
 
 export type InstrumentType = 'piano' | 'guitar';
+
+// Position-precise, compact song structure
+export interface ChordPosition {
+  chord: string;
+  position: number; // Exact character position in lyrics
+}
+
+export interface SongLine {
+  type: 'chords_only' | 'lyrics_only' | 'chord_over_lyrics';
+  lyrics?: string; // Lyrics text
+  chords?: ChordPosition[]; // Chords with exact positions
+  chord_line?: string; // Raw chord line for chords_only type
+}
+
+export interface SongSection {
+  type: string;
+  name: string;
+  lines: SongLine[];
+}
+
+export interface StructuredSong {
+  id: string;
+  title: string;
+  author: string;
+  folderId?: string;
+  format: 'structured';
+  sections: SongSection[];
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface AppState {
   songs: Song[];

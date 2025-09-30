@@ -109,17 +109,27 @@ export function transposeChord(chord: string, semitones: number): string {
   return cleanedNote + parsed.quality;
 }
 
-// Transpose all chords in a text
+// Transpose all chords in a text (smart line-by-line approach)
 export function transposeText(text: string, semitones: number): string {
   if (semitones === 0) return text;
   
-  // More aggressive regex to capture concatenated chords like GAm, DEm, etc.
+  const lines = text.split('\n');
+  const transposedLines = lines.map(line => {
+    // Only transpose lines that are identified as chord lines
+    if (isChordLine(line)) {
+      return transposeChordLine(line, semitones);
+    }
+    return line; // Keep lyrics and other lines unchanged
+  });
+  
+  return transposedLines.join('\n');
+}
+
+// Transpose chords in a single line
+function transposeChordLine(line: string, semitones: number): string {
   const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
   
-  return text.replace(chordPattern, (match, chord, offset) => {
-    // Additional validation to avoid false positives in lyrics
-    if (isPartOfWord(match, text, offset)) return match;
-    
+  return line.replace(chordPattern, (match, chord) => {
     return transposeChord(chord, semitones);
   });
 }
@@ -147,13 +157,23 @@ function isPartOfWord(match: string, text: string, offset: number): boolean {
 export function isChordLine(line: string): boolean {
   if (!line.trim()) return false;
   
-  // Check for chord patterns
-  const chordPattern = /\b[A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/g;
-  const matches = line.match(chordPattern) || [];
-  const words = line.trim().split(/\s+/);
+  // Skip section headers like [Intro], [Verse 1], etc.
+  if (line.trim().startsWith('[') && line.trim().endsWith(']')) return false;
   
-  // If more than 60% of words are chords, consider it a chord line
-  return words.length > 0 && (matches.length / words.length) >= 0.6;
+  // Skip lines that start with common French/English words (likely lyrics)
+  const lyricsIndicators = /^(je|tu|il|elle|on|nous|vous|ils|elles|le|la|les|un|une|des|du|de|et|ou|mais|donc|car|ni|or|i|you|he|she|we|they|the|a|an|and|or|but|so|for|nor|yet)/i;
+  if (lyricsIndicators.test(line.trim())) return false;
+  
+  // Check for chord patterns (more aggressive)
+  const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+  const matches = line.match(chordPattern) || [];
+  
+  // For concatenated chords (like GAm, DEm), check if the entire line is mostly chords
+  const totalChordLength = matches.join('').length;
+  const lineWithoutSpaces = line.replace(/\s/g, '');
+  
+  // If 70% of non-space characters are chords, it's a chord line
+  return lineWithoutSpaces.length > 0 && (totalChordLength / lineWithoutSpaces.length) >= 0.7;
 }
 
 // Generate piano voicings for a chord

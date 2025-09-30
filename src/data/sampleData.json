@@ -21,10 +21,85 @@
   ],
   "songs": [
     {
-      "id": "song-5",
-      "title": "Test Transposition",
-      "author": "Test",
-      "folderId": "folder-1",
+      "id": "song-1759220560025-sbcpvhj6o",
+      "title": "Ok",
+      "author": "",
+      "format": "structured",
+      "sections": [
+        {
+          "type": "intro",
+          "name": "Metadata",
+          "lines": [
+            {
+              "type": "lyrics_only",
+              "lyrics": "🎸 Capo 2"
+            }
+          ]
+        },
+        {
+          "type": "intro",
+          "name": "Intro",
+          "lines": [
+            {
+              "type": "chords_only",
+              "chord_line": "G# C# C# D#"
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "name": "Verse 1",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Je suis une cruche,",
+              "chords": [
+                {
+                  "chord": "Fm",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "percée de plus,",
+              "chords": [
+                {
+                  "chord": "A#m",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "j'ai la peau craquelée",
+              "chords": [
+                {
+                  "chord": "D",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "depuis toi, desséchée",
+              "chords": [
+                {
+                  "chord": "Fm",
+                  "position": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "createdAt": "2025-09-30T08:22:40.025Z",
+      "updatedAt": "2025-09-30T08:22:40.025Z"
+    },
+    {
+      "id": "song-1759220645938-o0xvvkeds",
+      "title": "OKI",
+      "author": "",
       "format": "structured",
       "sections": [
         {
@@ -33,69 +108,737 @@
           "lines": [
             {
               "type": "chords_only",
-              "chords": [
-                {"chord": "C", "position": 0},
-                {"chord": "C#", "position": 5},
-                {"chord": "D", "position": 10},
-                {"chord": "D#", "position": 15},
-                {"chord": "E", "position": 20},
-                {"chord": "F", "position": 25}
-              ],
-              "lyrics": ""
+              "chord_line": "|Em  D  G|        |"
             },
             {
               "type": "chords_only",
-              "chords": [
-                {"chord": "F#", "position": 0},
-                {"chord": "G", "position": 5},
-                {"chord": "G#", "position": 10},
-                {"chord": "A", "position": 15},
-                {"chord": "A#", "position": 20},
-                {"chord": "B", "position": 25}
-              ],
+              "chord_line": "|C       |G  D    |"
+            },
+            {
+              "type": "chords_only",
+              "chord_line": "|Em  D  G|        |"
+            },
+            {
+              "type": "lyrics_only",
               "lyrics": ""
             }
           ]
         },
         {
           "type": "verse",
-          "name": "Verse",
+          "name": "Verse 1",
           "lines": [
             {
-              "type": "chords_only",
+              "type": "chord_over_lyrics",
+              "lyrics": "Tell me somethin' girl",
               "chords": [
-                {"chord": "C", "position": 0},
-                {"chord": "F", "position": 1},
-                {"chord": "G", "position": 2},
-                {"chord": "Am", "position": 3}
-              ],
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 9
+                },
+                {
+                  "chord": "G",
+                  "position": 19
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Are you happy in this modern world?",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                },
+                {
+                  "chord": "G",
+                  "position": 22
+                },
+                {
+                  "chord": "D",
+                  "position": 30
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Or do you need more",
+              "chords": [
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 7
+                },
+                {
+                  "chord": "G",
+                  "position": 17
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Is there somethin' else you're searchin' for?",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                },
+                {
+                  "chord": "G",
+                  "position": 31
+                },
+                {
+                  "chord": "D",
+                  "position": 41
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "name": "Refrain",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I'm fallin'",
+              "chords": [
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 4
+                },
+                {
+                  "chord": "G",
+                  "position": 7
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In all the good times",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I find myself longin'      for change",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 2
+                },
+                {
+                  "chord": "D",
+                  "position": 9
+                },
+                {
+                  "chord": "Em",
+                  "position": 22
+                },
+                {
+                  "chord": "D",
+                  "position": 27
+                },
+                {
+                  "chord": "G",
+                  "position": 31
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "And in the bad times I fear myself",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                },
+                {
+                  "chord": "G",
+                  "position": 23
+                },
+                {
+                  "chord": "D",
+                  "position": 30
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            },
+            {
+              "type": "chords_only",
+              "chord_line": "|Em  D  G|        |"
+            },
+            {
+              "type": "chords_only",
+              "chord_line": "|Em  D  G|        |"
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "verse",
+          "name": "Verse 2",
+          "lines": [
+            {
+              "type": "lyrics_only",
+              "lyrics": "Page 1/3"
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Tell me something boy",
+              "chords": [
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 11
+                },
+                {
+                  "chord": "G",
+                  "position": 21
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Aren't you tired tryin' to fill that void?",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                },
+                {
+                  "chord": "G",
+                  "position": 28
+                },
+                {
+                  "chord": "D",
+                  "position": 38
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Or do you need more",
+              "chords": [
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 6
+                },
+                {
+                  "chord": "G",
+                  "position": 17
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Ain't it hard keepin' it so hardcore?",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                },
+                {
+                  "chord": "G",
+                  "position": 25
+                },
+                {
+                  "chord": "D",
+                  "position": 32
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "name": "Refrain",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I'm falling",
+              "chords": [
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 4
+                },
+                {
+                  "chord": "G",
+                  "position": 7
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In all the good times",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I find myself longing      for change",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 2
+                },
+                {
+                  "chord": "D",
+                  "position": 10
+                },
+                {
+                  "chord": "Em",
+                  "position": 22
+                },
+                {
+                  "chord": "D",
+                  "position": 27
+                },
+                {
+                  "chord": "G",
+                  "position": 31
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "And in the bad times I fear myself",
+              "chords": [
+                {
+                  "chord": "C",
+                  "position": 0
+                },
+                {
+                  "chord": "G",
+                  "position": 23
+                },
+                {
+                  "chord": "D",
+                  "position": 30
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "chorus",
+          "name": "Chorus",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I'm off the deep end",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Watch as I dive in",
+              "chords": [
+                {
+                  "chord": "D",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I'll never meet the ground",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 1
+                },
+                {
+                  "chord": "D",
+                  "position": 12
+                },
+                {
+                  "chord": "Em",
+                  "position": 20
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Crash through the surface",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Where they can't hurt us",
+              "chords": [
+                {
+                  "chord": "D",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "We're far from the shallow now",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 7
+                },
+                {
+                  "chord": "D",
+                  "position": 21
+                },
+                {
+                  "chord": "Em",
+                  "position": 28
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "bridge",
+          "name": "Bridge",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In the sha-ha-sha-ha-low",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 14
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In the sha-sha-la-la-la-low",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 7
+                },
+                {
+                  "chord": "Em",
+                  "position": 16
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In the sha-ha-sha-ha-low",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 14
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "We're far from the shallow now",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 6
+                },
+                {
+                  "chord": "D",
+                  "position": 21
+                },
+                {
+                  "chord": "Em",
+                  "position": 28
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
               "lyrics": ""
             },
             {
               "type": "lyrics_only",
-              "chords": [],
-              "lyrics": "Test de transposition complète"
+              "lyrics": "(GAGA BUILD UP)"
             },
             {
-              "type": "chords_only",
+              "type": "chord_over_lyrics",
+              "lyrics": "oooohhhhh   oahhhhhhh,   oahhhhhhhhhhhhhhhhhhhhhhhhhhhh",
               "chords": [
-                {"chord": "Dm", "position": 0},
-                {"chord": "G", "position": 2},
-                {"chord": "C", "position": 3},
-                {"chord": "C", "position": 4}
-              ],
+                {
+                  "chord": "Em",
+                  "position": 0
+                },
+                {
+                  "chord": "Bm",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 11
+                },
+                {
+                  "chord": "A",
+                  "position": 18
+                },
+                {
+                  "chord": "Em",
+                  "position": 24
+                },
+                {
+                  "chord": "Bm",
+                  "position": 31
+                },
+                {
+                  "chord": "D",
+                  "position": 38
+                },
+                {
+                  "chord": "A",
+                  "position": 45
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
               "lyrics": ""
             },
             {
               "type": "lyrics_only",
-              "chords": [],
-              "lyrics": "Tous les tons et demi-tons"
+              "lyrics": "[Chorus] (strum once and hold)"
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I'm off the deep end",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Watch as I dive in",
+              "chords": [
+                {
+                  "chord": "D",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "I'll never meet the ground",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 1
+                },
+                {
+                  "chord": "D",
+                  "position": 12
+                },
+                {
+                  "chord": "Em",
+                  "position": 20
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Crash through the surface",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": "Page 2/3"
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Where they can't hurt us",
+              "chords": [
+                {
+                  "chord": "D",
+                  "position": 0
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "We're far from the shallow now",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 7
+                },
+                {
+                  "chord": "D",
+                  "position": 20
+                },
+                {
+                  "chord": "Em",
+                  "position": 27
+                }
+              ]
+            },
+            {
+              "type": "lyrics_only",
+              "lyrics": ""
+            }
+          ]
+        },
+        {
+          "type": "outro",
+          "name": "Outro",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In the sha-ha-sha-ha-low",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 14
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In the sha-sha-la-la-la-low",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 7
+                },
+                {
+                  "chord": "Em",
+                  "position": 16
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "In the sha-ha-sha-ha-low",
+              "chords": [
+                {
+                  "chord": "Am",
+                  "position": 0
+                },
+                {
+                  "chord": "D",
+                  "position": 14
+                }
+              ]
+            },
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "We're far from the shallow now",
+              "chords": [
+                {
+                  "chord": "G",
+                  "position": 6
+                },
+                {
+                  "chord": "D",
+                  "position": 21
+                },
+                {
+                  "chord": "Em",
+                  "position": 28
+                },
+                {
+                  "chord": "Em",
+                  "position": 30
+                }
+              ]
             }
           ]
         }
       ],
-      "createdAt": "2024-01-15T11:00:00.000Z",
-      "updatedAt": "2024-01-15T11:00:00.000Z"
+      "createdAt": "2025-09-30T08:24:05.938Z",
+      "updatedAt": "2025-09-30T08:24:05.938Z"
     }
   ]
 }

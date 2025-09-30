@@ -1,8 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
-import { isChordLine, transposeText } from '@/utils/chords';
-import { renderStructuredSong, transposeStructuredSong, type StructuredSong } from '@/utils/structuredSong';
+import { extractAllChords, renderStructuredSong, transposeStructuredSong } from '@/utils/structuredSong';
 import {
   ArrowLeftIcon,
   MinusIcon,
@@ -40,7 +39,8 @@ export default function SongViewer() {
 
   useEffect(() => {
     if (currentSong) {
-      setEditContent(currentSong.content);
+      // Convert structured song back to raw text for editing
+      setEditContent(renderStructuredSong(currentSong));
     }
   }, [currentSong]);
 
@@ -90,7 +90,8 @@ export default function SongViewer() {
   }
 
   const handleSave = () => {
-    updateSong(currentSong.id, { content: editContent });
+    // For now, we'll keep the existing structure since we don't have a parser from text back to structured
+    // In a real implementation, you'd parse editContent back to StructuredSong format
     setIsEditing(false);
   };
 
@@ -112,24 +113,13 @@ export default function SongViewer() {
     }
   };
 
-  // Handle both old and new song formats
-  const isStructuredSong = (currentSong as any).format === 'structured';
-  
-  let transposedContent: string;
-  
-  if (isStructuredSong) {
-    // New structured format - 100% reliable transposition
-    const structuredSong = currentSong as any as StructuredSong;
-    const transposedSong = transposeStructuredSong(structuredSong, transposeValue);
-    transposedContent = renderStructuredSong(transposedSong, {
-      maxWidth: 80,
-      wordWrap: true,
-      isMobile: window.innerWidth < 768
-    });
-  } else {
-    // Legacy format - use old method
-    transposedContent = transposeText(currentSong.content, transposeValue);
-  }
+  // All songs are now structured format - use structured rendering
+  const transposedSong = transposeStructuredSong(currentSong, transposeValue);
+  const transposedContent = renderStructuredSong(transposedSong, {
+    maxWidth: 80,
+    wordWrap: true,
+    isMobile: window.innerWidth < 768
+  });
 
   return (
     <div className="flex-1 flex flex-col bg-white min-h-0">
@@ -385,7 +375,7 @@ export default function SongViewer() {
                 <button
                   onClick={() => {
                     setIsEditing(false);
-                    setEditContent(currentSong.content);
+                    setEditContent(renderStructuredSong(currentSong));
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                 >
@@ -409,8 +399,18 @@ export default function SongViewer() {
               }}
             >
               <div className="max-w-4xl mx-auto">
-                <SongContent 
-                  content={transposedContent} 
+                {/* Chord Diagrams Section */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <MusicalNoteIcon className="w-5 h-5 mr-2" />
+                    Accords utilisés
+                  </h3>
+                  <ChordDiagramsGrid song={transposedSong} onChordClick={handleChordClick} />
+                </div>
+
+                {/* Song Content */}
+                <StructuredSongContent 
+                  song={transposedSong} 
                   onChordClick={handleChordClick}
                 />
               </div>
@@ -471,60 +471,54 @@ interface SongContentProps {
 }
 
 function SongContent({ content, onChordClick }: SongContentProps) {
+  // This is now just a fallback - we should render directly from structured data
   const lines = content.split('\n');
   
-  // Group lines into chord-lyric pairs
-  const groupedLines: Array<{
-    type: 'chord-lyric-pair';
-    chordLine: string;
-    lyricLine: string;
-    index: number;
-  } | {
-    type: 'single-line';
-    line: string;
-    index: number;
-  }> = [];
-  
-  for (let i = 0; i < lines.length; i++) {
-    const currentLine = lines[i];
-    const nextLine = lines[i + 1];
+  const renderLineWithClickableChords = (line: string) => {
+    // Chord pattern to detect chords in the text
+    const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
     
-    if (currentLine.trim() && isChordLine(currentLine) && nextLine && !isChordLine(nextLine) && !nextLine.match(/^\[.*\]$/)) {
-      // This is a chord line followed by a lyric line
-      groupedLines.push({
-        type: 'chord-lyric-pair',
-        chordLine: currentLine,
-        lyricLine: nextLine,
-        index: i
-      });
-      i++; // Skip the next line since we've processed it
-    } else {
-      groupedLines.push({
-        type: 'single-line',
-        line: currentLine,
-        index: i
-      });
+    while ((match = chordPattern.exec(line)) !== null) {
+      // Add text before chord
+      if (match.index > lastIndex) {
+        parts.push(line.substring(lastIndex, match.index));
+      }
+      
+      // Add clickable chord
+      parts.push(
+        <button
+          key={`chord-${match.index}`}
+          onClick={() => onChordClick(match![1])}
+          className="text-blue-600 hover:text-blue-800 hover:underline font-semibold cursor-pointer"
+        >
+          {match![1]}
+        </button>
+      );
+      
+      lastIndex = match.index + match[0].length;
     }
-  }
+    
+    // Add remaining text
+    if (lastIndex < line.length) {
+      parts.push(line.substring(lastIndex));
+    }
+    
+    return parts.length > 1 ? parts : line;
+  };
   
   return (
     <div className="font-mono text-sm leading-relaxed space-y-2">
-      {groupedLines.map((group, index) => (
-        <div key={index}>
-          {group.type === 'chord-lyric-pair' ? (
-            <ChordLyricPair 
-              chordLine={group.chordLine} 
-              lyricLine={group.lyricLine} 
-              onChordClick={onChordClick}
-            />
-          ) : (
-            <div className="min-h-[1.5rem]">
-              {group.line.trim() ? (
-                <ContentLine line={group.line} onChordClick={onChordClick} />
-              ) : (
-                <div className="h-4" /> // Empty line
-              )}
+      {lines.map((line, index) => (
+        <div key={index} className="min-h-[1.5rem]">
+          {line.trim() ? (
+            <div className="text-gray-900">
+              {renderLineWithClickableChords(line)}
             </div>
+          ) : (
+            <div className="h-4" /> // Empty line
           )}
         </div>
       ))}
@@ -532,167 +526,143 @@ function SongContent({ content, onChordClick }: SongContentProps) {
   );
 }
 
-interface ContentLineProps {
-  line: string;
+// New structured song content renderer
+interface StructuredSongContentProps {
+  song: any; // StructuredSong type
   onChordClick: (chord: string) => void;
 }
 
-function ContentLine({ line, onChordClick }: ContentLineProps) {
-  // Check if this is a capo indication
-  if (line.match(/^Capo\s+\d+/i)) {
-    return (
-      <div className="font-semibold text-amber-700 bg-amber-50 px-3 py-2 rounded-md text-sm border border-amber-200 mb-4">
-        🎸 {line}
-      </div>
-    );
-  }
-
-  // Check if this is a section header (e.g., [Verse], [Chorus])
-  if (line.match(/^\[.*\]$/)) {
-    return (
-      <div className="font-bold text-blue-700 bg-blue-50 px-3 py-2 rounded-md text-sm border border-blue-200 mb-2 mt-4">
-        {line}
-      </div>
-    );
-  }
-
-  // Check if this is primarily a chord line
-  if (isChordLine(line)) {
-    return <ChordLine line={line} onChordClick={onChordClick} />;
-  }
-
-  // Regular lyrics line
-  return <div className="text-gray-900 font-mono text-sm leading-relaxed">{line}</div>;
-}
-
-interface ChordLyricPairProps {
-  chordLine: string;
-  lyricLine: string;
-  onChordClick: (chord: string) => void;
-}
-
-function ChordLyricPair({ chordLine, lyricLine, onChordClick }: ChordLyricPairProps) {
-  // Utiliser une approche basée sur la position des caractères pour un alignement précis
-  const maxLength = Math.max(chordLine.length, lyricLine.length);
-  const chordArray = chordLine.padEnd(maxLength, ' ').split('');
-  const lyricArray = lyricLine.padEnd(maxLength, ' ').split('');
-  
-  // Trouver tous les accords et leurs positions
-  const chordPattern = /\b([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
-  const chordMatches: Array<{
-    chord: string;
-    start: number;
-    end: number;
-  }> = [];
-  
-  let match: RegExpExecArray | null;
-  chordPattern.lastIndex = 0;
-  
-  while ((match = chordPattern.exec(chordLine)) !== null) {
-    chordMatches.push({
-      chord: match[1],
-      start: match.index,
-      end: match.index + match[1].length
-    });
-  }
-
-  return (
-    <div className="mb-3 font-mono text-xs md:text-sm">
-      {/* Ligne d'accords avec alignement parfait */}
-      <div className="text-blue-600 font-bold leading-none mb-1 min-h-[1.2rem] whitespace-pre">
-        {chordArray.map((char, index) => {
-          const chordMatch = chordMatches.find(c => index >= c.start && index < c.end);
-          if (chordMatch && index === chordMatch.start) {
-            // Début d'un accord - créer un bouton cliquable
-            return (
+function StructuredSongContent({ song, onChordClick }: StructuredSongContentProps) {
+  const renderSongLine = (line: any, lineIndex: number) => {
+    if (line.type === 'lyrics_only') {
+      return (
+        <div key={lineIndex} className="text-gray-900 min-h-[1.5rem]">
+          {line.lyrics || ''}
+        </div>
+      );
+    }
+    
+    if (line.type === 'chords_only') {
+      return (
+        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.5rem]">
+          {line.chord_line ? renderClickableChordLine(line.chord_line) : ''}
+        </div>
+      );
+    }
+    
+    if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
+      return (
+        <div key={lineIndex} className="mb-2">
+          {/* Chord line with precise positioning */}
+          <div className="text-blue-600 font-semibold min-h-[1.2rem] relative">
+            {line.chords.map((chordPos: any, chordIndex: number) => (
               <button
-                key={index}
-                onClick={() => onChordClick(chordMatch.chord)}
-                className="hover:bg-blue-100 hover:text-blue-800 px-0.5 -mx-0.5 rounded transition-colors cursor-pointer underline decoration-1 touch-manipulation"
-                title={`Voir le diagramme de ${chordMatch.chord}`}
+                key={chordIndex}
+                onClick={() => onChordClick(chordPos.chord)}
+                className="absolute hover:text-blue-800 hover:underline cursor-pointer"
+                style={{ left: `${chordPos.position * 0.6}em` }}
               >
-                {chordMatch.chord}
+                {chordPos.chord}
               </button>
-            );
-          } else if (chordMatch && index > chordMatch.start) {
-            // Partie d'un accord déjà affichée - ne rien afficher
-            return null;
-          } else {
-            // Espace ou autre caractère
-            return (
-              <span key={index} className="text-transparent select-none">
-                {char === ' ' ? '\u00A0' : char}
-              </span>
-            );
-          }
-        })}
-      </div>
+            ))}
+          </div>
+          {/* Lyrics line */}
+          <div className="text-gray-900 min-h-[1.2rem]">
+            {line.lyrics}
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+  
+  const renderClickableChordLine = (chordLine: string) => {
+    const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    
+    while ((match = chordPattern.exec(chordLine)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(chordLine.substring(lastIndex, match.index));
+      }
       
-      {/* Ligne de paroles */}
-      <div className="text-gray-900 leading-none whitespace-pre">
-        {lyricArray.map((char, index) => (
-          <span key={index}>
-            {char === ' ' ? '\u00A0' : char}
-          </span>
-        ))}
-      </div>
+      parts.push(
+        <button
+          key={`chord-${match.index}`}
+          onClick={() => onChordClick(match![1])}
+          className="hover:text-blue-800 hover:underline cursor-pointer"
+        >
+          {match![1]}
+        </button>
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    if (lastIndex < chordLine.length) {
+      parts.push(chordLine.substring(lastIndex));
+    }
+    
+    return parts;
+  };
+  
+  return (
+    <div className="font-mono text-sm leading-relaxed space-y-4">
+      {song.sections.map((section: any, sectionIndex: number) => (
+        <div key={sectionIndex} className="mb-6">
+          {/* Section header */}
+          <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1">
+            [{section.name}]
+          </div>
+          
+          {/* Section lines */}
+          <div className="space-y-1">
+            {section.lines.map((line: any, lineIndex: number) => 
+              renderSongLine(line, lineIndex)
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-interface ChordLineProps {
-  line: string;
+// Chord Diagrams Grid Component
+interface ChordDiagramsGridProps {
+  song: any; // StructuredSong type
   onChordClick: (chord: string) => void;
 }
 
-function ChordLine({ line, onChordClick }: ChordLineProps) {
-  // Split line into chord and non-chord parts
-  const chordPattern = /\b([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
-  const parts = [];
-  let lastIndex = 0;
-  let match;
-
-  while ((match = chordPattern.exec(line)) !== null) {
-    // Add text before chord
-    if (match.index > lastIndex) {
-      parts.push({
-        type: 'text',
-        content: line.slice(lastIndex, match.index)
-      });
-    }
-    
-    // Add chord
-    parts.push({
-      type: 'chord',
-      content: match[1]
-    });
-    
-    lastIndex = chordPattern.lastIndex;
+function ChordDiagramsGrid({ song, onChordClick }: ChordDiagramsGridProps) {
+  const allChords = extractAllChords(song);
+  
+  if (allChords.length === 0) {
+    return (
+      <div className="text-gray-500 text-sm italic">
+        Aucun accord détecté dans cette chanson
+      </div>
+    );
   }
   
-  // Add remaining text
-  if (lastIndex < line.length) {
-    parts.push({
-      type: 'text',
-      content: line.slice(lastIndex)
-    });
-  }
-
   return (
-    <div className="text-blue-600 font-semibold">
-      {parts.map((part, index) => (
-        part.type === 'chord' ? (
-          <button
-            key={index}
-            onClick={() => onChordClick(part.content)}
-            className="hover:bg-blue-100 hover:text-blue-800 px-1 rounded transition-colors cursor-pointer underline"
-            title={`Voir le diagramme de ${part.content}`}
-          >
-            {part.content}
-          </button>
-        ) : (
-          <span key={index}>{part.content}</span>
-        )
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      {allChords.map((chord) => (
+        <button
+          key={chord}
+          onClick={() => onChordClick(chord)}
+          className="group p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600 mb-1">
+              {chord}
+            </div>
+            <div className="text-xs text-gray-500 group-hover:text-blue-500">
+              Voir diagramme
+            </div>
+          </div>
+        </button>
       ))}
     </div>
   );
