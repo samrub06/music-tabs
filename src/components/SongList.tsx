@@ -41,8 +41,8 @@ export default function SongList() {
         song.sections?.some(section => 
           section.name.toLowerCase().includes(query) ||
           section.lines.some(line => 
-            line.lyrics.toLowerCase().includes(query) ||
-            line.chords.some(chord => chord.chord.toLowerCase().includes(query))
+            line.lyrics?.toLowerCase().includes(query) ||
+            line.chords?.some(chord => chord.chord.toLowerCase().includes(query))
           )
         )
       );

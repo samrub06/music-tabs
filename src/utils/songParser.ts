@@ -119,7 +119,7 @@ function parseLinePattern(currentLine: string, nextLine?: string): SongLine | nu
     // Check if next line is lyrics (chord over lyrics pattern)
     if (trimmedNext && !isPureChordLine(trimmedNext) && !trimmedNext.match(/^\[.*\]$/)) {
       // Calculate precise chord positions
-      const chordPositions = calculateChordPositions(currentLine, nextLine);
+      const chordPositions = calculateChordPositions(currentLine, nextLine || '');
       
       return {
         type: 'chord_over_lyrics',

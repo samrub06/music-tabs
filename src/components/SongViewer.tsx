@@ -442,7 +442,7 @@ export default function SongViewer() {
             </div>
 
             {/* Desktop Sidebar */}
-            <div className="hidden md:block w-80 border-l border-gray-200 bg-white">
+            <div className="hidden md:block w-96 border-l border-gray-200 bg-white">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Diagramme d&apos;accord

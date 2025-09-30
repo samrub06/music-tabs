@@ -160,34 +160,56 @@ function PianoDiagram({ chord }: { chord: string }) {
   
   if (voicings.length === 0) {
     return (
-      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="p-4 bg-gradient-to-b from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200 shadow-md">
         <div className="text-center">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">{chord} - Piano</h4>
-          <p className="text-sm text-gray-500">Accord non reconnu</p>
+          <h4 className="text-lg font-bold text-blue-900 mb-2">{chord}</h4>
+          <p className="text-sm text-blue-700">🎹 Piano</p>
+          <p className="text-sm text-blue-500 mt-2">Accord non reconnu</p>
         </div>
       </div>
     );
   }
   
+  // Determine chord quality for title
+  const getChordQuality = (chord: string) => {
+    if (chord.toLowerCase().includes('m') && !chord.toLowerCase().includes('maj')) {
+      return 'Minor';
+    }
+    if (chord.includes('7')) {
+      return chord.toLowerCase().includes('maj') ? 'Major 7th' : '7th';
+    }
+    return 'Major';
+  };
+
+  const inversionNames = ['Root Position', 'First Inversion', 'Second Inversion'];
+  
   return (
-    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-      <div className="text-center mb-4">
-        <h4 className="text-sm font-semibold text-gray-900">{chord} - Piano</h4>
+    <div className="p-4 bg-gradient-to-b from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200 shadow-md">
+      <div className="text-center mb-6">
+        <h4 className="text-xl font-bold text-blue-900 mb-1 border-b-2 border-blue-800 inline-block px-2">
+          {chord} {getChordQuality(chord)}
+        </h4>
+        <p className="text-sm text-blue-700 mt-2">🎹 Piano</p>
       </div>
       
-      {voicings.map((voicing, index) => (
-        <div key={index} className="mb-4 last:mb-0">
-          <div className="text-center text-xs text-gray-600 mb-2">
-            {voicing}
+      <div className="space-y-6">
+        {voicings.slice(0, 3).map((voicing, index) => (
+          <div key={index} className="text-center">
+            <h5 className="text-sm font-semibold text-blue-800 mb-3">
+              {inversionNames[index]}
+            </h5>
+            <PianoKeyboard 
+              activeNotes={voicing.split(' ')} 
+              showNoteNames={true}
+            />
           </div>
-          <PianoKeyboard activeNotes={voicing.split(' ')} />
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
-function PianoKeyboard({ activeNotes }: { activeNotes: string[] }) {
+function PianoKeyboard({ activeNotes, showNoteNames = false }: { activeNotes: string[]; showNoteNames?: boolean }) {
   const keys = [
     { note: 'C', type: 'white' },
     { note: 'C#', type: 'black' },
@@ -204,7 +226,7 @@ function PianoKeyboard({ activeNotes }: { activeNotes: string[] }) {
   ];
   
   return (
-    <div className="relative flex justify-center items-end h-20">
+    <div className="relative flex justify-center items-start h-20">
       {keys.map((key) => {
         const isActive = activeNotes.includes(key.note);
         const isBlack = key.type === 'black';
@@ -217,17 +239,32 @@ function PianoKeyboard({ activeNotes }: { activeNotes: string[] }) {
                 ? 'w-4 h-12 bg-gray-900 -mx-2 z-10 relative' 
                 : 'w-7 h-20 bg-white border border-gray-300'
               }
-              ${isActive && isBlack ? 'bg-orange-500' : ''}
-              ${isActive && !isBlack ? 'bg-yellow-200' : ''}
+              ${isActive && isBlack ? 'bg-blue-600' : ''}
+              ${isActive && !isBlack ? 'bg-blue-200' : ''}
               flex items-end justify-center pb-1
             `}
           >
-            <span className="text-xs text-gray-600 select-none">
-              {key.note.replace('#', '♯')}
+            <span className={`text-xs select-none ${
+              isActive 
+                ? isBlack 
+                  ? 'text-white font-semibold' 
+                  : 'text-blue-800 font-semibold'
+                : ''
+            }`}>
+              {isActive ? key.note.replace('#', '♯') : ''}
             </span>
           </div>
         );
       })}
+      
+      {/* Note labels below for active notes */}
+      {showNoteNames && (
+        <div className="mt-3 text-center">
+          <div className="text-sm font-medium text-gray-700 bg-gray-100 rounded px-3 py-1 inline-block">
+            {activeNotes.map(note => note.replace('#', '♯')).join(' - ')}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

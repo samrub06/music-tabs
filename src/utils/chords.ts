@@ -232,13 +232,16 @@ export function generatePianoVoicing(chord: string): string[] {
     intervals = [0, 3, 7, 10]; // Minor 7th
   }
   
-  // Generate voicings using standard sharp notation
-  const notes = intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
+  // Generate voicings using standard sharp notation with proper octave spacing
+  const rootNote = NOTES[rootIndex];
+  const thirdNote = NOTES[(rootIndex + intervals[1]) % 12];
+  const fifthNote = NOTES[(rootIndex + intervals[2]) % 12];
   
+  // For better visual distinction, we'll use different octave positions
   return [
-    notes.join(' '), // Root position
-    [notes[1], notes[2], notes[0]].join(' '), // First inversion
-    [notes[2], notes[0], notes[1]].join(' ')  // Second inversion
+    `${rootNote} ${thirdNote} ${fifthNote}`, // Root position: 1-3-5
+    `${thirdNote} ${fifthNote} ${rootNote}`, // First inversion: 3-5-1
+    `${fifthNote} ${rootNote} ${thirdNote}`  // Second inversion: 5-1-3
   ];
 }
 

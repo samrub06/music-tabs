@@ -1,12 +1,12 @@
 'use client';
 
 // Backend API will provide data
-import { AppState, Folder, InstrumentType, Song } from '@/types';
+import { AppState, Folder, InstrumentType, Song, NewSongData } from '@/types';
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 
 interface AppContextType extends AppState {
   // Actions
-  addSong: (song: Omit<Song, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addSong: (songData: NewSongData) => Promise<void>;
   updateSong: (id: string, updates: Partial<Song>) => void;
   deleteSong: (id: string) => void;
   addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;

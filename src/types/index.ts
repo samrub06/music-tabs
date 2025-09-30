@@ -56,6 +56,14 @@ export interface StructuredSong {
   updatedAt: Date;
 }
 
+// Type pour ajouter une nouvelle chanson (avec contenu texte)
+export interface NewSongData {
+  title: string;
+  author: string;
+  content: string;
+  folderId?: string;
+}
+
 export interface AppState {
   songs: Song[];
   folders: Folder[];
