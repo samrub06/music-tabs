@@ -1,6 +1,6 @@
 'use client';
 
-// Backend API will provide data
+import { folderService, songService } from '@/lib/services/songService';
 import { AppState, Folder, InstrumentType, NewSongData, Song, SongEditData } from '@/types';
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 
@@ -159,19 +159,18 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Load data from backend API
+  // Load data from Supabase
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch('/api/songs');
-        if (response.ok) {
-          const data = await response.json();
-          dispatch({ type: 'LOAD_DATA', payload: data });
-        } else {
-          console.error('Failed to load data from API');
-        }
+        const [songs, folders] = await Promise.all([
+          songService.getAllSongs(),
+          folderService.getAllFolders()
+        ]);
+        
+        dispatch({ type: 'LOAD_DATA', payload: { songs, folders } });
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading data from Supabase:', error);
       }
     };
 
@@ -183,20 +182,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const actions: Omit<AppContextType, keyof AppState> = {
     addSong: async (songData) => {
       try {
-        const response = await fetch('/api/songs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(songData),
-        });
-
-        if (response.ok) {
-          const newSong = await response.json();
-          dispatch({ type: 'ADD_SONG', payload: newSong });
-        } else {
-          console.error('Failed to add song');
-        }
+        const newSong = await songService.createSong(songData);
+        dispatch({ type: 'ADD_SONG', payload: newSong });
       } catch (error) {
         console.error('Error adding song:', error);
       }
@@ -204,30 +191,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     updateSong: async (id, updates) => {
       try {
-        // Préparer les données pour l'API
-        const songData = {
-          id,
-          title: updates.title,
-          author: updates.author,
-          content: updates.content,
-          folderId: updates.folderId
-        };
-
-        const response = await fetch('/api/songs', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(songData),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update song');
-        }
-
-        const updatedSong = await response.json();
-        
-        // Mettre à jour le state local
+        const updatedSong = await songService.updateSong(id, updates);
         dispatch({ type: 'UPDATE_SONG', payload: { id, updates: updatedSong } });
       } catch (error) {
         console.error('Error updating song:', error);
@@ -235,37 +199,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     },
 
-    deleteSong: (id) => {
-      dispatch({ type: 'DELETE_SONG', payload: id });
+    deleteSong: async (id) => {
+      try {
+        await songService.deleteSong(id);
+        dispatch({ type: 'DELETE_SONG', payload: id });
+      } catch (error) {
+        console.error('Error deleting song:', error);
+      }
     },
 
     addFolder: async (folderData) => {
       try {
-        const response = await fetch('/api/folders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(folderData),
-        });
-
-        if (response.ok) {
-          const newFolder = await response.json();
-          dispatch({ type: 'ADD_FOLDER', payload: newFolder });
-        } else {
-          console.error('Failed to add folder');
-        }
+        const newFolder = await folderService.createFolder(folderData);
+        dispatch({ type: 'ADD_FOLDER', payload: newFolder });
       } catch (error) {
         console.error('Error adding folder:', error);
       }
     },
 
-    updateFolder: (id, updates) => {
-      dispatch({ type: 'UPDATE_FOLDER', payload: { id, updates } });
+    updateFolder: async (id, updates) => {
+      try {
+        const updatedFolder = await folderService.updateFolder(id, updates);
+        dispatch({ type: 'UPDATE_FOLDER', payload: { id, updates: updatedFolder } });
+      } catch (error) {
+        console.error('Error updating folder:', error);
+      }
     },
 
-    deleteFolder: (id) => {
-      dispatch({ type: 'DELETE_FOLDER', payload: id });
+    deleteFolder: async (id) => {
+      try {
+        await folderService.deleteFolder(id);
+        dispatch({ type: 'DELETE_FOLDER', payload: id });
+      } catch (error) {
+        console.error('Error deleting folder:', error);
+      }
     },
 
 
@@ -275,6 +242,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setSearchQuery: (query) => {
       dispatch({ type: 'SET_SEARCH_QUERY', payload: query });
+    },
+
+    searchSongs: async (query) => {
+      try {
+        const songs = await songService.searchSongs(query);
+        // Mettre à jour le state avec les résultats de recherche
+        dispatch({ type: 'LOAD_DATA', payload: { songs, folders: state.folders } });
+      } catch (error) {
+        console.error('Error searching songs:', error);
+      }
     },
 
     setSelectedInstrument: (instrument) => {
