@@ -1,4 +1,5 @@
 import type { Folder, NewSongData, Song, SongEditData } from '@/types';
+import { parseTextToStructuredSong } from '@/utils/songParser';
 import { supabase } from '../supabase';
 
 // Service pour les chansons
@@ -44,6 +45,14 @@ export const songService = {
 
   // Créer une nouvelle chanson
   async createSong(songData: NewSongData): Promise<Song> {
+    // Parser le contenu texte en structure structurée
+    const structuredSong = parseTextToStructuredSong(
+      songData.title,
+      songData.author,
+      songData.content,
+      songData.folderId
+    );
+
     const { data, error } = await supabase
       .from('songs')
       .insert([{
@@ -51,7 +60,7 @@ export const songService = {
         author: songData.author,
         folder_id: songData.folderId,
         format: 'structured',
-        sections: [] // Sera rempli par le parser
+        sections: structuredSong.sections
       }])
       .select()
       .single();
@@ -70,14 +79,32 @@ export const songService = {
 
   // Mettre à jour une chanson
   async updateSong(id: string, updates: SongEditData): Promise<Song> {
+    // Parser le nouveau contenu si fourni
+    let sections = undefined;
+    if (updates.content) {
+      const structuredSong = parseTextToStructuredSong(
+        updates.title,
+        updates.author,
+        updates.content,
+        updates.folderId
+      );
+      sections = structuredSong.sections;
+    }
+
+    const updateData: any = {
+      title: updates.title,
+      author: updates.author,
+      folder_id: updates.folderId,
+      updated_at: new Date().toISOString()
+    };
+
+    if (sections) {
+      updateData.sections = sections;
+    }
+
     const { data, error } = await supabase
       .from('songs')
-      .update({
-        title: updates.title,
-        author: updates.author,
-        folder_id: updates.folderId,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
