@@ -3,10 +3,10 @@
 import { useApp } from '@/context/AppContext';
 import { Song } from '@/types';
 import {
-    FolderIcon,
-    MusicalNoteIcon,
-    PlayIcon,
-    TrashIcon
+  FolderIcon,
+  MusicalNoteIcon,
+  PlayIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import React, { useMemo } from 'react';
 
