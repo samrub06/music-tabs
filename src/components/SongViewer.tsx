@@ -655,11 +655,8 @@ function ChordDiagramsGrid({ song, onChordClick }: ChordDiagramsGridProps) {
           className="group p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600 mb-1">
+            <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
               {chord}
-            </div>
-            <div className="text-xs text-gray-500 group-hover:text-blue-500">
-              Voir diagramme
             </div>
           </div>
         </button>

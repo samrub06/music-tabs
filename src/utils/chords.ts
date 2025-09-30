@@ -9,6 +9,7 @@ export const ENHARMONIC_MAP: { [key: string]: string } = {
 
 // Guitar chord shapes (6 strings, -1 = muted, 0 = open, >0 = fret)
 export const GUITAR_SHAPES: { [key: string]: number[] } = {
+  // Natural chords
   "C": [-1, 3, 2, 0, 1, 0],
   "Cm": [-1, 3, 5, 5, 4, 3],
   "C7": [-1, 3, 2, 3, 1, 0],
@@ -16,6 +17,7 @@ export const GUITAR_SHAPES: { [key: string]: number[] } = {
   "D": [-1, -1, 0, 2, 3, 2],
   "Dm": [-1, -1, 0, 2, 3, 1],
   "D7": [-1, -1, 0, 2, 1, 2],
+  "Dm7": [-1, -1, 0, 2, 1, 1],
   "E": [0, 2, 2, 1, 0, 0],
   "Em": [0, 2, 2, 0, 0, 0],
   "Em7": [0, 2, 2, 0, 3, 0],
@@ -32,10 +34,32 @@ export const GUITAR_SHAPES: { [key: string]: number[] } = {
   "B": [-1, 2, 4, 4, 4, 2],
   "Bm": [-1, 2, 4, 4, 3, 2],
   "Bm7": [-1, 2, 0, 2, 2, 2],
-  "Bb": [1, 1, 3, 3, 3, 1],
+
+  // Sharp chords
+  "C#": [-1, -1, 3, 1, 2, 1],
+  "C#m": [-1, -1, 2, 1, 2, 0],
+  "D#": [-1, -1, 1, 3, 4, 3],
+  "D#m": [-1, -1, 4, 3, 4, 2],
   "F#": [2, 4, 4, 3, 2, 2],
   "F#m": [2, 4, 4, 2, 2, 2],
-  "Dm7": [-1, -1, 0, 2, 1, 1],
+  "G#": [4, 6, 6, 5, 4, 4],
+  "G#m": [4, 6, 6, 4, 4, 4],
+  "A#": [-1, 1, 3, 3, 3, 1],
+  "A#m": [-1, 1, 3, 3, 2, 1],
+
+  // Flat chords (enharmonic equivalents)
+  "Bb": [1, 1, 3, 3, 3, 1],
+  "Bbm": [1, 1, 3, 3, 2, 1],
+  "Db": [-1, -1, 3, 1, 2, 1],
+  "Dbm": [-1, -1, 2, 1, 2, 0],
+  "Eb": [-1, -1, 1, 3, 4, 3],
+  "Ebm": [-1, -1, 4, 3, 4, 2],
+  "Gb": [2, 4, 4, 3, 2, 2],
+  "Gbm": [2, 4, 4, 2, 2, 2],
+  "Ab": [4, 6, 6, 5, 4, 4],
+  "Abm": [4, 6, 6, 4, 4, 4],
+
+  // Suspended and add chords
   "Cadd9": [-1, 3, 2, 0, 3, 0],
   "Gsus4": [3, 2, 0, 0, 1, 3],
   "Asus4": [-1, 0, 2, 2, 3, 0],
@@ -181,8 +205,15 @@ export function generatePianoVoicing(chord: string): string[] {
   const parsed = parseChord(chord);
   if (!parsed) return [];
   
-  const rootIndex = NOTES.indexOf(parsed.root);
-  if (rootIndex === -1) return [];
+  // Normalize the root note first
+  const normalizedRoot = normalizeNote(parsed.root);
+  let rootIndex = NOTES.indexOf(normalizedRoot);
+  
+  // If still not found, try flat notes
+  if (rootIndex === -1) {
+    rootIndex = FLAT_NOTES.indexOf(normalizedRoot);
+    if (rootIndex === -1) return [];
+  }
   
   let intervals = [0, 4, 7]; // Major triad
   
@@ -201,7 +232,7 @@ export function generatePianoVoicing(chord: string): string[] {
     intervals = [0, 3, 7, 10]; // Minor 7th
   }
   
-  // Generate voicings
+  // Generate voicings using standard sharp notation
   const notes = intervals.map(interval => NOTES[(rootIndex + interval) % 12]);
   
   return [
