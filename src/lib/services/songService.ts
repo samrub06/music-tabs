@@ -49,7 +49,6 @@ export const songService = {
       .insert([{
         title: songData.title,
         author: songData.author,
-        content: songData.content,
         folder_id: songData.folderId,
         format: 'structured',
         sections: [] // Sera rempli par le parser
@@ -76,7 +75,6 @@ export const songService = {
       .update({
         title: updates.title,
         author: updates.author,
-        content: updates.content,
         folder_id: updates.folderId,
         updated_at: new Date().toISOString()
       })
@@ -114,7 +112,7 @@ export const songService = {
     const { data, error } = await supabase
       .from('songs')
       .select('*')
-      .or(`title.ilike.%${query}%,author.ilike.%${query}%,content.ilike.%${query}%`)
+      .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
       .order('created_at', { ascending: false });
 
     if (error) {
