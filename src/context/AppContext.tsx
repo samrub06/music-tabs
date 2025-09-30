@@ -21,6 +21,7 @@ interface AppContextType extends AppState {
   toggleAutoScroll: () => void;
   importSongs: (songs: Song[]) => void;
   exportData: () => string;
+  setCurrentSong: (songId: string | null) => void;
 }
 
 type AppAction =
@@ -282,6 +283,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     exportData: () => {
       return JSON.stringify({ songs: state.songs, folders: state.folders }, null, 2);
+    },
+
+    setCurrentSong: (songId) => {
+      // Implementation for setCurrentSong if needed
+      console.log('Setting current song:', songId);
     }
   };
 
