@@ -64,10 +64,17 @@ export interface NewSongData {
   folderId?: string;
 }
 
+// Type pour l'édition de chanson (avec contenu texte)
+export interface SongEditData {
+  title: string;
+  author: string;
+  content: string;
+  folderId?: string;
+}
+
 export interface AppState {
   songs: Song[];
   folders: Folder[];
-  currentSong: Song | null;
   currentFolder: string | null;
   searchQuery: string;
   selectedInstrument: InstrumentType;

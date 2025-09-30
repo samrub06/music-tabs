@@ -1,20 +1,20 @@
 'use client';
 
 // Backend API will provide data
-import { AppState, Folder, InstrumentType, NewSongData, Song } from '@/types';
+import { AppState, Folder, InstrumentType, NewSongData, Song, SongEditData } from '@/types';
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 
 interface AppContextType extends AppState {
   // Actions
   addSong: (songData: NewSongData) => Promise<void>;
-  updateSong: (id: string, updates: Partial<Song>) => void;
+  updateSong: (id: string, updates: SongEditData) => Promise<void>;
   deleteSong: (id: string) => void;
   addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateFolder: (id: string, updates: Partial<Folder>) => void;
   deleteFolder: (id: string) => void;
-  setCurrentSong: (song: Song | null) => void;
   setCurrentFolder: (folderId: string | null) => void;
   setSearchQuery: (query: string) => void;
+  searchSongs: (query: string) => Promise<void>;
   setSelectedInstrument: (instrument: InstrumentType) => void;
   setTransposeValue: (value: number) => void;
   setAutoScrollSpeed: (speed: number) => void;
@@ -30,7 +30,6 @@ type AppAction =
   | { type: 'ADD_FOLDER'; payload: Folder }
   | { type: 'UPDATE_FOLDER'; payload: { id: string; updates: Partial<Folder> } }
   | { type: 'DELETE_FOLDER'; payload: string }
-  | { type: 'SET_CURRENT_SONG'; payload: Song | null }
   | { type: 'SET_CURRENT_FOLDER'; payload: string | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_SELECTED_INSTRUMENT'; payload: InstrumentType }
@@ -43,7 +42,6 @@ type AppAction =
 const initialState: AppState = {
   songs: [],
   folders: [],
-  currentSong: null,
   currentFolder: null,
   searchQuery: '',
   selectedInstrument: 'piano',
@@ -75,8 +73,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'DELETE_SONG':
       return {
         ...state,
-        songs: state.songs.filter(song => song.id !== action.payload),
-        currentSong: state.currentSong?.id === action.payload ? null : state.currentSong
+        songs: state.songs.filter(song => song.id !== action.payload)
       };
     
     case 'ADD_FOLDER':
@@ -106,9 +103,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ),
         currentFolder: state.currentFolder === action.payload ? null : state.currentFolder
       };
-    
-    case 'SET_CURRENT_SONG':
-      return { ...state, currentSong: action.payload };
     
     case 'SET_CURRENT_FOLDER':
       return { ...state, currentFolder: action.payload };
@@ -208,8 +202,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     },
 
-    updateSong: (id, updates) => {
-      dispatch({ type: 'UPDATE_SONG', payload: { id, updates } });
+    updateSong: async (id, updates) => {
+      try {
+        // Préparer les données pour l'API
+        const songData = {
+          id,
+          title: updates.title,
+          author: updates.author,
+          content: updates.content,
+          folderId: updates.folderId
+        };
+
+        const response = await fetch('/api/songs', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(songData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update song');
+        }
+
+        const updatedSong = await response.json();
+        
+        // Mettre à jour le state local
+        dispatch({ type: 'UPDATE_SONG', payload: { id, updates: updatedSong } });
+      } catch (error) {
+        console.error('Error updating song:', error);
+        throw error;
+      }
     },
 
     deleteSong: (id) => {
@@ -245,9 +268,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'DELETE_FOLDER', payload: id });
     },
 
-    setCurrentSong: (song) => {
-      dispatch({ type: 'SET_CURRENT_SONG', payload: song });
-    },
 
     setCurrentFolder: (folderId) => {
       dispatch({ type: 'SET_CURRENT_FOLDER', payload: folderId });

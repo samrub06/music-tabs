@@ -1,12 +1,74 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+'use client';
+
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
+import { AppProvider } from '@/context/AppContext';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Inter } from 'next/font/google';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Music Tabs App',
-  description: 'A modern music tabs application built with Next.js and Tailwind CSS',
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // Check if we're on a song page
+  const isSongPage = pathname.startsWith('/song/')
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-50">
+      <Header />
+      
+      <div className="flex-1 flex overflow-hidden">
+        {/* Mobile sidebar backdrop */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <div className="absolute inset-0 bg-gray-600 opacity-75"></div>
+          </div>
+        )}
+
+        {/* Sidebar */}
+        <div className={`
+          fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}>
+          <div className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 lg:hidden">
+            <span className="text-lg font-semibold">Menu</span>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 rounded-md text-gray-400 hover:text-gray-600"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+          </div>
+          <Sidebar />
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Mobile menu button - only show when not on a song page */}
+          {!isSongPage && (
+            <div className="lg:hidden p-4 border-b border-gray-200 bg-white">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              >
+                <Bars3Icon className="h-6 w-6" />
+              </button>
+            </div>
+          )}
+          
+          {children}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function RootLayout({
@@ -16,8 +78,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
+      <head>
+        <title>Music Tabs App</title>
+        <meta name="description" content="A modern music tabs application built with Next.js and Tailwind CSS" />
+      </head>
       <body className={inter.className}>
-        <div id="root">{children}</div>
+        <AppProvider>
+          <LayoutContent>
+            {children}
+          </LayoutContent>
+        </AppProvider>
       </body>
     </html>
   )

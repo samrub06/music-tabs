@@ -1,24 +1,28 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { Song, SongEditData } from '@/types';
 import { extractAllChords, renderStructuredSong, transposeStructuredSong } from '@/utils/structuredSong';
 import {
-  ArrowLeftIcon,
-  MinusIcon,
-  MusicalNoteIcon,
-  PauseIcon,
-  PencilIcon,
-  PlayIcon,
-  PlusIcon,
-  TrashIcon
+    ArrowLeftIcon,
+    MinusIcon,
+    MusicalNoteIcon,
+    PauseIcon,
+    PencilIcon,
+    PlayIcon,
+    PlusIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import ChordDiagram from './ChordDiagram';
 
-export default function SongViewer() {
+interface SongViewerProps {
+  song: Song;
+}
+
+export default function SongViewer({ song }: SongViewerProps) {
   const {
-    currentSong,
-    setCurrentSong,
     updateSong,
     deleteSong,
     selectedInstrument,
@@ -29,20 +33,22 @@ export default function SongViewer() {
     toggleAutoScroll,
     setAutoScrollSpeed
   } = useApp();
+  const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [selectedChord, setSelectedChord] = useState<string | null>(null);
   const [showChordDiagram, setShowChordDiagram] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (currentSong) {
+    if (song) {
       // Convert structured song back to raw text for editing
-      setEditContent(renderStructuredSong(currentSong));
+      setEditContent(renderStructuredSong(song));
     }
-  }, [currentSong]);
+  }, [song]);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -73,7 +79,7 @@ export default function SongViewer() {
     };
   }, [autoScroll.isActive, autoScroll.speed, toggleAutoScroll]);
 
-  if (!currentSong) {
+  if (!song) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -89,16 +95,56 @@ export default function SongViewer() {
     );
   }
 
-  const handleSave = () => {
-    // For now, we'll keep the existing structure since we don't have a parser from text back to structured
-    // In a real implementation, you'd parse editContent back to StructuredSong format
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      // Extraire le titre et l'auteur du contenu édité
+      const lines = editContent.split('\n');
+      let title = song.title;
+      let author = song.author;
+      let content = editContent;
+
+      // Essayer d'extraire le titre et l'auteur des premières lignes
+      if (lines.length > 0) {
+        const firstLine = lines[0].trim();
+        if (firstLine && !firstLine.startsWith('[') && !firstLine.startsWith('{')) {
+          title = firstLine;
+        }
+      }
+
+      // Chercher une ligne qui commence par "Par " ou "By " pour l'auteur
+      const authorLine = lines.find(line => 
+        line.trim().toLowerCase().startsWith('par ') || 
+        line.trim().toLowerCase().startsWith('by ')
+      );
+      if (authorLine) {
+        author = authorLine.replace(/^(par |by )/i, '').trim();
+      }
+
+      // Appeler l'API pour mettre à jour la chanson
+      const songEditData: SongEditData = {
+        title,
+        author,
+        content,
+        folderId: song.folderId
+      };
+      
+      await updateSong(song.id, songEditData);
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving song:', error);
+      alert('Erreur lors de la sauvegarde de la chanson');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
-      deleteSong(currentSong.id);
-      setCurrentSong(null);
+      deleteSong(song.id);
+      router.push('/');
     }
   };
 
@@ -114,7 +160,7 @@ export default function SongViewer() {
   };
 
   // All songs are now structured format - use structured rendering
-  const transposedSong = transposeStructuredSong(currentSong, transposeValue);
+  const transposedSong = transposeStructuredSong(song, transposeValue);
   const transposedContent = renderStructuredSong(transposedSong, {
     maxWidth: 80,
     wordWrap: true,
@@ -129,15 +175,15 @@ export default function SongViewer() {
         <div className="block md:hidden">
           <div className="flex items-center justify-between p-3">
             <button
-              onClick={() => setCurrentSong(null)}
+              onClick={() => router.push('/')}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
             >
               <ArrowLeftIcon className="h-6 w-6" />
             </button>
             <div className="flex-1 text-center px-2">
-              <h1 className="text-lg font-bold text-gray-900 truncate">{currentSong.title}</h1>
-              {currentSong.author && (
-                <p className="text-sm text-gray-600 truncate">Par {currentSong.author}</p>
+              <h1 className="text-lg font-bold text-gray-900 truncate">{song.title}</h1>
+              {song.author && (
+                <p className="text-sm text-gray-600 truncate">Par {song.author}</p>
               )}
             </div>
             <button
@@ -243,15 +289,15 @@ export default function SongViewer() {
         <div className="hidden md:flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => setCurrentSong(null)}
+              onClick={() => router.push('/')}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
             >
               <ArrowLeftIcon className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{currentSong.title}</h1>
-              {currentSong.author && (
-                <p className="text-sm text-gray-600">Par {currentSong.author}</p>
+              <h1 className="text-xl font-bold text-gray-900">{song.title}</h1>
+              {song.author && (
+                <p className="text-sm text-gray-600">Par {song.author}</p>
               )}
             </div>
           </div>
@@ -375,7 +421,7 @@ export default function SongViewer() {
                 <button
                   onClick={() => {
                     setIsEditing(false);
-                    setEditContent(renderStructuredSong(currentSong));
+                    setEditContent(renderStructuredSong(song));
                   }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                 >
@@ -383,9 +429,10 @@ export default function SongViewer() {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                  disabled={isSaving}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sauvegarder
+                  {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
                 </button>
               </div>
             </div>
@@ -442,7 +489,7 @@ export default function SongViewer() {
             </div>
 
             {/* Desktop Sidebar */}
-            <div className="hidden md:block w-96 border-l border-gray-200 bg-white">
+            <div className="hidden md:block w-[450px] border-l border-gray-200 bg-white">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Diagramme d&apos;accord

@@ -3,11 +3,12 @@
 import { useApp } from '@/context/AppContext';
 import { Song } from '@/types';
 import {
-  FolderIcon,
-  MusicalNoteIcon,
-  PlayIcon,
-  TrashIcon
+    FolderIcon,
+    MusicalNoteIcon,
+    PlayIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
 
 export default function SongList() {
@@ -16,9 +17,9 @@ export default function SongList() {
     folders,
     currentFolder, 
     searchQuery, 
-    setCurrentSong,
     deleteSong
   } = useApp();
+  const router = useRouter();
 
   // Filter songs based on current folder and search query
   const filteredSongs = useMemo(() => {
@@ -118,7 +119,7 @@ export default function SongList() {
             key={song.id}
             song={song}
             folderName={getFolderName(song.folderId)}
-            onPlay={() => setCurrentSong(song)}
+            onPlay={() => router.push(`/song/${song.id}`)}
             onDelete={(e) => handleDeleteSong(e, song.id)}
             showFolder={!currentFolder || currentFolder === 'unorganized'}
           />

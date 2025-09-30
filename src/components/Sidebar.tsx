@@ -2,12 +2,12 @@
 
 import { useApp } from '@/context/AppContext';
 import {
-  FolderIcon,
-  FolderOpenIcon,
-  MusicalNoteIcon,
-  PencilIcon,
-  PlusIcon,
-  TrashIcon
+    FolderIcon,
+    FolderOpenIcon,
+    MusicalNoteIcon,
+    PencilIcon,
+    PlusIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 

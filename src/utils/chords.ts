@@ -200,11 +200,30 @@ export function isChordLine(line: string): boolean {
   return lineWithoutSpaces.length > 0 && (totalChordLength / lineWithoutSpaces.length) >= 0.7;
 }
 
-// Generate piano voicings for a chord
+// Helper to get the semitone index (0-11) for a given note name
+function getNoteSemitoneIndex(noteName: string): number {
+  const normalized = normalizeNote(noteName);
+  const index = NOTES.indexOf(normalized);
+  if (index === -1) {
+    // Fallback for flat notes if not in NOTES directly (e.g., Db)
+    const flatIndex = FLAT_NOTES.indexOf(normalized);
+    if (flatIndex !== -1) return flatIndex;
+  }
+  return index;
+}
+
+// Helper to convert an absolute semitone value to a note string with octave (e.g., 60 -> C4)
+function getNoteFromAbsoluteSemitone(absoluteSemitone: number): string {
+  const octave = Math.floor(absoluteSemitone / 12);
+  const noteIndex = absoluteSemitone % 12;
+  return `${NOTES[noteIndex]}${octave}`;
+}
+
+// Generate piano voicings for a chord with proper octave positioning
 export function generatePianoVoicing(chord: string): string[] {
   const parsed = parseChord(chord);
   if (!parsed) return [];
-  
+
   // Normalize the root note first
   const normalizedRoot = normalizeNote(parsed.root);
   let rootIndex = NOTES.indexOf(normalizedRoot);
@@ -214,7 +233,8 @@ export function generatePianoVoicing(chord: string): string[] {
     rootIndex = FLAT_NOTES.indexOf(normalizedRoot);
     if (rootIndex === -1) return [];
   }
-  
+
+  // Define intervals based on chord quality
   let intervals = [0, 4, 7]; // Major triad
   
   const quality = parsed.quality.toLowerCase();
@@ -231,17 +251,32 @@ export function generatePianoVoicing(chord: string): string[] {
   if (quality.includes('m7')) {
     intervals = [0, 3, 7, 10]; // Minor 7th
   }
-  
-  // Generate voicings using standard sharp notation with proper octave spacing
-  const rootNote = NOTES[rootIndex];
-  const thirdNote = NOTES[(rootIndex + intervals[1]) % 12];
-  const fifthNote = NOTES[(rootIndex + intervals[2]) % 12];
-  
-  // For better visual distinction, we'll use different octave positions
+
+  const baseOctave = 4; // Start with C4 as the reference octave for the lowest note
+
+  // Calculate the absolute semitone values for the root, third, and fifth
+  // ensuring they are in ascending order for the *root position*
+  let note1 = rootIndex + (baseOctave * 12); // Root
+  let note2 = rootIndex + intervals[1] + (baseOctave * 12); // Third
+  let note3 = rootIndex + intervals[2] + (baseOctave * 12); // Fifth
+
+  // Adjust octaves to ensure notes are ascending for the root position
+  if (note2 < note1) note2 += 12;
+  if (note3 < note2) note3 += 12;
+
+  // Root position: [note1, note2, note3]
+  const rootVoicingSemitones = [note1, note2, note3];
+
+  // First inversion: [note2, note3, note1 (octave up)]
+  const firstInversionVoicingSemitones = [note2, note3, note1 + 12];
+
+  // Second inversion: [note3, note1 (octave up), note2 (octave up)]
+  const secondInversionVoicingSemitones = [note3, note1 + 12, note2 + 12];
+
   return [
-    `${rootNote} ${thirdNote} ${fifthNote}`, // Root position: 1-3-5
-    `${thirdNote} ${fifthNote} ${rootNote}`, // First inversion: 3-5-1
-    `${fifthNote} ${rootNote} ${thirdNote}`  // Second inversion: 5-1-3
+    rootVoicingSemitones.map(getNoteFromAbsoluteSemitone).join(' '),
+    firstInversionVoicingSemitones.map(getNoteFromAbsoluteSemitone).join(' '),
+    secondInversionVoicingSemitones.map(getNoteFromAbsoluteSemitone).join(' ')
   ];
 }
 
