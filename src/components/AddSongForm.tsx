@@ -1,12 +1,19 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
-import { DocumentTextIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 
 interface AddSongFormProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface SearchResult {
+  title: string;
+  author: string;
+  url: string;
+  source: string;
 }
 
 export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
@@ -18,6 +25,10 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     folderId: ''
   });
   const [isImporting, setIsImporting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +125,100 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       content: '',
       folderId: ''
     });
+    setSearchResults([]);
+    setShowSearchResults(false);
+    setSearchQuery('');
+  };
+
+  // Rechercher des partitions en ligne
+  const handleSearchOnline = async () => {
+    if (!searchQuery.trim()) {
+      alert('Veuillez entrer un titre ou un artiste à rechercher.');
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchResults([]);
+
+    try {
+      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+
+      if (response.ok && data.results) {
+        setSearchResults(data.results);
+        setShowSearchResults(true);
+      } else {
+        alert(data.error || 'Aucune partition trouvée.');
+      }
+    } catch (error) {
+      console.error('Error searching:', error);
+      alert('Erreur lors de la recherche. Veuillez réessayer.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Récupérer une partition depuis une URL
+  const handleFetchFromUrl = async (url: string) => {
+    setIsSearching(true);
+
+    try {
+      const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+
+      if (response.ok && data.song) {
+        // Pré-remplir le formulaire avec les données récupérées
+        setFormData({
+          ...formData,
+          title: data.song.title,
+          author: data.song.author,
+          content: data.song.content
+        });
+        setShowSearchResults(false);
+        alert('Partition récupérée avec succès !');
+      } else {
+        alert(data.error || 'Impossible de récupérer la partition.');
+      }
+    } catch (error) {
+      console.error('Error fetching song:', error);
+      alert('Erreur lors de la récupération. Veuillez réessayer.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Recherche automatique rapide (récupère directement le meilleur résultat)
+  const handleQuickSearch = async () => {
+    if (!searchQuery.trim()) {
+      alert('Veuillez entrer un titre ou un artiste à rechercher.');
+      return;
+    }
+
+    setIsSearching(true);
+
+    try {
+      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&fullScrape=true`);
+      const data = await response.json();
+
+      if (response.ok && data.song) {
+        // Pré-remplir le formulaire avec les données récupérées
+        setFormData({
+          ...formData,
+          title: data.song.title,
+          author: data.song.author,
+          content: data.song.content
+        });
+        setSearchQuery('');
+        alert('Partition récupérée avec succès !');
+      } else {
+        alert(data.error || 'Aucune partition trouvée.');
+      }
+    } catch (error) {
+      console.error('Error in quick search:', error);
+      alert('Erreur lors de la recherche. Veuillez réessayer.');
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -133,7 +238,87 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Online Search */}
+          <div className="space-y-4">
+            <h4 className="text-md font-semibold text-gray-800 flex items-center">
+              <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
+              Recherche en ligne
+            </h4>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Titre ou Artiste
+                </label>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleQuickSearch()}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="ex: Hotel California Eagles"
+                  disabled={isSearching}
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleQuickSearch}
+                  disabled={isSearching || !searchQuery.trim()}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSearching ? 'Recherche...' : 'Recherche rapide'}
+                </button>
+                <button
+                  onClick={handleSearchOnline}
+                  disabled={isSearching || !searchQuery.trim()}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Plus de résultats
+                </button>
+              </div>
+
+              {/* Search Results */}
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="border border-gray-300 rounded-md p-3 max-h-96 overflow-y-auto">
+                  <h5 className="text-sm font-semibold text-gray-700 mb-2">
+                    Résultats ({searchResults.length})
+                  </h5>
+                  <div className="space-y-2">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleFetchFromUrl(result.url)}
+                      >
+                        <div className="text-sm font-medium text-gray-900">
+                          {result.title}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {result.author}
+                        </div>
+                        <div className="text-xs text-blue-600 mt-1">
+                          {result.source}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-600 bg-green-50 p-3 rounded-md">
+                <p className="font-medium mb-1">💡 Comment utiliser :</p>
+                <ul className="space-y-1">
+                  <li>• <strong>Recherche rapide</strong> : Récupère automatiquement le meilleur résultat</li>
+                  <li>• <strong>Plus de résultats</strong> : Affiche une liste pour choisir</li>
+                  <li>• Cliquez sur un résultat pour le charger</li>
+                  <li>• Les données pré-remplissent le formulaire</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Manual Entry Form */}
           <div className="space-y-4">
             <h4 className="text-md font-semibold text-gray-800 flex items-center">
