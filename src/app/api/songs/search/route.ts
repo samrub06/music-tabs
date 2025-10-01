@@ -1,9 +1,11 @@
-import { scrapeSongFromUrl, searchAndScrapeSong, searchSong } from '@/lib/services/scraperService';
+import { scrapeSongFromUrl, searchAndScrapeSong, searchSong, searchTab4UOnly, searchUltimateGuitarOnly } from '@/lib/services/scraperService';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * API Route pour rechercher des partitions
  * GET /api/songs/search?q=titre+de+la+chanson
+ * GET /api/songs/search?q=titre&source=ultimate-guitar
+ * GET /api/songs/search?q=titre&source=tab4u
  */
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +13,7 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q');
     const url = searchParams.get('url');
     const fullScrape = searchParams.get('fullScrape') === 'true';
+    const source = searchParams.get('source'); // 'ultimate-guitar' ou 'tab4u'
 
     if (!query && !url) {
       return NextResponse.json(
@@ -47,9 +50,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ song });
     }
 
-    // Sinon, retourner juste les résultats de recherche
+    // Recherche avec source spécifique
     if (query) {
-      const results = await searchSong(query);
+      let results;
+
+      if (source === 'ultimate-guitar') {
+        results = await searchUltimateGuitarOnly(query);
+      } else if (source === 'tab4u') {
+        results = await searchTab4UOnly(query);
+      } else {
+        // Par défaut, recherche sur les deux sites
+        results = await searchSong(query);
+      }
 
       if (results.length === 0) {
         return NextResponse.json(

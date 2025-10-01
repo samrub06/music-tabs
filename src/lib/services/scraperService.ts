@@ -143,7 +143,7 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
 /**
  * Recherche sur Ultimate Guitar
  */
-async function searchUltimateGuitar(query: string): Promise<SearchResult[]> {
+export async function searchUltimateGuitarOnly(query: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
 
   try {
@@ -203,6 +203,158 @@ async function searchUltimateGuitar(query: string): Promise<SearchResult[]> {
 }
 
 /**
+ * Scraper spécialisé pour Tab4U (site israélien)
+ * Tab4U structure le contenu dans des tables avec des spans pour les accords
+ */
+async function scrapeTab4U(url: string): Promise<ScrapedSong | null> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Extraire le titre depuis h1
+    let title = $('h1').first().text().trim();
+    // Nettoyer le titre (ex: "אקורדים לשיר XXX של YYY" -> "XXX")
+    title = title.replace(/^אקורדים לשיר\s+/, '').replace(/\s+של\s+.*$/, '');
+
+    // Extraire l'auteur (artiste)
+    const artistLink = $('a.artistTitle').first();
+    let author = artistLink.text().trim();
+    
+    // Alternative: chercher dans les métadonnées
+    if (!author) {
+      const artistMeta = $('[class*="artist"]').first().text().trim();
+      author = artistMeta;
+    }
+
+    // Extraire le contenu depuis les tables
+    let content = '';
+    const tables = $('table');
+    
+    tables.each((i: number, elem: any) => {
+      const $table = $(elem);
+      const tableText = $table.text();
+      
+      // Vérifier si cette table contient des accords
+      const chordCount = (tableText.match(/\b[A-G][#b]?(m|maj|min|dim|aug|sus)?[0-9]?\b/g) || []).length;
+      
+      if (chordCount > 5) {
+        // Extraire le contenu ligne par ligne
+        const rows = $table.find('tr');
+        
+        rows.each((j: number, row: any) => {
+          const $row = $(row);
+          const cells = $row.find('td');
+          
+          cells.each((k: number, cell: any) => {
+            const $cell = $(cell);
+            const cellText = $cell.text().trim();
+            
+            if (cellText) {
+              content += cellText + '\n';
+            }
+          });
+        });
+      }
+    });
+
+    // Alternative: chercher dans div#songContentTPL
+    if (!content || content.length < 100) {
+      const songDiv = $('#songContentTPL');
+      if (songDiv.length > 0) {
+        content = songDiv.text().trim();
+      }
+    }
+
+    if (!content || content.length < 50) {
+      return null;
+    }
+
+    return {
+      title: title || 'Sans titre',
+      author: author || 'Auteur inconnu',
+      content: cleanSongContent(content),
+      source: 'Tab4U',
+      url,
+    };
+  } catch (error) {
+    console.error('Error scraping Tab4U:', error);
+    return null;
+  }
+}
+
+/**
+ * Recherche sur Tab4U (site israélien)
+ */
+export async function searchTab4UOnly(query: string): Promise<SearchResult[]> {
+  const results: SearchResult[] = [];
+
+  try {
+    const searchUrl = `https://www.tab4u.com/resultsSimple?tab=songs&q=${encodeURIComponent(query)}`;
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
+    });
+
+    if (!response.ok) {
+      return results;
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Tab4U structure: <a href="tabs/songs/...">Title / Artist</a>
+    const songLinks = $('a[href*="tabs/songs/"]');
+    
+    songLinks.slice(0, 10).each((i: number, elem: any) => {
+      const $link = $(elem);
+      const href = $link.attr('href');
+      const fullText = $link.text().trim();
+      
+      // Ignorer les liens avec "ללא אקורדים" (sans accords)
+      if (fullText.includes('ללא אקורדים')) {
+        return;
+      }
+      
+      // Format du texte: "Titre / Artiste" ou "Titre - Artiste"
+      const parts = fullText.split(/[/\-]/).map(p => p.trim());
+      const title = parts[0] || fullText;
+      const author = parts[1] || '';
+      
+      if (href && title) {
+        const fullUrl = href.startsWith('http') 
+          ? href 
+          : `https://www.tab4u.com/${href}`;
+          
+        results.push({
+          title,
+          author: author || 'Unknown',
+          url: fullUrl,
+          source: 'Tab4U',
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Error searching Tab4U:', error);
+  }
+
+  return results;
+}
+
+/**
  * Recherche une chanson sur différents sites
  */
 export async function searchSong(query: string): Promise<SearchResult[]> {
@@ -210,14 +362,21 @@ export async function searchSong(query: string): Promise<SearchResult[]> {
 
   // 1. Recherche sur Ultimate Guitar (priorité car meilleure qualité)
   try {
-    const ugResults = await searchUltimateGuitar(query);
+    const ugResults = await searchUltimateGuitarOnly(query);
     results.push(...ugResults);
   } catch (error) {
     console.error('Error searching Ultimate Guitar:', error);
   }
 
-  // 2. Essayez les autres sites (TODO: ajouter d'autres scrapers)
-  // ... autres sites à implémenter
+  // 2. Si pas assez de résultats, chercher sur Tab4U
+  if (results.length < 5) {
+    try {
+      const tab4uResults = await searchTab4UOnly(query);
+      results.push(...tab4uResults);
+    } catch (error) {
+      console.error('Error searching Tab4U:', error);
+    }
+  }
 
   return results;
 }
@@ -233,6 +392,11 @@ export async function scrapeSongFromUrl(url: string): Promise<ScrapedSong | null
     // Ultimate Guitar
     if (hostname.includes('ultimate-guitar.com') || hostname.includes('tabs.ultimate-guitar.com')) {
       return await scrapeUltimateGuitar(url);
+    }
+
+    // Tab4U
+    if (hostname.includes('tab4u.com')) {
+      return await scrapeTab4U(url);
     }
 
     // Pour les autres sites, utiliser le scraper générique

@@ -130,8 +130,8 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setSearchQuery('');
   };
 
-  // Rechercher des partitions en ligne
-  const handleSearchOnline = async () => {
+  // Rechercher sur Ultimate Guitar (EN/FR)
+  const handleSearchUltimateGuitar = async () => {
     if (!searchQuery.trim()) {
       alert('Veuillez entrer un titre ou un artiste à rechercher.');
       return;
@@ -141,18 +141,46 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setSearchResults([]);
 
     try {
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=ultimate-guitar`);
       const data = await response.json();
 
       if (response.ok && data.results) {
         setSearchResults(data.results);
         setShowSearchResults(true);
       } else {
-        alert(data.error || 'Aucune partition trouvée.');
+        alert(data.error || 'Aucune partition trouvée sur Ultimate Guitar.');
       }
     } catch (error) {
       console.error('Error searching:', error);
       alert('Erreur lors de la recherche. Veuillez réessayer.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Rechercher sur Tab4U (hébreu)
+  const handleSearchTab4U = async () => {
+    if (!searchQuery.trim()) {
+      alert('נא להזין שם שיר או אמן.');
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchResults([]);
+
+    try {
+      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=tab4u`);
+      const data = await response.json();
+
+      if (response.ok && data.results) {
+        setSearchResults(data.results);
+        setShowSearchResults(true);
+      } else {
+        alert(data.error || 'לא נמצאו תוצאות ב-Tab4U.');
+      }
+    } catch (error) {
+      console.error('Error searching:', error);
+      alert('שגיאה בחיפוש. נסה שוב.');
     } finally {
       setIsSearching(false);
     }
@@ -182,40 +210,6 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     } catch (error) {
       console.error('Error fetching song:', error);
       alert('Erreur lors de la récupération. Veuillez réessayer.');
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Recherche automatique rapide (récupère directement le meilleur résultat)
-  const handleQuickSearch = async () => {
-    if (!searchQuery.trim()) {
-      alert('Veuillez entrer un titre ou un artiste à rechercher.');
-      return;
-    }
-
-    setIsSearching(true);
-
-    try {
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&fullScrape=true`);
-      const data = await response.json();
-
-      if (response.ok && data.song) {
-        // Pré-remplir le formulaire avec les données récupérées
-        setFormData({
-          ...formData,
-          title: data.song.title,
-          author: data.song.author,
-          content: data.song.content
-        });
-        setSearchQuery('');
-        alert('Partition récupérée avec succès !');
-      } else {
-        alert(data.error || 'Aucune partition trouvée.');
-      }
-    } catch (error) {
-      console.error('Error in quick search:', error);
-      alert('Erreur lors de la recherche. Veuillez réessayer.');
     } finally {
       setIsSearching(false);
     }
@@ -255,27 +249,29 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleQuickSearch()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearchUltimateGuitar()}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="ex: Hotel California Eagles"
                   disabled={isSearching}
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={handleQuickSearch}
+                  onClick={handleSearchUltimateGuitar}
                   disabled={isSearching || !searchQuery.trim()}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isSearching ? 'Recherche...' : 'Recherche rapide'}
+                  <span className="text-lg">🎸</span>
+                  {isSearching ? 'Recherche...' : 'EN/FR (Ultimate Guitar)'}
                 </button>
                 <button
-                  onClick={handleSearchOnline}
+                  onClick={handleSearchTab4U}
                   disabled={isSearching || !searchQuery.trim()}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-md hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Plus de résultats
+                  <span className="text-lg">🇮🇱</span>
+                  {isSearching ? 'מחפש...' : 'עברית (Tab4U)'}
                 </button>
               </div>
 
@@ -307,13 +303,13 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                 </div>
               )}
 
-              <div className="text-xs text-gray-600 bg-green-50 p-3 rounded-md">
+              <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md">
                 <p className="font-medium mb-1">💡 Comment utiliser :</p>
                 <ul className="space-y-1">
-                  <li>• <strong>Recherche rapide</strong> : Récupère automatiquement le meilleur résultat</li>
-                  <li>• <strong>Plus de résultats</strong> : Affiche une liste pour choisir</li>
-                  <li>• Cliquez sur un résultat pour le charger</li>
-                  <li>• Les données pré-remplissent le formulaire</li>
+                  <li>• <strong>🎸 EN/FR</strong> : Pour les chansons en anglais/français (Ultimate Guitar)</li>
+                  <li>• <strong>🇮🇱 עברית</strong> : לשירים בעברית (Tab4U)</li>
+                  <li>• Cliquez sur un résultat pour le charger dans le formulaire</li>
+                  <li>• Vous pouvez ensuite modifier avant d&apos;ajouter</li>
                 </ul>
               </div>
             </div>
