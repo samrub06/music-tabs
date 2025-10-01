@@ -46,7 +46,7 @@ const myCustomSite = {
 // ==========================================
 
 export async function scrapeWithPagination(query: string) {
-  const results = [];
+  const results: any[] = [];
   const maxPages = 3;
 
   for (let page = 1; page <= maxPages; page++) {
@@ -55,7 +55,7 @@ export async function scrapeWithPagination(query: string) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    $('.result').each((_: number, element: cheerio.Element) => {
+    $('.result').each((_: number, element: any) => {
       const $el = $(element);
       results.push({
         title: $el.find('.title').text().trim(),
@@ -161,7 +161,7 @@ export async function scrapeMultiSection(url: string) {
   const sections: string[] = [];
 
   // Parcourir chaque section
-  $('.song-section').each((_: number, element: cheerio.Element) => {
+  $('.song-section').each((_: number, element: any) => {
     const $section = $(element);
     const sectionName = $section.find('.section-name').text().trim();
     const sectionContent = $section.find('.section-content').text().trim();
