@@ -1,7 +1,7 @@
 'use client';
 
 import { Bars3Icon } from '@heroicons/react/24/outline';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -9,8 +9,13 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isSongPage = pathname.startsWith('/song/');
   const showMenuButton = !isSongPage;
+
+  const handleLogoClick = () => {
+    router.push('/');
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
@@ -28,12 +33,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
           )}
           
           {/* Logo - Centered on mobile when no menu button, left-aligned on desktop */}
-          <div className={`flex items-center space-x-2 ${showMenuButton ? 'lg:mx-auto' : 'mx-auto'}`}>
+          <button 
+            onClick={handleLogoClick}
+            className={`flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer ${showMenuButton ? 'lg:mx-auto' : 'mx-auto'}`}
+            aria-label="Retour à la page principale"
+          >
             <span className="text-xl md:text-2xl">🎸</span>
             <span className="text-lg font-semibold text-gray-900">
               Music Tabs
             </span>
-          </div>
+          </button>
           
           {/* Spacer for mobile menu button alignment */}
           {showMenuButton && <div className="w-10 lg:hidden"></div>}
