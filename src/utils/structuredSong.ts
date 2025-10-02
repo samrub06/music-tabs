@@ -1,9 +1,19 @@
 import { ChordPosition, SongLine, SongSection, StructuredSong } from '@/types';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const FLAT_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
-// Transpose a single chord
+// Enhanced chord transposition with proper enharmonic handling
 function transposeChord(chord: string, semitones: number): string {
+  // Handle chords with bass notes (slash chords) like F#/A#
+  if (chord.includes('/')) {
+    const [mainChord, bassNote] = chord.split('/');
+    const transposedMain = transposeChord(mainChord, semitones);
+    const transposedBass = transposeChord(bassNote, semitones);
+    return `${transposedMain}/${transposedBass}`;
+  }
+  
+  // More comprehensive chord pattern to handle complex chords
   const match = chord.match(/^([A-G][#b]?)(.*)$/);
   if (!match) return chord;
   
@@ -14,13 +24,62 @@ function transposeChord(chord: string, semitones: number): string {
   while (normalizedSemitones > 11) normalizedSemitones -= 12;
   while (normalizedSemitones < -11) normalizedSemitones += 12;
   
-  const noteIndex = NOTES.indexOf(root);
+  if (normalizedSemitones === 0) return chord;
+  
+  // Convert flat notes to sharp equivalents for consistent processing
+  const normalizedRoot = normalizeNote(root);
+  const noteIndex = NOTES.indexOf(normalizedRoot);
+  
   if (noteIndex === -1) return chord;
   
+  // Calculate new note index
   let newIndex = (noteIndex + normalizedSemitones) % 12;
   if (newIndex < 0) newIndex += 12;
   
-  return NOTES[newIndex] + quality;
+  // Choose the best enharmonic equivalent
+  const newNote = chooseBestEnharmonic(NOTES[newIndex], quality);
+  
+  return newNote + quality;
+}
+
+// Normalize notes to sharp equivalents for consistent processing
+function normalizeNote(note: string): string {
+  const flatToSharp: { [key: string]: string } = {
+    'Db': 'C#',
+    'Eb': 'D#', 
+    'Gb': 'F#',
+    'Ab': 'G#',
+    'Bb': 'A#'
+  };
+  
+  return flatToSharp[note] || note;
+}
+
+// Choose the best enharmonic equivalent based on chord quality and context
+function chooseBestEnharmonic(note: string, quality: string): string {
+  // Enhanced enharmonic mapping
+  const enharmonicMap: { [key: string]: string } = {
+    'A#': 'Bb',
+    'C#': 'Db', 
+    'D#': 'Eb',
+    'F#': 'Gb',
+    'G#': 'Ab'
+  };
+  
+  // Prefer flats for minor chords, diminished, and certain extensions
+  if (quality.includes('m') || quality.includes('dim') || 
+      quality.includes('maj7') || quality.includes('m7') || 
+      quality.includes('sus') || quality.includes('add')) {
+    return enharmonicMap[note] || note;
+  }
+  
+  // For major chords and simple extensions, prefer sharps
+  // But use flats for certain notes that sound more natural
+  if (note === 'A#' || note === 'D#') {
+    return enharmonicMap[note] || note;
+  }
+  
+  return note;
 }
 
 // Transpose entire structured song - 100% reliable
@@ -31,15 +90,33 @@ export function transposeStructuredSong(song: StructuredSong, semitones: number)
   
   transposedSong.sections.forEach((section: SongSection) => {
     section.lines.forEach((line: SongLine) => {
+      // Transpose chords with precise positions
       if (line.chords) {
         line.chords.forEach((chordPos: ChordPosition) => {
           chordPos.chord = transposeChord(chordPos.chord, semitones);
         });
       }
+      
+      // Also transpose chord_line for chords_only type
+      if (line.chord_line) {
+        line.chord_line = transposeChordLine(line.chord_line, semitones);
+      }
     });
   });
   
   return transposedSong;
+}
+
+// Transpose chords in a chord line (for chords_only type)
+function transposeChordLine(chordLine: string, semitones: number): string {
+  if (semitones === 0) return chordLine;
+  
+  // Pattern to match chords in the line
+  const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+  
+  return chordLine.replace(chordPattern, (match, chord) => {
+    return transposeChord(chord, semitones);
+  });
 }
 
 // Render structured song with responsive word wrap

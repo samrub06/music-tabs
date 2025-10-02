@@ -164,10 +164,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log('Loading data from Supabase...');
         const [songs, folders] = await Promise.all([
           songService.getAllSongs(),
           folderService.getAllFolders()
         ]);
+        
+        console.log('Loaded songs:', songs.length);
+        console.log('Loaded folders:', folders);
         
         dispatch({ type: 'LOAD_DATA', payload: { songs, folders } });
       } catch (error) {
@@ -192,8 +196,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     updateSong: async (id, updates) => {
       try {
+        console.log('Context updateSong called with:', { id, updates });
         const updatedSong = await songService.updateSong(id, updates);
+        console.log('Got updated song from service:', updatedSong);
         dispatch({ type: 'UPDATE_SONG', payload: { id, updates: updatedSong } });
+        console.log('Dispatched UPDATE_SONG action');
       } catch (error) {
         console.error('Error updating song:', error);
         throw error;

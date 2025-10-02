@@ -221,6 +221,28 @@ function getNoteFromAbsoluteSemitone(absoluteSemitone: number): string {
 
 // Generate piano voicings for a chord with proper octave positioning
 export function generatePianoVoicing(chord: string): string[] {
+  // Handle slash chords (e.g., F#/A#)
+  if (chord.includes('/')) {
+    const [mainChord, bassNote] = chord.split('/');
+    const mainVoicings = generatePianoVoicing(mainChord);
+    const bassVoicings = generatePianoVoicing(bassNote);
+    
+    // Combine main chord with bass note
+    if (mainVoicings.length > 0 && bassVoicings.length > 0) {
+      const combinedVoicings: string[] = [];
+      mainVoicings.forEach(mainVoicing => {
+        bassVoicings.forEach(bassVoicing => {
+          // Use the root note from bass voicing as the bass
+          const bassRoot = bassVoicing.split(' ')[0];
+          // Combine bass with main chord
+          const combined = `${bassRoot} ${mainVoicing}`;
+          combinedVoicings.push(combined);
+        });
+      });
+      return combinedVoicings.slice(0, 3); // Limit to 3 voicings
+    }
+  }
+  
   const parsed = parseChord(chord);
   if (!parsed) return [];
 
@@ -234,50 +256,114 @@ export function generatePianoVoicing(chord: string): string[] {
     if (rootIndex === -1) return [];
   }
 
-  // Define intervals based on chord quality
+  // Define intervals based on chord quality - ENHANCED to include all extensions
   let intervals = [0, 4, 7]; // Major triad
   
   const quality = parsed.quality.toLowerCase();
-  if (quality.includes('m') && !quality.includes('maj')) {
+  
+  // Basic chord types
+  if (quality.includes('m') && !quality.includes('maj') && !quality.includes('m7')) {
     intervals = [0, 3, 7]; // Minor triad
   }
-  if (quality.includes('7')) {
-    if (quality.includes('maj')) {
-      intervals = [0, 4, 7, 11]; // Major 7th
-    } else {
-      intervals = [0, 4, 7, 10]; // Dominant 7th
+  
+  // 7th chords
+  if (quality.includes('maj7')) {
+    intervals = [0, 4, 7, 11]; // Major 7th
+  } else if (quality.includes('m7')) {
+    intervals = [0, 3, 7, 10]; // Minor 7th
+  } else if (quality.includes('7')) {
+    intervals = [0, 4, 7, 10]; // Dominant 7th
+  }
+  
+  // Add extensions based on chord quality
+  if (quality.includes('9')) {
+    intervals.push(14); // Add 9th (2nd + octave)
+  }
+  if (quality.includes('11')) {
+    intervals.push(17); // Add 11th (4th + octave)
+  }
+  if (quality.includes('13')) {
+    intervals.push(21); // Add 13th (6th + octave)
+  }
+  
+  // Handle numeric extensions (4, 5, 6, etc.)
+  if (quality.includes('4')) {
+    intervals.push(5); // Add 4th
+  }
+  if (quality.includes('5')) {
+    intervals.push(7); // Add 5th (though it's usually already there)
+  }
+  if (quality.includes('6')) {
+    intervals.push(9); // Add 6th
+  }
+  
+  // Special chord types
+  if (quality.includes('sus4')) {
+    intervals = [0, 5, 7]; // Suspended 4th (replace 3rd with 4th)
+  } else if (quality.includes('sus2')) {
+    intervals = [0, 2, 7]; // Suspended 2nd (replace 3rd with 2nd)
+  }
+  
+  if (quality.includes('dim')) {
+    intervals = [0, 3, 6]; // Diminished triad
+    if (quality.includes('7')) {
+      intervals.push(9); // Diminished 7th
     }
   }
-  if (quality.includes('m7')) {
-    intervals = [0, 3, 7, 10]; // Minor 7th
+  
+  if (quality.includes('aug')) {
+    intervals = [0, 4, 8]; // Augmented triad
+  }
+  
+  if (quality.includes('add')) {
+    if (quality.includes('add9')) {
+      intervals.push(14); // Add 9th
+    } else if (quality.includes('add2')) {
+      intervals.push(2); // Add 2nd
+    } else if (quality.includes('add4')) {
+      intervals.push(5); // Add 4th
+    }
   }
 
   const baseOctave = 4; // Start with C4 as the reference octave for the lowest note
 
-  // Calculate the absolute semitone values for the root, third, and fifth
-  // ensuring they are in ascending order for the *root position*
-  let note1 = rootIndex + (baseOctave * 12); // Root
-  let note2 = rootIndex + intervals[1] + (baseOctave * 12); // Third
-  let note3 = rootIndex + intervals[2] + (baseOctave * 12); // Fifth
+  // Generate voicings with proper spacing
+  const generateVoicing = (intervalOrder: number[]) => {
+    const voicingSemitones: number[] = [];
+    let currentOctave = baseOctave;
+    
+    intervalOrder.forEach((interval, index) => {
+      const noteSemitone = rootIndex + interval + (currentOctave * 12);
+      voicingSemitones.push(noteSemitone);
+      
+      // Move to next octave for higher intervals to avoid clustering
+      if (interval >= 12) {
+        currentOctave++;
+      }
+    });
+    
+    return voicingSemitones.map(getNoteFromAbsoluteSemitone).join(' ');
+  };
 
-  // Adjust octaves to ensure notes are ascending for the root position
-  if (note2 < note1) note2 += 12;
-  if (note3 < note2) note3 += 12;
+  // Generate different voicings
+  const voicings: string[] = [];
+  
+  // Root position voicing
+  voicings.push(generateVoicing(intervals));
+  
+  // First inversion (move root up an octave)
+  if (intervals.length >= 3) {
+    const firstInversion = [...intervals.slice(1), intervals[0] + 12];
+    voicings.push(generateVoicing(firstInversion));
+  }
+  
+  // Second inversion (move root and third up an octave)
+  if (intervals.length >= 3) {
+    const secondInversion = [...intervals.slice(2), intervals[0] + 12, intervals[1] + 12];
+    voicings.push(generateVoicing(secondInversion));
+  }
 
-  // Root position: [note1, note2, note3]
-  const rootVoicingSemitones = [note1, note2, note3];
-
-  // First inversion: [note2, note3, note1 (octave up)]
-  const firstInversionVoicingSemitones = [note2, note3, note1 + 12];
-
-  // Second inversion: [note3, note1 (octave up), note2 (octave up)]
-  const secondInversionVoicingSemitones = [note3, note1 + 12, note2 + 12];
-
-  return [
-    rootVoicingSemitones.map(getNoteFromAbsoluteSemitone).join(' '),
-    firstInversionVoicingSemitones.map(getNoteFromAbsoluteSemitone).join(' '),
-    secondInversionVoicingSemitones.map(getNoteFromAbsoluteSemitone).join(' ')
-  ];
+  return voicings;
 }
 
 // Extract chords from text for clickable functionality

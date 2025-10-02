@@ -16,11 +16,15 @@ export const songService = {
       throw error;
     }
 
-    return data?.map(song => ({
+    const mappedSongs = data?.map(song => ({
       ...song,
+      folderId: song.folder_id, // Map folder_id to folderId
       createdAt: new Date(song.created_at),
       updatedAt: new Date(song.updated_at)
     })) || [];
+    
+    console.log('Mapped songs with folder IDs:', mappedSongs.map(s => ({ id: s.id, title: s.title, folderId: s.folderId })));
+    return mappedSongs;
   },
 
   // Récupérer une chanson par ID
@@ -38,6 +42,7 @@ export const songService = {
 
     return {
       ...data,
+      folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at)
     };
@@ -72,6 +77,7 @@ export const songService = {
 
     return {
       ...data,
+      folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at)
     };
@@ -79,9 +85,12 @@ export const songService = {
 
   // Mettre à jour une chanson
   async updateSong(id: string, updates: SongEditData): Promise<Song> {
+    console.log('songService.updateSong called with:', { id, updates });
+    
     // Parser le nouveau contenu si fourni
     let sections = undefined;
     if (updates.content) {
+      console.log('Parsing content to structured song...');
       const structuredSong = parseTextToStructuredSong(
         updates.title,
         updates.author,
@@ -89,6 +98,7 @@ export const songService = {
         updates.folderId
       );
       sections = structuredSong.sections;
+      console.log('Parsed sections:', sections);
     }
 
     const updateData: any = {
@@ -102,6 +112,8 @@ export const songService = {
       updateData.sections = sections;
     }
 
+    console.log('Updating database with:', updateData);
+
     const { data, error } = await supabase
       .from('songs')
       .update(updateData)
@@ -114,8 +126,11 @@ export const songService = {
       throw error;
     }
 
+    console.log('Song updated successfully:', data);
+
     return {
       ...data,
+      folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at)
     };
@@ -149,6 +164,7 @@ export const songService = {
 
     return data?.map(song => ({
       ...song,
+      folderId: song.folder_id, // Map folder_id to folderId
       createdAt: new Date(song.created_at),
       updatedAt: new Date(song.updated_at)
     })) || [];
@@ -159,6 +175,7 @@ export const songService = {
 export const folderService = {
   // Récupérer tous les dossiers
   async getAllFolders(): Promise<Folder[]> {
+    console.log('Fetching folders from database...');
     const { data, error } = await supabase
       .from('folders')
       .select('*')
@@ -169,11 +186,16 @@ export const folderService = {
       throw error;
     }
 
-    return data?.map(folder => ({
+    console.log('Raw folders data:', data);
+    
+    const mappedFolders = data?.map(folder => ({
       ...folder,
       createdAt: new Date(folder.created_at),
       updatedAt: new Date(folder.updated_at)
     })) || [];
+    
+    console.log('Mapped folders:', mappedFolders);
+    return mappedFolders;
   },
 
   // Créer un nouveau dossier

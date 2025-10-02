@@ -204,14 +204,50 @@ function PianoDiagram({ chord }: { chord: string }) {
     );
   }
   
-  // Determine chord quality for title
+  // Determine chord quality for title - ENHANCED
   const getChordQuality = (chord: string) => {
-    if (chord.toLowerCase().includes('m') && !chord.toLowerCase().includes('maj')) {
+    const quality = chord.toLowerCase();
+    
+    if (quality.includes('maj7')) {
+      return 'Major 7th';
+    }
+    if (quality.includes('m7')) {
+      return 'Minor 7th';
+    }
+    if (quality.includes('7')) {
+      return '7th';
+    }
+    if (quality.includes('9')) {
+      return '9th';
+    }
+    if (quality.includes('sus4')) {
+      return 'Suspended 4th';
+    }
+    if (quality.includes('sus2')) {
+      return 'Suspended 2nd';
+    }
+    if (quality.includes('dim')) {
+      return 'Diminished';
+    }
+    if (quality.includes('aug')) {
+      return 'Augmented';
+    }
+    if (quality.includes('add')) {
+      return 'Added Tone';
+    }
+    if (quality.includes('m') && !quality.includes('maj')) {
       return 'Minor';
     }
-    if (chord.includes('7')) {
-      return chord.toLowerCase().includes('maj') ? 'Major 7th' : '7th';
+    if (quality.includes('4')) {
+      return '4th Extension';
     }
+    if (quality.includes('5')) {
+      return '5th Extension';
+    }
+    if (quality.includes('6')) {
+      return '6th Extension';
+    }
+    
     return 'Major';
   };
 
@@ -309,13 +345,14 @@ function PianoKeyboard({
                       rx="2"
                       ry="2"
                     />
-                    {/* Note label */}
+                    {/* Note label with better visibility for extensions */}
                     {isActive && (
                       <text
                         x={index * keyWidth + keyWidth / 2}
                         y={whiteKeyHeight - 6}
                         textAnchor="middle"
                         className="text-xs font-bold fill-white"
+                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
                       >
                         {note.replace('#', '♯')}{octave}
                       </text>
@@ -341,13 +378,14 @@ function PianoKeyboard({
                       rx="1"
                       ry="1"
                     />
-                    {/* Note label */}
+                    {/* Note label with better visibility for extensions */}
                     {isActive && (
                       <text
                         x={position * keyWidth}
                         y={blackKeyHeight - 5}
                         textAnchor="middle"
                         className="text-xs font-bold fill-white"
+                        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
                       >
                         {note.replace('#', '♯')}{octave}
                       </text>

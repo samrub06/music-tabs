@@ -4,14 +4,14 @@ import { useApp } from '@/context/AppContext';
 import { Song, SongEditData } from '@/types';
 import { extractAllChords, renderStructuredSong, transposeStructuredSong } from '@/utils/structuredSong';
 import {
-    ArrowLeftIcon,
-    MinusIcon,
-    MusicalNoteIcon,
-    PauseIcon,
-    PencilIcon,
-    PlayIcon,
-    PlusIcon,
-    TrashIcon
+  ArrowLeftIcon,
+  MinusIcon,
+  MusicalNoteIcon,
+  PauseIcon,
+  PencilIcon,
+  PlayIcon,
+  PlusIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -181,9 +181,9 @@ export default function SongViewer({ song }: SongViewerProps) {
               <ArrowLeftIcon className="h-6 w-6" />
             </button>
             <div className="flex-1 text-center px-2">
-              <h1 className="text-lg font-bold text-gray-900 truncate">{song.title}</h1>
+              <h1 className="text-lg font-bold text-gray-900 truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
               {song.author && (
-                <p className="text-sm text-gray-600 truncate">Par {song.author}</p>
+                <p className="text-sm text-gray-600 truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
               )}
             </div>
             <button
@@ -295,9 +295,9 @@ export default function SongViewer({ song }: SongViewerProps) {
               <ArrowLeftIcon className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{song.title}</h1>
+              <h1 className="text-xl font-bold text-gray-900" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
               {song.author && (
-                <p className="text-sm text-gray-600">Par {song.author}</p>
+                <p className="text-sm text-gray-600" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
               )}
             </div>
           </div>
@@ -580,10 +580,16 @@ interface StructuredSongContentProps {
 }
 
 function StructuredSongContent({ song, onChordClick }: StructuredSongContentProps) {
+  // Detect if content contains Hebrew/RTL text
+  const containsHebrew = (text: string) => {
+    return /[\u0590-\u05FF\u200F\u200E]/.test(text);
+  };
+
   const renderSongLine = (line: any, lineIndex: number) => {
     if (line.type === 'lyrics_only') {
+      const isHebrew = line.lyrics && containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="text-gray-900 min-h-[1.5rem]">
+        <div key={lineIndex} className="text-gray-900 min-h-[1.5rem]" dir={isHebrew ? 'rtl' : 'ltr'}>
           {line.lyrics || ''}
         </div>
       );
@@ -598,8 +604,9 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
     }
     
     if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
+      const isHebrew = containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="mb-2">
+        <div key={lineIndex} className="mb-2" dir={isHebrew ? 'rtl' : 'ltr'}>
           {/* Chord line with precise positioning */}
           <div className="text-blue-600 font-semibold min-h-[1.2rem] relative">
             {line.chords.map((chordPos: any, chordIndex: number) => (
@@ -607,7 +614,10 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
                 key={chordIndex}
                 onClick={() => onChordClick(chordPos.chord)}
                 className="absolute hover:text-blue-800 hover:underline cursor-pointer"
-                style={{ left: `${chordPos.position * 0.6}em` }}
+                style={{ 
+                  left: isHebrew ? 'auto' : `${chordPos.position * 0.6}em`,
+                  right: isHebrew ? `${chordPos.position * 0.6}em` : 'auto'
+                }}
               >
                 {chordPos.chord}
               </button>

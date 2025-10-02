@@ -1,16 +1,19 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { Song } from '@/types';
 import {
     ChevronDownIcon,
     ChevronUpIcon,
     FunnelIcon,
     MusicalNoteIcon,
+    PencilIcon,
     PlayIcon,
     TrashIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import EditSongForm from './EditSongForm';
 
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt';
 type SortDirection = 'asc' | 'desc';
@@ -29,6 +32,8 @@ export default function SongTable() {
   const [sortField, setSortField] = useState<SortField>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [showFolderFilter, setShowFolderFilter] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -120,7 +125,10 @@ export default function SongTable() {
 
   const getFolderName = (folderId: string | null | undefined) => {
     if (!folderId) return 'Sans dossier';
+    console.log('Looking for folder with ID:', folderId);
+    console.log('Available folders:', folders);
     const folder = folders.find(f => f.id === folderId);
+    console.log('Found folder:', folder);
     return folder ? folder.name : 'Dossier inconnu';
   };
 
@@ -129,6 +137,17 @@ export default function SongTable() {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
       deleteSong(songId);
     }
+  };
+
+  const handleEditSong = (e: React.MouseEvent, song: Song) => {
+    e.stopPropagation();
+    setSelectedSong(song);
+    setShowEditForm(true);
+  };
+
+  const handleCloseEditForm = () => {
+    setShowEditForm(false);
+    setSelectedSong(null);
   };
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -302,6 +321,13 @@ export default function SongTable() {
                       <PlayIcon className="h-4 w-4" />
                     </button>
                     <button
+                      onClick={(e) => handleEditSong(e, song)}
+                      className="text-green-600 hover:text-green-900 p-1 rounded"
+                      title="Modifier"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={(e) => handleDeleteSong(e, song.id)}
                       className="text-red-600 hover:text-red-900 p-1 rounded"
                       title="Supprimer"
@@ -315,6 +341,13 @@ export default function SongTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit Song Modal */}
+      <EditSongForm 
+        isOpen={showEditForm}
+        onClose={handleCloseEditForm}
+        song={selectedSong}
+      />
     </div>
   );
 }

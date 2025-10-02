@@ -306,8 +306,8 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
               <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md">
                 <p className="font-medium mb-1">💡 Comment utiliser :</p>
                 <ul className="space-y-1">
-                  <li>• <strong>🎸 EN/FR</strong> : Pour les chansons en anglais/français (Ultimate Guitar)</li>
-                  <li>• <strong>🇮🇱 עברית</strong> : לשירים בעברית (Tab4U)</li>
+                  <li>• <strong>🎸 EN/FR</strong> : Pour les chansons en anglais/français</li>
+                  <li>• <strong>🇮🇱 עברית</strong> : לשירים בעברית</li>
                   <li>• Cliquez sur un résultat pour le charger dans le formulaire</li>
                   <li>• Vous pouvez ensuite modifier avant d&apos;ajouter</li>
                 </ul>
