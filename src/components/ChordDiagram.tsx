@@ -2,6 +2,8 @@
 
 import { InstrumentType } from '@/types';
 import { GUITAR_SHAPES, generatePianoVoicing } from '@/utils/chords';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
 // Removed react-piano - using custom piano component
 
 interface ChordDiagramProps {
@@ -19,6 +21,8 @@ export default function ChordDiagram({ chord, instrument }: ChordDiagramProps) {
 
 // Multiple guitar chord positions with SVG
 function GuitarDiagram({ chord }: { chord: string }) {
+  const [currentPosition, setCurrentPosition] = useState(0);
+
   // Generate multiple chord positions
   const generateChordPositions = (chord: string) => {
     const baseShape = GUITAR_SHAPES[chord];
@@ -40,6 +44,14 @@ function GuitarDiagram({ chord }: { chord: string }) {
   };
   
   const chordPositions = generateChordPositions(chord);
+
+  const nextPosition = () => {
+    setCurrentPosition((prev) => (prev + 1) % chordPositions.length);
+  };
+
+  const prevPosition = () => {
+    setCurrentPosition((prev) => (prev - 1 + chordPositions.length) % chordPositions.length);
+  };
   
   if (chordPositions.length === 0) {
     return (
@@ -60,14 +72,158 @@ function GuitarDiagram({ chord }: { chord: string }) {
   const totalHeight = frets.length * fretHeight;
   const positionNames = ['Pos.1', 'Pos.2', 'Pos.3', 'Pos.4'];
 
+  const currentShape = chordPositions[currentPosition] || chordPositions[0];
+
   return (
     <div className="p-1 bg-white rounded border border-gray-200 shadow-sm">
       <div className="text-center mb-2">
         <h4 className="text-xs font-bold text-gray-800 mb-1">{chord}</h4>
-        <p className="text-xs text-gray-600">4 positions</p>
+        <div className="flex items-center justify-center space-x-2">
+          {/* Mobile: Carousel with arrows */}
+          <div className="md:hidden flex items-center space-x-2">
+            <button
+              onClick={prevPosition}
+              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+              title="Position précédente"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+            <span className="text-xs font-medium text-gray-600 min-w-[4rem] text-center">
+              {positionNames[currentPosition]} ({currentPosition + 1}/{chordPositions.length})
+            </span>
+            <button
+              onClick={nextPosition}
+              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+              title="Position suivante"
+            >
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+          
+          {/* Desktop: Show all positions */}
+          <div className="hidden md:block">
+            <p className="text-xs text-gray-600">4 positions</p>
+          </div>
+        </div>
       </div>
       
-      <div className="space-y-2">
+      {/* Mobile: Single diagram with navigation */}
+      <div className="md:hidden">
+        <div className="text-center">
+          <div className="flex justify-center">
+            <div className="relative">
+              {/* Fret numbers on the left */}
+              <div className="absolute -left-6 top-0 h-full flex flex-col justify-around">
+                {frets.map((fret, fretIndex) => (
+                  <div
+                    key={fret}
+                    className="text-xs font-bold text-gray-600 text-center"
+                    style={{ height: `${fretHeight}px`, lineHeight: `${fretHeight}px` }}
+                  >
+                    {fret}
+                  </div>
+                ))}
+              </div>
+              
+              <svg width={totalWidth} height={totalHeight + 20} className="border border-gray-300 rounded">
+                {/* String names */}
+                {stringNames.map((name, index) => (
+                  <text
+                    key={name}
+                    x={index * stringWidth + stringWidth / 2}
+                    y={15}
+                    textAnchor="middle"
+                    className="text-xs font-bold fill-gray-700"
+                    fontSize="11"
+                  >
+                    {name}
+                  </text>
+                ))}
+                
+                {/* Fret lines */}
+                {frets.map((fret, fretIndex) => (
+                  <line
+                    key={fret}
+                    x1={0}
+                    y1={20 + fretIndex * fretHeight}
+                    x2={totalWidth}
+                    y2={20 + fretIndex * fretHeight}
+                    stroke="#374151"
+                    strokeWidth={fret === 0 ? 2 : 1}
+                  />
+                ))}
+                
+                {/* String lines */}
+                {stringNames.map((_, stringIndex) => (
+                  <line
+                    key={stringIndex}
+                    x1={stringIndex * stringWidth + stringWidth / 2}
+                    y1={20}
+                    x2={stringIndex * stringWidth + stringWidth / 2}
+                    y2={20 + frets.length * fretHeight}
+                    stroke="#6b7280"
+                    strokeWidth={1}
+                  />
+                ))}
+                
+                {/* Chord positions */}
+                {currentShape.map((fret, stringIndex) => {
+                  if (fret === -1) {
+                    // Muted string
+                    return (
+                      <text
+                        key={`mute-${stringIndex}`}
+                        x={stringIndex * stringWidth + stringWidth / 2}
+                        y={15}
+                        textAnchor="middle"
+                        className="text-xs font-bold fill-red-600"
+                        fontSize="11"
+                      >
+                        ×
+                      </text>
+                    );
+                  }
+                  
+                  if (fret === 0) {
+                    // Open string
+                    return (
+                      <circle
+                        key={`open-${stringIndex}`}
+                        cx={stringIndex * stringWidth + stringWidth / 2}
+                        cy={20 + fretHeight / 2}
+                        r={5}
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                      />
+                    );
+                  }
+                  
+                  if (fret > 0 && fret <= 12) {
+                    // Fingered position
+                    return (
+                      <circle
+                        key={`fret-${stringIndex}-${fret}`}
+                        cx={stringIndex * stringWidth + stringWidth / 2}
+                        cy={20 + (fret - 0.5) * fretHeight}
+                        r={6}
+                        fill="#3b82f6"
+                        stroke="white"
+                        strokeWidth={2}
+                      />
+                    );
+                  }
+                  
+                  return null;
+                })}
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop: All positions vertically */}
+      <div className="hidden md:block space-y-2">
         {chordPositions.slice(0, 4).map((shape, positionIndex) => (
           <div key={positionIndex} className="text-center">
             <div className="text-xs font-medium text-gray-600 mb-1">
