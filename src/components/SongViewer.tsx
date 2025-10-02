@@ -54,19 +54,10 @@ export default function SongViewer({ song }: SongViewerProps) {
 
   // Auto-scroll functionality
   useEffect(() => {
-    console.log('Auto-scroll effect triggered:', { 
-      isActive: autoScroll.isActive, 
-      speed: autoScroll.speed,
-      hasContentRef: !!contentRef.current 
-    });
+
     
     if (autoScroll.isActive && contentRef.current) {
-      console.log('Starting auto-scroll with speed:', autoScroll.speed);
-      console.log('Content dimensions:', {
-        scrollHeight: contentRef.current.scrollHeight,
-        clientHeight: contentRef.current.clientHeight,
-        scrollTop: contentRef.current.scrollTop
-      });
+     
       
       scrollIntervalRef.current = setInterval(() => {
         if (contentRef.current) {
@@ -74,17 +65,10 @@ export default function SongViewer({ song }: SongViewerProps) {
           const oldScrollTop = contentRef.current.scrollTop;
           const maxScrollTop = contentRef.current.scrollHeight - contentRef.current.clientHeight;
           
-          console.log('Auto-scrolling:', {
-            oldScrollTop,
-            maxScrollTop,
-            scrollAmount,
-            scrollHeight: contentRef.current.scrollHeight,
-            clientHeight: contentRef.current.clientHeight
-          });
+      
           
           // Check if there's content to scroll
           if (maxScrollTop <= 0) {
-            console.log('No scrollable content, stopping auto-scroll');
             toggleAutoScroll();
             return;
           }
@@ -97,13 +81,11 @@ export default function SongViewer({ song }: SongViewerProps) {
           const isAtBottom = contentRef.current.scrollTop >= maxScrollTop - tolerance;
           
           if (isAtBottom) {
-            console.log('Reached bottom, stopping auto-scroll');
             toggleAutoScroll();
           }
         }
       }, 50);
     } else {
-      console.log('Stopping auto-scroll or contentRef not available');
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
         scrollIntervalRef.current = null;
@@ -193,7 +175,6 @@ export default function SongViewer({ song }: SongViewerProps) {
   };
 
   const handleToggleAutoScroll = () => {
-    console.log('Toggle auto-scroll clicked, current state:', autoScroll.isActive);
     toggleAutoScroll();
   };
 

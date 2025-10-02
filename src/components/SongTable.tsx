@@ -3,13 +3,13 @@
 import { useApp } from '@/context/AppContext';
 import { Song } from '@/types';
 import {
-    ChevronDownIcon,
-    ChevronUpIcon,
-    FunnelIcon,
-    MusicalNoteIcon,
-    PencilIcon,
-    PlayIcon,
-    TrashIcon
+  ChevronDownIcon,
+  ChevronUpIcon,
+  FunnelIcon,
+  MusicalNoteIcon,
+  PencilIcon,
+  PlayIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -125,10 +125,8 @@ export default function SongTable() {
 
   const getFolderName = (folderId: string | null | undefined) => {
     if (!folderId) return 'Sans dossier';
-    console.log('Looking for folder with ID:', folderId);
-    console.log('Available folders:', folders);
+   
     const folder = folders.find(f => f.id === folderId);
-    console.log('Found folder:', folder);
     return folder ? folder.name : 'Dossier inconnu';
   };
 
