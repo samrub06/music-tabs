@@ -90,7 +90,7 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+      <div className="relative top-4 sm:top-20 mx-auto p-3 sm:p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white m-4 sm:m-0">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-medium text-gray-900 flex items-center">
             <PencilIcon className="h-5 w-5 mr-2" />
@@ -104,8 +104,8 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Titre *
@@ -156,11 +156,11 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Contenu (accords + paroles) *
             </label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              rows={12}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              <textarea
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                rows={8}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               placeholder={`[Intro]
 C   G   Am  F
 
@@ -173,25 +173,27 @@ Avec les accords alignés...`}
             />
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-            >
-              Annuler
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-            >
-              Fermer
-            </button>
+          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex space-x-3 order-2 sm:order-1">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
+              >
+                Fermer
+              </button>
+            </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="order-1 sm:order-2 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Mise à jour...' : 'Sauvegarder'}
             </button>

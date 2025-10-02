@@ -5,6 +5,7 @@ import { Song, SongEditData } from '@/types';
 import { extractAllChords, renderStructuredSong, transposeStructuredSong } from '@/utils/structuredSong';
 import {
   ArrowLeftIcon,
+  EyeIcon,
   MinusIcon,
   MusicalNoteIcon,
   PauseIcon,
@@ -40,6 +41,7 @@ export default function SongViewer({ song }: SongViewerProps) {
   const [selectedChord, setSelectedChord] = useState<string | null>(null);
   const [showChordDiagram, setShowChordDiagram] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [fontSize, setFontSize] = useState(14); // Default font size in px
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -52,20 +54,56 @@ export default function SongViewer({ song }: SongViewerProps) {
 
   // Auto-scroll functionality
   useEffect(() => {
+    console.log('Auto-scroll effect triggered:', { 
+      isActive: autoScroll.isActive, 
+      speed: autoScroll.speed,
+      hasContentRef: !!contentRef.current 
+    });
+    
     if (autoScroll.isActive && contentRef.current) {
+      console.log('Starting auto-scroll with speed:', autoScroll.speed);
+      console.log('Content dimensions:', {
+        scrollHeight: contentRef.current.scrollHeight,
+        clientHeight: contentRef.current.clientHeight,
+        scrollTop: contentRef.current.scrollTop
+      });
+      
       scrollIntervalRef.current = setInterval(() => {
         if (contentRef.current) {
-          const scrollAmount = autoScroll.speed * 0.5; // Adjust scroll speed
+          const scrollAmount = autoScroll.speed * 1; // Use speed directly
+          const oldScrollTop = contentRef.current.scrollTop;
+          const maxScrollTop = contentRef.current.scrollHeight - contentRef.current.clientHeight;
+          
+          console.log('Auto-scrolling:', {
+            oldScrollTop,
+            maxScrollTop,
+            scrollAmount,
+            scrollHeight: contentRef.current.scrollHeight,
+            clientHeight: contentRef.current.clientHeight
+          });
+          
+          // Check if there's content to scroll
+          if (maxScrollTop <= 0) {
+            console.log('No scrollable content, stopping auto-scroll');
+            toggleAutoScroll();
+            return;
+          }
+          
+          // Scroll down
           contentRef.current.scrollTop += scrollAmount;
           
-          // Stop if reached bottom
-          if (contentRef.current.scrollTop >= 
-              contentRef.current.scrollHeight - contentRef.current.clientHeight) {
+          // Stop if reached bottom (with small tolerance)
+          const tolerance = 5;
+          const isAtBottom = contentRef.current.scrollTop >= maxScrollTop - tolerance;
+          
+          if (isAtBottom) {
+            console.log('Reached bottom, stopping auto-scroll');
             toggleAutoScroll();
           }
         }
       }, 50);
     } else {
+      console.log('Stopping auto-scroll or contentRef not available');
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
         scrollIntervalRef.current = null;
@@ -75,6 +113,7 @@ export default function SongViewer({ song }: SongViewerProps) {
     return () => {
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
       }
     };
   }, [autoScroll.isActive, autoScroll.speed, toggleAutoScroll]);
@@ -153,6 +192,23 @@ export default function SongViewer({ song }: SongViewerProps) {
     setShowChordDiagram(true);
   };
 
+  const handleToggleAutoScroll = () => {
+    console.log('Toggle auto-scroll clicked, current state:', autoScroll.isActive);
+    toggleAutoScroll();
+  };
+
+  const increaseFontSize = () => {
+    setFontSize(prev => Math.min(prev + 2, 24)); // Max 24px
+  };
+
+  const decreaseFontSize = () => {
+    setFontSize(prev => Math.max(prev - 2, 10)); // Min 10px
+  };
+
+  const resetFontSize = () => {
+    setFontSize(14); // Reset to default
+  };
+
   const resetScroll = () => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -168,7 +224,7 @@ export default function SongViewer({ song }: SongViewerProps) {
   });
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-h-0">
+    <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
       {/* Header - Mobile Responsive */}
       <div className="flex-shrink-0 border-b border-gray-200">
         {/* Mobile Header */}
@@ -220,68 +276,110 @@ export default function SongViewer({ song }: SongViewerProps) {
               </button>
             </div>
 
-            {/* Controls Row - Mobile */}
-            <div className="flex items-center justify-between">
-              {/* Transpose Controls */}
-              <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
-                <span className="text-xs text-gray-600">Tonalité:</span>
-                <button
-                  onClick={() => setTransposeValue(Math.max(transposeValue - 1, -11))}
-                  disabled={transposeValue <= -11}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
-                >
-                  <MinusIcon className="h-4 w-4" />
-                </button>
-                <span className="text-sm font-medium min-w-[2.5rem] text-center">
-                  {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-                </span>
-                <button
-                  onClick={() => setTransposeValue(Math.min(transposeValue + 1, 11))}
-                  disabled={transposeValue >= 11}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                </button>
-              </div>
+             {/* Controls Row - Mobile */}
+             <div className="flex items-center justify-between">
+               {/* Transpose Controls */}
+               <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                 <span className="text-xs text-gray-600">Tonalité:</span>
+                 <button
+                   onClick={() => setTransposeValue(Math.max(transposeValue - 1, -11))}
+                   disabled={transposeValue <= -11}
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                 >
+                   <MinusIcon className="h-4 w-4" />
+                 </button>
+                 <span className="text-sm font-medium min-w-[2.5rem] text-center">
+                   {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                 </span>
+                 <button
+                   onClick={() => setTransposeValue(Math.min(transposeValue + 1, 11))}
+                   disabled={transposeValue >= 11}
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                 >
+                   <PlusIcon className="h-4 w-4" />
+                 </button>
+               </div>
 
-              {/* Auto-scroll Controls */}
-              <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
-                <button
-                  onClick={toggleAutoScroll}
-                  className={`p-2 rounded-full ${
-                    autoScroll.isActive
-                      ? 'bg-green-100 text-green-600'
-                      : 'text-gray-400 hover:text-gray-600 hover:bg-white'
-                  }`}
-                  title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}
-                >
-                  {autoScroll.isActive ? (
-                    <PauseIcon className="h-4 w-4" />
-                  ) : (
-                    <PlayIcon className="h-4 w-4" />
-                  )}
-                </button>
-                
-                <input
-                  type="range"
-                  min="0.5"
-                  max="4"
-                  step="0.1"
-                  value={autoScroll.speed}
-                  onChange={(e) => setAutoScrollSpeed(parseFloat(e.target.value))}
-                  className="w-20"
-                  title="Vitesse"
-                />
-                
-                <button
-                  onClick={resetScroll}
-                  className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded bg-white"
-                  title="Haut"
-                >
-                  ↑
-                </button>
-              </div>
-            </div>
+               {/* Auto-scroll Controls */}
+               <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+                 <button
+                   onClick={handleToggleAutoScroll}
+                   className={`p-2 rounded-full ${
+                     autoScroll.isActive
+                       ? 'bg-green-100 text-green-600'
+                       : 'text-gray-400 hover:text-gray-600 hover:bg-white'
+                   }`}
+                   title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}
+                 >
+                   {autoScroll.isActive ? (
+                     <PauseIcon className="h-4 w-4" />
+                   ) : (
+                     <PlayIcon className="h-4 w-4" />
+                   )}
+                 </button>
+                 
+                 <button
+                   onClick={() => setAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                   title="Ralentir"
+                 >
+                   <MinusIcon className="h-4 w-4" />
+                 </button>
+                 
+                 <span className="text-xs text-gray-600 min-w-[2rem] text-center">
+                   {autoScroll.speed.toFixed(1)}x
+                 </span>
+                 
+                 <button
+                   onClick={() => setAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                   title="Accélérer"
+                 >
+                   <PlusIcon className="h-4 w-4" />
+                 </button>
+                 
+                 <button
+                   onClick={resetScroll}
+                   className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded bg-white"
+                   title="Haut"
+                 >
+                   ↑
+                 </button>
+               </div>
+             </div>
+
+             {/* Font Size Controls - Mobile */}
+             <div className="flex items-center justify-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+               <span className="text-sm font-medium text-blue-700">Taille du texte:</span>
+               <div className="flex items-center space-x-1">
+                 <button
+                   onClick={decreaseFontSize}
+                   disabled={fontSize <= 10}
+                   className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+                   title="Réduire la taille"
+                 >
+                   <MinusIcon className="h-4 w-4" />
+                 </button>
+                 <span className="text-sm font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded min-w-[3rem] text-center">
+                   {fontSize}px
+                 </span>
+                 <button
+                   onClick={increaseFontSize}
+                   disabled={fontSize >= 24}
+                   className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+                   title="Augmenter la taille"
+                 >
+                   <PlusIcon className="h-4 w-4" />
+                 </button>
+                 <button
+                   onClick={resetFontSize}
+                   className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-full transition-colors"
+                   title="Taille par défaut"
+                 >
+                   <EyeIcon className="h-4 w-4" />
+                 </button>
+               </div>
+             </div>
           </div>
         </div>
 
@@ -349,40 +447,79 @@ export default function SongViewer({ song }: SongViewerProps) {
             </div>
 
             {/* Auto-scroll Controls */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
               <button
-                onClick={toggleAutoScroll}
+                onClick={handleToggleAutoScroll}
                 className={`p-2 rounded-full ${
                   autoScroll.isActive
                     ? 'bg-green-100 text-green-600'
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-white'
                 }`}
                 title={autoScroll.isActive ? 'Arrêter le défilement' : 'Démarrer le défilement'}
               >
                 {autoScroll.isActive ? (
-                  <PauseIcon className="h-5 w-5" />
+                  <PauseIcon className="h-4 w-4" />
                 ) : (
-                  <PlayIcon className="h-5 w-5" />
+                  <PlayIcon className="h-4 w-4" />
                 )}
               </button>
               
-              <input
-                type="range"
-                min="0.5"
-                max="4"
-                step="0.1"
-                value={autoScroll.speed}
-                onChange={(e) => setAutoScrollSpeed(parseFloat(e.target.value))}
-                className="w-16"
-                title="Vitesse de défilement"
-              />
+              <button
+                onClick={() => setAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                title="Ralentir"
+              >
+                <MinusIcon className="h-4 w-4" />
+              </button>
+              
+              <span className="text-xs text-gray-600 min-w-[2rem] text-center">
+                {autoScroll.speed.toFixed(1)}x
+              </span>
+              
+              <button
+                onClick={() => setAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                title="Accélérer"
+              >
+                <PlusIcon className="h-4 w-4" />
+              </button>
               
               <button
                 onClick={resetScroll}
-                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded"
+                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded bg-white"
                 title="Remonter en haut"
               >
                 ↑ Haut
+              </button>
+            </div>
+
+            {/* Font Size Controls */}
+            <div className="flex items-center space-x-1 bg-gray-100 rounded-md p-1">
+              <button
+                onClick={decreaseFontSize}
+                disabled={fontSize <= 10}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Réduire la taille"
+              >
+                <MinusIcon className="h-3 sm:h-4 w-3 sm:w-4" />
+              </button>
+              <span className="hidden sm:block text-xs font-medium min-w-[2rem] text-center text-gray-600">
+                {fontSize}px
+              </span>
+              <button
+                onClick={increaseFontSize}
+                disabled={fontSize >= 24}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Augmenter la taille"
+              >
+                <PlusIcon className="h-3 sm:h-4 w-3 sm:w-4" />
+              </button>
+              <button
+                onClick={resetFontSize}
+                className="p-1 text-gray-400 hover:text-gray-600 ml-1"
+                title="Taille par défaut"
+              >
+                <EyeIcon className="h-3 sm:h-4 w-3 sm:w-4" />
               </button>
             </div>
 
@@ -406,9 +543,9 @@ export default function SongViewer({ song }: SongViewerProps) {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {isEditing ? (
             <div className="flex-1 flex flex-col p-4">
               <textarea
@@ -439,26 +576,27 @@ export default function SongViewer({ song }: SongViewerProps) {
           ) : (
             <div 
               ref={contentRef}
-              className="flex-1 overflow-y-auto p-3 md:p-6 bg-gray-50"
+              className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6 bg-gray-50 min-h-0"
               style={{ 
-                height: 'calc(100vh - 200px)',
-                WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
+                WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+                maxHeight: 'calc(100vh - 200px)' // Ensure scrollable area
               }}
             >
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl mx-auto w-full">
                 {/* Chord Diagrams Section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <MusicalNoteIcon className="w-5 h-5 mr-2" />
                     Accords utilisés
                   </h3>
-                  <ChordDiagramsGrid song={transposedSong} onChordClick={handleChordClick} />
+                  <ChordDiagramsGrid song={transposedSong} onChordClick={handleChordClick} fontSize={fontSize} />
                 </div>
 
                 {/* Song Content */}
                 <StructuredSongContent 
                   song={transposedSong} 
                   onChordClick={handleChordClick}
+                  fontSize={fontSize}
                 />
               </div>
             </div>
@@ -577,9 +715,10 @@ function SongContent({ content, onChordClick }: SongContentProps) {
 interface StructuredSongContentProps {
   song: any; // StructuredSong type
   onChordClick: (chord: string) => void;
+  fontSize: number;
 }
 
-function StructuredSongContent({ song, onChordClick }: StructuredSongContentProps) {
+function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongContentProps) {
   // Detect if content contains Hebrew/RTL text
   const containsHebrew = (text: string) => {
     return /[\u0590-\u05FF\u200F\u200E]/.test(text);
@@ -589,7 +728,7 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
     if (line.type === 'lyrics_only') {
       const isHebrew = line.lyrics && containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="text-gray-900 min-h-[1.5rem]" dir={isHebrew ? 'rtl' : 'ltr'}>
+        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ fontSize: `${fontSize}px` }}>
           {line.lyrics || ''}
         </div>
       );
@@ -597,7 +736,7 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
     
     if (line.type === 'chords_only') {
       return (
-        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.5rem]">
+        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ fontSize: `${fontSize}px` }}>
           {line.chord_line ? renderClickableChordLine(line.chord_line) : ''}
         </div>
       );
@@ -606,17 +745,19 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
     if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
       const isHebrew = containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="mb-2" dir={isHebrew ? 'rtl' : 'ltr'}>
+        <div key={lineIndex} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'}>
           {/* Chord line with precise positioning */}
-          <div className="text-blue-600 font-semibold min-h-[1.2rem] relative">
+          <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full overflow-hidden" style={{ fontSize: `${fontSize}px` }}>
             {line.chords.map((chordPos: any, chordIndex: number) => (
               <button
                 key={chordIndex}
                 onClick={() => onChordClick(chordPos.chord)}
-                className="absolute hover:text-blue-800 hover:underline cursor-pointer"
+                className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
                 style={{ 
                   left: isHebrew ? 'auto' : `${chordPos.position * 0.6}em`,
-                  right: isHebrew ? `${chordPos.position * 0.6}em` : 'auto'
+                  right: isHebrew ? `${chordPos.position * 0.6}em` : 'auto',
+                  maxWidth: 'calc(100vw - 2rem)', // Prevent overflow on mobile
+                  fontSize: `${fontSize}px`
                 }}
               >
                 {chordPos.chord}
@@ -624,7 +765,7 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
             ))}
           </div>
           {/* Lyrics line */}
-          <div className="text-gray-900 min-h-[1.2rem]">
+          <div className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ fontSize: `${fontSize}px` }}>
             {line.lyrics}
           </div>
         </div>
@@ -666,16 +807,16 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
   };
   
   return (
-    <div className="font-mono text-sm leading-relaxed space-y-4">
+    <div className="font-mono leading-relaxed space-y-4 w-full overflow-x-hidden" style={{ fontSize: `${fontSize}px` }}>
       {song.sections.map((section: any, sectionIndex: number) => (
-        <div key={sectionIndex} className="mb-6">
+        <div key={sectionIndex} className="mb-6 w-full">
           {/* Section header */}
-          <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1">
+          <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ fontSize: `${fontSize + 4}px` }}>
             [{section.name}]
           </div>
           
           {/* Section lines */}
-          <div className="space-y-1">
+          <div className="space-y-1 w-full">
             {section.lines.map((line: any, lineIndex: number) => 
               renderSongLine(line, lineIndex)
             )}
@@ -690,9 +831,10 @@ function StructuredSongContent({ song, onChordClick }: StructuredSongContentProp
 interface ChordDiagramsGridProps {
   song: any; // StructuredSong type
   onChordClick: (chord: string) => void;
+  fontSize: number;
 }
 
-function ChordDiagramsGrid({ song, onChordClick }: ChordDiagramsGridProps) {
+function ChordDiagramsGrid({ song, onChordClick, fontSize }: ChordDiagramsGridProps) {
   const allChords = extractAllChords(song);
   
   if (allChords.length === 0) {
@@ -712,7 +854,7 @@ function ChordDiagramsGrid({ song, onChordClick }: ChordDiagramsGridProps) {
           className="group p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600">
+            <div className="font-bold text-gray-900 group-hover:text-blue-600" style={{ fontSize: `${fontSize + 2}px` }}>
               {chord}
             </div>
           </div>

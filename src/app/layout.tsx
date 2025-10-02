@@ -3,7 +3,7 @@
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { AppProvider } from '@/context/AppContext';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Inter } from 'next/font/google';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -19,8 +19,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isSongPage = pathname.startsWith('/song/')
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Header onMenuClick={() => setSidebarOpen(true)} />
       
       <div className="flex-1 flex overflow-hidden">
         {/* Mobile sidebar backdrop */}
@@ -51,19 +51,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Mobile menu button - only show when not on a song page */}
-          {!isSongPage && (
-            <div className="lg:hidden p-4 border-b border-gray-200 bg-white">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-              >
-                <Bars3Icon className="h-6 w-6" />
-              </button>
-            </div>
-          )}
-          
+        <div className="flex-1 flex flex-col min-h-0">
           {children}
         </div>
       </div>

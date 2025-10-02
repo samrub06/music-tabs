@@ -181,9 +181,9 @@ export default function SongTable() {
   return (
     <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
       {/* Filter Bar */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
             <span className="text-sm font-medium text-gray-700">
               {sortedSongs.length} chanson{sortedSongs.length !== 1 ? 's' : ''}
             </span>
@@ -198,17 +198,21 @@ export default function SongTable() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowFolderFilter(!showFolderFilter)}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto justify-between"
             >
-              <FunnelIcon className="h-4 w-4 mr-2" />
-              {currentFolder === null ? 'Tous les dossiers' : 
-               currentFolder === 'unorganized' ? 'Sans dossier' : 
-               getFolderName(currentFolder)}
-              <ChevronDownIcon className="h-4 w-4 ml-2" />
+              <div className="flex items-center">
+                <FunnelIcon className="h-4 w-4 mr-2" />
+                <span className="truncate">
+                  {currentFolder === null ? 'Tous les dossiers' : 
+                   currentFolder === 'unorganized' ? 'Sans dossier' : 
+                   getFolderName(currentFolder)}
+                </span>
+              </div>
+              <ChevronDownIcon className="h-4 w-4 ml-2 flex-shrink-0" />
             </button>
 
             {showFolderFilter && (
-              <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+              <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                 <div className="py-1">
                   <button
                     onClick={() => {
@@ -263,19 +267,19 @@ export default function SongTable() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <SortButton field="title">Titre</SortButton>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <SortButton field="author">Artiste</SortButton>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Dossier
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <SortButton field="updatedAt">Modifié</SortButton>
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -287,29 +291,35 @@ export default function SongTable() {
                 onClick={() => router.push(`/song/${song.id}`)}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               >
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <MusicalNoteIcon className="h-5 w-5 text-gray-400 mr-3" />
-                    <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                      {song.title}
+                    <MusicalNoteIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-none">
+                        {song.title}
+                      </div>
+                      {/* Show artist on mobile when artist column is hidden */}
+                      <div className="sm:hidden text-xs text-gray-500 truncate max-w-[180px]">
+                        {song.author}
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 truncate max-w-xs">
                     {song.author}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {getFolderName(song.folderId)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
+                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end space-x-1 sm:space-x-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
