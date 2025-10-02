@@ -602,7 +602,7 @@ export default function SongViewer({ song }: SongViewerProps) {
                   </button>
                 </div>
                 <div className="p-4">
-                  <ChordDiagram chord={selectedChord} instrument={selectedInstrument} />
+                  <ChordDiagram chord={selectedChord} instrument={selectedInstrument} fontSize={fontSize} />
                 </div>
               </div>
             </div>
@@ -621,7 +621,7 @@ export default function SongViewer({ song }: SongViewerProps) {
                 </button>
               </div>
               <div className="p-4">
-                <ChordDiagram chord={selectedChord} instrument={selectedInstrument} />
+                <ChordDiagram chord={selectedChord} instrument={selectedInstrument} fontSize={fontSize} />
               </div>
             </div>
           </>
@@ -827,15 +827,19 @@ function ChordDiagramsGrid({ song, onChordClick, fontSize }: ChordDiagramsGridPr
   }
   
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
       {allChords.map((chord) => (
         <button
           key={chord}
           onClick={() => onChordClick(chord)}
-          className="group p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="group p-2 sm:p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
         >
-          <div className="text-center">
-            <div className="font-bold text-gray-900 group-hover:text-blue-600" style={{ fontSize: `${fontSize + 2}px` }}>
+          <div className="text-center w-full">
+            <div 
+              className="font-bold text-gray-900 group-hover:text-blue-600 w-full text-center" 
+              style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
+              title={chord}
+            >
               {chord}
             </div>
           </div>

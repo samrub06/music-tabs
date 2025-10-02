@@ -9,18 +9,19 @@ import { useState } from 'react';
 interface ChordDiagramProps {
   chord: string;
   instrument: InstrumentType;
+  fontSize?: number;
 }
 
-export default function ChordDiagram({ chord, instrument }: ChordDiagramProps) {
+export default function ChordDiagram({ chord, instrument, fontSize = 14 }: ChordDiagramProps) {
   if (instrument === 'guitar') {
-    return <GuitarDiagram chord={chord} />;
+    return <GuitarDiagram chord={chord} fontSize={fontSize} />;
   } else {
-    return <PianoDiagram chord={chord} />;
+    return <PianoDiagram chord={chord} fontSize={fontSize} />;
   }
 }
 
 // Multiple guitar chord positions with SVG
-function GuitarDiagram({ chord }: { chord: string }) {
+function GuitarDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: number }) {
   const [currentPosition, setCurrentPosition] = useState(0);
 
   // Generate multiple chord positions
@@ -75,9 +76,15 @@ function GuitarDiagram({ chord }: { chord: string }) {
   const currentShape = chordPositions[currentPosition] || chordPositions[0];
 
   return (
-    <div className="p-1 bg-white rounded border border-gray-200 shadow-sm">
-      <div className="text-center mb-2">
-        <h4 className="text-xs font-bold text-gray-800 mb-1">{chord}</h4>
+    <div className="p-2 bg-white rounded border border-gray-200 shadow-sm w-full max-w-full">
+      <div className="text-center mb-2 w-full">
+        <h4 
+          className="font-bold text-gray-800 mb-1 w-full text-center" 
+          style={{ fontSize: `${Math.min(fontSize + 2, 16)}px` }}
+          title={chord}
+        >
+          {chord}
+        </h4>
         <div className="flex items-center justify-center space-x-2">
           {/* Mobile: Carousel with arrows */}
           <div className="md:hidden flex items-center space-x-2">
@@ -88,7 +95,10 @@ function GuitarDiagram({ chord }: { chord: string }) {
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            <span className="text-xs font-medium text-gray-600 min-w-[4rem] text-center">
+            <span 
+              className="font-medium text-gray-600 min-w-[4rem] text-center" 
+              style={{ fontSize: `${Math.min(fontSize, 12)}px` }}
+            >
               {positionNames[currentPosition]} ({currentPosition + 1}/{chordPositions.length})
             </span>
             <button
@@ -102,7 +112,12 @@ function GuitarDiagram({ chord }: { chord: string }) {
           
           {/* Desktop: Show all positions */}
           <div className="hidden md:block">
-            <p className="text-xs text-gray-600">4 positions</p>
+            <p 
+              className="text-gray-600" 
+              style={{ fontSize: `${Math.min(fontSize, 12)}px` }}
+            >
+              4 positions
+            </p>
           </div>
         </div>
       </div>
@@ -226,7 +241,10 @@ function GuitarDiagram({ chord }: { chord: string }) {
       <div className="hidden md:block space-y-2">
         {chordPositions.slice(0, 4).map((shape, positionIndex) => (
           <div key={positionIndex} className="text-center">
-            <div className="text-xs font-medium text-gray-600 mb-1">
+            <div 
+              className="font-medium text-gray-600 mb-1" 
+              style={{ fontSize: `${Math.min(fontSize, 12)}px` }}
+            >
               {positionNames[positionIndex]}
             </div>
             <div className="flex justify-center">
@@ -345,14 +363,20 @@ function GuitarDiagram({ chord }: { chord: string }) {
   );
 }
 
-function PianoDiagram({ chord }: { chord: string }) {
+function PianoDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: number }) {
   const voicings = generatePianoVoicing(chord);
   
   if (voicings.length === 0) {
     return (
       <div className="p-4 bg-gradient-to-b from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200 shadow-md">
         <div className="text-center">
-          <h4 className="text-lg font-bold text-blue-900 mb-2">{chord}</h4>
+          <h4 
+          className="font-bold text-blue-900 mb-2 break-words truncate max-w-full" 
+          style={{ fontSize: `${Math.min(fontSize + 4, 20)}px` }}
+          title={chord}
+        >
+          {chord}
+        </h4>
           <p className="text-sm text-blue-700">🎹 Piano</p>
           <p className="text-sm text-blue-500 mt-2">Accord non reconnu</p>
         </div>
@@ -412,7 +436,11 @@ function PianoDiagram({ chord }: { chord: string }) {
   return (
     <div className="p-4 bg-gradient-to-b from-blue-50 to-blue-100 rounded-lg border-2 border-blue-200 shadow-md">
       <div className="text-center mb-6">
-        <h4 className="text-xl font-bold text-blue-900 mb-1 border-b-2 border-blue-800 inline-block px-2">
+        <h4 
+          className="font-bold text-blue-900 mb-1 border-b-2 border-blue-800 inline-block px-2 break-words truncate max-w-full" 
+          style={{ fontSize: `${Math.min(fontSize + 4, 20)}px` }}
+          title={`${chord} ${getChordQuality(chord)}`}
+        >
           {chord} {getChordQuality(chord)}
         </h4>
         <p className="text-sm text-blue-700 mt-2">🎹 Piano</p>
