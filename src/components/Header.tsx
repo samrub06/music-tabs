@@ -2,7 +2,7 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -38,6 +38,21 @@ export default function Header({ onMenuClick }: HeaderProps) {
   ];
 
   const currentLanguage = languages.find(lang => lang.code === language) || languages[0];
+
+  // Générer les initiales de l'utilisateur
+  const getInitials = (name: string | null | undefined, email: string | null | undefined) => {
+    if (name) {
+      const parts = name.trim().split(' ');
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    if (email) {
+      return email.substring(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
@@ -75,16 +90,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <>
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
                     >
                       {profile?.avatar_url ? (
                         <Image 
                           src={profile.avatar_url} 
                           alt={profile.full_name || 'User'} 
-                          className="h-8 w-8 rounded-full"
+                          className="h-9 w-9 rounded-full object-cover border-2 border-gray-200"
                         />
                       ) : (
-                        <UserCircleIcon className="h-8 w-8" />
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-gray-200">
+                          {getInitials(profile?.full_name, profile?.email)}
+                        </div>
                       )}
                     </button>
                     

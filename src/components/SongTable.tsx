@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Song } from '@/types';
 import {
@@ -28,6 +29,7 @@ export default function SongTable() {
     currentFolder,
     setCurrentFolder
   } = useApp();
+  const { user } = useAuthContext();
   const { t } = useLanguage();
   const router = useRouter();
   
@@ -330,20 +332,25 @@ export default function SongTable() {
                     >
                       <PlayIcon className="h-4 w-4" />
                     </button>
-                    <button
-                      onClick={(e) => handleEditSong(e, song)}
-                      className="text-green-600 hover:text-green-900 p-1 rounded"
-                      title={t('songs.edit')}
-                    >
-                      <PencilIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteSong(e, song.id)}
-                      className="text-red-600 hover:text-red-900 p-1 rounded"
-                      title={t('songs.delete')}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
+                    {/* Boutons Edit et Delete visibles uniquement si connecté */}
+                    {user && (
+                      <>
+                        <button
+                          onClick={(e) => handleEditSong(e, song)}
+                          className="text-green-600 hover:text-green-900 p-1 rounded"
+                          title={t('songs.edit')}
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteSong(e, song.id)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                          title={t('songs.delete')}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
