@@ -2,9 +2,10 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import PlaylistImporter from './PlaylistImporter';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -17,6 +18,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showPlaylistImporter, setShowPlaylistImporter] = useState(false);
   
   const isSongPage = pathname.includes('/song/');
   const showMenuButton = !isSongPage;
@@ -116,6 +118,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
                         </div>
                         <button
                           onClick={() => {
+                            setShowPlaylistImporter(true);
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <CloudArrowDownIcon className="h-5 w-5" />
+                          <span>Importer Ultimate Guitar</span>
+                        </button>
+                        <button
+                          onClick={() => {
                             signOut();
                             setShowUserMenu(false);
                           }}
@@ -186,6 +198,31 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </div>
           </div>
         </div>
+
+        {/* Playlist Importer Modal */}
+        {showPlaylistImporter && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-900">Importer Ultimate Guitar</h2>
+                <button
+                  onClick={() => setShowPlaylistImporter(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-6">
+                <PlaylistImporter
+                  onImportComplete={(result) => {
+                    console.log('Import completed:', result);
+                    // Optionally refresh the song list or show success message
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

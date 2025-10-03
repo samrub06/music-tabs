@@ -81,3 +81,32 @@ export interface AppState {
   transposeValue: number;
   autoScroll: AutoScrollOptions;
 }
+
+export interface PlaylistSong {
+  title: string;
+  artist: string;
+  url?: string;
+  playlistName?: string;
+}
+
+export interface PlaylistData {
+  name: string;
+  songs: PlaylistSong[];
+}
+
+export interface PlaylistImportResult {
+  totalPlaylists: number;
+  playlists: Array<{
+    name: string;
+    songCount: number;
+    success: number;
+    failed: number;
+    errors: string[];
+  }>;
+  summary: {
+    totalSongs: number;
+    successfulImports: number;
+    failedImports: number;
+    errors: string[];
+  };
+}

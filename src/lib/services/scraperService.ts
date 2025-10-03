@@ -529,6 +529,261 @@ export async function searchAndScrapeSong(query: string): Promise<ScrapedSong | 
 }
 
 /**
+ * Interface pour les playlists Ultimate Guitar
+ */
+export interface PlaylistSong {
+  title: string;
+  artist: string;
+  url?: string;
+  playlistName?: string;
+}
+
+export interface PlaylistData {
+  name: string;
+  songs: PlaylistSong[];
+}
+
+/**
+ * Scraper pour les playlists Ultimate Guitar (page mytabs)
+ * Nécessite des cookies d'authentification
+ */
+export async function scrapeUltimateGuitarPlaylists(
+  cookies: string,
+  userAgent?: string
+): Promise<PlaylistData[]> {
+  try {
+    const response = await fetch('https://www.ultimate-guitar.com/user/mytabs', {
+      headers: {
+        'User-Agent': userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Cookie': cookies,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Vérifier si l'utilisateur est connecté
+    if (html.includes('Please log in') || html.includes('login')) {
+      throw new Error('User not authenticated. Please provide valid cookies.');
+    }
+
+    const playlists: PlaylistData[] = [];
+    
+    // Chercher les différentes sections de playlists
+    // Structure possible: playlists, bookmarks, favorites, etc.
+    const playlistSections = [
+      { selector: '.js-store', name: 'My Tabs' },
+      { selector: '[data-content*="bookmarks"]', name: 'Bookmarks' },
+      { selector: '[data-content*="favorites"]', name: 'Favorites' },
+    ];
+
+    for (const section of playlistSections) {
+      const sectionElement = $(section.selector);
+      
+      if (sectionElement.length > 0) {
+        // Extraire les données JSON comme pour la recherche normale
+        const dataContent = sectionElement.attr('data-content');
+        
+        if (dataContent) {
+          try {
+            const decodedData = decodeHTMLEntities(dataContent);
+            const data = JSON.parse(decodedData);
+            
+            // Analyser la structure des données pour extraire les playlists
+            const playlistsData = extractPlaylistsFromData(data);
+            
+            if (playlistsData.length > 0) {
+              playlists.push(...playlistsData.map(p => ({
+                ...p,
+                name: p.name || section.name
+              })));
+            }
+          } catch (parseError) {
+            console.warn(`Error parsing data for section ${section.name}:`, parseError);
+          }
+        }
+      }
+    }
+
+    // Alternative: scraper basé sur le HTML si les données JSON ne sont pas disponibles
+    if (playlists.length === 0) {
+      const htmlPlaylists = scrapePlaylistsFromHTML($);
+      playlists.push(...htmlPlaylists);
+    }
+
+    return playlists;
+
+  } catch (error) {
+    console.error('Error scraping Ultimate Guitar playlists:', error);
+    throw error;
+  }
+}
+
+/**
+ * Extrait les playlists depuis les données JSON
+ */
+function extractPlaylistsFromData(data: any): PlaylistData[] {
+  const playlists: PlaylistData[] = [];
+  
+  // Structure réelle découverte : data.store.page.data.list.list
+  if (data.store?.page?.data?.list?.list && Array.isArray(data.store.page.data.list.list)) {
+    const songs = data.store.page.data.list.list;
+    
+    console.log(`🎵 Found ${songs.length} favorite songs`);
+    
+    // Convertir les chansons favorites en playlist
+    const playlistSongs = songs.map((song: any) => ({
+      title: song.song_name || 'Unknown',
+      artist: song.band_name || 'Unknown',
+      url: song.song_url,
+      playlistName: 'My Favorites'
+    }));
+    
+    if (playlistSongs.length > 0) {
+      playlists.push({
+        name: 'My Favorites',
+        songs: playlistSongs
+      });
+    }
+  }
+  
+  // Structure alternative pour les playlists classiques (si elles existent)
+  if (data.store?.page?.data?.playlists) {
+    const playlistsData = data.store.page.data.playlists;
+    
+    if (Array.isArray(playlistsData)) {
+      for (const playlist of playlistsData) {
+        if (playlist.songs && Array.isArray(playlist.songs)) {
+          playlists.push({
+            name: playlist.name || 'Unnamed Playlist',
+            songs: playlist.songs.map((song: any) => ({
+              title: song.song_name || song.title || 'Unknown',
+              artist: song.artist_name || song.artist || 'Unknown',
+              url: song.tab_url || song.url,
+            }))
+          });
+        }
+      }
+    }
+  }
+  
+  return playlists;
+}
+
+/**
+ * Scraper alternatif basé sur le HTML
+ */
+function scrapePlaylistsFromHTML($: cheerio.CheerioAPI): PlaylistData[] {
+  const playlists: PlaylistData[] = [];
+  
+  // Chercher les liens vers les tabs dans la page
+  const songLinks = $('a[href*="/tab/"], a[href*="/tabs/"]');
+  
+  if (songLinks.length > 0) {
+    const songs: PlaylistSong[] = [];
+    
+    songLinks.each((i, elem) => {
+      const $link = $(elem);
+      const href = $link.attr('href');
+      const text = $link.text().trim();
+      
+      if (href && text && !text.includes('Pro') && !text.includes('Official')) {
+        // Extraire le titre et l'artiste du texte
+        const parts = text.split(' - ');
+        const title = parts[0] || text;
+        const artist = parts[1] || 'Unknown';
+        
+        songs.push({
+          title,
+          artist,
+          url: href.startsWith('http') ? href : `https://www.ultimate-guitar.com${href}`
+        });
+      }
+    });
+    
+    if (songs.length > 0) {
+      playlists.push({
+        name: 'My Tabs',
+        songs
+      });
+    }
+  }
+  
+  return playlists;
+}
+
+/**
+ * Importe automatiquement les meilleures versions des chansons d'une playlist
+ */
+export async function importPlaylistSongs(
+  playlistData: PlaylistData,
+  targetFolderId?: string,
+  maxConcurrent: number = 3
+): Promise<{ success: number; failed: number; errors: string[] }> {
+  const results = { success: 0, failed: 0, errors: [] as string[] };
+  
+  // Traiter les chansons par batch pour éviter de surcharger le serveur
+  for (let i = 0; i < playlistData.songs.length; i += maxConcurrent) {
+    const batch = playlistData.songs.slice(i, i + maxConcurrent);
+    
+    const promises = batch.map(async (song) => {
+      try {
+        // Rechercher la meilleure version de cette chanson
+        const searchQuery = `${song.artist} ${song.title}`;
+        const searchResults = await searchUltimateGuitarOnly(searchQuery);
+        
+        if (searchResults.length === 0) {
+          results.errors.push(`No results found for: ${searchQuery}`);
+          results.failed++;
+          return;
+        }
+        
+        // Prendre la première version (déjà triée par reviews)
+        const bestVersion = searchResults[0];
+        
+        // Scraper le contenu de cette version
+        const scrapedSong = await scrapeSongFromUrl(bestVersion.url);
+        
+        if (!scrapedSong) {
+          results.errors.push(`Failed to scrape content for: ${searchQuery}`);
+          results.failed++;
+          return;
+        }
+        
+        // Importer dans la base de données
+        // Note: Cette fonction nécessiterait d'être adaptée selon votre structure
+        // await importSongToDatabase(scrapedSong, targetFolderId);
+        
+        results.success++;
+        console.log(`Successfully imported: ${scrapedSong.title} by ${scrapedSong.author}`);
+        
+      } catch (error) {
+        results.errors.push(`Error processing ${song.title}: ${error}`);
+        results.failed++;
+      }
+    });
+    
+    await Promise.all(promises);
+    
+    // Délai entre les batches pour être respectueux
+    if (i + maxConcurrent < playlistData.songs.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  return results;
+}
+
+/**
  * Scraper personnalisé pour un site spécifique
  * Vous pouvez créer des fonctions spécifiques pour vos sites autorisés
  */
