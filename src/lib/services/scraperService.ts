@@ -20,7 +20,7 @@ interface ScraperConfig {
 // À adapter selon les sites que vous souhaitez scraper
 const scraperConfigs: ScraperConfig[] = [
   {
-    name: 'Ultimate Guitar',
+    name: 'Guitar Tabs',
     searchUrl: (query) => `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(query)}`,
     selectors: {
       searchResults: '.js-search-result',
@@ -54,13 +54,14 @@ export interface SearchResult {
   author: string;
   url: string;
   source: string;
+  reviews?: number; // Nombre de reviews/évaluations
 }
 
 /**
  * Nettoie et formate le contenu de la partition
  */
 function cleanSongContent(content: string): string {
-  // Nettoyer les balises [ch] et [/ch] d'Ultimate Guitar
+  // Nettoyer les balises [ch] et [/ch] des tabs
   let cleaned = content.replace(/\[ch\]/g, '').replace(/\[\/ch\]/g, '');
   cleaned = cleaned.replace(/\[tab\]/g, '').replace(/\[\/tab\]/g, '');
   
@@ -85,8 +86,8 @@ function decodeHTMLEntities(text: string): string {
 }
 
 /**
- * Scraper spécialisé pour Ultimate Guitar
- * Ultimate Guitar utilise React avec des données JSON dans l'attribut data-content
+ * Scraper spécialisé pour les tabs de guitare
+ * Utilise des données JSON dans l'attribut data-content
  */
 async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
   try {
@@ -103,7 +104,7 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Ultimate Guitar stocke les données dans l'attribut data-content
+    // Les données sont stockées dans l'attribut data-content
     const dataContent = $('.js-store').attr('data-content');
     
     if (!dataContent) {
@@ -131,17 +132,17 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
       title: tabData?.song_name || tab.song_name || 'Sans titre',
       author: tabData?.artist_name || tab.artist_name || 'Auteur inconnu',
       content: cleanSongContent(content),
-      source: 'Ultimate Guitar',
+      source: 'Guitar Tabs',
       url,
     };
   } catch (error) {
-    console.error('Error scraping Ultimate Guitar:', error);
+    console.error('Error scraping guitar tabs:', error);
     return null;
   }
 }
 
 /**
- * Recherche sur Ultimate Guitar
+ * Recherche sur les tabs de guitare
  */
 export async function searchUltimateGuitarOnly(query: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
@@ -178,25 +179,27 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
     }
 
     // Filtrer uniquement les tabs gratuites (pas les tabs Pro)
-    searchResults
+    const filteredResults = searchResults
       .filter((result: any) => {
         // Exclure les tabs Pro
         return result.tab_url && 
                !result.tab_url.includes('/pro/') && 
                (result.type === 'Chords' || result.type === 'Tab' || result.type);
       })
-      .slice(0, 10) // Limiter à 10 résultats
-      .forEach((result: any) => {
-        results.push({
-          title: result.song_name || 'Sans titre',
-          author: result.artist_name || 'Inconnu',
-          url: result.tab_url,
-          source: 'Ultimate Guitar',
-        });
-      });
+      .map((result: any) => ({
+        title: result.song_name || 'Sans titre',
+        author: result.artist_name || 'Inconnu',
+        url: result.tab_url,
+        source: 'Guitar Tabs',
+        reviews: result.votes || 0, // Nombre de votes/avis
+      }))
+      .sort((a, b) => b.reviews - a.reviews) // Trier par nombre de reviews (décroissant)
+      .slice(0, 10); // Limiter à 10 résultats
+
+    results.push(...filteredResults);
 
   } catch (error) {
-    console.error('Error searching Ultimate Guitar:', error);
+    console.error('Error searching guitar tabs:', error);
   }
 
   return results;
@@ -343,6 +346,7 @@ export async function searchTab4UOnly(query: string): Promise<SearchResult[]> {
           author: author || 'Unknown',
           url: fullUrl,
           source: 'Tab4U',
+          reviews: 0, // Tab4U ne fournit pas de données de reviews
         });
       }
     });
@@ -360,12 +364,12 @@ export async function searchTab4UOnly(query: string): Promise<SearchResult[]> {
 export async function searchSong(query: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
 
-  // 1. Recherche sur Ultimate Guitar (priorité car meilleure qualité)
+  // 1. Recherche sur les tabs de guitare (priorité car meilleure qualité)
   try {
     const ugResults = await searchUltimateGuitarOnly(query);
     results.push(...ugResults);
   } catch (error) {
-    console.error('Error searching Ultimate Guitar:', error);
+    console.error('Error searching guitar tabs:', error);
   }
 
   // 2. Si pas assez de résultats, chercher sur Tab4U
@@ -389,7 +393,7 @@ export async function scrapeSongFromUrl(url: string): Promise<ScrapedSong | null
     // Détecter le site et utiliser le scraper approprié
     const hostname = new URL(url).hostname;
 
-    // Ultimate Guitar
+    // Guitar tabs
     if (hostname.includes('ultimate-guitar.com') || hostname.includes('tabs.ultimate-guitar.com')) {
       return await scrapeUltimateGuitar(url);
     }

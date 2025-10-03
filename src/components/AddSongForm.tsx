@@ -14,6 +14,7 @@ interface SearchResult {
   author: string;
   url: string;
   source: string;
+  reviews?: number; // Nombre de reviews/évaluations
 }
 
 export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
@@ -130,7 +131,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setSearchQuery('');
   };
 
-  // Rechercher sur Ultimate Guitar (EN/FR)
+  // Rechercher sur les tabs de guitare (EN/FR)
   const handleSearchUltimateGuitar = async () => {
     if (!searchQuery.trim()) {
       alert('Veuillez entrer un titre ou un artiste à rechercher.');
@@ -148,7 +149,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
         setSearchResults(data.results);
         setShowSearchResults(true);
       } else {
-        alert(data.error || 'Aucune partition trouvée sur Ultimate Guitar.');
+        alert(data.error || 'Aucune partition trouvée.');
       }
     } catch (error) {
       console.error('Error searching:', error);
@@ -263,7 +264,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   className="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <span className="text-lg">🎸</span>
-                  {isSearching ? 'Recherche...' : 'EN/FR (Ultimate Guitar)'}
+                  {isSearching ? 'Recherche...' : 'EN/FR'}
                 </button>
                 <button
                   onClick={handleSearchTab4U}
@@ -271,7 +272,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   className="w-full px-4 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <span className="text-lg">🇮🇱</span>
-                  {isSearching ? 'מחפש...' : 'עברית (Tab4U)'}
+                  {isSearching ? 'מחפש...' : 'עברית'}
                 </button>
               </div>
 
@@ -288,14 +289,20 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                         className="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleFetchFromUrl(result.url)}
                       >
-                        <div className="text-sm font-medium text-gray-900">
-                          {result.title}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {result.author}
-                        </div>
-                        <div className="text-xs text-blue-600 mt-1">
-                          {result.source}
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-900">
+                              {result.title}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {result.author}
+                            </div>
+                          </div>
+                          {result.reviews !== undefined && result.reviews > 0 && (
+                            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full ml-2">
+                              ⭐ {result.reviews} avis
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -309,7 +316,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   <li>• <strong>🎸 EN/FR</strong> : Pour les chansons en anglais/français</li>
                   <li>• <strong>🇮🇱 עברית</strong> : לשירים בעברית</li>
                   <li>• Cliquez sur un résultat pour le charger dans le formulaire</li>
-                  <li>• Vous pouvez ensuite modifier avant d&apos;ajouter</li>
+                  <li>• Les résultats sont triés par popularité (⭐ avis)</li>
                 </ul>
               </div>
             </div>
