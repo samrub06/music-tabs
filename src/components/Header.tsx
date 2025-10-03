@@ -15,7 +15,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
-  const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext();
+  const { user, profile, session, loading, signInWithGoogle, signOut } = useAuthContext();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showPlaylistImporter, setShowPlaylistImporter] = useState(false);
@@ -125,6 +125,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
                         >
                           <CloudArrowDownIcon className="h-5 w-5" />
                           <span>Importer Ultimate Guitar</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log('🔍 DEBUG USER DATA:', {
+                              user: user ? { id: user.id, email: user.email } : null,
+                              session: session ? { access_token: session.access_token?.substring(0, 20) + '...' } : null,
+                              profile: profile ? { id: profile.id, email: profile.email } : null
+                            });
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <span>🐛 Debug User Data</span>
                         </button>
                         <button
                           onClick={() => {

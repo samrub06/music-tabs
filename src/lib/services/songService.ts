@@ -65,9 +65,12 @@ export const songService = {
   },
 
   // Créer une nouvelle chanson
-  async createSong(songData: NewSongData): Promise<Song> {
+  async createSong(songData: NewSongData, clientSupabase?: any): Promise<Song> {
+    // Utiliser le client Supabase fourni ou le client par défaut
+    const client = clientSupabase || supabase;
+    
     // Récupérer l'utilisateur (peut être null si non connecté)
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
 
     // Parser le contenu texte en structure structurée
     const structuredSong = parseTextToStructuredSong(
@@ -77,7 +80,7 @@ export const songService = {
       songData.folderId
     );
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('songs')
       .insert([{
         user_id: user?.id || null, // user_id si connecté, null si public
@@ -184,8 +187,9 @@ export const songService = {
   },
 
   // Rechercher des chansons
-  async searchSongs(query: string): Promise<Song[]> {
-    const { data, error } = await supabase
+  async searchSongs(query: string, clientSupabase?: any): Promise<Song[]> {
+    const client = clientSupabase || supabase;
+    const { data, error } = await client
       .from('songs')
       .select('*')
       .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
@@ -196,7 +200,7 @@ export const songService = {
       throw error;
     }
 
-    return data?.map(song => ({
+    return data?.map((song: any) => ({
       ...song,
       folderId: song.folder_id, // Map folder_id to folderId
       createdAt: new Date(song.created_at),

@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { songService } from './songService';
 
 /**
  * Configuration pour différents sites de partitions
@@ -115,24 +116,72 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
     const decodedData = decodeHTMLEntities(dataContent);
     const data = JSON.parse(decodedData);
 
-    // Extraire les données de la tab
-    const tab = data.store?.page?.data?.tab_view?.wiki_tab;
-    const tabData = data.store?.page?.data?.tab;
+    // Extraire les données depuis data.store.page.data.tab_view
+    const tabView = data.store?.page?.data?.tab_view;
     
-    if (!tab) {
+    if (!tabView) {
+      console.log('❌ No tab_view found in data structure');
+      console.log('🔍 Available keys in data.store.page.data:', Object.keys(data.store?.page?.data || {}));
+      return null;
+    }
+    
+    // Debug: afficher toutes les clés disponibles dans tabView
+    console.log('🔍 TabView structure:', {
+      hasWikiTab: !!tabView.wiki_tab,
+      hasMeta: !!tabView.meta,
+      allKeys: Object.keys(tabView).slice(0, 10) // Premiers 10 keys seulement
+    });
+    
+    const tab = tabView.wiki_tab;
+    
+    if (!tab?.content) {
+      console.log('❌ No wiki_tab content found');
       return null;
     }
 
-    const content = tab.content || '';
-    if (!content) {
-      return null;
+    const content = tab.content;
+    
+    // Extraire le titre et l'auteur avec plusieurs fallbacks
+    let title = 'Sans titre';
+    let author = 'Auteur inconnu';
+    
+    // Essayer différentes sources pour le titre
+    if (tabView.meta?.title) {
+      title = tabView.meta.title;
+    } else if (tab.song_name) {
+      title = tab.song_name;
+    } else if (tabView.song_name) {
+      title = tabView.song_name;
+    }
+    
+    // Essayer différentes sources pour l'auteur
+    if (tabView.meta?.artist) {
+      author = tabView.meta.artist;
+    } else if (tab.artist_name) {
+      author = tab.artist_name;
+    } else if (tabView.artist_name) {
+      author = tabView.artist_name;
+    } else if (tab.band_name) {
+      author = tab.band_name;
+    } else if (tabView.band_name) {
+      author = tabView.band_name;
+    }
+
+    console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"`);
+    
+    // Debug: montrer ce qu'on a trouvé
+    if (title === 'Sans titre' || author === 'Auteur inconnu') {
+      console.log('⚠️ Missing data. Available in meta:', {
+        meta: tabView.meta ? Object.keys(tabView.meta) : 'none',
+        wikiTab: tab ? Object.keys(tab).filter(k => k !== 'content').slice(0, 5) : 'none'
+      });
     }
 
     return {
-      title: tabData?.song_name || tab.song_name || 'Sans titre',
-      author: tabData?.artist_name || tab.artist_name || 'Auteur inconnu',
+      title,
+      author,
       content: cleanSongContent(content),
-      source: 'Guitar Tabs',
+      source: 'Ultimate Guitar',
       url,
     };
   } catch (error) {
@@ -726,10 +775,12 @@ function scrapePlaylistsFromHTML($: cheerio.CheerioAPI): PlaylistData[] {
  */
 export async function importPlaylistSongs(
   playlistData: PlaylistData,
+  userId: string,
   targetFolderId?: string,
-  maxConcurrent: number = 3
-): Promise<{ success: number; failed: number; errors: string[] }> {
-  const results = { success: 0, failed: 0, errors: [] as string[] };
+  maxConcurrent: number = 3,
+  clientSupabase?: any
+): Promise<{ success: number; failed: number; duplicates: number; errors: string[] }> {
+  const results = { success: 0, failed: 0, duplicates: 0, errors: [] as string[] };
   
   // Traiter les chansons par batch pour éviter de surcharger le serveur
   for (let i = 0; i < playlistData.songs.length; i += maxConcurrent) {
@@ -737,34 +788,79 @@ export async function importPlaylistSongs(
     
     const promises = batch.map(async (song) => {
       try {
-        // Rechercher la meilleure version de cette chanson
-        const searchQuery = `${song.artist} ${song.title}`;
-        const searchResults = await searchUltimateGuitarOnly(searchQuery);
-        
-        if (searchResults.length === 0) {
-          results.errors.push(`No results found for: ${searchQuery}`);
-          results.failed++;
-          return;
+        // Utiliser directement l'URL de la chanson favorite si disponible
+        if (song.url) {
+          console.log(`🎵 Scraping favorite song: ${song.title} by ${song.artist}`);
+          console.log(`🔗 URL: ${song.url}`);
+          
+          // Scraper directement le contenu de la chanson favorite
+          const scrapedSong = await scrapeSongFromUrl(song.url);
+          
+          if (!scrapedSong) {
+            console.log(`❌ Failed to scrape favorite song: ${song.title}`);
+            results.errors.push(`Failed to scrape favorite song: ${song.title}`);
+            results.failed++;
+            return;
+          }
+          
+          // PRIORITÉ AUX DONNÉES DE LA PLAYLIST (on les a déjà !)
+          const finalSong = {
+            ...scrapedSong,
+            title: song.title || scrapedSong.title || 'Sans titre',
+            author: song.artist || scrapedSong.author || 'Auteur inconnu'
+          };
+          
+          console.log(`✅ Successfully scraped: ${finalSong.title} by ${finalSong.author}`);
+          
+            // Importer dans la base de données Supabase
+            const importStatus = await importSongToDatabase(finalSong, userId, targetFolderId, clientSupabase);
+            
+            if (importStatus === 'success') {
+              results.success++;
+            } else if (importStatus === 'duplicate') {
+              results.duplicates++;
+            } else {
+              results.failed++;
+              results.errors.push(`Database import failed for ${song.title}`);
+            }
+          
+        } else {
+          // Fallback: rechercher si pas d'URL disponible
+          const searchQuery = `${song.artist} ${song.title}`;
+          console.log(`🔍 No URL available, searching for: ${searchQuery}`);
+          
+          const searchResults = await searchUltimateGuitarOnly(searchQuery);
+          
+          if (searchResults.length === 0) {
+            results.errors.push(`No results found for: ${searchQuery}`);
+            results.failed++;
+            return;
+          }
+          
+          // Prendre la première version (déjà triée par reviews)
+          const bestVersion = searchResults[0];
+          
+          // Scraper le contenu de cette version
+          const scrapedSong = await scrapeSongFromUrl(bestVersion.url);
+          
+          if (!scrapedSong) {
+            results.errors.push(`Failed to scrape content for: ${searchQuery}`);
+            results.failed++;
+            return;
+          }
+          
+            // Importer dans la base de données Supabase
+            const importStatus = await importSongToDatabase(scrapedSong, userId, targetFolderId, clientSupabase);
+            
+            if (importStatus === 'success') {
+              results.success++;
+            } else if (importStatus === 'duplicate') {
+              results.duplicates++;
+            } else {
+              results.failed++;
+              results.errors.push(`Database import failed for ${searchQuery}`);
+            }
         }
-        
-        // Prendre la première version (déjà triée par reviews)
-        const bestVersion = searchResults[0];
-        
-        // Scraper le contenu de cette version
-        const scrapedSong = await scrapeSongFromUrl(bestVersion.url);
-        
-        if (!scrapedSong) {
-          results.errors.push(`Failed to scrape content for: ${searchQuery}`);
-          results.failed++;
-          return;
-        }
-        
-        // Importer dans la base de données
-        // Note: Cette fonction nécessiterait d'être adaptée selon votre structure
-        // await importSongToDatabase(scrapedSong, targetFolderId);
-        
-        results.success++;
-        console.log(`Successfully imported: ${scrapedSong.title} by ${scrapedSong.author}`);
         
       } catch (error) {
         results.errors.push(`Error processing ${song.title}: ${error}`);
@@ -781,6 +877,44 @@ export async function importPlaylistSongs(
   }
   
   return results;
+}
+
+/**
+ * Importe une chanson scrappée dans la base de données Supabase
+ */
+async function importSongToDatabase(scrapedSong: ScrapedSong, userId: string, targetFolderId?: string, clientSupabase?: any): Promise<'success' | 'duplicate' | 'error'> {
+  try {
+    console.log(`📥 Importing to database: ${scrapedSong.title} by ${scrapedSong.author}`);
+    
+    // Vérifier si la chanson existe déjà pour cet utilisateur avec le bon client
+    const existingSongs = await songService.searchSongs(`${scrapedSong.title} ${scrapedSong.author}`, clientSupabase);
+    const duplicate = existingSongs.find(song => 
+      song.title.toLowerCase() === scrapedSong.title.toLowerCase() &&
+      song.author.toLowerCase() === scrapedSong.author.toLowerCase()
+    );
+    
+    if (duplicate) {
+      console.log(`⚠️ Song already exists: ${scrapedSong.title} by ${scrapedSong.author} (ID: ${duplicate.id})`);
+      return 'duplicate'; // Skip duplicate
+    }
+    
+    // Créer la nouvelle chanson avec le userId
+    const newSongData = {
+      title: scrapedSong.title,
+      author: scrapedSong.author,
+      content: scrapedSong.content,
+      userId: userId,
+      folderId: targetFolderId || undefined
+    };
+    
+        const createdSong = await songService.createSong(newSongData, clientSupabase);
+    console.log(`✅ Successfully imported: ${createdSong.title} (ID: ${createdSong.id})`);
+    return 'success';
+    
+  } catch (error) {
+    console.error('Error importing song to database:', error);
+    return 'error';
+  }
 }
 
 /**

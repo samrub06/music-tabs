@@ -1,7 +1,9 @@
 'use client';
 
-import { PlaylistData, PlaylistImportResult } from '@/types';
-import { useState } from 'react';
+import { useAuthContext } from '@/context/AuthContext';
+import { folderService } from '@/lib/services/songService';
+import { Folder, PlaylistData, PlaylistImportResult } from '@/types';
+import { useEffect, useState } from 'react';
 
 interface PlaylistImporterProps {
   onImportComplete?: (result: PlaylistImportResult) => void;
@@ -9,12 +11,40 @@ interface PlaylistImporterProps {
 }
 
 export default function PlaylistImporter({ onImportComplete, targetFolderId }: PlaylistImporterProps) {
+  const { user, session } = useAuthContext();
   const [cookies, setCookies] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [playlists, setPlaylists] = useState<PlaylistData[]>([]);
   const [showPlaylists, setShowPlaylists] = useState(false);
   const [importResult, setImportResult] = useState<PlaylistImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string>(targetFolderId || '');
+  const [importProgress, setImportProgress] = useState<{
+    current: number;
+    total: number;
+    currentSong: string;
+    status: 'idle' | 'importing' | 'completed' | 'error';
+  }>({
+    current: 0,
+    total: 0,
+    currentSong: '',
+    status: 'idle'
+  });
+
+  // Charger les dossiers au montage du composant
+  useEffect(() => {
+    const loadFolders = async () => {
+      try {
+        const userFolders = await folderService.getAllFolders();
+        setFolders(userFolders);
+      } catch (error) {
+        console.error('Error loading folders:', error);
+      }
+    };
+    
+    loadFolders();
+  }, []);
 
   const handleFetchPlaylists = async () => {
     if (!cookies.trim()) {
@@ -50,16 +80,36 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
 
     setIsLoading(true);
     setError(null);
+    setImportProgress({
+      current: 0,
+      total: 0,
+      currentSong: '',
+      status: 'importing'
+    });
 
     try {
+      // Vérifier que l'utilisateur est connecté via le contexte
+      if (!user || !session) {
+        throw new Error('Vous devez être connecté pour importer des chansons');
+      }
+
+      console.log('🔐 Using user from context:', {
+        userId: user.id,
+        email: user.email,
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token
+      });
+
+      // Démarrer l'import avec progression
       const response = await fetch('/api/playlists/import', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           cookies,
-          targetFolderId,
+          targetFolderId: selectedFolderId || null,
           maxConcurrent: 3
         }),
       });
@@ -71,9 +121,20 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
       }
 
       setImportResult(data.results);
+      setImportProgress(prev => ({
+        ...prev,
+        status: 'completed',
+        current: data.results.summary.totalSongs,
+        total: data.results.summary.totalSongs,
+        currentSong: ''
+      }));
       onImportComplete?.(data.results);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setImportProgress(prev => ({
+        ...prev,
+        status: 'error'
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -124,6 +185,29 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
         </button>
       </div>
 
+      {/* Folder selection */}
+      <div className="mb-4">
+        <label htmlFor="folder" className="block text-sm font-medium text-gray-700 mb-2">
+          Dossier de destination (optionnel)
+        </label>
+        <select
+          id="folder"
+          value={selectedFolderId}
+          onChange={(e) => setSelectedFolderId(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Aucun dossier (racine)</option>
+          {folders.map((folder) => (
+            <option key={folder.id} value={folder.id}>
+              {folder.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-sm text-gray-500">
+          Les chansons importées seront ajoutées dans ce dossier. Laissez vide pour les ajouter à la racine.
+        </p>
+      </div>
+
       {/* Error display */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -148,6 +232,50 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
           {isLoading ? 'Import...' : 'Importer toutes les chansons'}
         </button>
       </div>
+
+      {/* Progress bar */}
+      {importProgress.status === 'importing' && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-800">
+              Import en cours...
+            </span>
+            <span className="text-sm text-blue-600">
+              {importProgress.current} / {importProgress.total}
+            </span>
+          </div>
+          <div className="w-full bg-blue-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ 
+                width: importProgress.total > 0 
+                  ? `${(importProgress.current / importProgress.total) * 100}%` 
+                  : '0%' 
+              }}
+            ></div>
+          </div>
+          {importProgress.currentSong && (
+            <p className="text-sm text-blue-700 mt-2 truncate">
+              🎵 {importProgress.currentSong}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Success message */}
+      {importProgress.status === 'completed' && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center">
+            <span className="text-green-600 mr-2">✅</span>
+            <span className="text-sm font-medium text-green-800">
+              Import terminé ! {importResult?.summary.successfulImports} chansons importées
+              {importResult?.summary?.failedImports && importResult.summary.failedImports > 0 && (
+                <span className="text-orange-600">, {importResult.summary.failedImports} échecs</span>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Playlists preview */}
       {showPlaylists && playlists.length > 0 && (
