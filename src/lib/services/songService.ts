@@ -5,11 +5,25 @@ import { supabase } from '../supabase';
 // Service pour les chansons
 export const songService = {
   // Récupérer toutes les chansons
+  // Si connecté : chansons de l'utilisateur via RLS
+  // Si non connecté : chansons publiques (user_id = null)
   async getAllSongs(): Promise<Song[]> {
-    const { data, error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    console.log('user', user);
+    let query = supabase
       .from('songs')
       .select('*')
       .order('created_at', { ascending: false });
+    
+    // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
+    if (!user) {
+      query = query.is('user_id', null);
+    }
+    // Si connecté, RLS filtre automatiquement par user_id
+
+    const { data, error } = await query;
+    console.log('data', error);
 
     if (error) {
       console.error('Error fetching songs:', error);
@@ -50,6 +64,13 @@ export const songService = {
 
   // Créer une nouvelle chanson
   async createSong(songData: NewSongData): Promise<Song> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to create songs');
+    }
+
     // Parser le contenu texte en structure structurée
     const structuredSong = parseTextToStructuredSong(
       songData.title,
@@ -61,6 +82,7 @@ export const songService = {
     const { data, error } = await supabase
       .from('songs')
       .insert([{
+        user_id: user.id, // Ajouter user_id
         title: songData.title,
         author: songData.author,
         folder_id: songData.folderId,
@@ -174,12 +196,24 @@ export const songService = {
 // Service pour les dossiers
 export const folderService = {
   // Récupérer tous les dossiers
+  // Si connecté : dossiers de l'utilisateur via RLS
+  // Si non connecté : dossiers publics (user_id = null)
   async getAllFolders(): Promise<Folder[]> {
     console.log('Fetching folders from database...');
-    const { data, error } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    let query = supabase
       .from('folders')
       .select('*')
       .order('created_at', { ascending: false });
+    
+    // Si non connecté, récupérer uniquement les dossiers publics (sans user_id)
+    if (!user) {
+      query = query.is('user_id', null);
+    }
+    // Si connecté, RLS filtre automatiquement par user_id
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching folders:', error);
@@ -200,9 +234,17 @@ export const folderService = {
 
   // Créer un nouveau dossier
   async createFolder(folderData: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>): Promise<Folder> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to create folders');
+    }
+
     const { data, error } = await supabase
       .from('folders')
       .insert([{
+        user_id: user.id, // Ajouter user_id
         name: folderData.name,
         parent_id: folderData.parentId
       }])

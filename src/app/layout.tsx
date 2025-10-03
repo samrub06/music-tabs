@@ -3,6 +3,7 @@
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { AppProvider } from '@/context/AppContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Inter } from 'next/font/google';
@@ -31,8 +32,9 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <LanguageProvider>
-          <AppProvider>
-            <div className="min-h-screen flex flex-col bg-gray-50">
+          <AuthProvider>
+            <AppProvider>
+              <div className="min-h-screen flex flex-col bg-gray-50">
               <Header onMenuClick={() => setSidebarOpen(true)} />
               
               <div className="flex-1 flex overflow-hidden">
@@ -68,8 +70,9 @@ export default function RootLayout({
                   {children}
                 </div>
               </div>
-            </div>
-          </AppProvider>
+              </div>
+            </AppProvider>
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

@@ -4,7 +4,8 @@
     "openMenu": "Ouvrir le menu",
     "backToHome": "Retour à la page principale",
     "language": "Langue",
-    "selectLanguage": "Sélectionner la langue"
+    "selectLanguage": "Sélectionner la langue",
+    "loading": "Chargement"
   },
   "navigation": {
     "home": "Accueil",
@@ -93,6 +94,14 @@
     "songSaved": "Chanson enregistrée avec succès",
     "songDeleted": "Chanson supprimée avec succès",
     "songImported": "Chanson importée avec succès"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "signInWithGoogle": "Se connecter avec Google",
+    "welcome": "Bienvenue sur Music Tabs",
+    "pleaseSignIn": "Veuillez vous connecter pour accéder à vos chansons",
+    "signInToSaveYourSongs": "Connectez-vous pour enregistrer et organiser vos propres chansons !"
   },
   "sidebar": {
     "allSongs": "Toutes les chansons",

@@ -4,7 +4,8 @@
     "openMenu": "פתח תפריט",
     "backToHome": "חזור לעמוד הבית",
     "language": "שפה",
-    "selectLanguage": "בחר שפה"
+    "selectLanguage": "בחר שפה",
+    "loading": "טוען"
   },
   "navigation": {
     "home": "בית",
@@ -93,6 +94,14 @@
     "songSaved": "השיר נשמר בהצלחה",
     "songDeleted": "השיר נמחק בהצלחה",
     "songImported": "השיר יובא בהצלחה"
+  },
+  "auth": {
+    "signIn": "התחבר",
+    "signOut": "התנתק",
+    "signInWithGoogle": "התחבר עם Google",
+    "welcome": "ברוכים הבאים ל-Music Tabs",
+    "pleaseSignIn": "אנא התחבר כדי לגשת לשירים שלך",
+    "signInToSaveYourSongs": "התחבר כדי לשמור ולארגן את השירים שלך!"
   },
   "sidebar": {
     "allSongs": "כל השירים",

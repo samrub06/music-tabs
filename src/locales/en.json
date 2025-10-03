@@ -4,7 +4,8 @@
     "openMenu": "Open menu",
     "backToHome": "Back to home page",
     "language": "Language",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "loading": "Loading"
   },
   "navigation": {
     "home": "Home",
@@ -93,6 +94,14 @@
     "songSaved": "Song saved successfully",
     "songDeleted": "Song deleted successfully",
     "songImported": "Song imported successfully"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signInWithGoogle": "Sign in with Google",
+    "welcome": "Welcome to Music Tabs",
+    "pleaseSignIn": "Please sign in to access your songs",
+    "signInToSaveYourSongs": "Sign in to save and organize your own songs!"
   },
   "sidebar": {
     "allSongs": "All Songs",
