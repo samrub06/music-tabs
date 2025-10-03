@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Song } from '@/types';
 import {
   ChevronDownIcon,
@@ -27,6 +28,7 @@ export default function SongTable() {
     currentFolder,
     setCurrentFolder
   } = useApp();
+  const { t } = useLanguage();
   const router = useRouter();
   
   const [sortField, setSortField] = useState<SortField>('title');
@@ -167,10 +169,10 @@ export default function SongTable() {
       <div className="text-center py-12">
         <MusicalNoteIcon className="mx-auto h-12 w-12 text-gray-400" />
         <h3 className="mt-2 text-sm font-medium text-gray-900">
-          {searchQuery ? 'Aucune chanson trouvée' : 'Aucune chanson'}
+          {searchQuery ? t('songs.noSongs') : t('songs.noSongs')}
         </h3>
         <p className="mt-1 text-sm text-gray-500">
-          {searchQuery ? 'Essayez de modifier votre recherche.' : 'Commencez par ajouter une chanson.'}
+          {searchQuery ? t('songs.tryDifferentSearch') : t('songs.startAdding')}
         </p>
       </div>
     );
@@ -183,11 +185,11 @@ export default function SongTable() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
             <span className="text-sm font-medium text-gray-700">
-              {sortedSongs.length} chanson{sortedSongs.length !== 1 ? 's' : ''}
+              {sortedSongs.length} {sortedSongs.length !== 1 ? t('songs.songCountPlural') : t('songs.songCount')}
             </span>
             {currentFolder && (
               <span className="text-sm text-gray-500">
-                dans {getFolderName(currentFolder)}
+                {t('songs.inFolder')} {getFolderName(currentFolder)}
               </span>
             )}
           </div>
@@ -201,8 +203,8 @@ export default function SongTable() {
               <div className="flex items-center">
                 <FunnelIcon className="h-4 w-4 mr-2" />
                 <span className="truncate">
-                  {currentFolder === null ? 'Tous les dossiers' : 
-                   currentFolder === 'unorganized' ? 'Sans dossier' : 
+                  {currentFolder === null ? t('songs.allFolders') : 
+                   currentFolder === 'unorganized' ? t('songs.unorganized') : 
                    getFolderName(currentFolder)}
                 </span>
               </div>
@@ -223,7 +225,7 @@ export default function SongTable() {
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Toutes les chansons
+                    {t('songs.allSongs')}
                   </button>
                   <button
                     onClick={() => {
@@ -236,7 +238,7 @@ export default function SongTable() {
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Sans dossier
+                    {t('songs.unorganized')}
                   </button>
                   {folders.map((folder) => (
                     <button
@@ -266,19 +268,19 @@ export default function SongTable() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <SortButton field="title">Titre</SortButton>
+                <SortButton field="title">{t('songs.title')}</SortButton>
               </th>
               <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <SortButton field="author">Artiste</SortButton>
+                <SortButton field="author">{t('songs.artist')}</SortButton>
               </th>
               <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Dossier
+                {t('songs.folder')}
               </th>
               <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <SortButton field="updatedAt">Modifié</SortButton>
+                <SortButton field="updatedAt">{t('songs.modified')}</SortButton>
               </th>
               <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                {t('songs.actions')}
               </th>
             </tr>
           </thead>
@@ -324,21 +326,21 @@ export default function SongTable() {
                         router.push(`/song/${song.id}`);
                       }}
                       className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                      title="Ouvrir"
+                      title={t('songs.open')}
                     >
                       <PlayIcon className="h-4 w-4" />
                     </button>
                     <button
                       onClick={(e) => handleEditSong(e, song)}
                       className="text-green-600 hover:text-green-900 p-1 rounded"
-                      title="Modifier"
+                      title={t('songs.edit')}
                     >
                       <PencilIcon className="h-4 w-4" />
                     </button>
                     <button
                       onClick={(e) => handleDeleteSong(e, song.id)}
                       className="text-red-600 hover:text-red-900 p-1 rounded"
-                      title="Supprimer"
+                      title={t('songs.delete')}
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>

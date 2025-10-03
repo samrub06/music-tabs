@@ -15,7 +15,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ChordDiagram from './ChordDiagram';
 
 interface SongViewerProps {
@@ -705,11 +705,33 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     return /[\u0590-\u05FF\u200F\u200E]/.test(text);
   };
 
+  // Calculate character width based on font size for precise alignment
+  const getCharWidth = (fontSize: number) => {
+    return fontSize * 0.6; // Monospace character width approximation
+  };
+
+  // Hook to detect mobile/tablet for performance optimization
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const renderSongLine = (line: any, lineIndex: number) => {
     if (line.type === 'lyrics_only') {
       const isHebrew = line.lyrics && containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ fontSize: `${fontSize}px` }}>
+        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+          fontSize: `${fontSize}px`, 
+          lineHeight: 1.4,
+          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+        }}>
           {line.lyrics || ''}
         </div>
       );
@@ -717,7 +739,11 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     
     if (line.type === 'chords_only') {
       return (
-        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ fontSize: `${fontSize}px` }}>
+        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ 
+          fontSize: `${fontSize}px`, 
+          lineHeight: 1.4,
+          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+        }}>
           {line.chord_line ? renderClickableChordLine(line.chord_line) : ''}
         </div>
       );
@@ -726,30 +752,13 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
       const isHebrew = containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'}>
-          {/* Chord line with precise positioning */}
-          <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full overflow-hidden" style={{ fontSize: `${fontSize}px` }}>
-            {line.chords.map((chordPos: any, chordIndex: number) => (
-              <button
-                key={chordIndex}
-                onClick={() => onChordClick(chordPos.chord)}
-                className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap"
-                style={{ 
-                  left: isHebrew ? 'auto' : `${chordPos.position * 0.6}em`,
-                  right: isHebrew ? `${chordPos.position * 0.6}em` : 'auto',
-                  maxWidth: 'calc(100vw - 2rem)', // Prevent overflow on mobile
-                  fontSize: `${fontSize}px`
-                }}
-              >
-                {chordPos.chord}
-              </button>
-            ))}
-          </div>
-          {/* Lyrics line */}
-          <div className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ fontSize: `${fontSize}px` }}>
-            {line.lyrics}
-          </div>
-        </div>
+        <ChordOverLyricsLine 
+          key={lineIndex}
+          line={line}
+          isHebrew={isHebrew}
+          fontSize={fontSize}
+          onChordClick={onChordClick}
+        />
       );
     }
     
@@ -788,11 +797,17 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
   };
   
   return (
-    <div className="font-mono leading-relaxed space-y-4 w-full overflow-x-hidden" style={{ fontSize: `${fontSize}px` }}>
+    <div className="leading-relaxed space-y-4 w-full overflow-x-hidden" style={{ 
+      fontSize: `${fontSize}px`,
+      fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+    }}>
       {song.sections.map((section: any, sectionIndex: number) => (
         <div key={sectionIndex} className="mb-6 w-full">
           {/* Section header */}
-          <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ fontSize: `${fontSize + 4}px` }}>
+          <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ 
+            fontSize: `${fontSize + 4}px`,
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}>
             [{section.name}]
           </div>
           
@@ -807,6 +822,204 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     </div>
   );
 }
+
+// New component for precise chord-over-lyrics alignment
+interface ChordOverLyricsLineProps {
+  line: any;
+  isHebrew: boolean;
+  fontSize: number;
+  onChordClick: (chord: string) => void;
+}
+
+function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOverLyricsLineProps) {
+  const [containerWidth, setContainerWidth] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Measure container width for responsive chord positioning
+  useEffect(() => {
+    const measureWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+    
+    measureWidth();
+    window.addEventListener('resize', measureWidth);
+    return () => window.removeEventListener('resize', measureWidth);
+  }, [fontSize]);
+
+  // Calculate character width based on font size (monospace)
+  const charWidth = fontSize * 0.6;
+  
+  // Calculate maximum characters that fit in container
+  const maxCharsPerLine = Math.floor(containerWidth / charWidth);
+  
+  // Check if line needs wrapping
+  const needsWrapping = line.lyrics.length > maxCharsPerLine && maxCharsPerLine > 0;
+  
+  if (!needsWrapping) {
+    // Simple case: no wrapping needed
+    return (
+      <div ref={containerRef} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+      }}>
+        {/* Chord line */}
+        <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+          {line.chords.map((chordPos: any, chordIndex: number) => {
+            // Ensure chord doesn't go beyond lyrics length
+            const safePosition = Math.min(chordPos.position, line.lyrics.length);
+            const leftOffset = safePosition * charWidth;
+            
+            return (
+              <button
+                key={chordIndex}
+                onClick={() => onChordClick(chordPos.chord)}
+                className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
+                style={{ 
+                  left: isHebrew ? 'auto' : `${leftOffset}px`,
+                  right: isHebrew ? `${leftOffset}px` : 'auto',
+                  fontSize: `${fontSize}px`,
+                  lineHeight: 1.4
+                }}
+              >
+                {chordPos.chord}
+              </button>
+            );
+          })}
+        </div>
+        {/* Lyrics line */}
+        <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+          {line.lyrics}
+        </div>
+      </div>
+    );
+  }
+  
+  // Complex case: wrapping needed
+  return (
+    <WrappedChordLyricsLine 
+      ref={containerRef}
+      line={line}
+      isHebrew={isHebrew}
+      fontSize={fontSize}
+      charWidth={charWidth}
+      maxCharsPerLine={maxCharsPerLine}
+      onChordClick={onChordClick}
+    />
+  );
+}
+
+// Component for handling wrapped chord-lyrics lines
+interface WrappedChordLyricsLineProps {
+  line: any;
+  isHebrew: boolean;
+  fontSize: number;
+  charWidth: number;
+  maxCharsPerLine: number;
+  onChordClick: (chord: string) => void;
+}
+
+const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyricsLineProps>(
+  ({ line, isHebrew, fontSize, charWidth, maxCharsPerLine, onChordClick }, ref) => {
+    // Split lyrics into words for intelligent wrapping
+    const words = line.lyrics.split(' ');
+    const wrappedLines: Array<{
+      lyrics: string;
+      chords: Array<{ chord: string; position: number }>;
+      startPos: number;
+    }> = [];
+    
+    let currentLine = '';
+    let currentStartPos = 0;
+    let globalPos = 0;
+    
+    words.forEach((word: string, wordIndex: number) => {
+      const spaceNeeded = wordIndex > 0 ? 1 : 0; // Space before word (except first)
+      const wordWithSpace = (spaceNeeded ? ' ' : '') + word;
+      
+      // Check if adding this word would exceed line limit
+      if (currentLine.length + wordWithSpace.length > maxCharsPerLine && currentLine.length > 0) {
+        // Finish current line
+        const lineChords = line.chords.filter((c: any) => 
+          c.position >= currentStartPos && c.position < globalPos
+        ).map((c: any) => ({
+          chord: c.chord,
+          position: c.position - currentStartPos
+        }));
+        
+        wrappedLines.push({
+          lyrics: currentLine,
+          chords: lineChords,
+          startPos: currentStartPos
+        });
+        
+        // Start new line
+        currentLine = word;
+        currentStartPos = globalPos + spaceNeeded;
+      } else {
+        // Add to current line
+        currentLine += wordWithSpace;
+      }
+      
+      globalPos += wordWithSpace.length;
+    });
+    
+    // Add the last line
+    if (currentLine) {
+      const lineChords = line.chords.filter((c: any) => 
+        c.position >= currentStartPos
+      ).map((c: any) => ({
+        chord: c.chord,
+        position: c.position - currentStartPos
+      }));
+      
+      wrappedLines.push({
+        lyrics: currentLine,
+        chords: lineChords,
+        startPos: currentStartPos
+      });
+    }
+    
+    return (
+      <div ref={ref} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+      }}>
+        {wrappedLines.map((wrappedLine, lineIndex) => (
+          <div key={lineIndex} className="mb-1">
+            {/* Chord line for this wrapped line */}
+            <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+              {wrappedLine.chords.map((chordPos, chordIndex) => {
+                const leftOffset = Math.max(0, chordPos.position * charWidth);
+                
+                return (
+                  <button
+                    key={chordIndex}
+                    onClick={() => onChordClick(chordPos.chord)}
+                    className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
+                    style={{ 
+                      left: isHebrew ? 'auto' : `${leftOffset}px`,
+                      right: isHebrew ? `${leftOffset}px` : 'auto',
+                      fontSize: `${fontSize}px`,
+                      lineHeight: 1.4
+                    }}
+                  >
+                    {chordPos.chord}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Lyrics line */}
+            <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+              {wrappedLine.lyrics}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+);
+
+WrappedChordLyricsLine.displayName = 'WrappedChordLyricsLine';
 
 // Chord Diagrams Grid Component
 interface ChordDiagramsGridProps {

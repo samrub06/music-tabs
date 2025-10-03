@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Song } from '@/types';
 import { structuredSongToText } from '@/utils/structuredToText';
 import { PencilIcon } from '@heroicons/react/24/outline';
@@ -14,6 +15,7 @@ interface EditSongFormProps {
 
 export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProps) {
   const { updateSong, folders } = useApp();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -38,7 +40,7 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
     e.preventDefault();
 
     if (!song || !formData.title.trim()) {
-      alert('Le titre est obligatoire.');
+      alert(t('songForm.titleRequired'));
       return;
     }
 
@@ -94,7 +96,7 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-medium text-gray-900 flex items-center">
             <PencilIcon className="h-5 w-5 mr-2" />
-            Modifier la chanson
+            {t('songForm.editSong')}
           </h3>
           <button
             onClick={onClose}
@@ -108,7 +110,7 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Titre *
+                {t('songForm.songTitle')} *
               </label>
               <input
                 type="text"
@@ -122,7 +124,7 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Auteur
+                {t('songForm.artist')}
               </label>
               <input
                 type="text"
@@ -136,14 +138,14 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dossier
+              {t('songs.folder')}
             </label>
             <select
               value={formData.folderId}
               onChange={(e) => setFormData({ ...formData, folderId: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">Aucun dossier</option>
+              <option value="">{t('songs.unorganized')}</option>
               {folders.map((folder) => (
                 <option key={folder.id} value={folder.id}>
                   {folder.name}
@@ -180,14 +182,14 @@ Avec les accords alignés...`}
                 onClick={handleReset}
                 className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
-                Annuler
+                {t('songForm.cancel')}
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
               >
-                Fermer
+                {t('songForm.cancel')}
               </button>
             </div>
             <button
@@ -195,7 +197,7 @@ Avec les accords alignés...`}
               disabled={isLoading}
               className="order-1 sm:order-2 w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Mise à jour...' : 'Sauvegarder'}
+              {isLoading ? t('songForm.loading') : t('songForm.save')}
             </button>
           </div>
         </form>

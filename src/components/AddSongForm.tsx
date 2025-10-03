@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { DocumentTextIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 
@@ -19,6 +20,7 @@ interface SearchResult {
 
 export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   const { addSong, folders, importSongs } = useApp();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -35,7 +37,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.content.trim()) {
-      alert('Le titre et le contenu sont obligatoires.');
+      alert(t('songForm.titleRequired'));
       return;
     }
 
@@ -223,7 +225,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-medium text-gray-900">
-            Ajouter une nouvelle chanson
+            {t('songForm.addSong')}
           </h3>
           <button
             onClick={onClose}
@@ -238,13 +240,13 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
           <div className="space-y-4">
             <h4 className="text-md font-semibold text-gray-800 flex items-center">
               <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
-              Recherche en ligne
+              {t('songForm.searchSongs')}
             </h4>
             
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre ou Artiste
+                  {t('songForm.songTitle')} ou {t('songForm.artist')}
                 </label>
                 <input
                   type="text"
@@ -252,7 +254,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchUltimateGuitar()}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="ex: Hotel California Eagles"
+                  placeholder={t('songForm.searchPlaceholder')}
                   disabled={isSearching}
                 />
               </div>
@@ -264,7 +266,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   className="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <span className="text-lg">🎸</span>
-                  {isSearching ? 'Recherche...' : 'EN/FR'}
+                  {isSearching ? t('songForm.loading') : t('songForm.enFrSongs')}
                 </button>
                 <button
                   onClick={handleSearchTab4U}
@@ -272,7 +274,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   className="w-full px-4 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <span className="text-lg">🇮🇱</span>
-                  {isSearching ? 'מחפש...' : 'עברית'}
+                  {isSearching ? t('songForm.loading') : t('songForm.hebrewSongs')}
                 </button>
               </div>
 
@@ -280,7 +282,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
               {showSearchResults && searchResults.length > 0 && (
                 <div className="border border-gray-300 rounded-md p-3 max-h-96 overflow-y-auto">
                   <h5 className="text-sm font-semibold text-gray-700 mb-2">
-                    Résultats ({searchResults.length})
+                    {t('songForm.searchResults')} ({searchResults.length})
                   </h5>
                   <div className="space-y-2">
                     {searchResults.map((result, index) => (
@@ -311,12 +313,12 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
               )}
 
               <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md">
-                <p className="font-medium mb-1">💡 Comment utiliser :</p>
+                <p className="font-medium mb-1">💡 {t('songForm.howToUse')}</p>
                 <ul className="space-y-1">
-                  <li>• <strong>🎸 EN/FR</strong> : Pour les chansons en anglais/français</li>
-                  <li>• <strong>🇮🇱 עברית</strong> : לשירים בעברית</li>
-                  <li>• Cliquez sur un résultat pour le charger dans le formulaire</li>
-                  <li>• Les résultats sont triés par popularité (⭐ avis)</li>
+                  <li>• <strong>🎸 {t('songForm.enFrSongs')}</strong></li>
+                  <li>• <strong>🇮🇱 {t('songForm.hebrewSongs')}</strong></li>
+                  <li>• {t('songForm.clickToLoad')}</li>
+                  <li>• {t('songForm.sortedByPopularity')}</li>
                 </ul>
               </div>
             </div>
@@ -326,13 +328,13 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
           <div className="space-y-4">
             <h4 className="text-md font-semibold text-gray-800 flex items-center">
               <PlusIcon className="h-5 w-5 mr-2" />
-              Saisie manuelle
+              {t('songForm.manualEntry')}
             </h4>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Titre *
+                  {t('songForm.songTitle')} *
                 </label>
                 <input
                   type="text"
@@ -346,7 +348,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Auteur
+                  {t('songForm.artist')}
                 </label>
                 <input
                   type="text"
@@ -359,14 +361,14 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dossier
+                  {t('songs.folder')}
                 </label>
                 <select
                   value={formData.folderId}
                   onChange={(e) => setFormData({ ...formData, folderId: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">Aucun dossier</option>
+                  <option value="">{t('songs.unorganized')}</option>
                   {folders.map((folder) => (
                     <option key={folder.id} value={folder.id}>
                       {folder.name}
@@ -377,7 +379,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contenu (accords + paroles) *
+                  {t('songForm.chords')} + {t('songForm.lyrics')} *
                 </label>
                 <textarea
                   value={formData.content}
@@ -402,13 +404,13 @@ Avec les accords alignés...`}
                   onClick={handleReset}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                 >
-                  Effacer
+                  {t('songForm.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
                 >
-                  Ajouter la chanson
+                  {t('songForm.addSong')}
                 </button>
               </div>
             </form>
@@ -418,7 +420,7 @@ Avec les accords alignés...`}
           <div className="space-y-4">
             <h4 className="text-md font-semibold text-gray-800 flex items-center">
               <DocumentTextIcon className="h-5 w-5 mr-2" />
-              Import de fichiers
+              {t('songForm.importFromUrl')}
             </h4>
             
             <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg">
@@ -427,10 +429,10 @@ Avec les accords alignés...`}
                 <div className="mt-4">
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <span className="mt-2 block text-sm font-medium text-gray-900">
-                      Importer des fichiers .txt
+                      {t('songForm.import')} .txt
                     </span>
                     <span className="mt-1 block text-sm text-gray-500">
-                      Sélectionnez un ou plusieurs fichiers texte contenant vos chansons
+                      {t('songForm.selectFiles')}
                     </span>
                   </label>
                   <input
@@ -450,7 +452,7 @@ Avec les accords alignés...`}
                     disabled={isImporting}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
-                    {isImporting ? 'Import en cours...' : 'Choisir des fichiers'}
+                    {isImporting ? t('songForm.loading') : t('songForm.import')}
                   </button>
                 </div>
               </div>
@@ -459,14 +461,14 @@ Avec les accords alignés...`}
             {/* Folder Selection for Import */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dossier pour les fichiers importés
+                {t('songs.folder')} {t('songForm.import')}
               </label>
               <select
                 value={formData.folderId}
                 onChange={(e) => setFormData({ ...formData, folderId: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Aucun dossier</option>
+                <option value="">{t('songs.unorganized')}</option>
                 {folders.map((folder) => (
                   <option key={folder.id} value={folder.id}>
                     {folder.name}

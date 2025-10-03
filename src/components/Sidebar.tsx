@@ -1,6 +1,7 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
+import { useLanguage } from '@/context/LanguageContext';
 import {
     FolderIcon,
     FolderOpenIcon,
@@ -22,6 +23,7 @@ export default function Sidebar() {
     updateFolder,
     deleteFolder
   } = useApp();
+  const { t } = useLanguage();
 
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -50,7 +52,7 @@ export default function Sidebar() {
   };
 
   const handleDeleteFolder = (folderId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ? Les chansons seront déplacées vers "Sans dossier".')) {
+    if (confirm(t('sidebar.confirmDeleteFolder'))) {
       deleteFolder(folderId);
     }
   };
@@ -62,7 +64,7 @@ export default function Sidebar() {
   const unorganizedSongs = getSongCountByFolder(null);
 
   return (
-    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
+    <aside className="w-72 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4">
         
         {/* All Songs */}
@@ -79,7 +81,7 @@ export default function Sidebar() {
             }`}
           >
             <MusicalNoteIcon className="mr-3 h-5 w-5" />
-            Toutes les chansons
+            {t('sidebar.allSongs')}
             <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
               {songs.length}
             </span>
@@ -99,7 +101,7 @@ export default function Sidebar() {
               }`}
             >
               <FolderIcon className="mr-3 h-5 w-5" />
-              Sans dossier
+              {t('sidebar.unorganizedSongs')}
               <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                 {unorganizedSongs}
               </span>
@@ -111,12 +113,12 @@ export default function Sidebar() {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-              Dossiers
+              {t('sidebar.folders')}
             </h3>
             <button
               onClick={() => setShowAddForm(true)}
               className="p-1 text-gray-400 hover:text-gray-600 rounded"
-              title="Ajouter un dossier"
+              title={t('sidebar.addFolder')}
             >
               <PlusIcon className="h-4 w-4" />
             </button>
@@ -127,7 +129,7 @@ export default function Sidebar() {
             <div className="mb-3 p-2 border border-gray-200 rounded-md bg-gray-50">
               <input
                 type="text"
-                placeholder="Nom du dossier"
+                placeholder={t('sidebar.folderName')}
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 onKeyPress={(e) => {
@@ -148,14 +150,14 @@ export default function Sidebar() {
                   }}
                   className="px-2 py-1 text-xs text-gray-600 hover:text-gray-800"
                 >
-                  Annuler
+                  {t('sidebar.cancel')}
                 </button>
                 <button
                   onClick={handleAddFolder}
                   disabled={!newFolderName.trim()}
                   className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
-                  Créer
+                  {t('sidebar.create')}
                 </button>
               </div>
             </div>
@@ -217,7 +219,7 @@ export default function Sidebar() {
                           handleEditFolder(folder);
                         }}
                         className="p-1 text-gray-400 hover:text-blue-600 rounded"
-                        title="Renommer"
+                        title={t('sidebar.rename')}
                       >
                         <PencilIcon className="h-3 w-3" />
                       </button>
@@ -227,7 +229,7 @@ export default function Sidebar() {
                           handleDeleteFolder(folder.id);
                         }}
                         className="p-1 text-gray-400 hover:text-red-600 rounded"
-                        title="Supprimer"
+                        title={t('sidebar.delete')}
                       >
                         <TrashIcon className="h-3 w-3" />
                       </button>
@@ -240,7 +242,7 @@ export default function Sidebar() {
 
           {folders.length === 0 && !showAddForm && (
             <p className="text-sm text-gray-500 italic">
-              Aucun dossier. Cliquez sur + pour en créer un.
+              {t('sidebar.noFolders')}
             </p>
           )}
         </div>
