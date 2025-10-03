@@ -89,19 +89,17 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Add Song Button - Only visible when logged in */}
-            {user && (
-              <div className="flex-shrink-0">
-                <button
-                  onClick={() => setShowAddSong(true)}
-                  className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
-                >
-                  <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
-                  <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
-                  <span className="hidden sm:inline">{t('songs.addNew')}</span>
-                </button>
-              </div>
-            )}
+                   {/* Add Song Button - Always visible */}
+                   <div className="flex-shrink-0">
+                     <button
+                       onClick={() => setShowAddSong(true)}
+                       className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
+                     >
+                       <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
+                       <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
+                       <span className="hidden sm:inline">{t('songs.addNew')}</span>
+                     </button>
+                   </div>
           </div>
         </div>
 

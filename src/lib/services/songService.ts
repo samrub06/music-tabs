@@ -5,8 +5,8 @@ import { supabase } from '../supabase';
 // Service pour les chansons
 export const songService = {
   // Récupérer toutes les chansons
-  // Si connecté : chansons de l'utilisateur via RLS
-  // Si non connecté : chansons publiques (user_id = null)
+  // Si connecté : uniquement les chansons de l'utilisateur
+  // Si non connecté : uniquement les chansons publiques (user_id = null)
   async getAllSongs(): Promise<Song[]> {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -19,8 +19,10 @@ export const songService = {
     // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
     if (!user) {
       query = query.is('user_id', null);
+    } else {
+      // Si connecté, récupérer uniquement les chansons de l'utilisateur
+      query = query.eq('user_id', user.id);
     }
-    // Si connecté, RLS filtre automatiquement par user_id
 
     const { data, error } = await query;
     console.log('data', error);
@@ -64,12 +66,8 @@ export const songService = {
 
   // Créer une nouvelle chanson
   async createSong(songData: NewSongData): Promise<Song> {
-    // Vérifier que l'utilisateur est connecté
+    // Récupérer l'utilisateur (peut être null si non connecté)
     const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to create songs');
-    }
 
     // Parser le contenu texte en structure structurée
     const structuredSong = parseTextToStructuredSong(
@@ -82,7 +80,7 @@ export const songService = {
     const { data, error } = await supabase
       .from('songs')
       .insert([{
-        user_id: user.id, // Ajouter user_id
+        user_id: user?.id || null, // user_id si connecté, null si public
         title: songData.title,
         author: songData.author,
         folder_id: songData.folderId,
@@ -108,6 +106,13 @@ export const songService = {
   // Mettre à jour une chanson
   async updateSong(id: string, updates: SongEditData): Promise<Song> {
     console.log('songService.updateSong called with:', { id, updates });
+    
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to update songs');
+    }
     
     // Parser le nouveau contenu si fourni
     let sections = undefined;
@@ -160,6 +165,13 @@ export const songService = {
 
   // Supprimer une chanson
   async deleteSong(id: string): Promise<void> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to delete songs');
+    }
+
     const { error } = await supabase
       .from('songs')
       .delete()
@@ -196,8 +208,8 @@ export const songService = {
 // Service pour les dossiers
 export const folderService = {
   // Récupérer tous les dossiers
-  // Si connecté : dossiers de l'utilisateur via RLS
-  // Si non connecté : dossiers publics (user_id = null)
+  // Si connecté : uniquement les dossiers de l'utilisateur
+  // Si non connecté : uniquement les dossiers publics (user_id = null)
   async getAllFolders(): Promise<Folder[]> {
     console.log('Fetching folders from database...');
     const { data: { user } } = await supabase.auth.getUser();
@@ -210,8 +222,10 @@ export const folderService = {
     // Si non connecté, récupérer uniquement les dossiers publics (sans user_id)
     if (!user) {
       query = query.is('user_id', null);
+    } else {
+      // Si connecté, récupérer uniquement les dossiers de l'utilisateur
+      query = query.eq('user_id', user.id);
     }
-    // Si connecté, RLS filtre automatiquement par user_id
 
     const { data, error } = await query;
 
@@ -265,6 +279,13 @@ export const folderService = {
 
   // Mettre à jour un dossier
   async updateFolder(id: string, updates: Partial<Folder>): Promise<Folder> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to update folders');
+    }
+
     const { data, error } = await supabase
       .from('folders')
       .update({
@@ -290,6 +311,13 @@ export const folderService = {
 
   // Supprimer un dossier
   async deleteFolder(id: string): Promise<void> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to delete folders');
+    }
+
     const { error } = await supabase
       .from('folders')
       .delete()
