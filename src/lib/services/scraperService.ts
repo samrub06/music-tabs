@@ -145,26 +145,37 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
     let title = 'Sans titre';
     let author = 'Auteur inconnu';
     
+    // Debug: afficher la structure pour comprendre (seulement si nécessaire)
+    // console.log('🔍 Full tabView structure:', JSON.stringify(tabView, null, 2));
+    
     // Essayer différentes sources pour le titre
     if (tabView.meta?.title) {
       title = tabView.meta.title;
-    } else if (tab.song_name) {
+    } else if (tab?.song_name) {
       title = tab.song_name;
     } else if (tabView.song_name) {
       title = tabView.song_name;
+    } else if (tab?.song_title) {
+      title = tab.song_title;
+    } else if (tabView.song_title) {
+      title = tabView.song_title;
     }
     
     // Essayer différentes sources pour l'auteur
     if (tabView.meta?.artist) {
       author = tabView.meta.artist;
-    } else if (tab.artist_name) {
+    } else if (tab?.artist_name) {
       author = tab.artist_name;
     } else if (tabView.artist_name) {
       author = tabView.artist_name;
-    } else if (tab.band_name) {
+    } else if (tab?.band_name) {
       author = tab.band_name;
     } else if (tabView.band_name) {
       author = tabView.band_name;
+    } else if (tab?.artist) {
+      author = tab.artist;
+    } else if (tabView.artist) {
+      author = tabView.artist;
     }
 
     console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"`);

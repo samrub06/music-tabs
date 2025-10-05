@@ -251,15 +251,18 @@ export const folderService = {
   },
 
   // Créer un nouveau dossier
-  async createFolder(folderData: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>): Promise<Folder> {
+  async createFolder(folderData: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>, clientSupabase?: any): Promise<Folder> {
+    // Utiliser le client Supabase fourni ou le client par défaut
+    const client = clientSupabase || supabase;
+    
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to create folders');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('folders')
       .insert([{
         user_id: user.id, // Ajouter user_id
