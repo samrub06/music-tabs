@@ -4,6 +4,13 @@ import { useApp } from '@/context/AppContext';
 import { Song, SongEditData } from '@/types';
 import { extractAllChords, renderStructuredSong, transposeStructuredSong } from '@/utils/structuredSong';
 import {
+  getOptimalLineHeight,
+  getResponsiveFontSize,
+  needsWrapping,
+  wrapLyricsWithChords,
+  type TextMeasurementOptions
+} from '@/utils/textMeasurement';
+import {
   ArrowLeftIcon,
   EyeIcon,
   MinusIcon,
@@ -700,6 +707,8 @@ interface StructuredSongContentProps {
 }
 
 function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongContentProps) {
+  const measurementRef = useRef<HTMLDivElement>(null);
+  
   // Detect if content contains Hebrew/RTL text
   const containsHebrew = (text: string) => {
     return /[\u0590-\u05FF\u200F\u200E]/.test(text);
@@ -707,29 +716,60 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
 
   // Calculate character width based on font size for precise alignment
   const getCharWidth = (fontSize: number) => {
-    return fontSize * 0.6; // Monospace character width approximation
+    // More accurate calculation based on actual monospace font metrics
+    // Monaco/Lucida Console have different character widths
+    return fontSize * 0.58; // Adjusted for better accuracy
+  };
+
+  // Get actual text width using canvas for precise measurements
+  const getTextWidth = (text: string, fontSize: number): number => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) return text.length * getCharWidth(fontSize);
+    
+    context.font = `${fontSize}px Monaco, "Lucida Console", "Courier New", monospace`;
+    return context.measureText(text).width;
   };
 
   // Hook to detect mobile/tablet for performance optimization
   const [isMobile, setIsMobile] = useState(false);
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setIsMobile(true);
+        setScreenSize('mobile');
+      } else if (width < 1024) {
+        setIsMobile(false);
+        setScreenSize('tablet');
+      } else {
+        setIsMobile(false);
+        setScreenSize('desktop');
+      }
     };
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+  // Get optimal font size based on screen size
+  const getOptimalFontSize = (baseFontSize: number): number => {
+    return getResponsiveFontSize(baseFontSize, window.innerWidth);
+  };
+
   const renderSongLine = (line: any, lineIndex: number) => {
+    const optimalFontSize = getOptimalFontSize(fontSize);
+    const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
+    
     if (line.type === 'lyrics_only') {
       const isHebrew = line.lyrics && containsHebrew(line.lyrics);
       return (
         <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
-          fontSize: `${fontSize}px`, 
-          lineHeight: 1.4,
+          fontSize: `${optimalFontSize}px`, 
+          lineHeight: optimalLineHeight,
           fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
         }}>
           {line.lyrics || ''}
@@ -740,8 +780,8 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     if (line.type === 'chords_only') {
       return (
         <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ 
-          fontSize: `${fontSize}px`, 
-          lineHeight: 1.4,
+          fontSize: `${optimalFontSize}px`, 
+          lineHeight: optimalLineHeight,
           fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
         }}>
           {line.chord_line ? renderClickableChordLine(line.chord_line) : ''}
@@ -756,7 +796,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
           key={lineIndex}
           line={line}
           isHebrew={isHebrew}
-          fontSize={fontSize}
+          fontSize={optimalFontSize}
           onChordClick={onChordClick}
         />
       );
@@ -796,16 +836,32 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     return parts;
   };
   
+  const optimalFontSize = getOptimalFontSize(fontSize);
+
+  const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
+
   return (
     <div className="leading-relaxed space-y-4 w-full overflow-x-hidden" style={{ 
-      fontSize: `${fontSize}px`,
+      fontSize: `${optimalFontSize}px`,
+      lineHeight: optimalLineHeight,
       fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
     }}>
+      {/* Hidden measurement element for precise text width calculations */}
+      <div 
+        ref={measurementRef}
+        className="absolute -top-[9999px] left-0 opacity-0 pointer-events-none whitespace-pre"
+        style={{ 
+          fontSize: `${optimalFontSize}px`,
+          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+        }}
+        aria-hidden="true"
+      />
+      
       {song.sections.map((section: any, sectionIndex: number) => (
         <div key={sectionIndex} className="mb-6 w-full">
           {/* Section header */}
           <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ 
-            fontSize: `${fontSize + 4}px`,
+            fontSize: `${optimalFontSize + 4}px`,
             fontFamily: 'system-ui, -apple-system, sans-serif'
           }}>
             [{section.name}]
@@ -849,15 +905,19 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
   }, [fontSize]);
 
   // Calculate character width based on font size (monospace)
-  const charWidth = fontSize * 0.6;
+  const charWidth = fontSize * 0.58;
   
-  // Calculate maximum characters that fit in container
-  const maxCharsPerLine = Math.floor(containerWidth / charWidth);
+  // Check if line needs wrapping using the utility function
+  const measurementOptions: TextMeasurementOptions = {
+    fontSize,
+    fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+    containerWidth: Math.max(containerWidth, 300),
+    padding: 20
+  };
   
-  // Check if line needs wrapping
-  const needsWrapping = line.lyrics.length > maxCharsPerLine && maxCharsPerLine > 0;
+  const needsWrappingCheck = needsWrapping(line.lyrics, measurementOptions);
   
-  if (!needsWrapping) {
+  if (!needsWrappingCheck) {
     // Simple case: no wrapping needed
     return (
       <div ref={containerRef} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
@@ -902,8 +962,7 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
       line={line}
       isHebrew={isHebrew}
       fontSize={fontSize}
-      charWidth={charWidth}
-      maxCharsPerLine={maxCharsPerLine}
+      measurementOptions={measurementOptions}
       onChordClick={onChordClick}
     />
   );
@@ -914,71 +973,16 @@ interface WrappedChordLyricsLineProps {
   line: any;
   isHebrew: boolean;
   fontSize: number;
-  charWidth: number;
-  maxCharsPerLine: number;
+  measurementOptions: TextMeasurementOptions;
   onChordClick: (chord: string) => void;
 }
 
 const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyricsLineProps>(
-  ({ line, isHebrew, fontSize, charWidth, maxCharsPerLine, onChordClick }, ref) => {
-    // Split lyrics into words for intelligent wrapping
-    const words = line.lyrics.split(' ');
-    const wrappedLines: Array<{
-      lyrics: string;
-      chords: Array<{ chord: string; position: number }>;
-      startPos: number;
-    }> = [];
+  ({ line, isHebrew, fontSize, measurementOptions, onChordClick }, ref) => {
+    // Use the utility function for intelligent wrapping
+    const wrappedLines = wrapLyricsWithChords(line.lyrics, line.chords, measurementOptions);
     
-    let currentLine = '';
-    let currentStartPos = 0;
-    let globalPos = 0;
-    
-    words.forEach((word: string, wordIndex: number) => {
-      const spaceNeeded = wordIndex > 0 ? 1 : 0; // Space before word (except first)
-      const wordWithSpace = (spaceNeeded ? ' ' : '') + word;
-      
-      // Check if adding this word would exceed line limit
-      if (currentLine.length + wordWithSpace.length > maxCharsPerLine && currentLine.length > 0) {
-        // Finish current line
-        const lineChords = line.chords.filter((c: any) => 
-          c.position >= currentStartPos && c.position < globalPos
-        ).map((c: any) => ({
-          chord: c.chord,
-          position: c.position - currentStartPos
-        }));
-        
-        wrappedLines.push({
-          lyrics: currentLine,
-          chords: lineChords,
-          startPos: currentStartPos
-        });
-        
-        // Start new line
-        currentLine = word;
-        currentStartPos = globalPos + spaceNeeded;
-      } else {
-        // Add to current line
-        currentLine += wordWithSpace;
-      }
-      
-      globalPos += wordWithSpace.length;
-    });
-    
-    // Add the last line
-    if (currentLine) {
-      const lineChords = line.chords.filter((c: any) => 
-        c.position >= currentStartPos
-      ).map((c: any) => ({
-        chord: c.chord,
-        position: c.position - currentStartPos
-      }));
-      
-      wrappedLines.push({
-        lyrics: currentLine,
-        chords: lineChords,
-        startPos: currentStartPos
-      });
-    }
+    const lineHeight = getOptimalLineHeight(fontSize);
     
     return (
       <div ref={ref} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
@@ -987,9 +991,12 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
         {wrappedLines.map((wrappedLine, lineIndex) => (
           <div key={lineIndex} className="mb-1">
             {/* Chord line for this wrapped line */}
-            <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+            <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
+              fontSize: `${fontSize}px`, 
+              lineHeight 
+            }}>
               {wrappedLine.chords.map((chordPos, chordIndex) => {
-                const leftOffset = Math.max(0, chordPos.position * charWidth);
+                const leftOffset = Math.max(0, chordPos.position * (fontSize * 0.58));
                 
                 return (
                   <button
@@ -1000,7 +1007,7 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
                       left: isHebrew ? 'auto' : `${leftOffset}px`,
                       right: isHebrew ? `${leftOffset}px` : 'auto',
                       fontSize: `${fontSize}px`,
-                      lineHeight: 1.4
+                      lineHeight
                     }}
                   >
                     {chordPos.chord}
@@ -1009,7 +1016,10 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
               })}
             </div>
             {/* Lyrics line */}
-            <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+            <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
+              fontSize: `${fontSize}px`, 
+              lineHeight 
+            }}>
               {wrappedLine.lyrics}
             </div>
           </div>
