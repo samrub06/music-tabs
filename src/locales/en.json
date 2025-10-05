@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Music Tabs",
+    "appName": "TABasco",
     "openMenu": "Open menu",
     "backToHome": "Back to home page",
     "language": "Language",
@@ -99,7 +99,7 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "signInWithGoogle": "Sign in with Google",
-    "welcome": "Welcome to Music Tabs",
+    "welcome": "Welcome to TABasco",
     "pleaseSignIn": "Please sign in to access your songs",
     "signInToSaveYourSongs": "Sign in to save and organize your own songs!"
   },

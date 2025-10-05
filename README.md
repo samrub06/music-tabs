@@ -1,4 +1,4 @@
-# 🎸 Music Tabs - Application de Gestion de Partitions
+# 🌶️ TABasco - Application de Gestion de Partitions
 
 Une application moderne de gestion de partitions et tablatures musicales construite avec Next.js 15, TypeScript et Tailwind CSS.
 

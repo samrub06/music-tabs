@@ -76,7 +76,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer mx-auto"
             aria-label={t('common.backToHome')}
           >
-            <span className="text-xl md:text-2xl">🎸</span>
+            <span className="text-xl md:text-2xl">🌶️</span>
             <span className="text-lg font-semibold text-gray-900">
               {t('common.appName')}
             </span>

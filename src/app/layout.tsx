@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html>
       <head>
-        <title>Music Tabs App</title>
+        <title>TABasco App</title>
         <meta name="description" content="A modern music tabs application built with Next.js and Tailwind CSS" />
       </head>
       <body className={inter.className}>
