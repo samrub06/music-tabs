@@ -216,35 +216,35 @@ export default function SongViewer({ song }: SongViewerProps) {
       {/* Header - Mobile Responsive */}
       <div className="flex-shrink-0 border-b border-gray-200">
         {/* Mobile Header */}
-        <div className="block md:hidden">
-          <div className="flex items-center justify-between p-3">
+        <div className="block md:hidden w-full max-w-full overflow-hidden">
+          <div className="flex items-center justify-between p-3 gap-2 w-full max-w-full">
             <button
               onClick={() => router.push('/')}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0"
             >
-              <ArrowLeftIcon className="h-6 w-6" />
+              <ArrowLeftIcon className="h-5 w-5 sm:h-6 sm:w-6" />
             </button>
-            <div className="flex-1 text-center px-2">
-              <h1 className="text-lg font-bold text-gray-900 truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
+            <div className="flex-1 text-center px-1 min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate max-w-full" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
               {song.author && (
-                <p className="text-sm text-gray-600 truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate max-w-full" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
               )}
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0"
             >
-              <PencilIcon className="h-5 w-5" />
+              <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
           
           {/* Mobile Controls */}
-          <div className="px-3 pb-3 space-y-3">
+          <div className="px-3 pb-3 space-y-3 w-full max-w-full overflow-hidden">
             {/* Instrument Toggle - Mobile */}
-            <div className="flex rounded-md shadow-sm w-full">
+            <div className="flex rounded-md shadow-sm w-full max-w-full">
               <button
                 onClick={() => setSelectedInstrument('piano')}
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border ${
+                className={`flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-l-md border ${
                   selectedInstrument === 'piano'
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -254,7 +254,7 @@ export default function SongViewer({ song }: SongViewerProps) {
               </button>
               <button
                 onClick={() => setSelectedInstrument('guitar')}
-                className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b ${
+                className={`flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-r-md border-t border-r border-b ${
                   selectedInstrument === 'guitar'
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -265,34 +265,34 @@ export default function SongViewer({ song }: SongViewerProps) {
             </div>
 
              {/* Controls Row - Mobile */}
-             <div className="flex items-center justify-between">
+             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full max-w-full">
                {/* Transpose Controls */}
-               <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
-                 <span className="text-xs text-gray-600">Tonalité:</span>
+               <div className="flex items-center space-x-1 sm:space-x-2 bg-gray-50 rounded-lg px-2 sm:px-3 py-2 flex-1 min-w-0">
+                 <span className="text-xs text-gray-600 whitespace-nowrap">Ton:</span>
                  <button
                    onClick={() => setTransposeValue(Math.max(transposeValue - 1, -11))}
                    disabled={transposeValue <= -11}
-                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded flex-shrink-0"
                  >
-                   <MinusIcon className="h-4 w-4" />
+                   <MinusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
-                 <span className="text-sm font-medium min-w-[2.5rem] text-center">
+                 <span className="text-xs sm:text-sm font-medium min-w-[2rem] text-center">
                    {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
                  </span>
                  <button
                    onClick={() => setTransposeValue(Math.min(transposeValue + 1, 11))}
                    disabled={transposeValue >= 11}
-                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded flex-shrink-0"
                  >
-                   <PlusIcon className="h-4 w-4" />
+                   <PlusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
                </div>
 
                {/* Auto-scroll Controls */}
-               <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
+               <div className="flex items-center space-x-1 bg-gray-50 rounded-lg px-2 py-2 flex-1 min-w-0">
                  <button
                    onClick={handleToggleAutoScroll}
-                   className={`p-2 rounded-full ${
+                   className={`p-1.5 sm:p-2 rounded-full flex-shrink-0 ${
                      autoScroll.isActive
                        ? 'bg-green-100 text-green-600'
                        : 'text-gray-400 hover:text-gray-600 hover:bg-white'
@@ -300,35 +300,35 @@ export default function SongViewer({ song }: SongViewerProps) {
                    title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}
                  >
                    {autoScroll.isActive ? (
-                     <PauseIcon className="h-4 w-4" />
+                     <PauseIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                    ) : (
-                     <PlayIcon className="h-4 w-4" />
+                     <PlayIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                    )}
                  </button>
                  
                  <button
                    onClick={() => setAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
-                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded flex-shrink-0"
                    title="Ralentir"
                  >
-                   <MinusIcon className="h-4 w-4" />
+                   <MinusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
                  
-                 <span className="text-xs text-gray-600 min-w-[2rem] text-center">
+                 <span className="text-xs text-gray-600 min-w-[1.5rem] sm:min-w-[2rem] text-center">
                    {autoScroll.speed.toFixed(1)}x
                  </span>
                  
                  <button
                    onClick={() => setAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
-                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
+                   className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded flex-shrink-0"
                    title="Accélérer"
                  >
-                   <PlusIcon className="h-4 w-4" />
+                   <PlusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
                  
                  <button
                    onClick={resetScroll}
-                   className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded bg-white"
+                   className="text-xs text-gray-500 hover:text-gray-700 px-1.5 sm:px-2 py-1 rounded bg-white flex-shrink-0"
                    title="Haut"
                  >
                    ↑
@@ -337,34 +337,34 @@ export default function SongViewer({ song }: SongViewerProps) {
              </div>
 
              {/* Font Size Controls - Mobile */}
-             <div className="flex items-center justify-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-               <span className="text-sm font-medium text-blue-700">Taille du texte:</span>
-               <div className="flex items-center space-x-1">
+             <div className="flex items-center justify-center gap-1 sm:gap-2 bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 w-full max-w-full">
+               <span className="text-xs sm:text-sm font-medium text-blue-700 whitespace-nowrap">Taille:</span>
+               <div className="flex items-center space-x-1 flex-1 justify-center">
                  <button
                    onClick={decreaseFontSize}
                    disabled={fontSize <= 10}
-                   className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+                   className="p-1.5 sm:p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors flex-shrink-0"
                    title="Réduire la taille"
                  >
-                   <MinusIcon className="h-4 w-4" />
+                   <MinusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
-                 <span className="text-sm font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded min-w-[3rem] text-center">
+                 <span className="text-xs sm:text-sm font-bold text-blue-800 bg-blue-100 px-2 sm:px-3 py-1 rounded min-w-[2.5rem] sm:min-w-[3rem] text-center">
                    {fontSize}px
                  </span>
                  <button
                    onClick={increaseFontSize}
                    disabled={fontSize >= 24}
-                   className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+                   className="p-1.5 sm:p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors flex-shrink-0"
                    title="Augmenter la taille"
                  >
-                   <PlusIcon className="h-4 w-4" />
+                   <PlusIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
                  <button
                    onClick={resetFontSize}
-                   className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-full transition-colors"
+                   className="p-1.5 sm:p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-full transition-colors flex-shrink-0"
                    title="Taille par défaut"
                  >
-                   <EyeIcon className="h-4 w-4" />
+                   <EyeIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                  </button>
                </div>
              </div>
@@ -567,10 +567,12 @@ export default function SongViewer({ song }: SongViewerProps) {
               className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6 bg-gray-50 min-h-0"
               style={{ 
                 WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-                maxHeight: 'calc(100vh - 200px)' // Ensure scrollable area
+                maxHeight: 'calc(100vh - 200px)', // Ensure scrollable area
+                width: '100%',
+                maxWidth: '100%'
               }}
             >
-              <div className="max-w-4xl mx-auto w-full">
+              <div className="max-w-4xl mx-auto w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
                 {/* Chord Diagrams Section */}
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -767,10 +769,14 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     if (line.type === 'lyrics_only') {
       const isHebrew = line.lyrics && containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
-          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          maxWidth: '100%',
+          width: '100%'
         }}>
           {line.lyrics || ''}
         </div>
@@ -779,10 +785,14 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     
     if (line.type === 'chords_only') {
       return (
-        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.8rem] break-words overflow-wrap-anywhere w-full" style={{ 
+        <div key={lineIndex} className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
-          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          maxWidth: '100%',
+          width: '100%'
         }}>
           {line.chord_line ? renderClickableChordLine(line.chord_line) : ''}
         </div>
@@ -844,7 +854,9 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     <div className="leading-relaxed space-y-4 w-full overflow-x-hidden" style={{ 
       fontSize: `${optimalFontSize}px`,
       lineHeight: optimalLineHeight,
-      fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+      fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+      maxWidth: '100%',
+      width: '100%'
     }}>
       {/* Hidden measurement element for precise text width calculations */}
       <div 
@@ -858,17 +870,20 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
       />
       
       {song.sections.map((section: any, sectionIndex: number) => (
-        <div key={sectionIndex} className="mb-6 w-full">
+        <div key={sectionIndex} className="mb-6 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           {/* Section header */}
           <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ 
             fontSize: `${optimalFontSize + 4}px`,
-            fontFamily: 'system-ui, -apple-system, sans-serif'
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+            maxWidth: '100%'
           }}>
             [{section.name}]
           </div>
           
           {/* Section lines */}
-          <div className="space-y-1 w-full">
+          <div className="space-y-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
             {section.lines.map((line: any, lineIndex: number) => 
               renderSongLine(line, lineIndex)
             )}
@@ -921,14 +936,21 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
     // Simple case: no wrapping needed
     return (
       <div ref={containerRef} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
-        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+        maxWidth: '100%',
+        overflow: 'hidden'
       }}>
         {/* Chord line */}
-        <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+        <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
+          fontSize: `${fontSize}px`, 
+          lineHeight: 1.4,
+          maxWidth: '100%',
+          overflow: 'hidden'
+        }}>
           {line.chords.map((chordPos: any, chordIndex: number) => {
             // Ensure chord doesn't go beyond lyrics length
             const safePosition = Math.min(chordPos.position, line.lyrics.length);
-            const leftOffset = safePosition * charWidth;
+            const leftOffset = Math.min(safePosition * charWidth, containerWidth - 50); // Prevent overflow
             
             return (
               <button
@@ -939,7 +961,8 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
                   left: isHebrew ? 'auto' : `${leftOffset}px`,
                   right: isHebrew ? `${leftOffset}px` : 'auto',
                   fontSize: `${fontSize}px`,
-                  lineHeight: 1.4
+                  lineHeight: 1.4,
+                  maxWidth: 'calc(100vw - 40px)'
                 }}
               >
                 {chordPos.chord}
@@ -948,7 +971,13 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
           })}
         </div>
         {/* Lyrics line */}
-        <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ fontSize: `${fontSize}px`, lineHeight: 1.4 }}>
+        <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
+          fontSize: `${fontSize}px`, 
+          lineHeight: 1.4,
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          maxWidth: '100%'
+        }}>
           {line.lyrics}
         </div>
       </div>
@@ -986,17 +1015,21 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
     
     return (
       <div ref={ref} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
-        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+        maxWidth: '100%',
+        overflow: 'hidden'
       }}>
         {wrappedLines.map((wrappedLine, lineIndex) => (
-          <div key={lineIndex} className="mb-1">
+          <div key={lineIndex} className="mb-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
             {/* Chord line for this wrapped line */}
             <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
               fontSize: `${fontSize}px`, 
-              lineHeight 
+              lineHeight,
+              maxWidth: '100%',
+              overflow: 'hidden'
             }}>
               {wrappedLine.chords.map((chordPos, chordIndex) => {
-                const leftOffset = Math.max(0, chordPos.position * (fontSize * 0.58));
+                const leftOffset = Math.max(0, Math.min(chordPos.position * (fontSize * 0.58), measurementOptions.containerWidth - 50));
                 
                 return (
                   <button
@@ -1007,7 +1040,8 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
                       left: isHebrew ? 'auto' : `${leftOffset}px`,
                       right: isHebrew ? `${leftOffset}px` : 'auto',
                       fontSize: `${fontSize}px`,
-                      lineHeight
+                      lineHeight,
+                      maxWidth: 'calc(100vw - 40px)'
                     }}
                   >
                     {chordPos.chord}
@@ -1018,7 +1052,10 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
             {/* Lyrics line */}
             <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
               fontSize: `${fontSize}px`, 
-              lineHeight 
+              lineHeight,
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+              maxWidth: '100%'
             }}>
               {wrappedLine.lyrics}
             </div>

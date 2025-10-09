@@ -50,7 +50,7 @@ export default function RootLayout({
 
                 {/* Sidebar */}
                 <div className={`
-                  fixed inset-y-0 left-0 z-40 w-72 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+                  fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:max-w-none
                   ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                 `}>
                   <div className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 lg:hidden">
@@ -66,7 +66,7 @@ export default function RootLayout({
                 </div>
 
                 {/* Main content */}
-                <div className="flex-1 flex flex-col min-h-0">
+                <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden">
                   {children}
                 </div>
               </div>
