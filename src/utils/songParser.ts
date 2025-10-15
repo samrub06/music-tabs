@@ -86,7 +86,8 @@ export function parseTextToStructuredSong(
     format: 'structured',
     sections,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    content
   };
 }
 

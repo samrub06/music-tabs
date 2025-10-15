@@ -186,6 +186,50 @@ export const songService = {
     }
   },
 
+  // Supprimer plusieurs chansons
+  async deleteSongs(ids: string[]): Promise<void> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to delete songs');
+    }
+
+    if (ids.length === 0) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('songs')
+      .delete()
+      .in('id', ids);
+
+    if (error) {
+      console.error('Error deleting songs:', error);
+      throw error;
+    }
+  },
+
+  // Supprimer toutes les chansons de l'utilisateur
+  async deleteAllSongs(): Promise<void> {
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to delete songs');
+    }
+
+    const { error } = await supabase
+      .from('songs')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error deleting all songs:', error);
+      throw error;
+    }
+  },
+
   // Rechercher des chansons
   async searchSongs(query: string, clientSupabase?: any): Promise<Song[]> {
     const client = clientSupabase || supabase;

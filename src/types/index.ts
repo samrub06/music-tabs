@@ -54,6 +54,7 @@ export interface StructuredSong {
   sections: SongSection[];
   createdAt: Date;
   updatedAt: Date;
+  content: string;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)

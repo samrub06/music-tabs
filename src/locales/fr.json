@@ -36,7 +36,15 @@
     "title": "Titre",
     "key": "Tonalité",
     "tempo": "Tempo",
-    "view": "Voir"
+    "view": "Voir",
+    "selected": "sélectionnées",
+    "deleteSelected": "Supprimer la sélection",
+    "deleteAll": "Tout supprimer",
+    "cancel": "Annuler",
+    "confirmDeleteAll": "Supprimer toutes les chansons ?",
+    "confirmDeleteSelected": "Supprimer les chansons sélectionnées ?",
+    "confirmDeleteAllMessage": "Cela supprimera définitivement toutes vos chansons. Cette action ne peut pas être annulée.",
+    "confirmDeleteSelectedMessage": "Cela supprimera définitivement {count} chansons sélectionnées. Cette action ne peut pas être annulée."
   },
   "songForm": {
     "addSong": "Ajouter une chanson",

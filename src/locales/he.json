@@ -36,7 +36,15 @@
     "title": "כותרת",
     "key": "טון",
     "tempo": "קצב",
-    "view": "צפה"
+    "view": "צפה",
+    "selected": "נבחרו",
+    "deleteSelected": "מחק נבחרים",
+    "deleteAll": "מחק הכל",
+    "cancel": "בטל",
+    "confirmDeleteAll": "מחק את כל השירים?",
+    "confirmDeleteSelected": "מחק את השירים הנבחרים?",
+    "confirmDeleteAllMessage": "זה ימחק לצמיתות את כל השירים שלך. לא ניתן לבטל פעולה זו.",
+    "confirmDeleteSelectedMessage": "זה ימחק לצמיתות {count} שירים נבחרים. לא ניתן לבטל פעולה זו."
   },
   "songForm": {
     "addSong": "הוסף שיר",

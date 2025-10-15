@@ -11,7 +11,9 @@ import {
   MusicalNoteIcon,
   PencilIcon,
   PlayIcon,
-  TrashIcon
+  TrashIcon,
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -26,6 +28,8 @@ export default function SongTable() {
     folders,
     searchQuery, 
     deleteSong,
+    deleteSongs,
+    deleteAllSongs,
     currentFolder,
     setCurrentFolder
   } = useApp();
@@ -38,6 +42,9 @@ export default function SongTable() {
   const [showFolderFilter, setShowFolderFilter] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -152,6 +159,56 @@ export default function SongTable() {
     setSelectedSong(null);
   };
 
+  // Handle song selection
+  const handleSelectSong = (songId: string, checked: boolean) => {
+    const newSelectedSongs = new Set(selectedSongs);
+    if (checked) {
+      newSelectedSongs.add(songId);
+    } else {
+      newSelectedSongs.delete(songId);
+    }
+    setSelectedSongs(newSelectedSongs);
+  };
+
+  // Handle select all
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allSongIds = new Set(sortedSongs.map(song => song.id));
+      setSelectedSongs(allSongIds);
+    } else {
+      setSelectedSongs(new Set());
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = (type: 'selected' | 'all') => {
+    setDeleteType(type);
+    setShowDeleteConfirm(true);
+  };
+
+  // Confirm bulk delete
+  const confirmBulkDelete = async () => {
+    try {
+      if (deleteType === 'all') {
+        await deleteAllSongs();
+      } else if (deleteType === 'selected') {
+        await deleteSongs(Array.from(selectedSongs));
+      }
+      setSelectedSongs(new Set());
+    } catch (error) {
+      console.error('Error deleting songs:', error);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeleteType(null);
+    }
+  };
+
+  // Cancel bulk delete
+  const cancelBulkDelete = () => {
+    setShowDeleteConfirm(false);
+    setDeleteType(null);
+  };
+
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
@@ -186,13 +243,44 @@ export default function SongTable() {
       <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-            <span className="text-sm font-medium text-gray-700">
-              {sortedSongs.length} {sortedSongs.length !== 1 ? t('songs.songCountPlural') : t('songs.songCount')}
-            </span>
-            {currentFolder && (
-              <span className="text-sm text-gray-500">
-                {t('songs.inFolder')} {getFolderName(currentFolder)}
-              </span>
+            {selectedSongs.size > 0 ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-medium text-blue-700">
+                  {selectedSongs.size} {selectedSongs.size !== 1 ? t('songs.songCountPlural') : t('songs.songCount')} {t('songs.selected')}
+                </span>
+                <button
+                  onClick={() => handleBulkDelete('selected')}
+                  className="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <TrashIcon className="h-4 w-4 mr-1.5" />
+                  {t('songs.deleteSelected')}
+                </button>
+                <button
+                  onClick={() => handleBulkDelete('all')}
+                  className="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <TrashIcon className="h-4 w-4 mr-1.5" />
+                  {t('songs.deleteAll')}
+                </button>
+                <button
+                  onClick={() => setSelectedSongs(new Set())}
+                  className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <XMarkIcon className="h-4 w-4 mr-1.5" />
+                  {t('songs.cancel')}
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="text-sm font-medium text-gray-700">
+                  {sortedSongs.length} {sortedSongs.length !== 1 ? t('songs.songCountPlural') : t('songs.songCount')}
+                </span>
+                {currentFolder && (
+                  <span className="text-sm text-gray-500">
+                    {t('songs.inFolder')} {getFolderName(currentFolder)}
+                  </span>
+                )}
+              </>
             )}
           </div>
           
@@ -269,6 +357,17 @@ export default function SongTable() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              {/* Checkbox column - Only show if user is logged in */}
+              {user && (
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                  <input
+                    type="checkbox"
+                    checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </th>
+              )}
               <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <SortButton field="title">{t('songs.title')}</SortButton>
               </th>
@@ -293,6 +392,23 @@ export default function SongTable() {
                 onClick={() => router.push(`/song/${song.id}`)}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               >
+                {/* Checkbox column - Only show if user is logged in */}
+                {user && (
+                  <td 
+                    className="px-3 sm:px-6 py-4 whitespace-nowrap"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSongs.has(song.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleSelectSong(song.id, e.target.checked);
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </td>
+                )}
                 <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <MusicalNoteIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
@@ -365,6 +481,44 @@ export default function SongTable() {
         onClose={handleCloseEditForm}
         song={selectedSong}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <TrashIcon className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mt-4">
+                {deleteType === 'all' ? t('songs.confirmDeleteAll') : t('songs.confirmDeleteSelected')}
+              </h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500">
+                  {deleteType === 'all' 
+                    ? t('songs.confirmDeleteAllMessage')
+                    : t('songs.confirmDeleteSelectedMessage').replace('{count}', selectedSongs.size.toString())
+                  }
+                </p>
+              </div>
+              <div className="flex justify-center space-x-4 mt-4">
+                <button
+                  onClick={cancelBulkDelete}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                >
+                  {t('songs.cancel')}
+                </button>
+                <button
+                  onClick={confirmBulkDelete}
+                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  {t('songs.delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

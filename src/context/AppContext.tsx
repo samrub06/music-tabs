@@ -8,10 +8,12 @@ interface AppContextType extends AppState {
   // Actions
   addSong: (songData: NewSongData) => Promise<void>;
   updateSong: (id: string, updates: SongEditData) => Promise<void>;
-  deleteSong: (id: string) => void;
+  deleteSong: (id: string) => Promise<void>;
+  deleteSongs: (ids: string[]) => Promise<void>;
+  deleteAllSongs: () => Promise<void>;
   addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateFolder: (id: string, updates: Partial<Folder>) => void;
-  deleteFolder: (id: string) => void;
+  updateFolder: (id: string, updates: Partial<Folder>) => Promise<void>;
+  deleteFolder: (id: string) => Promise<void>;
   setCurrentFolder: (folderId: string | null) => void;
   setSearchQuery: (query: string) => void;
   searchSongs: (query: string) => Promise<void>;
@@ -19,7 +21,7 @@ interface AppContextType extends AppState {
   setTransposeValue: (value: number) => void;
   setAutoScrollSpeed: (speed: number) => void;
   toggleAutoScroll: () => void;
-  importSongs: (songs: Song[]) => void;
+  importSongs: (songs: Song[]) => Promise<void>;
   exportData: () => string;
   setCurrentSong: (songId: string | null) => void;
 }
@@ -28,6 +30,8 @@ type AppAction =
   | { type: 'ADD_SONG'; payload: Song }
   | { type: 'UPDATE_SONG'; payload: { id: string; updates: Partial<Song> } }
   | { type: 'DELETE_SONG'; payload: string }
+  | { type: 'DELETE_SONGS'; payload: string[] }
+  | { type: 'DELETE_ALL_SONGS' }
   | { type: 'ADD_FOLDER'; payload: Folder }
   | { type: 'UPDATE_FOLDER'; payload: { id: string; updates: Partial<Folder> } }
   | { type: 'DELETE_FOLDER'; payload: string }
@@ -75,6 +79,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         songs: state.songs.filter(song => song.id !== action.payload)
+      };
+    
+    case 'DELETE_SONGS':
+      return {
+        ...state,
+        songs: state.songs.filter(song => !action.payload.includes(song.id))
+      };
+    
+    case 'DELETE_ALL_SONGS':
+      return {
+        ...state,
+        songs: []
       };
     
     case 'ADD_FOLDER':
@@ -216,6 +232,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     },
 
+    deleteSongs: async (ids) => {
+      try {
+        await songService.deleteSongs(ids);
+        dispatch({ type: 'DELETE_SONGS', payload: ids });
+      } catch (error) {
+        console.error('Error deleting songs:', error);
+      }
+    },
+
+    deleteAllSongs: async () => {
+      try {
+        await songService.deleteAllSongs();
+        dispatch({ type: 'DELETE_ALL_SONGS' });
+      } catch (error) {
+        console.error('Error deleting all songs:', error);
+      }
+    },
+
     addFolder: async (folderData) => {
       try {
         const newFolder = await folderService.createFolder(folderData);
@@ -278,14 +312,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'TOGGLE_AUTO_SCROLL' });
     },
 
-    importSongs: (songs) => {
-      const songsWithIds = songs.map(song => ({
-        ...song,
-        id: generateId(),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }));
-      dispatch({ type: 'IMPORT_SONGS', payload: songsWithIds });
+    importSongs: async (songs) => {
+      try {
+        // Create each song in Supabase
+        const createdSongs = await Promise.all(
+          songs.map(song => songService.createSong({
+            title: song.title,
+            author: song.author || '',
+            content: song.content,
+            folderId: song.folderId
+          }))
+        );
+        // Add all created songs to state
+        dispatch({ type: 'IMPORT_SONGS', payload: createdSongs });
+      } catch (error) {
+        console.error('Error importing songs:', error);
+        throw error;
+      }
     },
 
     exportData: () => {

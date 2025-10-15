@@ -36,7 +36,15 @@
     "title": "Title",
     "key": "Key",
     "tempo": "Tempo",
-    "view": "View"
+    "view": "View",
+    "selected": "selected",
+    "deleteSelected": "Delete Selected",
+    "deleteAll": "Delete All",
+    "cancel": "Cancel",
+    "confirmDeleteAll": "Delete All Songs?",
+    "confirmDeleteSelected": "Delete Selected Songs?",
+    "confirmDeleteAllMessage": "This will permanently delete all your songs. This action cannot be undone.",
+    "confirmDeleteSelectedMessage": "This will permanently delete {count} selected songs. This action cannot be undone."
   },
   "songForm": {
     "addSong": "Add Song",
