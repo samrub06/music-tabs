@@ -226,9 +226,20 @@ export default function SongViewer({ song }: SongViewerProps) {
             </button>
             <div className="flex-1 text-center px-1 min-w-0">
               <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate max-w-full" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
-              {song.author && (
-                <p className="text-xs sm:text-sm text-gray-600 truncate max-w-full" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
-              )}
+              <div className="flex items-center justify-center space-x-2 mt-1">
+                {song.author && (
+                  <p className="text-xs sm:text-sm text-gray-600 truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
+                )}
+                {song.capo && (
+                  <>
+                    {song.author && <span className="text-gray-300">•</span>}
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs sm:text-sm text-blue-600 font-medium">🎸</span>
+                      <span className="text-xs sm:text-sm text-blue-600 font-medium">Capo {song.capo}</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
@@ -382,9 +393,20 @@ export default function SongViewer({ song }: SongViewerProps) {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-900" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
-              {song.author && (
-                <p className="text-sm text-gray-600" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
-              )}
+              <div className="flex items-center space-x-2 mt-1">
+                {song.author && (
+                  <p className="text-sm text-gray-600" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>Par {song.author}</p>
+                )}
+                {song.capo && (
+                  <>
+                    {song.author && <span className="text-gray-300">•</span>}
+                    <div className="flex items-center space-x-1">
+                      <span className="text-sm text-blue-600 font-medium">🎸</span>
+                      <span className="text-sm text-blue-600 font-medium">Capo {song.capo}</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 

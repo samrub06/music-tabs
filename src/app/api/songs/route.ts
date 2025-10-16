@@ -1,4 +1,5 @@
 import { parseTextToStructuredSong } from '@/utils/songParser';
+import { analyzeSongChords } from '@/utils/chordAnalysis';
 import fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
@@ -24,7 +25,7 @@ export async function GET() {
 // POST - Ajouter une nouvelle chanson (convertie automatiquement au format structuré)
 export async function POST(request: NextRequest) {
   try {
-    const { title, author, content, folderId } = await request.json();
+    const { title, author, content, folderId, reviews, capo, key, firstChord, lastChord, chordProgression } = await request.json();
     
     // Lire le fichier actuel
     const fileContents = fs.readFileSync(DATA_FILE_PATH, 'utf8');
@@ -34,7 +35,19 @@ export async function POST(request: NextRequest) {
     const generateId = () => `song-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     // Parser le contenu texte vers le format structuré
-    const structuredSong = parseTextToStructuredSong(title, author, content, folderId);
+    const structuredSong = parseTextToStructuredSong(title, author, content, folderId, reviews, capo, key);
+    
+    // Add chord analysis if not provided
+    if (!firstChord || !lastChord) {
+      const chordAnalysis = analyzeSongChords(content, key, capo);
+      structuredSong.firstChord = firstChord || chordAnalysis.firstChord;
+      structuredSong.lastChord = lastChord || chordAnalysis.lastChord;
+      structuredSong.chordProgression = chordProgression || chordAnalysis.chordProgression;
+    } else {
+      structuredSong.firstChord = firstChord;
+      structuredSong.lastChord = lastChord;
+      structuredSong.chordProgression = chordProgression;
+    }
     
     // Ajouter l'ID et les timestamps
     const songWithMetadata = {

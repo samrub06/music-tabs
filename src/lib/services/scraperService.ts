@@ -48,6 +48,9 @@ export interface ScrapedSong {
   content: string;
   source: string;
   url?: string;
+  reviews?: number;
+  capo?: number;
+  key?: string;
 }
 
 export interface SearchResult {
@@ -86,11 +89,123 @@ function decodeHTMLEntities(text: string): string {
     .replace(/&gt;/g, '>');
 }
 
+// Fonction pour détecter la tonalité (key) dans le contenu
+function detectKey(content: string): string | undefined {
+  if (!content) return undefined;
+  
+  // Patterns de détection de la tonalité
+  const keyPatterns = [
+    /key\s*:?\s*([A-G](?:#|b)?m?)/i,
+    /tonality\s*:?\s*([A-G](?:#|b)?m?)/i,
+    /tonalité\s*:?\s*([A-G](?:#|b)?m?)/i,
+    /in\s+([A-G](?:#|b)?m?)\s+key/i,
+    /en\s+([A-G](?:#|b)?m?)/i,
+  ];
+  
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    for (const pattern of keyPatterns) {
+      const match = trimmedLine.match(pattern);
+      if (match) {
+        const key = match[1].trim();
+        console.log(`🎵 Key détectée: ${key} (ligne: "${trimmedLine}")`);
+        return key;
+      }
+    }
+  }
+  
+  return undefined;
+}
+
+// Fonction pour détecter le capo dans le contenu
+function detectCapo(content: string): number | undefined {
+  if (!content) return undefined;
+  
+  // Fonction pour convertir les chiffres romains en chiffres arabes
+  const romanToArabic = (roman: string): number => {
+    const romanNumerals: { [key: string]: number } = {
+      'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
+      'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10,
+      'XI': 11, 'XII': 12
+    };
+    return romanNumerals[roman.toUpperCase()] || 0;
+  };
+  
+  // Patterns de détection du capo (plusieurs variantes)
+  const capoPatterns = [
+    // Chiffres arabes
+    /capo\s*:?\s*(\d+)/i,
+    /capo\s+(\d+)/i,
+    /🎸?\s*capo\s+(\d+)/i,
+    /capo\s+on\s+fret\s+(\d+)/i,
+    /fret\s+(\d+)/i,
+    /capo\s+(\d+)\s+fret/i,
+    /(\d+)\s+capo/i,
+    /capo\s*(\d+)/i,
+    /capo\s*=\s*(\d+)/i,
+    /capo\s*:?\s*(\d+)\s*fret/i,
+    /fret\s*(\d+)/i,
+    /capo\s+(\d+)\s*st/i,
+    /(\d+)\s*st\s+capo/i,
+    // Patterns avec "th" (1st, 2nd, 3rd, 4th, etc.)
+    /capo\s*:?\s*(\d+)(?:st|nd|rd|th)\s+fret/i,
+    /capo\s+(\d+)(?:st|nd|rd|th)\s+fret/i,
+    /(\d+)(?:st|nd|rd|th)\s+fret/i,
+    // Chiffres romains
+    /capo\s*:?\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /capo\s+(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /🎸?\s*capo\s+(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /capo\s+on\s+fret\s+(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /fret\s+(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /capo\s+(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\s+fret/i,
+    /(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\s+capo/i,
+    /capo\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /capo\s*=\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /capo\s*:?\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\s*fret/i,
+    /fret\s*(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\b/i,
+    /capo\s+(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\s*st/i,
+    /(I{1,3}|IV|V|VI{0,3}|IX|X|XI|XII)\s*st\s+capo/i,
+  ];
+  
+  const lines = content.split('\n');
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    // Vérifier chaque pattern
+    for (const pattern of capoPatterns) {
+      const match = trimmedLine.match(pattern);
+      if (match) {
+        let capoValue: number;
+        
+        // Vérifier si c'est un chiffre romain ou arabe
+        if (isNaN(parseInt(match[1], 10))) {
+          // C'est un chiffre romain
+          capoValue = romanToArabic(match[1]);
+        } else {
+          // C'est un chiffre arabe
+          capoValue = parseInt(match[1], 10);
+        }
+        
+        if (capoValue >= 0 && capoValue <= 12) { // Capo valide entre 0 et 12
+          console.log(`🎸 Capo détecté: ${capoValue} (${match[1]}) (ligne: "${trimmedLine}")`);
+          return capoValue;
+        }
+      }
+    }
+  }
+  
+  return undefined;
+}
+
 /**
  * Scraper spécialisé pour les tabs de guitare
  * Utilise des données JSON dans l'attribut data-content
  */
-async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
+async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -141,14 +256,46 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
 
     const content = tab.content;
     
+    // Essayer d'extraire les métadonnées de la page pour trouver le capo
+    let metadataContent = '';
+    
+    // Chercher dans les métadonnées de la page
+    if (tabView.meta) {
+      const metaKeys = Object.keys(tabView.meta);
+      console.log('🔍 Métadonnées disponibles:', metaKeys);
+      
+      // Construire une chaîne de métadonnées pour la recherche de capo
+      metadataContent = Object.entries(tabView.meta)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+    }
+    
+    // Chercher aussi dans les informations de tuning et autres métadonnées
+    if (tab.tuning) {
+      metadataContent += `\nTuning: ${tab.tuning}`;
+    }
+    if (tab.key) {
+      metadataContent += `\nKey: ${tab.key}`;
+    }
+    if (tab.difficulty) {
+      metadataContent += `\nDifficulty: ${tab.difficulty}`;
+    }
+    
+    // Combiner le contenu principal avec les métadonnées
+    const fullContent = metadataContent + '\n\n' + content;
+    
+    // Debug: afficher le début du contenu pour voir ce qui est extrait
+    console.log('🔍 Contenu extrait (premiers 500 caractères):', fullContent.substring(0, 500));
+    console.log('🔍 Contenu extrait (derniers 500 caractères):', fullContent.substring(Math.max(0, fullContent.length - 500)));
+    
     // Extraire le titre et l'auteur avec plusieurs fallbacks
-    let title = 'Sans titre';
-    let author = 'Auteur inconnu';
+    let title = searchResult?.title || 'Sans titre';
+    let author = searchResult?.author || 'Auteur inconnu';
     
     // Debug: afficher la structure pour comprendre (seulement si nécessaire)
     // console.log('🔍 Full tabView structure:', JSON.stringify(tabView, null, 2));
     
-    // Essayer différentes sources pour le titre
+    // Essayer différentes sources pour le titre (priorité aux données de la page)
     if (tabView.meta?.title) {
       title = tabView.meta.title;
     } else if (tab?.song_name) {
@@ -161,7 +308,7 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
       title = tabView.song_title;
     }
     
-    // Essayer différentes sources pour l'auteur
+    // Essayer différentes sources pour l'auteur (priorité aux données de la page)
     if (tabView.meta?.artist) {
       author = tabView.meta.artist;
     } else if (tab?.artist_name) {
@@ -178,7 +325,11 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
       author = tabView.artist;
     }
 
-    console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"`);
+    // Détecter la tonalité et le capo dans le contenu complet (métadonnées + contenu)
+    const key = detectKey(fullContent);
+    const capo = detectCapo(fullContent);
+    
+    console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"${key ? ` (Key: ${key})` : ''}${capo ? ` (Capo: ${capo})` : ''}`);
     
     // Debug: montrer ce qu'on a trouvé
     if (title === 'Sans titre' || author === 'Auteur inconnu') {
@@ -191,9 +342,12 @@ async function scrapeUltimateGuitar(url: string): Promise<ScrapedSong | null> {
     return {
       title,
       author,
-      content: cleanSongContent(content),
+      content: cleanSongContent(fullContent),
       source: 'Ultimate Guitar',
       url,
+      reviews: searchResult?.reviews || 0,
+      capo,
+      key
     };
   } catch (error) {
     console.error('Error scraping guitar tabs:', error);
@@ -269,7 +423,7 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
  * Scraper spécialisé pour Tab4U (site israélien)
  * Tab4U structure le contenu dans des tables avec des spans pour les accords
  */
-async function scrapeTab4U(url: string): Promise<ScrapedSong | null> {
+async function scrapeTab4U(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -285,19 +439,24 @@ async function scrapeTab4U(url: string): Promise<ScrapedSong | null> {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Extraire le titre depuis h1
-    let title = $('h1').first().text().trim();
+    // Extraire le titre depuis h1 (utiliser searchResult comme fallback)
+    let title = searchResult?.title || $('h1').first().text().trim();
     // Nettoyer le titre (ex: "אקורדים לשיר XXX של YYY" -> "XXX")
-    title = title.replace(/^אקורדים לשיר\s+/, '').replace(/\s+של\s+.*$/, '');
+    if (!searchResult?.title) {
+      title = title.replace(/^אקורדים לשיר\s+/, '').replace(/\s+של\s+.*$/, '');
+    }
 
-    // Extraire l'auteur (artiste)
-    const artistLink = $('a.artistTitle').first();
-    let author = artistLink.text().trim();
-    
-    // Alternative: chercher dans les métadonnées
+    // Extraire l'auteur (artiste) (utiliser searchResult comme fallback)
+    let author = searchResult?.author || '';
     if (!author) {
-      const artistMeta = $('[class*="artist"]').first().text().trim();
-      author = artistMeta;
+      const artistLink = $('a.artistTitle').first();
+      author = artistLink.text().trim();
+      
+      // Alternative: chercher dans les métadonnées
+      if (!author) {
+        const artistMeta = $('[class*="artist"]').first().text().trim();
+        author = artistMeta;
+      }
     }
 
     // Extraire le contenu depuis les tables
@@ -343,12 +502,21 @@ async function scrapeTab4U(url: string): Promise<ScrapedSong | null> {
       return null;
     }
 
+    // Détecter la tonalité et le capo dans le contenu
+    const key = detectKey(content);
+    const capo = detectCapo(content);
+    
+    console.log(`🎵 Extracted from Tab4U: "${title || 'Sans titre'}" by "${author || 'Auteur inconnu'}"${key ? ` (Key: ${key})` : ''}${capo ? ` (Capo: ${capo})` : ''}`);
+
     return {
       title: title || 'Sans titre',
       author: author || 'Auteur inconnu',
       content: cleanSongContent(content),
       source: 'Tab4U',
       url,
+      reviews: searchResult?.reviews || 0,
+      capo,
+      key
     };
   } catch (error) {
     console.error('Error scraping Tab4U:', error);
@@ -448,19 +616,19 @@ export async function searchSong(query: string): Promise<SearchResult[]> {
 /**
  * Récupère le contenu d'une partition depuis une URL
  */
-export async function scrapeSongFromUrl(url: string): Promise<ScrapedSong | null> {
+export async function scrapeSongFromUrl(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
     // Détecter le site et utiliser le scraper approprié
     const hostname = new URL(url).hostname;
 
     // Guitar tabs
     if (hostname.includes('ultimate-guitar.com') || hostname.includes('tabs.ultimate-guitar.com')) {
-      return await scrapeUltimateGuitar(url);
+      return await scrapeUltimateGuitar(url, searchResult);
     }
 
     // Tab4U
     if (hostname.includes('tab4u.com')) {
-      return await scrapeTab4U(url);
+      return await scrapeTab4U(url, searchResult);
     }
 
     // Pour les autres sites, utiliser le scraper générique
@@ -579,7 +747,7 @@ export async function searchAndScrapeSong(query: string): Promise<ScrapedSong | 
 
     // Prendre le premier résultat et récupérer son contenu
     const firstResult = searchResults[0];
-    const song = await scrapeSongFromUrl(firstResult.url);
+    const song = await scrapeSongFromUrl(firstResult.url, firstResult);
 
     return song;
   } catch (error) {

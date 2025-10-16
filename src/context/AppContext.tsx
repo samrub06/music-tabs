@@ -8,6 +8,7 @@ interface AppContextType extends AppState {
   // Actions
   addSong: (songData: NewSongData) => Promise<void>;
   updateSong: (id: string, updates: SongEditData) => Promise<void>;
+  updateSongFolder: (id: string, folderId: string | undefined) => Promise<void>;
   deleteSong: (id: string) => Promise<void>;
   deleteSongs: (ids: string[]) => Promise<void>;
   deleteAllSongs: () => Promise<void>;
@@ -219,6 +220,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.log('Dispatched UPDATE_SONG action');
       } catch (error) {
         console.error('Error updating song:', error);
+        throw error;
+      }
+    },
+
+    updateSongFolder: async (id, folderId) => {
+      try {
+        console.log('Context updateSongFolder called with:', { id, folderId });
+        const updatedSong = await songService.updateSongFolder(id, folderId);
+        console.log('Got updated song folder from service:', updatedSong);
+        dispatch({ type: 'UPDATE_SONG', payload: { id, updates: updatedSong } });
+        console.log('Dispatched UPDATE_SONG action for folder change');
+      } catch (error) {
+        console.error('Error updating song folder:', error);
         throw error;
       }
     },

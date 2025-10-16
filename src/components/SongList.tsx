@@ -156,6 +156,15 @@ function SongListItem({ song, folderName, onPlay, onDelete, showFolder }: SongLi
                 <p className="text-sm text-gray-500 truncate">
                   {song.author || 'Auteur inconnu'}
                 </p>
+                {song.capo && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-blue-600 font-medium">🎸</span>
+                      <span className="text-xs text-blue-600 font-medium">Capo {song.capo}</span>
+                    </div>
+                  </>
+                )}
                 {showFolder && folderName && (
                   <>
                     <span className="text-gray-300">•</span>

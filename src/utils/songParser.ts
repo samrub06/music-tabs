@@ -1,11 +1,15 @@
 import { ChordPosition, SongLine, SongSection, StructuredSong } from '@/types';
+import { analyzeSongChords } from './chordAnalysis';
 
 // Parser optimisé avec positions précises
 export function parseTextToStructuredSong(
   title: string,
   author: string,
   content: string,
-  folderId?: string
+  folderId?: string,
+  reviews?: number,
+  capo?: number,
+  key?: string
 ): StructuredSong {
   const lines = content.split('\n');
   const sections: SongSection[] = [];
@@ -78,6 +82,9 @@ export function parseTextToStructuredSong(
     sections.push(currentSection);
   }
   
+  // Analyze chords for medley generation
+  const chordAnalysis = analyzeSongChords(content, key, capo);
+  
   return {
     id: '', // Will be set by the API
     title,
@@ -87,7 +94,14 @@ export function parseTextToStructuredSong(
     sections,
     createdAt: new Date(),
     updatedAt: new Date(),
-    content
+    content,
+    reviews: reviews || 0,
+    capo: capo || undefined,
+    key: key || undefined,
+    soundingKey: undefined, // Will be calculated when needed
+    firstChord: chordAnalysis.firstChord,
+    lastChord: chordAnalysis.lastChord,
+    chordProgression: chordAnalysis.chordProgression
   };
 }
 

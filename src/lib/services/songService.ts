@@ -77,7 +77,10 @@ export const songService = {
       songData.title,
       songData.author,
       songData.content,
-      songData.folderId
+      songData.folderId,
+      songData.reviews,
+      songData.capo,
+      songData.key
     );
 
     const { data, error } = await client
@@ -88,7 +91,14 @@ export const songService = {
         author: songData.author,
         folder_id: songData.folderId,
         format: 'structured',
-        sections: structuredSong.sections
+        sections: structuredSong.sections,
+        reviews: songData.reviews || 0,
+        capo: songData.capo || null,
+        key: songData.key || null,
+        sounding_key: songData.soundingKey || null,
+        first_chord: structuredSong.firstChord || null,
+        last_chord: structuredSong.lastChord || null,
+        chord_progression: structuredSong.chordProgression || null
       }])
       .select()
       .single();
@@ -157,6 +167,46 @@ export const songService = {
     }
 
     console.log('Song updated successfully:', data);
+
+    return {
+      ...data,
+      folderId: data.folder_id, // Map folder_id to folderId
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
+    };
+  },
+
+  // Mettre à jour seulement le dossier d'une chanson
+  async updateSongFolder(id: string, folderId: string | undefined): Promise<Song> {
+    console.log('songService.updateSongFolder called with:', { id, folderId });
+    
+    // Vérifier que l'utilisateur est connecté
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to update songs');
+    }
+
+    const updateData = {
+      folder_id: folderId,
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('Updating song folder with:', updateData);
+
+    const { data, error } = await supabase
+      .from('songs')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating song folder:', error);
+      throw error;
+    }
+
+    console.log('Song folder updated successfully:', data);
 
     return {
       ...data,

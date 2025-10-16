@@ -55,6 +55,13 @@ export interface StructuredSong {
   createdAt: Date;
   updatedAt: Date;
   content: string;
+  reviews?: number;
+  capo?: number;
+  key?: string;
+  soundingKey?: string;
+  firstChord?: string;
+  lastChord?: string;
+  chordProgression?: string[];
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)
@@ -63,6 +70,13 @@ export interface NewSongData {
   author: string;
   content: string;
   folderId?: string;
+  reviews?: number;
+  capo?: number;
+  key?: string;
+  soundingKey?: string;
+  firstChord?: string;
+  lastChord?: string;
+  chordProgression?: string[];
 }
 
 // Type pour l'édition de chanson (avec contenu texte)
@@ -71,6 +85,13 @@ export interface SongEditData {
   author: string;
   content: string;
   folderId?: string;
+  reviews?: number;
+  capo?: number;
+  key?: string;
+  soundingKey?: string;
+  firstChord?: string;
+  lastChord?: string;
+  chordProgression?: string[];
 }
 
 export interface AppState {

@@ -18,6 +18,7 @@ import {
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import EditSongForm from './EditSongForm';
+import FolderDropdown from './FolderDropdown';
 
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt';
 type SortDirection = 'asc' | 'desc';
@@ -30,6 +31,7 @@ export default function SongTable() {
     deleteSong,
     deleteSongs,
     deleteAllSongs,
+    updateSongFolder,
     currentFolder,
     setCurrentFolder
   } = useApp();
@@ -157,6 +159,15 @@ export default function SongTable() {
   const handleCloseEditForm = () => {
     setShowEditForm(false);
     setSelectedSong(null);
+  };
+
+  const handleFolderChange = async (songId: string, newFolderId: string | undefined) => {
+    try {
+      await updateSongFolder(songId, newFolderId);
+    } catch (error) {
+      console.error('Error updating song folder:', error);
+      throw error;
+    }
   };
 
   // Handle song selection
@@ -418,20 +429,47 @@ export default function SongTable() {
                       </div>
                       {/* Show artist on mobile when artist column is hidden */}
                       <div className="sm:hidden text-xs text-gray-500 truncate max-w-[180px]">
-                        {song.author}
+                        <div className="flex items-center space-x-2">
+                          <span>{song.author}</span>
+                          {song.capo && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-blue-600 font-medium">🎸</span>
+                                <span className="text-blue-600 font-medium">Capo {song.capo}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 truncate max-w-xs">
-                    {song.author}
+                    <div className="flex items-center space-x-2">
+                      <span>{song.author}</span>
+                      {song.capo && (
+                        <>
+                          <span className="text-gray-300">•</span>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-blue-600 font-medium">🎸</span>
+                            <span className="text-blue-600 font-medium">Capo {song.capo}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {getFolderName(song.folderId)}
-                  </span>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <FolderDropdown
+                      currentFolderId={song.folderId}
+                      folders={folders}
+                      onFolderChange={(newFolderId) => handleFolderChange(song.id, newFolderId)}
+                      disabled={!user} // Seulement les utilisateurs connectés peuvent changer les dossiers
+                    />
+                  </div>
                 </td>
                 <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(song.updatedAt).toLocaleDateString('fr-FR')}

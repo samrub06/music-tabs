@@ -32,6 +32,8 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,31 +43,22 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       return;
     }
 
-    try {
-      await addSong({
-        title: formData.title.trim(),
-        author: formData.author.trim(),
-        content: formData.content.trim(),
-        folderId: formData.folderId || undefined
-      });
+    await addSong({
+      title: formData.title.trim(),
+      author: formData.author.trim(),
+      content: formData.content.trim(),
+      folderId: formData.folderId || undefined
+    });
 
-      // Reset form
-      setFormData({
-        title: '',
-        author: '',
-        content: '',
-        folderId: ''
-      });
+    // Reset form
+    setFormData({
+      title: '',
+      author: '',
+      content: '',
+      folderId: ''
+    });
 
-      // Show success message
-      alert('✅ Chanson ajoutée avec succès !');
-      
-      // Close the modal
-      onClose();
-    } catch (error) {
-      console.error('Error adding song:', error);
-      alert('❌ Erreur lors de l\'ajout de la chanson. Veuillez réessayer.');
-    }
+    onClose();
   };
 
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,76 +68,59 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setIsImporting(true);
     const importedSongs = [];
 
-    try {
-      for (const file of Array.from(files)) {
-        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
-          try {
-            const content = await file.text();
-            const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
-            
-            // Try to detect title and author from content
-            const lines = content.split('\n').filter(line => line.trim());
-            let title = fileName;
-            let author = '';
-            
-            if (lines.length > 0) {
-              const firstLine = lines[0].trim();
-              // Check if first line looks like a title
-              if (firstLine && !firstLine.match(/^\[/) && !firstLine.match(/^[A-G]/)) {
-                title = firstLine;
-                
-                // Check if second line could be an author
-                if (lines.length > 1) {
-                  const secondLine = lines[1].trim();
-                  if (secondLine && !secondLine.match(/^\[/) && !secondLine.match(/^[A-G]/)) {
-                    // Check if it looks like an author line
-                    if (secondLine.toLowerCase().includes('by ') || 
-                        secondLine.match(/^[-–—]\s*/) ||
-                        secondLine.match(/^\([^)]+\)$/)) {
-                      author = secondLine.replace(/^(by\s+|[-–—]\s*|\(|\))/, '').trim();
-                    }
+    for (const file of Array.from(files)) {
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        try {
+          const content = await file.text();
+          const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+          
+          // Try to detect title and author from content
+          const lines = content.split('\n').filter(line => line.trim());
+          let title = fileName;
+          let author = '';
+          
+          if (lines.length > 0) {
+            const firstLine = lines[0].trim();
+            // Check if first line looks like a title
+            if (firstLine && !firstLine.match(/^\[/) && !firstLine.match(/^[A-G]/)) {
+              title = firstLine;
+              
+              // Check if second line could be an author
+              if (lines.length > 1) {
+                const secondLine = lines[1].trim();
+                if (secondLine && !secondLine.match(/^\[/) && !secondLine.match(/^[A-G]/)) {
+                  // Check if it looks like an author line
+                  if (secondLine.toLowerCase().includes('by ') || 
+                      secondLine.match(/^[-–—]\s*/) ||
+                      secondLine.match(/^\([^)]+\)$/)) {
+                    author = secondLine.replace(/^(by\s+|[-–—]\s*|\(|\))/, '').trim();
                   }
                 }
               }
             }
-
-            importedSongs.push({
-              title,
-              author,
-              content,
-              folderId: formData.folderId || undefined
-            });
-          } catch (error) {
-            console.error(`Error reading file ${file.name}:`, error);
           }
+
+          importedSongs.push({
+            title,
+            author,
+            content,
+            folderId: formData.folderId || undefined
+          });
+        } catch (error) {
+          console.error(`Error reading file ${file.name}:`, error);
         }
       }
-
-      if (importedSongs.length > 0) {
-        await importSongs(importedSongs as any[]);
-        alert(`✅ ${importedSongs.length} chanson(s) importée(s) avec succès !`);
-        
-        // Reset form
-        setFormData({
-          title: '',
-          author: '',
-          content: '',
-          folderId: ''
-        });
-        
-        // Close the modal
-        onClose();
-      } else {
-        alert('⚠️ Aucun fichier .txt valide trouvé.');
-      }
-    } catch (error) {
-      console.error('Error importing files:', error);
-      alert('❌ Erreur lors de l\'import. Veuillez réessayer.');
-    } finally {
-      setIsImporting(false);
-      // Reset file input
-      e.target.value = '';
     }
+
+    if (importedSongs.length > 0) {
+      importSongs(importedSongs as any[]);
+      alert(`${importedSongs.length} chanson(s) importée(s) avec succès !`);
+      onClose();
+    }
+
+    setIsImporting(false);
+    // Reset file input
+    e.target.value = '';
   };
 
   const handleReset = () => {
@@ -162,7 +138,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   // Rechercher sur les tabs de guitare (EN/FR)
   const handleSearchUltimateGuitar = async () => {
     if (!searchQuery.trim()) {
-      alert('Veuillez entrer un titre ou un artiste à rechercher.');
+      console.log('Please enter a title or artist to search.');
       return;
     }
 
@@ -216,32 +192,76 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   };
 
   // Récupérer une partition depuis une URL
-  const handleFetchFromUrl = async (url: string) => {
+  const handleFetchFromUrl = async (url: string, searchResult?: SearchResult) => {
     setIsSearching(true);
-
+    setMessage(null);
+    
     try {
       const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}`);
       const data = await response.json();
 
       if (response.ok && data.song) {
-        // Pré-remplir le formulaire avec les données récupérées
-        setFormData({
-          ...formData,
-          title: data.song.title,
-          author: data.song.author,
-          content: data.song.content
-        });
-        setShowSearchResults(false);
-        setSearchResults([]);
-        alert('✅ Partition récupérée avec succès ! Cliquez sur "Ajouter" pour l\'enregistrer.');
+        // Use search result data as fallback for title and author
+        const songData = {
+          ...data.song,
+          title: searchResult?.title || data.song.title || 'Unknown title',
+          author: searchResult?.author || data.song.author || 'Unknown artist',
+          reviews: searchResult?.reviews || data.song.reviews || 0,
+          capo: data.song.capo,
+          key: data.song.key
+        };
+        
+        // Directly save the song without showing preview
+        await handleDirectSave(songData);
       } else {
-        alert(data.error || '❌ Impossible de récupérer la partition.');
+        setMessage({ type: 'error', text: data.error || '❌ Unable to retrieve the song.' });
       }
     } catch (error) {
       console.error('Error fetching song:', error);
-      alert('❌ Erreur lors de la récupération. Veuillez réessayer.');
+      setMessage({ type: 'error', text: '❌ Error retrieving the song. Please try again.' });
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  // Direct save function for scraped songs
+  const handleDirectSave = async (songData: { title: string; author: string; content: string; reviews?: number; capo?: number; key?: string }) => {
+    if (!songData.title.trim() || !songData.content.trim()) {
+      setMessage({ type: 'error', text: 'Données de chanson invalides.' });
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage(null);
+
+    try {
+      await addSong({
+        title: songData.title.trim(),
+        author: songData.author.trim(),
+        content: songData.content.trim(),
+        folderId: formData.folderId || undefined,
+        reviews: songData.reviews || 0,
+        capo: songData.capo,
+        key: songData.key
+      });
+
+      // Reset search results
+      setShowSearchResults(false);
+      setSearchResults([]);
+      setSearchQuery('');
+
+      // Show success message
+      setMessage({ type: 'success', text: `✅ "${songData.title}" by ${songData.author} added successfully!` });
+      
+      // Close the modal after a short delay
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Error adding song:', error);
+      setMessage({ type: 'error', text: '❌ Error adding song. Please try again.' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -316,7 +336,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                       <div
                         key={index}
                         className="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleFetchFromUrl(result.url)}
+                        onClick={() => handleFetchFromUrl(result.url, result)}
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
