@@ -2,7 +2,7 @@
 
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { DocumentTextIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 
 interface AddSongFormProps {
@@ -27,7 +27,6 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     content: '',
     folderId: ''
   });
-  const [isImporting, setIsImporting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -61,67 +60,6 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     onClose();
   };
 
-  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    setIsImporting(true);
-    const importedSongs = [];
-
-    for (const file of Array.from(files)) {
-      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
-        try {
-          const content = await file.text();
-          const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
-          
-          // Try to detect title and author from content
-          const lines = content.split('\n').filter(line => line.trim());
-          let title = fileName;
-          let author = '';
-          
-          if (lines.length > 0) {
-            const firstLine = lines[0].trim();
-            // Check if first line looks like a title
-            if (firstLine && !firstLine.match(/^\[/) && !firstLine.match(/^[A-G]/)) {
-              title = firstLine;
-              
-              // Check if second line could be an author
-              if (lines.length > 1) {
-                const secondLine = lines[1].trim();
-                if (secondLine && !secondLine.match(/^\[/) && !secondLine.match(/^[A-G]/)) {
-                  // Check if it looks like an author line
-                  if (secondLine.toLowerCase().includes('by ') || 
-                      secondLine.match(/^[-–—]\s*/) ||
-                      secondLine.match(/^\([^)]+\)$/)) {
-                    author = secondLine.replace(/^(by\s+|[-–—]\s*|\(|\))/, '').trim();
-                  }
-                }
-              }
-            }
-          }
-
-          importedSongs.push({
-            title,
-            author,
-            content,
-            folderId: formData.folderId || undefined
-          });
-        } catch (error) {
-          console.error(`Error reading file ${file.name}:`, error);
-        }
-      }
-    }
-
-    if (importedSongs.length > 0) {
-      importSongs(importedSongs as any[]);
-      alert(`${importedSongs.length} chanson(s) importée(s) avec succès !`);
-      onClose();
-    }
-
-    setIsImporting(false);
-    // Reset file input
-    e.target.value = '';
-  };
 
   const handleReset = () => {
     setFormData({
@@ -282,7 +220,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Online Search */}
           <div className="space-y-4">
             <h4 className="text-md font-semibold text-gray-800 flex items-center">
@@ -463,77 +401,6 @@ Avec les accords alignés...`}
             </form>
           </div>
 
-          {/* File Import */}
-          <div className="space-y-4">
-            <h4 className="text-md font-semibold text-gray-800 flex items-center">
-              <DocumentTextIcon className="h-5 w-5 mr-2" />
-              {t('songForm.importFromUrl')}
-            </h4>
-            
-            <div className="p-6 border-2 border-dashed border-gray-300 rounded-lg">
-              <div className="text-center">
-                <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="mt-4">
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <span className="mt-2 block text-sm font-medium text-gray-900">
-                      {t('songForm.import')} .txt
-                    </span>
-                    <span className="mt-1 block text-sm text-gray-500">
-                      {t('songForm.selectFiles')}
-                    </span>
-                  </label>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    className="sr-only"
-                    multiple
-                    accept=".txt,text/plain"
-                    onChange={handleFileImport}
-                    disabled={isImporting}
-                  />
-                </div>
-                <div className="mt-6">
-                  <button
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                    disabled={isImporting}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                  >
-                    {isImporting ? t('songForm.loading') : t('songForm.import')}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Folder Selection for Import */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t('songs.folder')} {t('songForm.import')}
-              </label>
-              <select
-                value={formData.folderId}
-                onChange={(e) => setFormData({ ...formData, folderId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">{t('songs.unorganized')}</option>
-                {folders.map((folder) => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
-              <p className="font-medium mb-1">💡 Conseils pour l&apos;import :</p>
-              <ul className="text-xs space-y-1">
-                <li>• Le nom du fichier sera utilisé comme titre si aucun titre n&apos;est détecté</li>
-                <li>• La première ligne non-accord sera considérée comme le titre</li>
-                <li>• La deuxième ligne peut être détectée comme l&apos;auteur</li>
-                <li>• Les accords sont automatiquement reconnus (ex: C, Am, F#m7)</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </div>
     </div>
