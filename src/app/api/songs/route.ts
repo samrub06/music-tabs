@@ -1,5 +1,4 @@
 import { parseTextToStructuredSong } from '@/utils/songParser';
-import { analyzeSongChords } from '@/utils/chordAnalysis';
 import fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
@@ -39,10 +38,12 @@ export async function POST(request: NextRequest) {
     
     // Add chord analysis if not provided
     if (!firstChord || !lastChord) {
-      const chordAnalysis = analyzeSongChords(content, key, capo);
-      structuredSong.firstChord = firstChord || chordAnalysis.firstChord;
-      structuredSong.lastChord = lastChord || chordAnalysis.lastChord;
-      structuredSong.chordProgression = chordProgression || chordAnalysis.chordProgression;
+      // Simple chord extraction for now
+      const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+      const chords = content.match(chordPattern) || [];
+      structuredSong.firstChord = firstChord || chords[0] || '';
+      structuredSong.lastChord = lastChord || chords[chords.length - 1] || '';
+      structuredSong.chordProgression = chordProgression || chords;
     } else {
       structuredSong.firstChord = firstChord;
       structuredSong.lastChord = lastChord;

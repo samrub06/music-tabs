@@ -1,0 +1,101 @@
+{
+  "songs": [
+    {
+      "id": "song-1",
+      "title": "Wonderwall",
+      "author": "Oasis",
+      "folderId": null,
+      "format": "structured",
+      "sections": [
+        {
+          "type": "verse",
+          "name": "Verse 1",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "Today is gonna be the day",
+              "chords": [
+                { "chord": "Em", "position": 0 },
+                { "chord": "G", "position": 6 },
+                { "chord": "D", "position": 12 }
+              ]
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "content": "Em G D\nToday is gonna be the day",
+      "reviews": 0,
+      "key": "Em",
+      "firstChord": "Em",
+      "lastChord": "D",
+      "chordProgression": ["Em", "G", "D"]
+    },
+    {
+      "id": "song-2", 
+      "title": "Hotel California",
+      "author": "Eagles",
+      "folderId": null,
+      "format": "structured",
+      "sections": [
+        {
+          "type": "verse",
+          "name": "Verse 1",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "On a dark desert highway",
+              "chords": [
+                { "chord": "Am", "position": 0 },
+                { "chord": "E", "position": 6 },
+                { "chord": "G", "position": 12 }
+              ]
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "content": "Am E G\nOn a dark desert highway",
+      "reviews": 0,
+      "key": "Am",
+      "firstChord": "Am",
+      "lastChord": "G",
+      "chordProgression": ["Am", "E", "G"]
+    },
+    {
+      "id": "song-3",
+      "title": "Sweet Child O' Mine",
+      "author": "Guns N' Roses", 
+      "folderId": null,
+      "format": "structured",
+      "sections": [
+        {
+          "type": "verse",
+          "name": "Verse 1",
+          "lines": [
+            {
+              "type": "chord_over_lyrics",
+              "lyrics": "She's got a smile that it seems to me",
+              "chords": [
+                { "chord": "D", "position": 0 },
+                { "chord": "C", "position": 6 },
+                { "chord": "G", "position": 12 }
+              ]
+            }
+          ]
+        }
+      ],
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "content": "D C G\nShe's got a smile that it seems to me",
+      "reviews": 0,
+      "key": "G",
+      "firstChord": "D",
+      "lastChord": "G",
+      "chordProgression": ["D", "C", "G"]
+    }
+  ],
+  "folders": []
+}

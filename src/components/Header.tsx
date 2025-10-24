@@ -84,15 +84,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           
           {/* Right side: Playlist Generator + Auth + Language */}
           <div className="flex items-center space-x-2">
-      {/* Medley Generator Button */}
-      <button
-        onClick={() => router.push('/playlist-generator')}
-        className="hidden sm:flex items-center space-x-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-        title="Générateur de Medley"
-      >
-        <MusicalNoteIcon className="h-4 w-4" />
-        <span>Medley</span>
-      </button>
+     
             {/* User menu */}
             {!loading && (
               <div className="relative">
