@@ -73,57 +73,45 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setSearchQuery('');
   };
 
-  // Rechercher sur les tabs de guitare (EN/FR)
-  const handleSearchUltimateGuitar = async () => {
-    if (!searchQuery.trim()) {
-      console.log('Please enter a title or artist to search.');
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchResults([]);
-
-    try {
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=ultimate-guitar`);
-      const data = await response.json();
-
-      if (response.ok && data.results) {
-        setSearchResults(data.results);
-        setShowSearchResults(true);
-      } else {
-        alert(data.error || 'Aucune partition trouvée.');
-      }
-    } catch (error) {
-      console.error('Error searching:', error);
-      alert('Erreur lors de la recherche. Veuillez réessayer.');
-    } finally {
-      setIsSearching(false);
-    }
+  // Fonction pour détecter si le texte contient des caractères hébreux
+  const isHebrew = (text: string) => {
+    const hebrewRegex = /[\u0590-\u05FF]/;
+    return hebrewRegex.test(text);
   };
 
-  // Rechercher sur Tab4U (hébreu)
-  const handleSearchTab4U = async () => {
+  // Recherche automatique qui détecte la langue
+  const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      alert('נא להזין שם שיר או אמן.');
+      alert('Veuillez entrer un titre ou un artiste à rechercher.');
       return;
     }
 
+    const isHebrewText = isHebrew(searchQuery);
+    const source = isHebrewText ? 'tab4u' : 'ultimate-guitar';
+    
     setIsSearching(true);
     setSearchResults([]);
 
     try {
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=tab4u`);
+      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${source}`);
       const data = await response.json();
 
       if (response.ok && data.results) {
+        console.log('Search results:', data.results); // Debug log
         setSearchResults(data.results);
         setShowSearchResults(true);
       } else {
-        alert(data.error || 'לא נמצאו תוצאות ב-Tab4U.');
+        const errorMsg = isHebrewText 
+          ? data.error || 'לא נמצאו תוצאות ב-Tab4U.'
+          : data.error || 'Aucune partition trouvée.';
+        alert(errorMsg);
       }
     } catch (error) {
       console.error('Error searching:', error);
-      alert('שגיאה בחיפוש. נסה שוב.');
+      const errorMsg = isHebrewText 
+        ? 'שגיאה בחיפוש. נסה שוב.'
+        : 'Erreur lors de la recherche. Veuillez réessayer.';
+      alert(errorMsg);
     } finally {
       setIsSearching(false);
     }
@@ -135,18 +123,32 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setMessage(null);
     
     try {
-      const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}`);
+      // Passer les données de recherche à l'API pour enrichir le scraping
+      const searchResultParam = searchResult ? encodeURIComponent(JSON.stringify(searchResult)) : '';
+      const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}&searchResult=${searchResultParam}`);
       const data = await response.json();
 
+      console.log('Data:', data);
+
       if (response.ok && data.song) {
+        console.log('Song data:', data.song);
         // Use search result data as fallback for title and author
         const songData = {
           ...data.song,
-          title: searchResult?.title || data.song.title || 'Unknown title',
-          author: searchResult?.author || data.song.author || 'Unknown artist',
+          title: data.song.title || searchResult?.title || 'Unknown title',
+          author: data.song.author || searchResult?.author || 'Unknown artist',
           reviews: searchResult?.reviews || data.song.reviews || 0,
           capo: data.song.capo,
-          key: data.song.key
+          key: data.song.key,
+          rating: data.song.rating,
+          difficulty: data.song.difficulty,
+          version: data.song.version,
+          versionDescription: data.song.versionDescription,
+          artistUrl: data.song.artistUrl,
+          artistImageUrl: data.song.artistImageUrl,
+          songImageUrl: data.song.songImageUrl,
+          sourceUrl: data.song.url,
+          sourceSite: data.song.source
         };
         
         // Directly save the song without showing preview
@@ -163,7 +165,23 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   };
 
   // Direct save function for scraped songs
-  const handleDirectSave = async (songData: { title: string; author: string; content: string; reviews?: number; capo?: number; key?: string }) => {
+  const handleDirectSave = async (songData: { 
+    title: string; 
+    author: string; 
+    content: string; 
+    reviews?: number; 
+    capo?: number; 
+    key?: string;
+    rating?: number;
+    difficulty?: string;
+    version?: number;
+    versionDescription?: string;
+    artistUrl?: string;
+    artistImageUrl?: string;
+    songImageUrl?: string;
+    sourceUrl?: string;
+    sourceSite?: string;
+  }) => {
     if (!songData.title.trim() || !songData.content.trim()) {
       setMessage({ type: 'error', text: 'Données de chanson invalides.' });
       return;
@@ -180,7 +198,17 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
         folderId: formData.folderId || undefined,
         reviews: songData.reviews || 0,
         capo: songData.capo,
-        key: songData.key
+        key: songData.key,
+        // Nouveaux champs Ultimate Guitar
+        rating: songData.rating,
+        difficulty: songData.difficulty,
+        version: songData.version,
+        versionDescription: songData.versionDescription,
+        artistUrl: songData.artistUrl,
+        artistImageUrl: songData.artistImageUrl,
+        songImageUrl: songData.songImageUrl,
+        sourceUrl: songData.sourceUrl,
+        sourceSite: songData.sourceSite
       });
 
       // Reset search results
@@ -207,7 +235,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+      <div className="relative top-4 md:top-8 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-medium text-gray-900">
             {t('songForm.addSong')}
@@ -237,7 +265,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchUltimateGuitar()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   placeholder={t('songForm.searchPlaceholder')}
                   disabled={isSearching}
@@ -246,20 +274,12 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={handleSearchUltimateGuitar}
+                  onClick={handleSearch}
                   disabled={isSearching || !searchQuery.trim()}
                   className="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <span className="text-lg">🎸</span>
-                  {isSearching ? t('songForm.loading') : t('songForm.enFrSongs')}
-                </button>
-                <button
-                  onClick={handleSearchTab4U}
-                  disabled={isSearching || !searchQuery.trim()}
-                  className="w-full px-4 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <span className="text-lg">🇮🇱</span>
-                  {isSearching ? t('songForm.loading') : t('songForm.hebrewSongs')}
+                  <span className="text-lg">🔍</span>
+                  {isSearching ? t('songForm.loading') : 'Rechercher'}
                 </button>
               </div>
 
@@ -278,18 +298,33 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 leading-tight">
                               {result.title}
                             </div>
-                            <div className="text-xs text-gray-600">
-                              {result.author}
+                            <div className="flex items-center justify-between mt-1">
+                              <div className="text-xs text-gray-600">
+                                {result.author}
+                              </div>
+                              {/* Afficher le rating et la difficulté sur la même ligne */}
+                              <div className="flex items-center gap-1">
+                                {result.rating && (
+                                  <div className="text-xs text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded-full">
+                                    ⭐ {result.rating.toFixed(1)}
+                                  </div>
+                                )}
+                                {result.difficulty && (
+                                  <div className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
+                                    🎸 {result.difficulty}
+                                  </div>
+                                )}
+                                {result.reviews !== undefined && result.reviews > 0 && (
+                                  <div className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                                    👥 {result.reviews}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          {result.reviews !== undefined && result.reviews > 0 && (
-                            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full ml-2">
-                              ⭐ {result.reviews} avis
-                            </div>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -297,15 +332,15 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                 </div>
               )}
 
-              <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md">
-                <p className="font-medium mb-1">💡 {t('songForm.howToUse')}</p>
-                <ul className="space-y-1">
-                  <li>• <strong>🎸 {t('songForm.enFrSongs')}</strong></li>
-                  <li>• <strong>🇮🇱 {t('songForm.hebrewSongs')}</strong></li>
-                  <li>• {t('songForm.clickToLoad')}</li>
-                  <li>• {t('songForm.sortedByPopularity')}</li>
-                </ul>
-              </div>
+              {!showSearchResults && (
+                <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md">
+                  <p className="font-medium mb-1">💡 {t('songForm.howToUse')}</p>
+                  <ul className="space-y-1">
+                    <li>• {t('songForm.clickToLoad')}</li>
+                    <li>• {t('songForm.sortedByPopularity')}</li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
@@ -369,7 +404,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows={12}
+                  rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                   placeholder={`[Intro]
 C   G   Am  F

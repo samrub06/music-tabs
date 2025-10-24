@@ -36,7 +36,17 @@ export const songService = {
       ...song,
       folderId: song.folder_id, // Map folder_id to folderId
       createdAt: new Date(song.created_at),
-      updatedAt: new Date(song.updated_at)
+      updatedAt: new Date(song.updated_at),
+      // Mapper les nouveaux champs Ultimate Guitar
+      version: song.version,
+      versionDescription: song.version_description,
+      rating: song.rating,
+      difficulty: song.difficulty,
+      artistUrl: song.artist_url,
+      artistImageUrl: song.artist_image_url,
+      songImageUrl: song.song_image_url,
+      sourceUrl: song.source_url,
+      sourceSite: song.source_site
     })) || [];
     
     console.log('Mapped songs with folder IDs:', mappedSongs.map(s => ({ id: s.id, title: s.title, folderId: s.folderId })));
@@ -60,7 +70,17 @@ export const songService = {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      updatedAt: new Date(data.updated_at),
+      // Mapper les nouveaux champs Ultimate Guitar
+      version: data.version,
+      versionDescription: data.version_description,
+      rating: data.rating,
+      difficulty: data.difficulty,
+      artistUrl: data.artist_url,
+      artistImageUrl: data.artist_image_url,
+      songImageUrl: data.song_image_url,
+      sourceUrl: data.source_url,
+      sourceSite: data.source_site
     };
   },
 
@@ -95,10 +115,18 @@ export const songService = {
         reviews: songData.reviews || 0,
         capo: songData.capo || null,
         key: songData.key || null,
-        sounding_key: songData.soundingKey || null,
         first_chord: structuredSong.firstChord || null,
         last_chord: structuredSong.lastChord || null,
-        chord_progression: structuredSong.chordProgression || null
+        // Nouveaux champs Ultimate Guitar
+        version: songData.version || null,
+        version_description: songData.versionDescription || null,
+        rating: songData.rating || null,
+        difficulty: songData.difficulty || null,
+        artist_url: songData.artistUrl || null,
+        artist_image_url: songData.artistImageUrl || null,
+        song_image_url: songData.songImageUrl || null,
+        source_url: songData.sourceUrl || null,
+        source_site: songData.sourceSite || null
       }])
       .select()
       .single();
@@ -112,7 +140,17 @@ export const songService = {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      updatedAt: new Date(data.updated_at),
+      // Mapper les nouveaux champs Ultimate Guitar
+      version: data.version,
+      versionDescription: data.version_description,
+      rating: data.rating,
+      difficulty: data.difficulty,
+      artistUrl: data.artist_url,
+      artistImageUrl: data.artist_image_url,
+      songImageUrl: data.song_image_url,
+      sourceUrl: data.source_url,
+      sourceSite: data.source_site
     };
   },
 
@@ -145,7 +183,17 @@ export const songService = {
       title: updates.title,
       author: updates.author,
       folder_id: updates.folderId,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      // Nouveaux champs Ultimate Guitar
+      version: updates.version || null,
+      version_description: updates.versionDescription || null,
+      rating: updates.rating || null,
+      difficulty: updates.difficulty || null,
+      artist_url: updates.artistUrl || null,
+      artist_image_url: updates.artistImageUrl || null,
+      song_image_url: updates.songImageUrl || null,
+      source_url: updates.sourceUrl || null,
+      source_site: updates.sourceSite || null
     };
 
     if (sections) {
@@ -172,7 +220,17 @@ export const songService = {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      updatedAt: new Date(data.updated_at),
+      // Mapper les nouveaux champs Ultimate Guitar
+      version: data.version,
+      versionDescription: data.version_description,
+      rating: data.rating,
+      difficulty: data.difficulty,
+      artistUrl: data.artist_url,
+      artistImageUrl: data.artist_image_url,
+      songImageUrl: data.song_image_url,
+      sourceUrl: data.source_url,
+      sourceSite: data.source_site
     };
   },
 
@@ -212,7 +270,17 @@ export const songService = {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
       createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      updatedAt: new Date(data.updated_at),
+      // Mapper les nouveaux champs Ultimate Guitar
+      version: data.version,
+      versionDescription: data.version_description,
+      rating: data.rating,
+      difficulty: data.difficulty,
+      artistUrl: data.artist_url,
+      artistImageUrl: data.artist_image_url,
+      songImageUrl: data.song_image_url,
+      sourceUrl: data.source_url,
+      sourceSite: data.source_site
     };
   },
 
@@ -298,7 +366,17 @@ export const songService = {
       ...song,
       folderId: song.folder_id, // Map folder_id to folderId
       createdAt: new Date(song.created_at),
-      updatedAt: new Date(song.updated_at)
+      updatedAt: new Date(song.updated_at),
+      // Mapper les nouveaux champs Ultimate Guitar
+      version: song.version,
+      versionDescription: song.version_description,
+      rating: song.rating,
+      difficulty: song.difficulty,
+      artistUrl: song.artist_url,
+      artistImageUrl: song.artist_image_url,
+      songImageUrl: song.song_image_url,
+      sourceUrl: song.source_url,
+      sourceSite: song.source_site
     })) || [];
   }
 };

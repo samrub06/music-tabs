@@ -62,6 +62,16 @@ export interface StructuredSong {
   firstChord?: string;
   lastChord?: string;
   chordProgression?: string[];
+  // Nouveaux champs Ultimate Guitar
+  version?: number;
+  versionDescription?: string;
+  rating?: number;
+  difficulty?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
+  sourceUrl?: string;
+  sourceSite?: string;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)
@@ -77,6 +87,16 @@ export interface NewSongData {
   firstChord?: string;
   lastChord?: string;
   chordProgression?: string[];
+  // Nouveaux champs Ultimate Guitar
+  version?: number;
+  versionDescription?: string;
+  rating?: number;
+  difficulty?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
+  sourceUrl?: string;
+  sourceSite?: string;
 }
 
 // Type pour l'édition de chanson (avec contenu texte)
@@ -92,6 +112,16 @@ export interface SongEditData {
   firstChord?: string;
   lastChord?: string;
   chordProgression?: string[];
+  // Nouveaux champs Ultimate Guitar
+  version?: number;
+  versionDescription?: string;
+  rating?: number;
+  difficulty?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
+  sourceUrl?: string;
+  sourceSite?: string;
 }
 
 export interface AppState {

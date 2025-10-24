@@ -24,7 +24,19 @@ export async function GET(request: NextRequest) {
 
     // Si une URL est fournie, scraper directement depuis cette URL
     if (url) {
-      const song = await scrapeSongFromUrl(url);
+      // Essayer de récupérer les données de recherche depuis les paramètres
+      const searchResultData = searchParams.get('searchResult');
+      let searchResult = null;
+      
+      if (searchResultData) {
+        try {
+          searchResult = JSON.parse(decodeURIComponent(searchResultData));
+        } catch (e) {
+          console.warn('Could not parse searchResult data:', e);
+        }
+      }
+      
+      const song = await scrapeSongFromUrl(url, searchResult);
       
       if (!song) {
         return NextResponse.json(

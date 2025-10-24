@@ -144,7 +144,20 @@ function SongListItem({ song, folderName, onPlay, onDelete, showFolder }: SongLi
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              {/* Image de l'album/chanson si disponible, sinon icône par défaut */}
+              {song.songImageUrl ? (
+                <img 
+                  src={song.songImageUrl} 
+                  alt={song.title}
+                  className="w-10 h-10 rounded-lg object-cover"
+                  onError={(e) => {
+                    // Si l'image ne charge pas, afficher l'icône par défaut
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+              ) : null}
+              <div className={`w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center ${song.songImageUrl ? 'hidden' : ''}`}>
                 <MusicalNoteIcon className="h-5 w-5 text-blue-600" />
               </div>
             </div>
@@ -153,15 +166,53 @@ function SongListItem({ song, folderName, onPlay, onDelete, showFolder }: SongLi
                 {song.title}
               </h3>
               <div className="flex items-center space-x-2 mt-1">
+                {/* Image de l'artiste si disponible */}
+                {song.artistImageUrl && (
+                  <img 
+                    src={song.artistImageUrl} 
+                    alt={song.author}
+                    className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
                 <p className="text-sm text-gray-500 truncate">
                   {song.author || 'Auteur inconnu'}
                 </p>
+                {song.key && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-purple-600 font-medium">🎵</span>
+                      <span className="text-xs text-purple-600 font-medium">{song.key}</span>
+                    </div>
+                  </>
+                )}
                 {song.capo && (
                   <>
                     <span className="text-gray-300">•</span>
                     <div className="flex items-center space-x-1">
                       <span className="text-xs text-blue-600 font-medium">🎸</span>
                       <span className="text-xs text-blue-600 font-medium">Capo {song.capo}</span>
+                    </div>
+                  </>
+                )}
+                {song.rating && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-yellow-600 font-medium">⭐</span>
+                      <span className="text-xs text-yellow-600 font-medium">{song.rating.toFixed(1)}</span>
+                    </div>
+                  </>
+                )}
+                {song.reviews && song.reviews > 0 && (
+                  <>
+                    <span className="text-gray-300">•</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs text-gray-600 font-medium">👥</span>
+                      <span className="text-xs text-gray-600 font-medium">{song.reviews}</span>
                     </div>
                   </>
                 )}

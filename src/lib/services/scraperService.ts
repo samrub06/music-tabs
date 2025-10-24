@@ -51,6 +51,13 @@ export interface ScrapedSong {
   reviews?: number;
   capo?: number;
   key?: string;
+  version?: number;
+  versionDescription?: string;
+  rating?: number;
+  difficulty?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
 }
 
 export interface SearchResult {
@@ -59,6 +66,12 @@ export interface SearchResult {
   url: string;
   source: string;
   reviews?: number; // Nombre de reviews/évaluations
+  version?: number;
+  rating?: number;
+  difficulty?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
 }
 
 /**
@@ -207,6 +220,7 @@ function detectCapo(content: string): number | undefined {
  */
 async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
+    console.log('🎸 scrapeUltimateGuitar called with:', { url, searchResult });
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
@@ -292,6 +306,15 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     let title = searchResult?.title || 'Sans titre';
     let author = searchResult?.author || 'Auteur inconnu';
     
+    // Extraire les données supplémentaires - PRIORITÉ AUX DONNÉES DE RECHERCHE
+    const version = searchResult?.version || tab?.version || tabView.version;
+    const versionDescription = searchResult?.versionDescription || tab?.version_description || tabView.version_description;
+    const rating = searchResult?.rating || tab?.rating || tabView.rating;
+    const difficulty = searchResult?.difficulty || tab?.difficulty || tabView.difficulty;
+    const artistUrl = searchResult?.artistUrl || tab?.artist_url || tabView.artist_url;
+    const artistImageUrl = searchResult?.artistImageUrl || tab?.artist_cover?.web_artist_cover?.small || tabView.artist_cover?.web_artist_cover?.small;
+    const songImageUrl = searchResult?.songImageUrl || tab?.album_cover?.web_album_cover?.small || tabView.album_cover?.web_album_cover?.small;
+    
     // Debug: afficher la structure pour comprendre (seulement si nécessaire)
     // console.log('🔍 Full tabView structure:', JSON.stringify(tabView, null, 2));
     
@@ -307,6 +330,9 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     } else if (tabView.song_title) {
       title = tabView.song_title;
     }
+    
+    // La version est déjà ajoutée au titre dans les données de recherche
+    // Pas besoin de l'ajouter à nouveau ici
     
     // Essayer différentes sources pour l'auteur (priorité aux données de la page)
     if (tabView.meta?.artist) {
@@ -324,12 +350,19 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     } else if (tabView.artist) {
       author = tabView.artist;
     }
+    
+    // Ajouter la description de version au début du contenu si elle existe
+    let finalContent = content;
+    if (versionDescription) {
+      finalContent = `[Version Description]\n${versionDescription}\n\n${content}`;
+    }
 
     // Détecter la tonalité et le capo dans le contenu complet (métadonnées + contenu)
     const key = detectKey(fullContent);
     const capo = detectCapo(fullContent);
     
-    console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"${key ? ` (Key: ${key})` : ''}${capo ? ` (Capo: ${capo})` : ''}`);
+    console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"${key ? ` (Key: ${key})` : ''}${capo ? ` (Capo: ${capo})` : ''}${version ? ` (Version: ${version})` : ''}${rating ? ` (Rating: ${rating})` : ''}${difficulty ? ` (Difficulty: ${difficulty})` : ''}`);
+    console.log('🔍 Final extracted data:', { rating, difficulty, version, artistUrl, artistImageUrl, songImageUrl });
     
     // Debug: montrer ce qu'on a trouvé
     if (title === 'Sans titre' || author === 'Auteur inconnu') {
@@ -342,12 +375,19 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     return {
       title,
       author,
-      content: cleanSongContent(fullContent),
+      content: cleanSongContent(finalContent),
       source: 'Ultimate Guitar',
       url,
       reviews: searchResult?.reviews || 0,
       capo,
-      key
+      key,
+      version,
+      versionDescription,
+      rating,
+      difficulty,
+      artistUrl,
+      artistImageUrl,
+      songImageUrl
     };
   } catch (error) {
     console.error('Error scraping guitar tabs:', error);
@@ -391,6 +431,7 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
     if (!searchResults || !Array.isArray(searchResults)) {
       return results;
     }
+    console.log('🔍 Search results of the first 5 results:', JSON.stringify(searchResults.slice(0, 5), null, 2));
 
     // Filtrer uniquement les tabs gratuites (pas les tabs Pro)
     const filteredResults = searchResults
@@ -400,13 +441,27 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
                !result.tab_url.includes('/pro/') && 
                (result.type === 'Chords' || result.type === 'Tab' || result.type);
       })
-      .map((result: any) => ({
-        title: result.song_name || 'Sans titre',
-        author: result.artist_name || 'Inconnu',
-        url: result.tab_url,
-        source: 'Guitar Tabs',
-        reviews: result.votes || 0, // Nombre de votes/avis
-      }))
+      .map((result: any) => {
+        // Construire le titre avec la version si disponible
+        let title = result.song_name || 'Sans titre';
+        if (result.version && result.version > 1) {
+          title += ` (version ${result.version})`;
+        }
+        
+        return {
+          title,
+          author: result.artist_name || 'Inconnu',
+          url: result.tab_url,
+          source: 'Guitar Tabs',
+          reviews: result.votes || 0, // Nombre de votes/avis
+          version: result.version,
+          rating: result.rating,
+          difficulty: result.difficulty,
+          artistUrl: result.artist_url,
+          artistImageUrl: result.artist_cover?.web_artist_cover?.small,
+          songImageUrl: result.album_cover?.web_album_cover?.small,
+        };
+      })
       .sort((a, b) => b.reviews - a.reviews) // Trier par nombre de reviews (décroissant)
       .slice(0, 10); // Limiter à 10 résultats
 
@@ -618,6 +673,8 @@ export async function searchSong(query: string): Promise<SearchResult[]> {
  */
 export async function scrapeSongFromUrl(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
+    console.log('🔍 scrapeSongFromUrl called with:', { url, searchResult });
+    
     // Détecter le site et utiliser le scraper approprié
     const hostname = new URL(url).hostname;
 
@@ -1077,13 +1134,26 @@ async function importSongToDatabase(scrapedSong: ScrapedSong, userId: string, ta
       return 'duplicate'; // Skip duplicate
     }
     
-    // Créer la nouvelle chanson avec le userId
+    // Créer la nouvelle chanson avec le userId et toutes les données Ultimate Guitar
     const newSongData = {
       title: scrapedSong.title,
       author: scrapedSong.author,
       content: scrapedSong.content,
       userId: userId,
-      folderId: targetFolderId || undefined
+      folderId: targetFolderId || undefined,
+      reviews: scrapedSong.reviews,
+      capo: scrapedSong.capo,
+      key: scrapedSong.key,
+      // Nouveaux champs Ultimate Guitar
+      version: scrapedSong.version,
+      versionDescription: scrapedSong.versionDescription,
+      rating: scrapedSong.rating,
+      difficulty: scrapedSong.difficulty,
+      artistUrl: scrapedSong.artistUrl,
+      artistImageUrl: scrapedSong.artistImageUrl,
+      songImageUrl: scrapedSong.songImageUrl,
+      sourceUrl: scrapedSong.url,
+      sourceSite: scrapedSong.source
     };
     
         const createdSong = await songService.createSong(newSongData, clientSupabase);

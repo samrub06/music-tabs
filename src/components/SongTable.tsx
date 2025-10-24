@@ -19,8 +19,9 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import EditSongForm from './EditSongForm';
 import FolderDropdown from './FolderDropdown';
+import ColumnConfig from './ColumnConfig';
 
-type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt';
+type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt' | 'key' | 'rating' | 'reviews' | 'difficulty' | 'version';
 type SortDirection = 'asc' | 'desc';
 
 export default function SongTable() {
@@ -47,6 +48,7 @@ export default function SongTable() {
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'folder']);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -109,6 +111,26 @@ export default function SongTable() {
           aValue = a.author.toLowerCase();
           bValue = b.author.toLowerCase();
           break;
+        case 'key':
+          aValue = a.key || '';
+          bValue = b.key || '';
+          break;
+        case 'rating':
+          aValue = a.rating || 0;
+          bValue = b.rating || 0;
+          break;
+        case 'reviews':
+          aValue = a.reviews || 0;
+          bValue = b.reviews || 0;
+          break;
+        case 'difficulty':
+          aValue = a.difficulty || '';
+          bValue = b.difficulty || '';
+          break;
+        case 'version':
+          aValue = a.version || 0;
+          bValue = b.version || 0;
+          break;
         case 'createdAt':
           aValue = new Date(a.createdAt).getTime();
           bValue = new Date(b.createdAt).getTime();
@@ -134,6 +156,16 @@ export default function SongTable() {
       setSortField(field);
       setSortDirection('asc');
     }
+  };
+
+  const handleToggleColumn = (column: string) => {
+    setVisibleColumns(prev => {
+      if (prev.includes(column)) {
+        return prev.filter(col => col !== column);
+      } else {
+        return [...prev, column];
+      }
+    });
   };
 
   const getFolderName = (folderId: string | null | undefined) => {
@@ -361,6 +393,12 @@ export default function SongTable() {
               </div>
             )}
           </div>
+          
+          {/* Column Configuration */}
+          <ColumnConfig 
+            visibleColumns={visibleColumns}
+            onToggleColumn={handleToggleColumn}
+          />
         </div>
       </div>
 
@@ -382,15 +420,46 @@ export default function SongTable() {
               <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <SortButton field="title">{t('songs.title')}</SortButton>
               </th>
-              <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <SortButton field="author">{t('songs.artist')}</SortButton>
-              </th>
-              <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('songs.folder')}
-              </th>
-              <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <SortButton field="updatedAt">{t('songs.modified')}</SortButton>
-              </th>
+              {visibleColumns.includes('author') && (
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="author">{t('songs.artist')}</SortButton>
+                </th>
+              )}
+              {visibleColumns.includes('key') && (
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="key">🎵 Key</SortButton>
+                </th>
+              )}
+              {visibleColumns.includes('rating') && (
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="rating">⭐ Rating</SortButton>
+                </th>
+              )}
+              {visibleColumns.includes('reviews') && (
+                <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="reviews">👥 Reviews</SortButton>
+                </th>
+              )}
+              {visibleColumns.includes('difficulty') && (
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="difficulty">🎸 Difficulty</SortButton>
+                </th>
+              )}
+              {visibleColumns.includes('version') && (
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="version">🔢 Version</SortButton>
+                </th>
+              )}
+              {visibleColumns.includes('folder') && (
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('songs.folder')}
+                </th>
+              )}
+              {visibleColumns.includes('updatedAt') && (
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="updatedAt">{t('songs.modified')}</SortButton>
+                </th>
+              )}
               <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('songs.actions')}
               </th>
@@ -422,22 +491,37 @@ export default function SongTable() {
                 )}
                 <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <MusicalNoteIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
+                    {/* Image de l'album/chanson si disponible, sinon icône par défaut */}
+                    {song.songImageUrl ? (
+                      <img 
+                        src={song.songImageUrl} 
+                        alt={song.title}
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover mr-2 sm:mr-3 flex-shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <MusicalNoteIcon className={`h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0 ${song.songImageUrl ? 'hidden' : ''}`} />
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-none">
                         {song.title}
                       </div>
-                      {/* Show artist on mobile when artist column is hidden */}
+                      {/* Show artist and key metadata on mobile when columns are hidden */}
                       <div className="sm:hidden text-xs text-gray-500 truncate max-w-[180px]">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap">
                           <span>{song.author}</span>
-                          {song.capo && (
+                          {song.key && (
                             <>
                               <span className="text-gray-300">•</span>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-blue-600 font-medium">🎸</span>
-                                <span className="text-blue-600 font-medium">Capo {song.capo}</span>
-                              </div>
+                              <span className="text-purple-600 font-medium">🎵 {song.key}</span>
+                            </>
+                          )}
+                          {song.rating && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
                             </>
                           )}
                         </div>
@@ -445,35 +529,96 @@ export default function SongTable() {
                     </div>
                   </div>
                 </td>
-                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 truncate max-w-xs">
+                {visibleColumns.includes('author') && (
+                  <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
-                      <span>{song.author}</span>
-                      {song.capo && (
-                        <>
-                          <span className="text-gray-300">•</span>
-                          <div className="flex items-center space-x-1">
-                            <span className="text-blue-600 font-medium">🎸</span>
-                            <span className="text-blue-600 font-medium">Capo {song.capo}</span>
-                          </div>
-                        </>
+                      {/* Image de l'artiste si disponible */}
+                      {song.artistImageUrl && (
+                        <img 
+                          src={song.artistImageUrl} 
+                          alt={song.author}
+                          className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <span className="text-sm text-gray-900 truncate">{song.author}</span>
+                    </div>
+                  </td>
+                )}
+                {visibleColumns.includes('key') && (
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {song.key ? (
+                        <span className="text-purple-600 font-medium">{song.key}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
                       )}
                     </div>
-                  </div>
-                </td>
-                <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <FolderDropdown
-                      currentFolderId={song.folderId}
-                      folders={folders}
-                      onFolderChange={(newFolderId) => handleFolderChange(song.id, newFolderId)}
-                      disabled={!user} // Seulement les utilisateurs connectés peuvent changer les dossiers
-                    />
-                  </div>
-                </td>
-                <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
-                </td>
+                  </td>
+                )}
+                {visibleColumns.includes('rating') && (
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {song.rating ? (
+                        <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+                )}
+                {visibleColumns.includes('reviews') && (
+                  <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {song.reviews && song.reviews > 0 ? (
+                        <span className="text-gray-600 font-medium">👥 {song.reviews}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+                )}
+                {visibleColumns.includes('difficulty') && (
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {song.difficulty ? (
+                        <span className="text-blue-600 font-medium">🎸 {song.difficulty}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+                )}
+                {visibleColumns.includes('version') && (
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {song.version ? (
+                        <span className="text-green-600 font-medium">🔢 v{song.version}</span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+                )}
+                {visibleColumns.includes('folder') && (
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FolderDropdown
+                        currentFolderId={song.folderId}
+                        folders={folders}
+                        onFolderChange={(newFolderId) => handleFolderChange(song.id, newFolderId)}
+                        disabled={!user} // Seulement les utilisateurs connectés peuvent changer les dossiers
+                      />
+                    </div>
+                  </td>
+                )}
+                {visibleColumns.includes('updatedAt') && (
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
+                  </td>
+                )}
                 <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-1 sm:space-x-2">
                     <button
