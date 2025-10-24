@@ -13,8 +13,13 @@ import {
     FireIcon
 } from '@heroicons/react/24/outline';
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const { 
     folders, 
     songs, 
@@ -26,6 +31,7 @@ export default function Sidebar() {
     deleteFolder
   } = useApp();
   const { t } = useLanguage();
+  const router = useRouter();
 
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -132,6 +138,7 @@ export default function Sidebar() {
             onClick={() => {
               setCurrentFolder(null);
               setCurrentSong(null); // Close song view when changing folder
+              onClose?.();
             }}
             className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
               currentFolder === null
@@ -152,6 +159,7 @@ export default function Sidebar() {
               onClick={() => {
                 setCurrentFolder('unorganized');
                 setCurrentSong(null); // Close song view when changing folder
+                onClose?.();
               }}
               className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                 currentFolder === 'unorganized'
@@ -258,6 +266,7 @@ export default function Sidebar() {
                       onClick={() => {
                         setCurrentFolder(folder.id);
                         setCurrentSong(null); // Close song view when changing folder
+                        onClose?.();
                       }}
                       className="flex-1 flex items-center text-left"
                     >
@@ -319,8 +328,8 @@ export default function Sidebar() {
                 <button
                   key={song.id}
                   onClick={() => {
-                    setCurrentSong(song);
-                    setCurrentFolder(null);
+                    router.push(`/song/${song.id}`);
+                    onClose?.();
                   }}
                   className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100"
                 >
@@ -354,8 +363,8 @@ export default function Sidebar() {
                 <button
                   key={song.id}
                   onClick={() => {
-                    setCurrentSong(song);
-                    setCurrentFolder(null);
+                    router.push(`/song/${song.id}`);
+                    onClose?.();
                   }}
                   className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100"
                 >
@@ -365,7 +374,6 @@ export default function Sidebar() {
                     <div className="truncate text-xs text-gray-500">{song.author}</div>
                   </div>
                   <span className="text-xs text-blue-600 font-medium ml-2">
-                    👁️ 
                   </span>
                 </button>
               ))

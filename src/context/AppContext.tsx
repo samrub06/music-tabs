@@ -24,7 +24,7 @@ interface AppContextType extends AppState {
   toggleAutoScroll: () => void;
   importSongs: (songs: Song[]) => Promise<void>;
   exportData: () => string;
-  setCurrentSong: (songId: string | null) => void;
+  setCurrentSong: (song: Song | null) => void;
 }
 
 type AppAction =

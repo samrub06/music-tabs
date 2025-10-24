@@ -62,7 +62,7 @@ export default function RootLayout({
                       <XMarkIcon className="h-6 w-6" />
                     </button>
                   </div>
-                  <Sidebar />
+                  <Sidebar onClose={() => setSidebarOpen(false)} />
                 </div>
 
                 {/* Main content */}
