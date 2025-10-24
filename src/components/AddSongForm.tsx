@@ -15,7 +15,16 @@ interface SearchResult {
   author: string;
   url: string;
   source: string;
-  reviews?: number; // Nombre de reviews/évaluations
+  reviews?: number;
+  rating?: number;
+  difficulty?: string;
+  version?: number;
+  versionDescription?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
+  sourceUrl?: string;
+  sourceSite?: string;
 }
 
 export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {

@@ -72,6 +72,7 @@ export interface SearchResult {
   artistUrl?: string;
   artistImageUrl?: string;
   songImageUrl?: string;
+  versionDescription?: string;
 }
 
 /**
