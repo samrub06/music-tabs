@@ -63,7 +63,7 @@ export default function SongContent({
   return (
     <div 
       ref={contentRef}
-      className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6 bg-gray-50 min-h-0"
+      className="song-content-scrollable flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-6 bg-gray-50 min-h-0"
       style={{ 
         WebkitOverflowScrolling: 'touch',
         maxHeight: 'calc(100vh - 200px)',
