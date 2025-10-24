@@ -125,8 +125,10 @@ function detectKey(content: string): string | undefined {
       const match = trimmedLine.match(pattern);
       if (match) {
         const key = match[1].trim();
-        console.log(`🎵 Key détectée: ${key} (ligne: "${trimmedLine}")`);
-        return key;
+        // S'assurer que la première lettre est en majuscule
+        const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+        console.log(`🎵 Key détectée: ${capitalizedKey} (ligne: "${trimmedLine}")`);
+        return capitalizedKey;
       }
     }
   }
@@ -290,7 +292,8 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
       metadataContent += `\nTuning: ${tab.tuning}`;
     }
     if (tab.key) {
-      metadataContent += `\nKey: ${tab.key}`;
+      const capitalizedKey = tab.key.charAt(0).toUpperCase() + tab.key.slice(1);
+      metadataContent += `\nKey: ${capitalizedKey}`;
     }
     if (tab.difficulty) {
       metadataContent += `\nDifficulty: ${tab.difficulty}`;
