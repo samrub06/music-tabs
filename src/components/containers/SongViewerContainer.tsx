@@ -4,12 +4,13 @@ import { useApp } from '@/context/AppContext';
 import { Song } from '@/types';
 import { transposeStructuredSong, renderStructuredSong } from '@/utils/structuredSong';
 import { useRouter } from 'next/navigation';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import SongViewer from '../presentational/SongViewer';
 import { useSongEditor } from '@/lib/hooks/useSongEditor';
 import { useAutoScroll } from '@/lib/hooks/useAutoScroll';
 import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
+import { songService } from '@/lib/services/songService';
 
 interface SongViewerContainerProps {
   song: Song;
@@ -46,6 +47,20 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
   
   // Refs
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Increment view count when component mounts
+  useEffect(() => {
+    const incrementViewCount = async () => {
+      try {
+        await songService.incrementViewCount(song.id);
+        console.log('View count incremented for song:', song.id);
+      } catch (error) {
+        console.error('Failed to increment view count:', error);
+      }
+    };
+
+    incrementViewCount();
+  }, [song.id]);
 
   // Auto-scroll functionality
   useAutoScroll({ 

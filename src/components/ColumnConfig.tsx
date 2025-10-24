@@ -21,6 +21,7 @@ const COLUMN_DEFINITIONS = [
   { key: 'reviews', label: 'Avis', icon: '👥', defaultVisible: false },
   { key: 'difficulty', label: 'Difficulté', icon: '🎸', defaultVisible: false },
   { key: 'version', label: 'Version', icon: '🔢', defaultVisible: false },
+  { key: 'viewCount', label: 'Vues', icon: '👁️', defaultVisible: true },
   { key: 'folder', label: 'Dossier', icon: '📁', defaultVisible: true },
   { key: 'updatedAt', label: 'Modifié', icon: '📅', defaultVisible: false },
 ];

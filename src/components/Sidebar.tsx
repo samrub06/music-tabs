@@ -8,9 +8,11 @@ import {
     MusicalNoteIcon,
     PencilIcon,
     PlusIcon,
-    TrashIcon
+    TrashIcon,
+    ClockIcon,
+    FireIcon
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export default function Sidebar() {
   const { 
@@ -29,6 +31,7 @@ export default function Sidebar() {
   const [editName, setEditName] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>('all');
 
   const handleAddFolder = () => {
     if (newFolderName.trim()) {
@@ -63,11 +66,67 @@ export default function Sidebar() {
 
   const unorganizedSongs = getSongCountByFolder(null);
 
+  // Calculer les chansons récentes (dernières 10 ajoutées)
+  const recentSongs = useMemo(() => {
+    return [...songs]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
+  }, [songs]);
+
+  // Calculer les chansons populaires (les plus vues)
+  const popularSongs = useMemo(() => {
+    return [...songs]
+      .filter(song => song.viewCount && song.viewCount > 0)
+      .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+      .slice(0, 10);
+  }, [songs]);
+
   return (
     <aside className="w-72 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4">
         
-        {/* All Songs */}
+        {/* Tabs */}
+        <div className="mb-4">
+          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'all'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <MusicalNoteIcon className="h-4 w-4 mr-2" />
+            </button>
+            <button
+              onClick={() => setActiveTab('recent')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'recent'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <ClockIcon className="h-4 w-4 mr-2" />
+              
+            </button>
+            <button
+              onClick={() => setActiveTab('popular')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'popular'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FireIcon className="h-4 w-4 mr-2" />
+              
+            </button>
+          </div>
+        </div>
+
+        {/* Content based on active tab */}
+        {activeTab === 'all' && (
+          <>
+            {/* All Songs */}
         <div className="space-y-1">
           <button
             onClick={() => {
@@ -246,6 +305,75 @@ export default function Sidebar() {
             </p>
           )}
         </div>
+          </>
+        )}
+
+        {/* Recent Songs Tab */}
+        {activeTab === 'recent' && (
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+              Récemment ajoutées
+            </h3>
+            {recentSongs.length > 0 ? (
+              recentSongs.map((song) => (
+                <button
+                  key={song.id}
+                  onClick={() => {
+                    setCurrentSong(song);
+                    setCurrentFolder(null);
+                  }}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100"
+                >
+                  <MusicalNoteIcon className="mr-3 h-4 w-4 flex-shrink-0" />
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="truncate font-medium">{song.title}</div>
+                    <div className="truncate text-xs text-gray-500">{song.author}</div>
+                  </div>
+                  <span className="text-xs text-gray-400 ml-2">
+                    {new Date(song.createdAt).toLocaleDateString('fr-FR', { 
+                      day: 'numeric', 
+                      month: 'short' 
+                    })}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">Aucune chanson récente</p>
+            )}
+          </div>
+        )}
+
+        {/* Popular Songs Tab */}
+        {activeTab === 'popular' && (
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+              Les plus écoutées
+            </h3>
+            {popularSongs.length > 0 ? (
+              popularSongs.map((song) => (
+                <button
+                  key={song.id}
+                  onClick={() => {
+                    setCurrentSong(song);
+                    setCurrentFolder(null);
+                  }}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100"
+                >
+                  <MusicalNoteIcon className="mr-3 h-4 w-4 flex-shrink-0" />
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="truncate font-medium">{song.title}</div>
+                    <div className="truncate text-xs text-gray-500">{song.author}</div>
+                  </div>
+                  <span className="text-xs text-blue-600 font-medium ml-2">
+                    👁️ 
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">Aucune donnée de vues disponible</p>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   );

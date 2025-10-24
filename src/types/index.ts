@@ -72,6 +72,7 @@ export interface StructuredSong {
   songImageUrl?: string;
   sourceUrl?: string;
   sourceSite?: string;
+  viewCount?: number;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)

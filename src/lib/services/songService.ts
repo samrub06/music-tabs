@@ -46,7 +46,8 @@ export const songService = {
       artistImageUrl: song.artist_image_url,
       songImageUrl: song.song_image_url,
       sourceUrl: song.source_url,
-      sourceSite: song.source_site
+      sourceSite: song.source_site,
+      viewCount: song.view_count || 0
     })) || [];
     
     console.log('Mapped songs with folder IDs:', mappedSongs.map(s => ({ id: s.id, title: s.title, folderId: s.folderId })));
@@ -282,6 +283,18 @@ export const songService = {
       sourceUrl: data.source_url,
       sourceSite: data.source_site
     };
+  },
+
+  // Incrémenter le compteur de vues d'une chanson
+  async incrementViewCount(songId: string): Promise<void> {
+    const { error } = await supabase.rpc('increment_view_count', {
+      song_id: songId
+    });
+
+    if (error) {
+      console.error('Error incrementing view count:', error);
+      throw error;
+    }
   },
 
   // Supprimer une chanson
