@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         songs = data.songs || [];
         console.log('✅ Songs fetched from local file:', songs?.length || 0, 'songs');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('❌ Supabase failed, falling back to local file:', error.message);
       // Fallback to local file
       const DATA_FILE_PATH = path.join(process.cwd(), 'src/data/sampleData.json');
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Final candidate songs for medley:', candidateSongs.length);
-    console.log('Sample candidate songs:', candidateSongs.slice(0, 3).map(s => ({ 
+    console.log('Sample candidate songs:', candidateSongs.slice(0, 3).map((s: any) => ({ 
       id: s.id, 
       title: s.title, 
       key: s.key, 
