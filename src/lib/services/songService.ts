@@ -7,11 +7,12 @@ export const songService = {
   // Récupérer toutes les chansons
   // Si connecté : uniquement les chansons de l'utilisateur
   // Si non connecté : uniquement les chansons publiques (user_id = null)
-  async getAllSongs(): Promise<Song[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+  async getAllSongs(clientSupabase?: any): Promise<Song[]> {
+    const client = clientSupabase || supabase;
+    const { data: { user } } = await client.auth.getUser();
     
     console.log('user', user);
-    let query = supabase
+    let query = client
       .from('songs')
       .select('*')
       .order('created_at', { ascending: false });
@@ -32,7 +33,7 @@ export const songService = {
       throw error;
     }
 
-    const mappedSongs = data?.map(song => ({
+    const mappedSongs: Song[] = (data as any[])?.map((song: any) => ({
       ...song,
       folderId: song.folder_id, // Map folder_id to folderId
       createdAt: new Date(song.created_at),
@@ -50,7 +51,7 @@ export const songService = {
       viewCount: song.view_count || 0
     })) || [];
     
-    console.log('Mapped songs with folder IDs:', mappedSongs.map(s => ({ id: s.id, title: s.title, folderId: s.folderId })));
+    console.log('Mapped songs with folder IDs:', mappedSongs.map((s: Song) => ({ id: s.id, title: s.title, folderId: s.folderId })));
     return mappedSongs;
   },
 

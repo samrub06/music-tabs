@@ -14,7 +14,7 @@ import {
     SparklesIcon
 } from '@heroicons/react/24/outline';
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -25,8 +25,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
     folders, 
     songs, 
     playlists,
+    currentPlaylistId,
     currentFolder, 
     setCurrentFolder,
+    setSearchQuery,
+    setCurrentPlaylist,
     setCurrentSong,
     addFolder,
     updateFolder,
@@ -34,6 +37,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   } = useApp();
   const { t } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -154,6 +158,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
             onClick={() => {
               setCurrentFolder(null);
               setCurrentSong(null); // Close song view when changing folder
+              setSearchQuery('');
+              if (pathname !== '/') router.push('/');
               onClose?.();
             }}
             className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -175,6 +181,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
               onClick={() => {
                 setCurrentFolder('unorganized');
                 setCurrentSong(null); // Close song view when changing folder
+                setSearchQuery('');
+                if (pathname !== '/') router.push('/');
                 onClose?.();
               }}
               className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -279,9 +287,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 ) : (
                   <>
                     <button
-                      onClick={() => {
+                        onClick={() => {
                         setCurrentFolder(folder.id);
                         setCurrentSong(null); // Close song view when changing folder
+                        setSearchQuery('');
+                          if (pathname !== '/') router.push('/');
                         onClose?.();
                       }}
                       className="flex-1 flex items-center text-left"
@@ -345,22 +355,21 @@ export default function Sidebar({ onClose }: SidebarProps) {
               {playlists.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => {
-                    // For now, navigate to first item if exists
-                    if (p.items && p.items.length > 0) {
-                      router.push(`/song/${p.items[0].originalSongId || ''}`);
-                    }
+                  onClick={async () => {
+                    await setCurrentPlaylist(p.id);
+                    setSearchQuery('');
+                    if (pathname !== '/') router.push('/');
                     onClose?.();
                   }}
-                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100"
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    currentPlaylistId === p.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
                   <MusicalNoteIcon className="mr-3 h-5 w-5" />
                   <span className="truncate flex-1 text-left">{p.name}</span>
-                  {p.items && (
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
-                      {p.items.length}
-                    </span>
-                  )}
+                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                    {p.songIds?.length || 0}
+                  </span>
                 </button>
               ))}
             </div>

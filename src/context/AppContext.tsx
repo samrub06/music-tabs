@@ -19,6 +19,7 @@ interface AppContextType extends AppState {
   // Playlists
   refreshPlaylists: () => Promise<void>;
   createPlaylistFromMedleyUI: (name: string, medleySongs: Song[]) => Promise<Playlist>;
+  setCurrentPlaylist: (playlistId: string | null) => void;
   setCurrentFolder: (folderId: string | null) => void;
   setSearchQuery: (query: string) => void;
   searchSongs: (query: string) => Promise<void>;
@@ -41,6 +42,7 @@ type AppAction =
   | { type: 'UPDATE_FOLDER'; payload: { id: string; updates: Partial<Folder> } }
   | { type: 'DELETE_FOLDER'; payload: string }
   | { type: 'SET_CURRENT_FOLDER'; payload: string | null }
+  | { type: 'SET_CURRENT_PLAYLIST'; payload: string | null }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_SELECTED_INSTRUMENT'; payload: InstrumentType }
   | { type: 'SET_TRANSPOSE_VALUE'; payload: number }
@@ -55,6 +57,7 @@ const initialState: AppState = {
   folders: [],
   playlists: [],
   currentFolder: null,
+  currentPlaylistId: null,
   searchQuery: '',
   selectedInstrument: 'piano',
   transposeValue: 0,
@@ -129,7 +132,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
       };
     
     case 'SET_CURRENT_FOLDER':
-      return { ...state, currentFolder: action.payload };
+      return { ...state, currentFolder: action.payload, currentPlaylistId: null };
+    case 'SET_CURRENT_PLAYLIST':
+      return { ...state, currentPlaylistId: action.payload, currentFolder: null };
     
     case 'SET_SEARCH_QUERY':
       return { ...state, searchQuery: action.payload };
@@ -311,6 +316,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setCurrentFolder: (folderId) => {
       dispatch({ type: 'SET_CURRENT_FOLDER', payload: folderId });
+    },
+    setCurrentPlaylist: async (playlistId) => {
+      dispatch({ type: 'SET_CURRENT_PLAYLIST', payload: playlistId });
+      if (!playlistId) return;
+      try {
+        const pl = await playlistService.getPlaylist(playlistId);
+        const wantIds = new Set(pl.songIds || []);
+        const haveIds = new Set(state.songs.map(s => s.id));
+        const missingIds = Array.from(wantIds).filter(id => !haveIds.has(id));
+        if (missingIds.length > 0) {
+          const fetched = await Promise.all(missingIds.map(id => songService.getSongById(id)));
+          const newSongs = fetched.filter((s): s is Song => !!s);
+          if (newSongs.length > 0) {
+            dispatch({ type: 'IMPORT_SONGS', payload: newSongs });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load missing songs for playlist', e);
+      }
     },
 
     setSearchQuery: (query) => {

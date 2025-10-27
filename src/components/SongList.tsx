@@ -16,6 +16,8 @@ export default function SongList() {
     songs, 
     folders,
     currentFolder, 
+    currentPlaylistId,
+    playlists,
     searchQuery, 
     deleteSong
   } = useApp();
@@ -25,11 +27,18 @@ export default function SongList() {
   const filteredSongs = useMemo(() => {
     let filtered = songs;
 
-    // Filter by folder
-    if (currentFolder === 'unorganized') {
-      filtered = songs.filter(song => !song.folderId);
-    } else if (currentFolder) {
-      filtered = songs.filter(song => song.folderId === currentFolder);
+    // Filter by playlist if selected
+    if (currentPlaylistId) {
+      const pl = playlists.find(p => p.id === currentPlaylistId);
+      const ids = new Set(pl?.songIds || []);
+      filtered = songs.filter(song => ids.has(song.id));
+    } else {
+      // Filter by folder
+      if (currentFolder === 'unorganized') {
+        filtered = songs.filter(song => !song.folderId);
+      } else if (currentFolder) {
+        filtered = songs.filter(song => song.folderId === currentFolder);
+      }
     }
 
     // Filter by search query
@@ -50,8 +59,9 @@ export default function SongList() {
     }
 
     // Sort by title
-    return filtered.sort((a, b) => a.title.localeCompare(b.title));
-  }, [songs, currentFolder, searchQuery]);
+    const result = filtered.sort((a, b) => a.title.localeCompare(b.title));
+    return result;
+  }, [songs, currentFolder, currentPlaylistId, playlists, searchQuery]);
 
   const handleDeleteSong = (e: React.MouseEvent, songId: string) => {
     e.stopPropagation();
@@ -67,6 +77,10 @@ export default function SongList() {
   };
 
   const getCurrentFolderName = () => {
+    if (currentPlaylistId) {
+      const pl = playlists.find(p => p.id === currentPlaylistId);
+      return pl ? `Playlist: ${pl.name}` : 'Playlist';
+    }
     if (currentFolder === 'unorganized') return 'Sans dossier';
     if (currentFolder) {
       return getFolderName(currentFolder) || 'Dossier';

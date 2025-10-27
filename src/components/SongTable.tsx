@@ -34,6 +34,8 @@ export default function SongTable() {
     deleteAllSongs,
     updateSongFolder,
     currentFolder,
+    currentPlaylistId,
+    playlists,
     setCurrentFolder
   } = useApp();
   const { user } = useAuthContext();
@@ -70,15 +72,22 @@ export default function SongTable() {
     };
   }, []);
 
-  // Filter songs based on search query and folder
+  // Filter songs based on search query and folder/playlist
   const filteredSongs = useMemo(() => {
     let filtered = songs;
 
-    // Filter by folder
-    if (currentFolder === 'unorganized') {
-      filtered = songs.filter(song => !song.folderId);
-    } else if (currentFolder) {
-      filtered = songs.filter(song => song.folderId === currentFolder);
+    // Filter by playlist if selected
+    if (currentPlaylistId) {
+      const pl = playlists.find(p => p.id === currentPlaylistId);
+      const ids = new Set(pl?.songIds || []);
+      filtered = songs.filter(song => ids.has(song.id));
+    } else {
+      // Filter by folder
+      if (currentFolder === 'unorganized') {
+        filtered = songs.filter(song => !song.folderId);
+      } else if (currentFolder) {
+        filtered = songs.filter(song => song.folderId === currentFolder);
+      }
     }
 
     // Filter by search query
@@ -99,7 +108,7 @@ export default function SongTable() {
     }
 
     return filtered;
-  }, [songs, searchQuery, currentFolder]);
+  }, [songs, searchQuery, currentFolder, currentPlaylistId, playlists]);
 
   // Sort songs
   const sortedSongs = useMemo(() => {

@@ -130,6 +130,7 @@ export interface AppState {
   folders: Folder[];
   playlists: Playlist[];
   currentFolder: string | null;
+  currentPlaylistId: string | null;
   searchQuery: string;
   selectedInstrument: InstrumentType;
   transposeValue: number;
@@ -167,20 +168,20 @@ export interface PlaylistImportResult {
 
 // Playlists persistent types
 export interface PlaylistItemSnapshot {
-  id: string;
-  playlistId: string;
-  orderIndex: number;
-  originalSongId?: string;
-  title: string;
-  author?: string;
-  sections: SongSection[];
-  key?: string;
-  capo?: number;
-  firstChord?: string;
-  lastChord?: string;
-  songImageUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string; // deprecated
+  playlistId: string; // deprecated
+  orderIndex: number; // deprecated
+  originalSongId?: string; // deprecated
+  title: string; // deprecated
+  author?: string; // deprecated
+  sections: SongSection[]; // deprecated
+  key?: string; // deprecated
+  capo?: number; // deprecated
+  firstChord?: string; // deprecated
+  lastChord?: string; // deprecated
+  songImageUrl?: string; // deprecated
+  createdAt: Date; // deprecated
+  updatedAt: Date; // deprecated
 }
 
 export interface Playlist {
@@ -189,5 +190,5 @@ export interface Playlist {
   description?: string;
   createdAt: Date;
   updatedAt: Date;
-  items?: PlaylistItemSnapshot[];
+  songIds: string[];
 }

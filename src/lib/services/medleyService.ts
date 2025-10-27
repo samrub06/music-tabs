@@ -116,114 +116,74 @@ export function generateMedleySequence(
   songs: Song[], 
   options: MedleyOptions = {}
 ): MedleyResult {
-  console.log('generateMedleySequence called with:', songs.length, 'songs');
-  console.log('Options:', options);
-  
   if (songs.length === 0) {
-    console.log('No songs provided, returning empty result');
-    return {
-      songs: [],
-      totalScore: 0,
-      keyProgression: [],
-      estimatedDuration: 0
+    return { songs: [], totalScore: 0, keyProgression: [], estimatedDuration: 0 };
+  }
+
+  // Determine grouping key:
+  // - if options.targetKey provided: use it
+  // - else: most common key among songs
+  const requestedKey = (options.targetKey || '').trim();
+  const normalizeKey = (k: string) => {
+    const flatToSharp: Record<string, string> = {
+      'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
     };
-  }
-  
-  const { targetKey, maxSongs = 10 } = options;
-  console.log('Processing with targetKey:', targetKey, 'maxSongs:', maxSongs);
-  
-  // Filter and score songs
-  let candidateSongs = songs.map(song => {
-    const compatibilityScore = targetKey 
-      ? calculateKeyCompatibility(song.key || '', targetKey)
-      : 0.5;
-    
-    return {
-      ...song,
-      compatibilityScore,
-      transitionScore: 0,
-      keyAdjustment: 0
-    } as MedleySong;
-  });
-  
-  console.log('Scored candidate songs:', candidateSongs.length);
-  console.log('Sample scored songs:', candidateSongs.slice(0, 3).map(s => ({ 
-    title: s.title, 
-    key: s.key, 
-    compatibilityScore: s.compatibilityScore 
-  })));
-  
-  // Sort by compatibility score
-  candidateSongs.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
-  
-  // Limit to maxSongs
-  candidateSongs = candidateSongs.slice(0, maxSongs);
-  console.log('After limiting to maxSongs:', candidateSongs.length);
-  
-  // Generate optimal sequence using greedy algorithm
-  const sequence: MedleySong[] = [];
-  const used = new Set<string>();
-  
-  console.log('Starting sequence generation with', candidateSongs.length, 'candidates');
-  
-  // Start with the best song
-  if (candidateSongs.length > 0) {
-    sequence.push(candidateSongs[0]);
-    used.add(candidateSongs[0].id);
-    console.log('Added first song to sequence:', candidateSongs[0].title);
-  }
-  
-  // Build sequence by finding best transitions
-  while (sequence.length < candidateSongs.length) {
-    const lastSong = sequence[sequence.length - 1];
-    let bestNext: MedleySong | null = null;
-    let bestScore = -1;
-    
-    console.log('Looking for next song after:', lastSong.title);
-    
-    for (const candidate of candidateSongs) {
-      if (used.has(candidate.id)) continue;
-      
-      const transitionScore = calculateTransitionScore(lastSong, candidate);
-      const totalScore = transitionScore * 0.7 + candidate.compatibilityScore * 0.3;
-      
-      console.log(`  Candidate ${candidate.title}: transition=${transitionScore}, total=${totalScore}`);
-      
-      if (totalScore > bestScore) {
-        bestScore = totalScore;
-        bestNext = { ...candidate, transitionScore };
-      }
+    const upper = k.replace(/\s+/g, '').replace('major', '').replace('Minor', 'm').replace('minor', 'm');
+    // Extract base like C, C#, Db and optional m
+    const match = upper.match(/^([A-G](?:#|b)?)(m)?$/i);
+    if (!match) return k.trim();
+    let base = match[1].toUpperCase();
+    const isMinor = !!match[2];
+    if (flatToSharp[base]) base = flatToSharp[base];
+    return base + (isMinor ? 'm' : '');
+  };
+
+  const extractKeyFromTitle = (title?: string): string | null => {
+    if (!title) return null;
+    // Look for tokens in parentheses e.g. (C), (Am), (Db), (G#m)
+    const parenMatches = title.match(/\(([^)]+)\)/g) || [];
+    for (const m of parenMatches) {
+      const token = m.replace(/[()]/g, '').trim();
+      const n = normalizeKey(token);
+      if (/^[A-G](?:#)?m?$/.test(n)) return n; // Accept A..G with optional # and optional m
     }
-    
-    if (bestNext) {
-      sequence.push(bestNext);
-      used.add(bestNext.id);
-      console.log('Added to sequence:', bestNext.title, 'with score:', bestScore);
-    } else {
-      console.log('No more good transitions found');
-      break; // No more good transitions
+    return null;
+  };
+
+  const getSongKey = (s: Song): string => {
+    const fromField = (s.key || '').trim();
+    if (fromField) return normalizeKey(fromField);
+    const fromTitle = extractKeyFromTitle(s.title);
+    if (fromTitle) return normalizeKey(fromTitle);
+    return 'Unknown';
+  };
+
+  let groupingKey = requestedKey ? normalizeKey(requestedKey) : '';
+  if (!groupingKey) {
+    const counts = new Map<string, number>();
+    for (const s of songs) {
+      const k = getSongKey(s);
+      counts.set(k, (counts.get(k) || 0) + 1);
     }
+    groupingKey = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
   }
-  
-  console.log('Final sequence length:', sequence.length);
-  
-  // Calculate total score
-  const totalScore = sequence.reduce((sum, song, index) => {
-    if (index === 0) return song.compatibilityScore;
-    return sum + song.transitionScore;
-  }, 0) / sequence.length;
-  
-  // Generate key progression
-  const keyProgression = sequence.map(song => song.key || 'Unknown');
-  
-  // Estimate duration (assuming 3-4 minutes per song)
-  const estimatedDuration = sequence.length * 3.5;
-  
+
+  // Keep only songs matching the grouping key
+  const grouped = songs.filter(s => getSongKey(s) === groupingKey);
+
+  // Map to MedleySong with simple scores
+  const sequence: MedleySong[] = grouped.map(s => ({
+    ...s,
+    compatibilityScore: 1,
+    transitionScore: 1,
+    keyAdjustment: 0
+  }));
+
   return {
     songs: sequence,
-    totalScore,
-    keyProgression,
-    estimatedDuration
+    totalScore: sequence.length > 0 ? 1 : 0,
+    keyProgression: sequence.map(s => getSongKey(s)),
+    estimatedDuration: sequence.length * 3.5
   };
 }
 

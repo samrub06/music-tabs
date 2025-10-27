@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { songService } from '@/lib/services/songService';
+import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { 
@@ -20,11 +21,20 @@ export async function POST(request: NextRequest) {
       maxSongs = 10 
     }: MedleyOptions = body;
 
+
+
     // Try to get songs from Supabase first, fallback to local file
     let songs = [];
     try {
-      console.log('Attempting to fetch songs from Supabase...');
-      songs = await songService.getAllSongs();
+      console.log('Attempting to fetch songs from Supabase (server-side)...');
+      // Use service role on server to read songs regardless of client session
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+      if (!supabaseUrl || !serviceKey) {
+        throw new Error('Missing Supabase env vars');
+      }
+      const serverClient = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+      songs = await songService.getAllSongs(serverClient);
       console.log('✅ Songs fetched from Supabase:', songs?.length || 0, 'songs');
       
       // If no songs from Supabase, try fallback
@@ -46,7 +56,7 @@ export async function POST(request: NextRequest) {
       console.log('✅ Songs fetched from local file:', songs?.length || 0, 'songs');
     }
 
-    console.log('First song sample:', songs?.[0]);
+    console.log('First song sample:', songs);
 
     if (!songs || songs.length === 0) {
       console.log('No songs found in database');
@@ -90,6 +100,9 @@ export async function POST(request: NextRequest) {
       firstChord: s.firstChord, 
       lastChord: s.lastChord 
     })));
+
+    console.log(targetKey)
+    console.log(candidateSongs)
 
     // Generate medley sequence
     const medleyResult = generateMedleySequence(candidateSongs, {
