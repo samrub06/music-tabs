@@ -217,15 +217,30 @@ export async function importPlaylistFromText(
         }
 
         // Créer la chanson finale en priorisant les données de la playlist
+        // IMPORTANT: Passer TOUTES les métadonnées scrappées
         const finalSong = {
           title: song.title, // Priorité absolue au titre de la playlist
           author: song.artist, // Priorité absolue à l'artiste de la playlist
           content: scrapedSong.content, // Contenu scrappé depuis Ultimate Guitar
           source: 'Ultimate Guitar',
-          url: bestVersion.url
+          url: bestVersion.url,
+          // Passer toutes les métadonnées scrappées
+          reviews: scrapedSong.reviews,
+          capo: scrapedSong.capo,
+          key: scrapedSong.key,
+          rating: scrapedSong.rating,
+          difficulty: scrapedSong.difficulty,
+          version: scrapedSong.version,
+          versionDescription: scrapedSong.versionDescription,
+          artistUrl: scrapedSong.artistUrl,
+          artistImageUrl: scrapedSong.artistImageUrl,
+          songImageUrl: scrapedSong.songImageUrl,
+          sourceUrl: scrapedSong.url,
+          sourceSite: scrapedSong.source
         };
 
         console.log(`✅ Final song data: "${finalSong.title}" by "${finalSong.author}"`);
+        console.log(`📊 Metadata: key=${finalSong.key}, capo=${finalSong.capo}, rating=${finalSong.rating}, difficulty=${finalSong.difficulty}`);
 
         // Déterminer le dossier de destination
         const songKey = `${song.title}|${song.artist}`;
@@ -356,8 +371,28 @@ async function importSongToDatabase(
       author: scrapedSong.author,
       content: scrapedSong.content,
       userId: userId,
-      folderId: targetFolderId || undefined
+      folderId: targetFolderId || undefined,
+      reviews: scrapedSong.reviews,
+      capo: scrapedSong.capo,
+      key: scrapedSong.key,
+      rating: scrapedSong.rating,
+      difficulty: scrapedSong.difficulty,
+      version: scrapedSong.version,
+      versionDescription: scrapedSong.versionDescription,
+      artistUrl: scrapedSong.artistUrl,
+      artistImageUrl: scrapedSong.artistImageUrl,
+      songImageUrl: scrapedSong.songImageUrl,
+      sourceUrl: scrapedSong.url,
+      sourceSite: scrapedSong.source
     };
+    
+    console.log(`💾 Creating song with metadata:`, {
+      key: newSongData.key,
+      capo: newSongData.capo,
+      rating: newSongData.rating,
+      difficulty: newSongData.difficulty,
+      reviews: newSongData.reviews
+    });
     
     const createdSong = await songService.createSong(newSongData, clientSupabase);
     console.log(`✅ Successfully imported: ${createdSong.title} (ID: ${createdSong.id})`);

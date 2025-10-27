@@ -24,6 +24,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const { 
     folders, 
     songs, 
+    playlists,
     currentFolder, 
     setCurrentFolder,
     setCurrentSong,
@@ -327,6 +328,42 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <p className="text-sm text-gray-500 italic">
               {t('sidebar.noFolders')}
             </p>
+          )}
+        </div>
+
+        {/* Playlists */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+              Playlists
+            </h3>
+          </div>
+          {playlists.length === 0 ? (
+            <p className="text-sm text-gray-500 italic">Aucune playlist</p>
+          ) : (
+            <div className="space-y-1">
+              {playlists.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    // For now, navigate to first item if exists
+                    if (p.items && p.items.length > 0) {
+                      router.push(`/song/${p.items[0].originalSongId || ''}`);
+                    }
+                    onClose?.();
+                  }}
+                  className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100"
+                >
+                  <MusicalNoteIcon className="mr-3 h-5 w-5" />
+                  <span className="truncate flex-1 text-left">{p.name}</span>
+                  {p.items && (
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                      {p.items.length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           )}
         </div>
           </>

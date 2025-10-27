@@ -12,6 +12,7 @@ import {
   KeyIcon
 } from '@heroicons/react/24/outline';
 import { MedleyResult, MedleySong } from '@/lib/services/medleyService';
+import { useApp } from '@/context/AppContext';
 
 interface MedleyPlaylistProps {
   medley: MedleyResult;
@@ -19,8 +20,10 @@ interface MedleyPlaylistProps {
 }
 
 export default function MedleyPlaylist({ medley, onSongSelect }: MedleyPlaylistProps) {
+  const { createPlaylistFromMedleyUI } = useApp();
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handlePlay = () => {
     setIsPlaying(!isPlaying);
@@ -68,6 +71,25 @@ export default function MedleyPlaylist({ medley, onSongSelect }: MedleyPlaylistP
           <div className="text-sm text-gray-600">
             Score: <span className="font-medium text-purple-600">{Math.round(medley.totalScore * 100)}%</span>
           </div>
+          <button
+            onClick={async () => {
+              const defaultName = `Medley ${new Date().toLocaleString('fr-FR')}`;
+              const name = prompt('Nom de la playlist ?', defaultName) || defaultName;
+              try {
+                setIsSaving(true);
+                await createPlaylistFromMedleyUI(name, medley.songs as any);
+                alert('Playlist enregistrée');
+              } catch (e) {
+                alert('Erreur lors de la sauvegarde de la playlist');
+              } finally {
+                setIsSaving(false);
+              }
+            }}
+            disabled={isSaving}
+            className="px-3 py-2 text-sm rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50"
+          >
+            {isSaving ? 'Sauvegarde...' : 'Sauvegarder en playlist'}
+          </button>
         </div>
       </div>
 

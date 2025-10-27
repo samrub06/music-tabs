@@ -97,7 +97,7 @@ export function parseTextToStructuredSong(
     content,
     reviews: reviews || 0,
     capo: capo || undefined,
-    key: key || undefined,
+    key: key || chords[0] || '',
     soundingKey: undefined, // Will be calculated when needed
     firstChord: chords[0] || '',
     lastChord: chords[chords.length - 1] || '',

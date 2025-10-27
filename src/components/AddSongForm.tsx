@@ -3,7 +3,8 @@
 import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface AddSongFormProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ interface SearchResult {
 export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   const { addSong, folders, importSongs } = useApp();
   const { t } = useLanguage();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -42,6 +44,13 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,7 +209,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     setMessage(null);
 
     try {
-      await addSong({
+      const newSong = await addSong({
         title: songData.title.trim(),
         author: songData.author.trim(),
         content: songData.content.trim(),
@@ -219,23 +228,11 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
         sourceUrl: songData.sourceUrl,
         sourceSite: songData.sourceSite
       });
-
-      // Reset search results
-      setShowSearchResults(false);
-      setSearchResults([]);
-      setSearchQuery('');
-
-      // Show success message
-      setMessage({ type: 'success', text: `✅ "${songData.title}" by ${songData.author} added successfully!` });
-      
-      // Close the modal after a short delay
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      // Redirect to the newly created song page
+      router.push(`/song/${newSong.id}`);
     } catch (error) {
       console.error('Error adding song:', error);
       setMessage({ type: 'error', text: '❌ Error adding song. Please try again.' });
-    } finally {
       setIsSaving(false);
     }
   };
@@ -272,6 +269,8 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
                 </label>
                 <input
                   type="text"
+                  ref={searchInputRef}
+                  autoFocus
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -447,6 +446,14 @@ Avec les accords alignés...`}
 
         </div>
       </div>
+      {isSaving && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-[60]">
+          <div className="bg-white rounded-md shadow p-4 flex items-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <div className="text-sm text-gray-700">{t('songForm.loading')} • Redirection...</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

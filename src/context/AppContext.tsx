@@ -1,12 +1,13 @@
 'use client';
 
 import { folderService, songService } from '@/lib/services/songService';
-import { AppState, Folder, InstrumentType, NewSongData, Song, SongEditData } from '@/types';
+import { AppState, Folder, InstrumentType, NewSongData, Playlist, Song, SongEditData } from '@/types';
+import { playlistService } from '@/lib/services/playlistService';
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 
 interface AppContextType extends AppState {
   // Actions
-  addSong: (songData: NewSongData) => Promise<void>;
+  addSong: (songData: NewSongData) => Promise<Song>;
   updateSong: (id: string, updates: SongEditData) => Promise<void>;
   updateSongFolder: (id: string, folderId: string | undefined) => Promise<void>;
   deleteSong: (id: string) => Promise<void>;
@@ -15,6 +16,9 @@ interface AppContextType extends AppState {
   addFolder: (folder: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateFolder: (id: string, updates: Partial<Folder>) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
+  // Playlists
+  refreshPlaylists: () => Promise<void>;
+  createPlaylistFromMedleyUI: (name: string, medleySongs: Song[]) => Promise<Playlist>;
   setCurrentFolder: (folderId: string | null) => void;
   setSearchQuery: (query: string) => void;
   searchSongs: (query: string) => Promise<void>;
@@ -43,11 +47,13 @@ type AppAction =
   | { type: 'SET_AUTO_SCROLL_SPEED'; payload: number }
   | { type: 'TOGGLE_AUTO_SCROLL' }
   | { type: 'IMPORT_SONGS'; payload: Song[] }
-  | { type: 'LOAD_DATA'; payload: { songs: Song[]; folders: Folder[] } };
+  | { type: 'LOAD_DATA'; payload: { songs: Song[]; folders: Folder[]; playlists: Playlist[] } }
+  | { type: 'SET_PLAYLISTS'; payload: Playlist[] };
 
 const initialState: AppState = {
   songs: [],
   folders: [],
+  playlists: [],
   currentFolder: null,
   searchQuery: '',
   selectedInstrument: 'piano',
@@ -164,8 +170,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ...folder,
           createdAt: new Date(folder.createdAt),
           updatedAt: new Date(folder.updatedAt)
+        })),
+        playlists: action.payload.playlists.map(p => ({
+          ...p,
+          createdAt: new Date(p.createdAt),
+          updatedAt: new Date(p.updatedAt)
         }))
       };
+    case 'SET_PLAYLISTS':
+      return { ...state, playlists: action.payload };
     
     default:
       return state;
@@ -182,15 +195,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const loadData = async () => {
       try {
         console.log('Loading data from Supabase...');
-        const [songs, folders] = await Promise.all([
+        const [songs, folders, playlists] = await Promise.all([
           songService.getAllSongs(),
-          folderService.getAllFolders()
+          folderService.getAllFolders(),
+          playlistService.getAllPlaylists()
         ]);
         
         console.log('Loaded songs:', songs.length);
         console.log('Loaded folders:', folders);
+        console.log('Loaded playlists:', playlists.length);
         
-        dispatch({ type: 'LOAD_DATA', payload: { songs, folders } });
+        dispatch({ type: 'LOAD_DATA', payload: { songs, folders, playlists } });
       } catch (error) {
         console.error('Error loading data from Supabase:', error);
       }
@@ -206,8 +221,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const newSong = await songService.createSong(songData);
         dispatch({ type: 'ADD_SONG', payload: newSong });
+        return newSong;
       } catch (error) {
         console.error('Error adding song:', error);
+        throw error;
       }
     },
 
@@ -304,7 +321,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const songs = await songService.searchSongs(query);
         // Mettre à jour le state avec les résultats de recherche
-        dispatch({ type: 'LOAD_DATA', payload: { songs, folders: state.folders } });
+        dispatch({ type: 'LOAD_DATA', payload: { songs, folders: state.folders, playlists: state.playlists } });
       } catch (error) {
         console.error('Error searching songs:', error);
       }
@@ -352,6 +369,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCurrentSong: (songId) => {
       // Implementation for setCurrentSong if needed
       console.log('Setting current song:', songId);
+    },
+
+    // Playlists
+    refreshPlaylists: async () => {
+      try {
+        const playlists = await playlistService.getAllPlaylists();
+        dispatch({ type: 'SET_PLAYLISTS', payload: playlists });
+      } catch (e) {
+        console.error('Error refreshing playlists', e);
+      }
+    },
+    createPlaylistFromMedleyUI: async (name, medleySongs) => {
+      const medleyLike = { songs: medleySongs, totalScore: 0, keyProgression: [], estimatedDuration: 0 } as any;
+      const playlist = await playlistService.createPlaylistFromMedley(name, medleyLike);
+      const playlists = await playlistService.getAllPlaylists();
+      dispatch({ type: 'SET_PLAYLISTS', payload: playlists });
+      return playlist;
     }
   };
 

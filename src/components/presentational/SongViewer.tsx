@@ -40,6 +40,10 @@ interface SongViewerProps {
   onSetTransposeValue: (value: number) => void;
   onSetAutoScrollSpeed: (speed: number) => void;
   onNavigateBack: () => void;
+  onPrevSong?: () => void;
+  onNextSong?: () => void;
+  canPrevSong?: boolean;
+  canNextSong?: boolean;
 }
 
 export default function SongViewer({
@@ -71,7 +75,11 @@ export default function SongViewer({
   onSetSelectedInstrument,
   onSetTransposeValue,
   onSetAutoScrollSpeed,
-  onNavigateBack
+  onNavigateBack,
+  onPrevSong,
+  onNextSong,
+  canPrevSong,
+  canNextSong
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -109,6 +117,10 @@ export default function SongViewer({
         onIncreaseFontSize={onIncreaseFontSize}
         onDecreaseFontSize={onDecreaseFontSize}
         onResetFontSize={onResetFontSize}
+        onPrevSong={onPrevSong}
+        onNextSong={onNextSong}
+        canPrevSong={!!canPrevSong}
+        canNextSong={!!canNextSong}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">

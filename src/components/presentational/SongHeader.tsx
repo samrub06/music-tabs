@@ -11,7 +11,8 @@ import {
   PlusIcon,
   TrashIcon,
   ChevronDownIcon,
-  MusicalNoteIcon
+  MusicalNoteIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 
@@ -35,6 +36,10 @@ interface SongHeaderProps {
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
   onResetFontSize: () => void;
+  onPrevSong?: () => void;
+  onNextSong?: () => void;
+  canPrevSong?: boolean;
+  canNextSong?: boolean;
 }
 
 export default function SongHeader({
@@ -53,7 +58,11 @@ export default function SongHeader({
   onResetScroll,
   onIncreaseFontSize,
   onDecreaseFontSize,
-  onResetFontSize
+  onResetFontSize,
+  onPrevSong,
+  onNextSong,
+  canPrevSong,
+  canNextSong
 }: SongHeaderProps) {
   const [showControls, setShowControls] = useState(false);
   return (
@@ -78,6 +87,26 @@ export default function SongHeader({
               </p>
             )}
           </div>
+          {onPrevSong && onNextSong && (
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={onPrevSong}
+                disabled={!canPrevSong}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                title="Précédente"
+              >
+                <ArrowLeftIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={onNextSong}
+                disabled={!canNextSong}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                title="Suivante"
+              >
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           <button
             onClick={onToggleEdit}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0"
@@ -269,6 +298,26 @@ export default function SongHeader({
         </div>
 
         <div className="flex items-center space-x-2">
+          {onPrevSong && onNextSong && (
+            <div className="flex items-center space-x-1 mr-2">
+              <button
+                onClick={onPrevSong}
+                disabled={!canPrevSong}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                title="Chanson précédente"
+              >
+                <ArrowLeftIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={onNextSong}
+                disabled={!canNextSong}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                title="Chanson suivante"
+              >
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           {/* Instrument Toggle */}
           <div className="flex rounded-md shadow-sm">
             <button

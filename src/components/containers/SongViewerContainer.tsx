@@ -18,6 +18,8 @@ interface SongViewerContainerProps {
 
 export default function SongViewerContainer({ song }: SongViewerContainerProps) {
   const {
+    songs,
+    currentFolder,
     updateSong,
     deleteSong,
     selectedInstrument,
@@ -95,6 +97,33 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
     isMobile: window.innerWidth < 768
   });
 
+  // Determine navigation scope
+  const scopeSongs: Song[] = React.useMemo(() => {
+    if (currentFolder === 'unorganized') {
+      return songs.filter(s => !s.folderId);
+    }
+    if (currentFolder && currentFolder !== 'unorganized') {
+      return songs.filter(s => s.folderId === currentFolder);
+    }
+    return songs;
+  }, [songs, currentFolder]);
+
+  const currentIndex = React.useMemo(() => scopeSongs.findIndex(s => s.id === song.id), [scopeSongs, song.id]);
+  const canPrevSong = currentIndex > 0;
+  const canNextSong = currentIndex >= 0 && currentIndex < scopeSongs.length - 1;
+
+  const handlePrevSong = () => {
+    if (!canPrevSong) return;
+    const prev = scopeSongs[currentIndex - 1];
+    router.push(`/song/${prev.id}`);
+  };
+
+  const handleNextSong = () => {
+    if (!canNextSong) return;
+    const next = scopeSongs[currentIndex + 1];
+    router.push(`/song/${next.id}`);
+  };
+
   // Props for presentation component
   const songViewerProps = {
     song,
@@ -125,7 +154,11 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
     onSetSelectedInstrument: setSelectedInstrument,
     onSetTransposeValue: setTransposeValue,
     onSetAutoScrollSpeed: setAutoScrollSpeed,
-    onNavigateBack: () => router.push('/')
+    onNavigateBack: () => router.push('/'),
+    onPrevSong: handlePrevSong,
+    onNextSong: handleNextSong,
+    canPrevSong,
+    canNextSong
   };
 
   return <SongViewer {...songViewerProps} />;

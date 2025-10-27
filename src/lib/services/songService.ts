@@ -115,10 +115,9 @@ export const songService = {
         sections: structuredSong.sections,
         reviews: songData.reviews || 0,
         capo: songData.capo || null,
-        key: songData.key || null,
+        key: songData.key || structuredSong.firstChord,
         first_chord: structuredSong.firstChord || null,
         last_chord: structuredSong.lastChord || null,
-        // Nouveaux champs Ultimate Guitar
         version: songData.version || null,
         version_description: songData.versionDescription || null,
         rating: songData.rating || null,

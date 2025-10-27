@@ -128,6 +128,7 @@ export interface SongEditData {
 export interface AppState {
   songs: Song[];
   folders: Folder[];
+  playlists: Playlist[];
   currentFolder: string | null;
   searchQuery: string;
   selectedInstrument: InstrumentType;
@@ -162,4 +163,31 @@ export interface PlaylistImportResult {
     failedImports: number;
     errors: string[];
   };
+}
+
+// Playlists persistent types
+export interface PlaylistItemSnapshot {
+  id: string;
+  playlistId: string;
+  orderIndex: number;
+  originalSongId?: string;
+  title: string;
+  author?: string;
+  sections: SongSection[];
+  key?: string;
+  capo?: number;
+  firstChord?: string;
+  lastChord?: string;
+  songImageUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  items?: PlaylistItemSnapshot[];
 }
