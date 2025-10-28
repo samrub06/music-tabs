@@ -10,6 +10,7 @@ export function parseTextToStructuredSong(
   capo?: number,
   key?: string
 ): StructuredSong {
+  debugger;
   const lines = content.split('\n');
   const sections: SongSection[] = [];
   let currentSection: SongSection | null = null;
@@ -81,7 +82,39 @@ export function parseTextToStructuredSong(
     sections.push(currentSection);
   }
   
+  // Determine first chord from the first chords_only line
+  let firstChordFromSections: string | undefined;
+  for (const section of sections) {
+    for (const line of section.lines) {
+      if (line.type === 'chords_only' && line.chord_line) {
+        const matchedChords = line.chord_line.match(/([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g) || [];
+        if (matchedChords[0]) {
+          firstChordFromSections = matchedChords[0];
+          break;
+        }
+      }
+    }
+    if (firstChordFromSections) break;
+  }
+  
+  // Determine last chord from the parsed sections
+  let lastChordFromSections: string | undefined;
+  for (const section of sections) {
+    for (const line of section.lines) {
+      if (line.type === 'chords_only' && line.chord_line) {
+        const matchedChords = line.chord_line.match(/([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g) || [];
+        if (matchedChords.length > 0) {
+          lastChordFromSections = matchedChords[matchedChords.length - 1];
+        }
+      } else if (line.type === 'chord_over_lyrics' && line.chords && line.chords.length > 0) {
+        lastChordFromSections = line.chords[line.chords.length - 1].chord;
+      }
+    }
+  }
+  
   // Simple chord extraction
+  //imagine Dm Gm Am
+
   const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
   const chords = content.match(chordPattern) || [];
   
@@ -97,10 +130,10 @@ export function parseTextToStructuredSong(
     content,
     reviews: reviews || 0,
     capo: capo || undefined,
-    key: key || chords[0] || '',
+    key: key || firstChordFromSections || chords[0] || '',
     soundingKey: undefined, // Will be calculated when needed
-    firstChord: chords[0] || '',
-    lastChord: chords[chords.length - 1] || '',
+    firstChord: firstChordFromSections || chords[0] || '',
+    lastChord: lastChordFromSections || (chords.length > 0 ? chords[chords.length - 1] : ''),
     chordProgression: chords
   };
 }

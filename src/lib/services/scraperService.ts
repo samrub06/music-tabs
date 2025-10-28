@@ -58,6 +58,7 @@ export interface ScrapedSong {
   artistUrl?: string;
   artistImageUrl?: string;
   songImageUrl?: string;
+  tabId?: number;
 }
 
 export interface SearchResult {
@@ -110,10 +111,6 @@ function detectKey(content: string): string | undefined {
   // Patterns de détection de la tonalité
   const keyPatterns = [
     /key\s*:?\s*([A-G](?:#|b)?m?)/i,
-    /tonality\s*:?\s*([A-G](?:#|b)?m?)/i,
-    /tonalité\s*:?\s*([A-G](?:#|b)?m?)/i,
-    /in\s+([A-G](?:#|b)?m?)\s+key/i,
-    /en\s+([A-G](?:#|b)?m?)/i,
   ];
   
   const lines = content.split('\n');
@@ -318,42 +315,8 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     const artistUrl = searchResult?.artistUrl || tab?.artist_url || tabView.artist_url;
     const artistImageUrl = searchResult?.artistImageUrl || tab?.artist_cover?.web_artist_cover?.small || tabView.artist_cover?.web_artist_cover?.small;
     const songImageUrl = searchResult?.songImageUrl || tab?.album_cover?.web_album_cover?.small || tabView.album_cover?.web_album_cover?.small;
+    const tabId = data.store?.page?.data?.tab?.id;
     
-    // Debug: afficher la structure pour comprendre (seulement si nécessaire)
-    // console.log('🔍 Full tabView structure:', JSON.stringify(tabView, null, 2));
-    
-    // Essayer différentes sources pour le titre (priorité aux données de la page)
-    if (tabView.meta?.title) {
-      title = tabView.meta.title;
-    } else if (tab?.song_name) {
-      title = tab.song_name;
-    } else if (tabView.song_name) {
-      title = tabView.song_name;
-    } else if (tab?.song_title) {
-      title = tab.song_title;
-    } else if (tabView.song_title) {
-      title = tabView.song_title;
-    }
-    
-    // La version est déjà ajoutée au titre dans les données de recherche
-    // Pas besoin de l'ajouter à nouveau ici
-    
-    // Essayer différentes sources pour l'auteur (priorité aux données de la page)
-    if (tabView.meta?.artist) {
-      author = tabView.meta.artist;
-    } else if (tab?.artist_name) {
-      author = tab.artist_name;
-    } else if (tabView.artist_name) {
-      author = tabView.artist_name;
-    } else if (tab?.band_name) {
-      author = tab.band_name;
-    } else if (tabView.band_name) {
-      author = tabView.band_name;
-    } else if (tab?.artist) {
-      author = tab.artist;
-    } else if (tabView.artist) {
-      author = tabView.artist;
-    }
     
     // Ajouter la description de version au début du contenu si elle existe
     let finalContent = content;
@@ -391,7 +354,8 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
       difficulty,
       artistUrl,
       artistImageUrl,
-      songImageUrl
+      songImageUrl,
+      tabId
     };
   } catch (error) {
     console.error('Error scraping guitar tabs:', error);
@@ -1160,7 +1124,7 @@ async function importSongToDatabase(scrapedSong: ScrapedSong, userId: string, ta
       sourceSite: scrapedSong.source
     };
     
-        const createdSong = await songService.createSong(newSongData, clientSupabase);
+    const createdSong = await songService.createSong(newSongData, clientSupabase);
     console.log(`✅ Successfully imported: ${createdSong.title} (ID: ${createdSong.id})`);
     return 'success';
     

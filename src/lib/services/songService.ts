@@ -48,7 +48,8 @@ export const songService = {
       songImageUrl: song.song_image_url,
       sourceUrl: song.source_url,
       sourceSite: song.source_site,
-      viewCount: song.view_count || 0
+      viewCount: song.view_count || 0,
+      tabId: song.tab_id
     })) || [];
     
     console.log('Mapped songs with folder IDs:', mappedSongs.map((s: Song) => ({ id: s.id, title: s.title, folderId: s.folderId })));
@@ -82,7 +83,8 @@ export const songService = {
       artistImageUrl: data.artist_image_url,
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
-      sourceSite: data.source_site
+      sourceSite: data.source_site,
+      tabId: data.tab_id
     };
   },
 
@@ -94,6 +96,8 @@ export const songService = {
     // Récupérer l'utilisateur (peut être null si non connecté)
     const { data: { user } } = await client.auth.getUser();
 
+    debugger;
+    console.log('songData', songData);
     // Parser le contenu texte en structure structurée
     const structuredSong = parseTextToStructuredSong(
       songData.title,
@@ -127,7 +131,8 @@ export const songService = {
         artist_image_url: songData.artistImageUrl || null,
         song_image_url: songData.songImageUrl || null,
         source_url: songData.sourceUrl || null,
-        source_site: songData.sourceSite || null
+        source_site: songData.sourceSite || null,
+        tab_id: songData.tabId || null
       }])
       .select()
       .single();
@@ -151,7 +156,8 @@ export const songService = {
       artistImageUrl: data.artist_image_url,
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
-      sourceSite: data.source_site
+      sourceSite: data.source_site,
+      tabId: data.tab_id
     };
   },
 
@@ -194,7 +200,8 @@ export const songService = {
       artist_image_url: updates.artistImageUrl || null,
       song_image_url: updates.songImageUrl || null,
       source_url: updates.sourceUrl || null,
-      source_site: updates.sourceSite || null
+      source_site: updates.sourceSite || null,
+      tab_id: updates.tabId || null
     };
 
     if (sections) {
@@ -231,7 +238,8 @@ export const songService = {
       artistImageUrl: data.artist_image_url,
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
-      sourceSite: data.source_site
+      sourceSite: data.source_site,
+      tabId: data.tab_id
     };
   },
 
@@ -389,7 +397,8 @@ export const songService = {
       artistImageUrl: song.artist_image_url,
       songImageUrl: song.song_image_url,
       sourceUrl: song.source_url,
-      sourceSite: song.source_site
+      sourceSite: song.source_site,
+      tabId: song.tab_id
     })) || [];
   }
 };

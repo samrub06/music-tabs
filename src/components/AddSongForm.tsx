@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { NewSongData } from '@/types';
 
 interface AddSongFormProps {
   isOpen: boolean;
@@ -145,32 +146,13 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       const searchResultParam = searchResult ? encodeURIComponent(JSON.stringify(searchResult)) : '';
       const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}&searchResult=${searchResultParam}`);
       const data = await response.json();
-
       console.log('Data:', data);
 
       if (response.ok && data.song) {
         console.log('Song data:', data.song);
-        // Use search result data as fallback for title and author
-        const songData = {
-          ...data.song,
-          title: data.song.title || searchResult?.title || 'Unknown title',
-          author: data.song.author || searchResult?.author || 'Unknown artist',
-          reviews: searchResult?.reviews || data.song.reviews || 0,
-          capo: data.song.capo,
-          key: data.song.key,
-          rating: data.song.rating,
-          difficulty: data.song.difficulty,
-          version: data.song.version,
-          versionDescription: data.song.versionDescription,
-          artistUrl: data.song.artistUrl,
-          artistImageUrl: data.song.artistImageUrl,
-          songImageUrl: data.song.songImageUrl,
-          sourceUrl: data.song.url,
-          sourceSite: data.song.source
-        };
-        
-        // Directly save the song without showing preview
-        await handleDirectSave(songData);
+        // Construire le payload une seule fois et sauvegarder directement
+        const payload = buildNewSongDataFromScrape(data.song, searchResult, formData.folderId);
+        await handleDirectSave(payload);
       } else {
         setMessage({ type: 'error', text: data.error || '❌ Unable to retrieve the song.' });
       }
@@ -182,24 +164,35 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     }
   };
 
+  // Construit un payload normalisé pour l'ajout, basé sur le scraping et le résultat de recherche
+  function buildNewSongDataFromScrape(
+    scraped: Partial<NewSongData> & { url?: string; source?: string; songImageUrl?: string },
+    result?: SearchResult,
+    folderId?: string
+  ): NewSongData {
+    return {
+      title: (scraped.title || result?.title || 'Unknown title').trim(),
+      author: (scraped.author || result?.author || 'Unknown artist').trim(),
+      content: (scraped as any).content || '',
+      folderId: folderId || undefined,
+      reviews: (result?.reviews ?? scraped.reviews) || 0,
+      capo: scraped.capo,
+      key: scraped.key,
+      rating: scraped.rating,
+      difficulty: scraped.difficulty,
+      version: scraped.version,
+      versionDescription: scraped.versionDescription,
+      artistUrl: scraped.artistUrl,
+      artistImageUrl: scraped.artistImageUrl,
+      songImageUrl: scraped.songImageUrl,
+      sourceUrl: scraped.url,
+      sourceSite: scraped.source,
+      tabId: scraped.tabId
+    } as NewSongData;
+  }
+
   // Direct save function for scraped songs
-  const handleDirectSave = async (songData: { 
-    title: string; 
-    author: string; 
-    content: string; 
-    reviews?: number; 
-    capo?: number; 
-    key?: string;
-    rating?: number;
-    difficulty?: string;
-    version?: number;
-    versionDescription?: string;
-    artistUrl?: string;
-    artistImageUrl?: string;
-    songImageUrl?: string;
-    sourceUrl?: string;
-    sourceSite?: string;
-  }) => {
+  const handleDirectSave = async (songData: NewSongData) => {
     if (!songData.title.trim() || !songData.content.trim()) {
       setMessage({ type: 'error', text: 'Données de chanson invalides.' });
       return;
@@ -210,23 +203,10 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
 
     try {
       const newSong = await addSong({
+        ...songData,
         title: songData.title.trim(),
         author: songData.author.trim(),
-        content: songData.content.trim(),
-        folderId: formData.folderId || undefined,
-        reviews: songData.reviews || 0,
-        capo: songData.capo,
-        key: songData.key,
-        // Nouveaux champs Ultimate Guitar
-        rating: songData.rating,
-        difficulty: songData.difficulty,
-        version: songData.version,
-        versionDescription: songData.versionDescription,
-        artistUrl: songData.artistUrl,
-        artistImageUrl: songData.artistImageUrl,
-        songImageUrl: songData.songImageUrl,
-        sourceUrl: songData.sourceUrl,
-        sourceSite: songData.sourceSite
+        content: songData.content.trim()
       });
       // Redirect to the newly created song page
       router.push(`/song/${newSong.id}`);

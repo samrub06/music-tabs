@@ -73,6 +73,7 @@ export interface StructuredSong {
   sourceUrl?: string;
   sourceSite?: string;
   viewCount?: number;
+  tabId?: string;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)
@@ -98,6 +99,7 @@ export interface NewSongData {
   songImageUrl?: string;
   sourceUrl?: string;
   sourceSite?: string;
+  tabId?: string;
 }
 
 // Type pour l'édition de chanson (avec contenu texte)
@@ -123,6 +125,7 @@ export interface SongEditData {
   songImageUrl?: string;
   sourceUrl?: string;
   sourceSite?: string;
+  tabId?: string;
 }
 
 export interface AppState {
