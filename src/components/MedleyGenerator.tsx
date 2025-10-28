@@ -11,7 +11,7 @@ import {
   PlayIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { MedleyResult, MedleySong } from '@/lib/services/medleyService';
+import { MedleyResult, generateMedleySequence, getRandomSongs } from '@/lib/services/medleyService';
 
 interface MedleyGeneratorProps {
   onMedleyGenerated: (result: MedleyResult) => void;
@@ -57,6 +57,8 @@ export default function MedleyGenerator({ onMedleyGenerated }: MedleyGeneratorPr
 
   const handleGenerateMedley = async () => {
     setIsGenerating(true);
+    /* import { MedleyResult, MedleySong } from '@/lib/services/
+medleyService';
     
     try {
       const response = await fetch('/api/medley/generate', {
@@ -66,18 +68,50 @@ export default function MedleyGenerator({ onMedleyGenerated }: MedleyGeneratorPr
         },
         body: JSON.stringify({
           targetKey: targetKey || undefined,
-          selectedFolders: selectedFolders.length > 0 ? selectedFolders : undefined,
-          selectedSongs: selectedSongs.length > 0 ? selectedSongs : undefined,
+          selectedFolders: selectedFolders.length > 0 ? 
+          selectedFolders : undefined,
+          selectedSongs: selectedSongs.length > 0 ? 
+          selectedSongs : undefined,
           useRandomSelection,
           maxSongs
         }),
-      });
-
       if (!response.ok) {
         throw new Error('Failed to generate medley');
       }
 
       const result: MedleyResult = await response.json();
+ */
+    try {
+      // Start from all songs in context
+      let candidateSongs = [...songs];
+
+      // Filter by folders if specified (including 'unorganized')
+      if (selectedFolders.length > 0) {
+        candidateSongs = candidateSongs.filter(s =>
+          selectedFolders.includes(s.folderId || 'unorganized')
+        );
+      }
+
+      // Filter by specific song IDs if specified
+      if (selectedSongs.length > 0) {
+        const selectedSet = new Set(selectedSongs);
+        candidateSongs = candidateSongs.filter(s => selectedSet.has(s.id));
+      }
+
+      // Random selection if requested
+      if (useRandomSelection) {
+        candidateSongs = getRandomSongs(candidateSongs, maxSongs);
+      }
+
+      // Generate medley locally
+      const result: MedleyResult = generateMedleySequence(candidateSongs, {
+        targetKey: targetKey || undefined,
+        selectedFolders: selectedFolders.length > 0 ? selectedFolders : undefined,
+        selectedSongs: selectedSongs.length > 0 ? selectedSongs : undefined,
+        useRandomSelection,
+        maxSongs
+      });
+
       setGeneratedMedley(result);
       onMedleyGenerated(result);
     } catch (error) {
