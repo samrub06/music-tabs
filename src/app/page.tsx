@@ -14,6 +14,7 @@ export default function Home() {
   const [showAddSong, setShowAddSong] = useState(false);
   const { t } = useLanguage();
 
+
   // Afficher un loader pendant la vérification de l'auth
   if (loading) {
     return (

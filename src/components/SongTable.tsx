@@ -681,7 +681,7 @@ export default function SongTable() {
                     {/* Image de l'album/chanson si disponible, sinon icône par défaut */}
                     {song?.songImageUrl ? (
                       <img 
-                        src={song.songImageUrl} 
+                        src={song?.songImageUrl} 
                         alt={song.title}
                         width={40}
                         height={40}
@@ -692,10 +692,10 @@ export default function SongTable() {
                         }}
                       />
                     ) : null}
-                    <MusicalNoteIcon className={`h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0 ${song.songImageUrl ? 'hidden' : ''}`} />
+                    <MusicalNoteIcon className={`h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0 ${song?.songImageUrl ? 'hidden' : ''}`} />
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-gray-900 truncate max-w-[150px] sm:max-w-none">
-                        {song.title}
+``                        {song?.title}
                       </div>
                       {/* Show artist and key metadata on mobile when columns are hidden */}
                       <div className="sm:hidden text-xs text-gray-500 mt-1">
