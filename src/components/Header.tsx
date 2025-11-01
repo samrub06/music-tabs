@@ -2,8 +2,9 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState } from 'react';
 import PlaylistImporter from './PlaylistImporter';
 
@@ -59,21 +60,44 @@ export default function Header({ onMenuClick }: HeaderProps) {
     <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
-          {/* Mobile menu button */}
-          {showMenuButton && (
-            <button
-              onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              aria-label={t('common.openMenu')}
-            >
-              <Bars3Icon className="h-6 w-6" />
-            </button>
-          )}
+          {/* Left side: Mobile menu button + Navigation */}
+          <div className="flex items-center space-x-1 md:space-x-4">
+            {/* Mobile menu button */}
+            {showMenuButton && (
+              <button
+                onClick={onMenuClick}
+                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label={t('common.openMenu')}
+              >
+                <Bars3Icon className="h-6 w-6" />
+              </button>
+            )}
+            
+            {/* Authenticated navigation - Desktop */}
+            {user && (
+              <nav className="hidden md:flex items-center space-x-2">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <RectangleStackIcon className="h-5 w-5" />
+                  <span>My Songs</span>
+                </Link>
+                <Link
+                  href="/library"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <FolderOpenIcon className="h-5 w-5" />
+                  <span>Explore</span>
+                </Link>
+              </nav>
+            )}
+          </div>
           
-          {/* Logo - Always centered */}
+          {/* Logo - Centered */}
           <button 
             onClick={handleLogoClick}
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer mx-auto"
+            className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
             aria-label={t('common.backToHome')}
           >
             <span className="text-xl md:text-2xl">🌶️</span>
@@ -117,6 +141,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                             {profile?.email}
                           </p>
                         </div>
+                        
                         <button
                           onClick={() => {
                             setShowPlaylistImporter(true);

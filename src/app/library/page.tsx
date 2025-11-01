@@ -8,25 +8,18 @@ export default async function LibraryPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Fetch songs from Supabase - RLS will automatically filter based on user's auth state
-  const { data: songsData, error } = await supabase
+  const { data: songs, error } = await supabase
     .from('songs')
     .select('id, title, author, key, rating, reviews, difficulty, song_image_url, artist_image_url, created_at, updated_at')
+    .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(50)
   
-  console.log('songsData', songsData);
-  // Map snake_case to camelCase
-  const songs = songsData?.map((song: any) => ({
-    ...song,
-    songImageUrl: song.song_image_url,
-    artistImageUrl: song.artist_image_url,
-    createdAt: song.created_at,
-    updatedAt: song.updated_at
-  })) || []
+
 
   if (error) {
     return (
-      <div className="flex-1 p-6">
+      <div className="p-6">
         <div className="text-center text-red-600">
           Erreur lors du chargement des chansons: {error.message}
         </div>
@@ -35,7 +28,7 @@ export default async function LibraryPage() {
   }
 
   return (
-    <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
+    <div className="p-3 sm:p-6 overflow-y-auto">
       {/* Banner pour encourager la connexion si non connecté */}
       {!user && (
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 sm:p-6">
@@ -75,9 +68,9 @@ export default async function LibraryPage() {
             >
               {/* Song Image or Default Icon */}
               <div className="relative w-full aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden">
-                {song.songImageUrl ? (
-                  <Image 
-                    src={song.songImageUrl} 
+                {song.song_image_url ? (
+                  <img 
+                    src={song.song_image_url} 
                     alt={song.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-200"
