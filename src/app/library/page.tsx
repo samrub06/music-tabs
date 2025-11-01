@@ -8,14 +8,19 @@ export default async function LibraryPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   // Fetch songs from Supabase - RLS will automatically filter based on user's auth state
-  const { data: songs, error } = await supabase
+  const { data: songsData, error } = await supabase
     .from('songs')
     .select('id, title, author, key, rating, reviews, difficulty, song_image_url, artist_image_url, created_at, updated_at')
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(50)
   
-
+  // Map snake_case to camelCase
+  const songs = songsData?.map((song: any) => ({
+    ...song,
+    songImageUrl: song.song_image_url,
+    artistImageUrl: song.artist_image_url,
+  })) || []
 
   if (error) {
     return (
@@ -57,61 +62,56 @@ export default async function LibraryPage() {
         </p>
       </div>
 
-      {/* Songs Grid */}
+      {/* Songs Grid - Shopify style avec cartes plus petites */}
       {songs && songs.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
           {songs.map((song: any) => (
             <Link 
               key={song.id} 
               href={`/song/${song.id}`}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer group"
+              className="group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border border-gray-200 hover:border-gray-300"
             >
-              {/* Song Image or Default Icon */}
-              <div className="relative w-full aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden">
-                {song.song_image_url ? (
+              {/* Song Image or Default Icon - plus petite carte */}
+              <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
+                {song.songImageUrl ? (
                   <img 
-                    src={song.song_image_url} 
+                    src={song.songImageUrl} 
                     alt={song.title}
-                    fill
+                    
                     className="object-cover group-hover:scale-105 transition-transform duration-200"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <MusicalNoteIcon className="h-16 w-16 text-gray-400" />
+                    <MusicalNoteIcon className="h-12 w-12 text-gray-400" />
                   </div>
                 )}
               </div>
 
-              {/* Song Info */}
-              <div>
-                <h3 className="font-semibold text-gray-900 truncate mb-1 group-hover:text-blue-600 transition-colors">
+              {/* Song Info - compacte comme Shopify */}
+              <div className="p-2 sm:p-3">
+                <h3 className="font-medium text-gray-900 text-xs sm:text-sm line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors min-h-[2.5rem]">
                   {song.title}
                 </h3>
-                <p className="text-sm text-gray-600 truncate mb-2">
+                <p className="text-xs text-gray-600 truncate mb-2">
                   {song.author}
                 </p>
 
-                {/* Metadata badges */}
-                <div className="flex flex-wrap gap-1.5 text-xs">
+                {/* Metadata badges - plus petites */}
+                <div className="flex flex-wrap gap-1">
                   {song.key && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                      🎵 {song.key}
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-purple-50 text-purple-700 border border-purple-200">
+                      🎵
                     </span>
                   )}
                   {song.rating && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-yellow-50 text-yellow-700 border border-yellow-200">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 border border-yellow-200">
                       ⭐ {song.rating.toFixed(1)}
                     </span>
                   )}
                   {song.difficulty && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                      🎸 {song.difficulty}
-                    </span>
-                  )}
-                  {song.reviews && song.reviews > 0 && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-50 text-gray-700 border border-gray-200">
-                      👥 {song.reviews}
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                      🎸
                     </span>
                   )}
                 </div>
@@ -137,4 +137,3 @@ export default async function LibraryPage() {
     </div>
   )
 }
-
