@@ -14,12 +14,13 @@ import {
   XMarkIcon,
   ArrowsUpDownIcon
 } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import EditSongForm from './EditSongForm';
 import FolderDropdown from './FolderDropdown';
 import ColumnConfig from './ColumnConfig';
+import SongTableHeader from './song-table/SongTableHeader';
+import SongTableRow from './song-table/SongTableRow';
+import SongTableEmptyState from './song-table/SongTableEmptyState';
 
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt' | 'key' | 'rating' | 'reviews' | 'difficulty' | 'version' | 'viewCount';
 type SortDirection = 'asc' | 'desc';
@@ -40,7 +41,6 @@ export default function SongTable() {
   } = useApp();
   const { user } = useAuthContext();
   const { t } = useLanguage();
-  const router = useRouter();
   
   const [sortField, setSortField] = useState<SortField>('title');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -294,59 +294,18 @@ export default function SongTable() {
       <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex flex-col gap-2 sm:gap-0 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-            {selectedSongs.size > 0 ? (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <span className="text-sm font-medium text-blue-700">
-                  {selectedSongs.size} {selectedSongs.size !== 1 ? t('songs.songCountPlural') : t('songs.songCount')} {t('songs.selected')}
-                </span>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <button
-                    onClick={() => handleBulkDelete('selected')}
-                    className="inline-flex items-center justify-center px-4 py-3 sm:px-3 sm:py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 min-h-[48px] sm:min-h-0"
-                  >
-                    <TrashIcon className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1.5" />
-                    <span className="sm:hidden">Supprimer sélection</span>
-                    <span className="hidden sm:inline">{t('songs.deleteSelected')}</span>
-                  </button>
-                  {selectedSongs.size === sortedSongs.length && sortedSongs.length > 0 && (
-                    <button
-                      onClick={() => handleBulkDelete('all')}
-                      className="inline-flex items-center justify-center px-4 py-3 sm:px-3 sm:py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 min-h-[48px] sm:min-h-0"
-                    >
-                      <TrashIcon className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1.5" />
-                      <span className="sm:hidden">Tout supprimer</span>
-                      <span className="hidden sm:inline">{t('songs.deleteAll')}</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedSongs(new Set())}
-                    className="inline-flex items-center justify-center px-4 py-3 sm:px-3 sm:py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[48px] sm:min-h-0"
-                  >
-                    <XMarkIcon className="h-5 w-5 sm:h-4 sm:w-4 mr-2 sm:mr-1.5" />
-                    <span className="sm:hidden">Annuler</span>
-                    <span className="hidden sm:inline">{t('songs.cancel')}</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center space-x-2 flex-wrap">
-                  <span className="text-sm font-medium text-gray-700">
-                    {sortedSongs.length} {sortedSongs.length !== 1 ? t('songs.songCountPlural') : t('songs.songCount')}
-                  </span>
-                  {currentFolder && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      {currentFolder === 'unorganized' ? 'Sans dossier' : getFolderName(currentFolder)}
-                    </span>
-                  )}
-                  {searchQuery && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                      &ldquo;{searchQuery}&rdquo;
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
+            <SongTableHeader
+              sortedSongsCount={sortedSongs.length}
+              selectedCount={selectedSongs.size}
+              currentFolder={currentFolder}
+              searchQuery={searchQuery}
+              getFolderName={getFolderName}
+              showDeleteAll={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
+              onCancelSelection={() => setSelectedSongs(new Set())}
+              onDeleteSelected={() => handleBulkDelete('selected')}
+              onDeleteAll={() => handleBulkDelete('all')}
+              t={t}
+            />
           </div>
           
           {/* Mobile Controls - Clean Style */}
@@ -614,228 +573,27 @@ export default function SongTable() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedSongs.length === 0 ? (
-              <tr>
-                <td colSpan={user ? visibleColumns.length + 2 : visibleColumns.length + 1} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center">
-                    <MusicalNoteIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
-                      {currentFolder === 'unorganized' 
-                        ? 'Aucune chanson sans dossier'
-                        : currentFolder 
-                        ? `Aucune chanson dans "${getFolderName(currentFolder)}"`
-                        : searchQuery 
-                        ? 'Aucune chanson trouvée'
-                        : 'Aucune chanson'
-                      }
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {currentFolder === 'unorganized' 
-                        ? 'Toutes vos chansons sont organisées dans des dossiers'
-                        : currentFolder 
-                        ? 'Essayez de sélectionner un autre dossier ou ajoutez des chansons à ce dossier'
-                        : searchQuery 
-                        ? 'Essayez avec d\'autres mots-clés'
-                        : 'Commencez par ajouter votre première chanson'
-                      }
-                    </p>
-                    {(currentFolder || searchQuery) && (
-                      <button
-                        onClick={() => {
-                          setCurrentFolder(null);
-                          // Clear search query if it exists
-                        }}
-                        className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        Voir toutes les chansons
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
+              <SongTableEmptyState
+                currentFolder={currentFolder}
+                searchQuery={searchQuery}
+                getFolderName={getFolderName}
+                onResetFilters={() => setCurrentFolder(null)}
+                visibleColumnsCount={visibleColumns.length}
+                hasUser={!!user}
+              />
             ) : (
               sortedSongs.map((song) => (
-              <tr
-                key={song.id}
-                onClick={() => router.push(`/song/${song.id}`)}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
-              >
-                {/* Checkbox column - Only show if user is logged in */}
-                {user && (
-                  <td 
-                    className="px-2 sm:px-6 py-3 sm:py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedSongs.has(song.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        handleSelectSong(song.id, e.target.checked);
-                      }}
-                      className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                    />
-                  </td>
-                )}
-                <td className="px-2 sm:px-6 py-3 sm:py-4">
-                  <div className="flex items-center">
-                    {/* Image de l'album/chanson si disponible, sinon icône par défaut */}
-                    {song?.songImageUrl ? (
-                      <img 
-                        src={song?.songImageUrl} 
-                        alt={song.title}
-                        width={40}
-                        height={40}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover mr-2 sm:mr-3 flex-shrink-0"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                    ) : null}
-                    <MusicalNoteIcon className={`h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0 ${song?.songImageUrl ? 'hidden' : ''}`} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-gray-900 truncate max-w-[150px] sm:max-w-none">
-``                        {song?.title}
-                      </div>
-                      {/* Show artist and key metadata on mobile when columns are hidden */}
-                      <div className="sm:hidden text-xs text-gray-500 mt-1">
-                        <div className="flex items-center space-x-2 flex-wrap">
-                          <span className="truncate max-w-[120px]">{song.author}</span>
-                          {song.key && (
-                            <>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-purple-600 font-medium">🎵 {song.key}</span>
-                            </>
-                          )}
-                          {song.rating && (
-                            <>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                {visibleColumns.includes('author') && (
-                  <td className="hidden sm:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {/* Image de l'artiste si disponible */}
-                      {song.artistImageUrl && (
-                        <img 
-                          src={song.artistImageUrl} 
-                          alt={song.author}
-                          width={16}
-                          height={16}
-                          className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      )}
-                      <span className="text-sm text-gray-900 truncate">{song.author}</span>
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('key') && (
-                  <td className="hidden md:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {song.key ? (
-                        <span className="text-purple-600 font-medium">{song.key}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('rating') && (
-                  <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {song.rating ? (
-                        <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('reviews') && (
-                  <td className="hidden xl:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {song.reviews && song.reviews > 0 ? (
-                        <span className="text-gray-600 font-medium">👥 {song.reviews}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('difficulty') && (
-                  <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {song.difficulty ? (
-                        <span className="text-blue-600 font-medium">🎸 {song.difficulty}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('version') && (
-                  <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {song.version ? (
-                        <span className="text-green-600 font-medium">🔢 v{song.version}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('viewCount') && (
-                  <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {song.viewCount && song.viewCount > 0 ? (
-                        <span className="text-blue-600 font-medium">👁️ {song.viewCount}</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('folder') && (
-                  <td className="hidden md:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <FolderDropdown
-                        currentFolderId={song.folderId}
-                        folders={folders}
-                        onFolderChange={(newFolderId) => handleFolderChange(song.id, newFolderId)}
-                        disabled={!user} // Seulement les utilisateurs connectés peuvent changer les dossiers
-                      />
-                    </div>
-                  </td>
-                )}
-                {visibleColumns.includes('updatedAt') && (
-                  <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
-                  </td>
-                )}
-                <td className="px-2 sm:px-6 py-3 sm:py-4 text-right text-sm font-medium">
-                  <div className="flex items-center justify-end">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/song/${song.id}`);
-                      }}
-                      className="text-blue-600 hover:text-blue-900 p-2 sm:p-1 rounded-lg hover:bg-blue-50 min-h-[44px] sm:min-h-0 min-w-[44px] sm:min-w-0 flex items-center justify-center"
-                      title={t('songs.open')}
-                    >
-                      <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                <SongTableRow
+                  key={song.id}
+                  song={song}
+                  folders={folders}
+                  visibleColumns={visibleColumns}
+                  isSelected={selectedSongs.has(song.id)}
+                  onSelect={(checked) => handleSelectSong(song.id, checked)}
+                  onFolderChange={handleFolderChange}
+                  hasUser={!!user}
+                  t={t}
+                />
               ))
             )}
           </tbody>
