@@ -12,15 +12,14 @@ import {
   KeyIcon
 } from '@heroicons/react/24/outline';
 import { MedleyResult, MedleySong } from '@/lib/services/medleyService';
-import { useApp } from '@/context/AppContext';
 
 interface MedleyPlaylistProps {
   medley: MedleyResult;
   onSongSelect?: (song: MedleySong) => void;
+  onCreatePlaylist?: (name: string, medley: MedleyResult) => Promise<void>;
 }
 
-export default function MedleyPlaylist({ medley, onSongSelect }: MedleyPlaylistProps) {
-  const { createPlaylistFromMedleyUI } = useApp();
+export default function MedleyPlaylist({ medley, onSongSelect, onCreatePlaylist }: MedleyPlaylistProps) {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,11 +72,12 @@ export default function MedleyPlaylist({ medley, onSongSelect }: MedleyPlaylistP
           </div>
           <button
             onClick={async () => {
+              if (!onCreatePlaylist) return;
               const defaultName = `Medley ${new Date().toLocaleString('fr-FR')}`;
               const name = prompt('Nom de la playlist ?', defaultName) || defaultName;
               try {
                 setIsSaving(true);
-                await createPlaylistFromMedleyUI(name, medley.songs as any);
+                await onCreatePlaylist(name, medley);
                 alert('Playlist enregistrée');
               } catch (e) {
                 alert('Erreur lors de la sauvegarde de la playlist');

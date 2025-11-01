@@ -1,10 +1,9 @@
 'use client';
 
-import { useApp } from '@/context/AppContext';
 import { Song } from '@/types';
 import { transposeStructuredSong, renderStructuredSong } from '@/utils/structuredSong';
 import { useRouter } from 'next/navigation';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import SongViewer from '../presentational/SongViewer';
 import { useSongEditor } from '@/lib/hooks/useSongEditor';
 import { useAutoScroll } from '@/lib/hooks/useAutoScroll';
@@ -12,26 +11,24 @@ import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
 import { songService } from '@/lib/services/songService';
 
-interface SongViewerContainerProps {
+interface SongViewerContainerSSRProps {
   song: Song;
+  onUpdate: (id: string, updates: any) => Promise<any>;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export default function SongViewerContainer({ song }: SongViewerContainerProps) {
-  const {
-    songs,
-    currentFolder,
-    updateSong,
-    deleteSong,
-    selectedInstrument,
-    setSelectedInstrument,
-    transposeValue,
-    setTransposeValue,
-    autoScroll,
-    toggleAutoScroll,
-    setAutoScrollSpeed
-  } = useApp();
+export default function SongViewerContainerSSR({ 
+  song, 
+  onUpdate,
+  onDelete 
+}: SongViewerContainerSSRProps) {
   const router = useRouter();
 
+  // Local state instead of AppContext
+  const [selectedInstrument, setSelectedInstrument] = useState<'piano' | 'guitar'>('piano');
+  const [transposeValue, setTransposeValue] = useState(0);
+  const [autoScroll, setAutoScroll] = useState({ isActive: false, speed: 2.5 });
+  
   // Custom hooks
   const {
     isEditing,
@@ -41,7 +38,7 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
     handleSave,
     handleCancelEdit,
     handleToggleEdit
-  } = useSongEditor({ song, updateSong });
+  } = useSongEditor({ song, updateSong: onUpdate });
 
   const { selectedChord, showChordDiagram, handleChordClick, handleCloseChordDiagram } = useChordDiagram();
   
@@ -68,19 +65,19 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
   useAutoScroll({ 
     isActive: autoScroll.isActive, 
     speed: autoScroll.speed, 
-    toggleAutoScroll 
+    toggleAutoScroll: () => setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive }))
   });
 
   // Business logic handlers
   const handleDelete = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
-      deleteSong(song.id);
-      router.push('/');
+      onDelete(song.id);
+      router.push('/dashboard');
     }
   };
 
   const handleToggleAutoScroll = () => {
-    toggleAutoScroll();
+    setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive }));
   };
 
   const resetScroll = () => {
@@ -94,35 +91,8 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
   const transposedContent = renderStructuredSong(transposedSong, {
     maxWidth: 80,
     wordWrap: true,
-    isMobile: window.innerWidth < 768
+    isMobile: typeof window !== 'undefined' && window.innerWidth < 768
   });
-
-  // Determine navigation scope
-  const scopeSongs: Song[] = React.useMemo(() => {
-    if (currentFolder === 'unorganized') {
-      return songs.filter(s => !s.folderId);
-    }
-    if (currentFolder && currentFolder !== 'unorganized') {
-      return songs.filter(s => s.folderId === currentFolder);
-    }
-    return songs;
-  }, [songs, currentFolder]);
-
-  const currentIndex = React.useMemo(() => scopeSongs.findIndex(s => s.id === song.id), [scopeSongs, song.id]);
-  const canPrevSong = currentIndex > 0;
-  const canNextSong = currentIndex >= 0 && currentIndex < scopeSongs.length - 1;
-
-  const handlePrevSong = () => {
-    if (!canPrevSong) return;
-    const prev = scopeSongs[currentIndex - 1];
-    router.push(`/song/${prev.id}`);
-  };
-
-  const handleNextSong = () => {
-    if (!canNextSong) return;
-    const next = scopeSongs[currentIndex + 1];
-    router.push(`/song/${next.id}`);
-  };
 
   // Props for presentation component
   const songViewerProps = {
@@ -153,13 +123,14 @@ export default function SongViewerContainer({ song }: SongViewerContainerProps) 
     onCloseChordDiagram: handleCloseChordDiagram,
     onSetSelectedInstrument: setSelectedInstrument,
     onSetTransposeValue: setTransposeValue,
-    onSetAutoScrollSpeed: setAutoScrollSpeed,
-    onNavigateBack: () => router.push('/'),
-    onPrevSong: handlePrevSong,
-    onNextSong: handleNextSong,
-    canPrevSong,
-    canNextSong
+    onSetAutoScrollSpeed: (speed: number) => setAutoScroll(prev => ({ ...prev, speed })),
+    onNavigateBack: () => router.push('/dashboard'),
+    onPrevSong: () => {}, // Remove navigation for now
+    onNextSong: () => {}, // Remove navigation for now
+    canPrevSong: false,
+    canNextSong: false
   };
 
   return <SongViewer {...songViewerProps} />;
 }
+

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useApp } from '@/context/AppContext';
 import { 
   MusicalNoteIcon, 
   SparklesIcon,
@@ -12,13 +11,15 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { MedleyResult, generateMedleySequence, getRandomSongs } from '@/lib/services/medleyService';
+import { Song, Folder } from '@/types';
 
 interface MedleyGeneratorProps {
+  songs: Song[];
+  folders: Folder[];
   onMedleyGenerated: (result: MedleyResult) => void;
 }
 
-export default function MedleyGenerator({ onMedleyGenerated }: MedleyGeneratorProps) {
-  const { songs, folders } = useApp();
+export default function MedleyGenerator({ songs, folders, onMedleyGenerated }: MedleyGeneratorProps) {
   
   const [targetKey, setTargetKey] = useState('');
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);

@@ -25,7 +25,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const showMenuButton = !isSongPage;
 
   const handleLogoClick = () => {
-    router.push('/');
+    if (user) {
+      router.push('/dashboard');
+    } else {
+      router.push('/library');
+    }
   };
 
   const handleLanguageChange = (newLanguage: 'en' | 'fr' | 'he') => {
@@ -58,7 +62,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 ">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Left side: Mobile menu button + Navigation */}
           <div className="flex items-center space-x-1 md:space-x-4">
@@ -76,6 +80,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
             {/* Authenticated navigation - Desktop */}
             {user && (
               <nav className="hidden md:flex items-center space-x-2">
+                 <Link
+                  href="/library"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <FolderOpenIcon className="h-5 w-5" />
+                  <span>Explore</span>
+                </Link>
                 <Link
                   href="/dashboard"
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
@@ -83,13 +94,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <RectangleStackIcon className="h-5 w-5" />
                   <span>My Songs</span>
                 </Link>
-                <Link
-                  href="/library"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                >
-                  <FolderOpenIcon className="h-5 w-5" />
-                  <span>Explore</span>
-                </Link>
+               
               </nav>
             )}
           </div>

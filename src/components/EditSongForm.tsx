@@ -1,8 +1,7 @@
 'use client';
 
-import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { Song } from '@/types';
+import { Song, Folder, SongEditData } from '@/types';
 import { structuredSongToText } from '@/utils/structuredToText';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
@@ -11,10 +10,11 @@ interface EditSongFormProps {
   isOpen: boolean;
   onClose: () => void;
   song: Song | null;
+  folders?: Folder[];
+  onUpdate: (id: string, updates: SongEditData) => Promise<void>;
 }
 
-export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProps) {
-  const { updateSong, folders } = useApp();
+export default function EditSongForm({ isOpen, onClose, song, folders = [], onUpdate }: EditSongFormProps) {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
@@ -54,7 +54,7 @@ export default function EditSongForm({ isOpen, onClose, song }: EditSongFormProp
         folderId: formData.folderId || undefined
       });
 
-      await updateSong(song.id, {
+      await onUpdate(song.id, {
         title: formData.title.trim(),
         author: formData.author.trim(),
         content: formData.content.trim(),

@@ -1,9 +1,7 @@
 'use client';
 
-import { useApp } from '@/context/AppContext';
-import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { Song } from '@/types';
+import { Song, Folder, Playlist } from '@/types';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -25,21 +23,35 @@ import SongTableEmptyState from './song-table/SongTableEmptyState';
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt' | 'key' | 'rating' | 'reviews' | 'difficulty' | 'version' | 'viewCount';
 type SortDirection = 'asc' | 'desc';
 
-export default function SongTable() {
-  const { 
-    songs, 
-    folders,
-    searchQuery, 
-    deleteSong,
-    deleteSongs,
-    deleteAllSongs,
-    updateSongFolder,
-    currentFolder,
-    currentPlaylistId,
-    playlists,
-    setCurrentFolder
-  } = useApp();
-  const { user } = useAuthContext();
+interface SongTableProps {
+  songs: Song[];
+  folders: Folder[];
+  playlists?: Playlist[];
+  currentFolder?: string | null;
+  currentPlaylistId?: string | null;
+  searchQuery?: string;
+  hasUser?: boolean;
+  onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>;
+  onDeleteSongs: (ids: string[]) => Promise<void>;
+  onDeleteAllSongs: () => Promise<void>;
+  onCurrentFolderChange?: (folderId: string | null) => void;
+  onUpdateSong?: (id: string, updates: any) => Promise<any>;
+}
+
+export default function SongTable({
+  songs,
+  folders,
+  playlists = [],
+  currentFolder = null,
+  currentPlaylistId = null,
+  searchQuery = '',
+  hasUser = false,
+  onFolderChange,
+  onDeleteSongs,
+  onDeleteAllSongs,
+  onCurrentFolderChange,
+  onUpdateSong
+}: SongTableProps) {
   const { t } = useLanguage();
   
   const [sortField, setSortField] = useState<SortField>('title');
@@ -201,7 +213,7 @@ export default function SongTable() {
 
   const handleFolderChange = async (songId: string, newFolderId: string | undefined) => {
     try {
-      await updateSongFolder(songId, newFolderId);
+      await onFolderChange(songId, newFolderId);
     } catch (error) {
       console.error('Error updating song folder:', error);
       throw error;
@@ -239,9 +251,9 @@ export default function SongTable() {
   const confirmBulkDelete = async () => {
     try {
       if (deleteType === 'all') {
-        await deleteAllSongs();
+        await onDeleteAllSongs();
       } else if (deleteType === 'selected') {
-        await deleteSongs(Array.from(selectedSongs));
+        await onDeleteSongs(Array.from(selectedSongs));
       }
       setSelectedSongs(new Set());
     } catch (error) {
@@ -312,7 +324,7 @@ export default function SongTable() {
           <div className="flex flex-wrap gap-1 sm:hidden">
             {/* Quick Filter Buttons */}
             <button
-              onClick={() => setCurrentFolder(null)}
+              onClick={() => onCurrentFolderChange?.(null)}
               className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
                 currentFolder === null
                   ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -323,7 +335,7 @@ export default function SongTable() {
             </button>
             
             <button
-              onClick={() => setCurrentFolder('unorganized')}
+              onClick={() => onCurrentFolderChange?.('unorganized')}
               className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
                 currentFolder === 'unorganized'
                   ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -336,7 +348,7 @@ export default function SongTable() {
             {folders.slice(0, 3).map((folder) => (
               <button
                 key={folder.id}
-                onClick={() => setCurrentFolder(folder.id)}
+                onClick={() => onCurrentFolderChange?.(folder.id)}
                 className={`px-3 py-2 text-sm font-medium rounded-md border transition-all truncate max-w-[120px] ${
                   currentFolder === folder.id
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -383,7 +395,7 @@ export default function SongTable() {
                   <button
                     key={folder.id}
                     onClick={() => {
-                      setCurrentFolder(folder.id);
+                      onCurrentFolderChange?.(folder.id);
                       setShowFolderFilter(false);
                     }}
                     className={`px-3 py-2 text-sm font-medium rounded-md border transition-all ${
@@ -448,7 +460,7 @@ export default function SongTable() {
                   <div className="py-1">
                     <button
                       onClick={() => {
-                        setCurrentFolder(null);
+                        onCurrentFolderChange?.(null);
                         setShowFolderFilter(false);
                       }}
                       className={`w-full text-left px-4 py-2 text-sm ${
@@ -461,7 +473,7 @@ export default function SongTable() {
                     </button>
                     <button
                       onClick={() => {
-                        setCurrentFolder('unorganized');
+                        onCurrentFolderChange?.('unorganized');
                         setShowFolderFilter(false);
                       }}
                       className={`w-full text-left px-4 py-2 text-sm ${
@@ -476,7 +488,7 @@ export default function SongTable() {
                       <button
                         key={folder.id}
                         onClick={() => {
-                          setCurrentFolder(folder.id);
+                          onCurrentFolderChange?.(folder.id);
                           setShowFolderFilter(false);
                         }}
                         className={`w-full text-left px-4 py-2 text-sm ${
@@ -507,7 +519,7 @@ export default function SongTable() {
           <thead className="bg-gray-50">
             <tr>
               {/* Checkbox column - Only show if user is logged in */}
-              {user && (
+              {hasUser && (
                 <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 sm:w-12">
                   <input
                     type="checkbox"
@@ -577,9 +589,9 @@ export default function SongTable() {
                 currentFolder={currentFolder}
                 searchQuery={searchQuery}
                 getFolderName={getFolderName}
-                onResetFilters={() => setCurrentFolder(null)}
+                onResetFilters={() => onCurrentFolderChange?.(null)}
                 visibleColumnsCount={visibleColumns.length}
-                hasUser={!!user}
+                hasUser={hasUser}
               />
             ) : (
               sortedSongs.map((song) => (
@@ -591,7 +603,7 @@ export default function SongTable() {
                   isSelected={selectedSongs.has(song.id)}
                   onSelect={(checked) => handleSelectSong(song.id, checked)}
                   onFolderChange={handleFolderChange}
-                  hasUser={!!user}
+                  hasUser={hasUser}
                   t={t}
                 />
               ))
@@ -605,6 +617,8 @@ export default function SongTable() {
         isOpen={showEditForm}
         onClose={handleCloseEditForm}
         song={selectedSong}
+        folders={folders}
+        onUpdate={onUpdateSong || (async () => {})}
       />
 
       {/* Delete Confirmation Modal */}

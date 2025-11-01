@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
         throw new Error('Missing Supabase env vars');
       }
       const serverClient = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-      songs = await songService.getAllSongs(serverClient);
+      const songsResult = await songService.getAllSongs(serverClient);
+      songs = songsResult.songs;
       console.log('✅ Songs fetched from Supabase:', songs?.length || 0, 'songs');
       
       // If no songs from Supabase, try fallback

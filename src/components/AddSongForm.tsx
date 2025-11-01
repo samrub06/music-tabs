@@ -1,15 +1,16 @@
 'use client';
 
-import { useApp } from '@/context/AppContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { NewSongData } from '@/types';
+import { NewSongData, Folder } from '@/types';
+import { addSongAction } from '@/app/(protected)/dashboard/actions';
 
 interface AddSongFormProps {
   isOpen: boolean;
   onClose: () => void;
+  folders?: Folder[];
 }
 
 interface SearchResult {
@@ -29,8 +30,7 @@ interface SearchResult {
   sourceSite?: string;
 }
 
-export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
-  const { addSong, folders, importSongs } = useApp();
+export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFormProps) {
   const { t } = useLanguage();
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -53,6 +53,35 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
     }
   }, [isOpen]);
 
+  // Normalize song data
+  function normalizeNewSongData(d: NewSongData): NewSongData {
+    return {
+      ...d,
+      title: d.title.trim(),
+      author: (d.author || '').trim(),
+      content: d.content.trim(),
+      folderId: d.folderId || undefined,
+    };
+  }
+
+  // Unified save function
+  const saveNewSong = async (payload: NewSongData, opts?: { redirect?: boolean }) => {
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const newSong = await addSongAction(normalizeNewSongData(payload));
+      if (opts?.redirect) {
+        router.push(`/song/${newSong.id}`);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Error adding song:', error);
+      setMessage({ type: 'error', text: '❌ Error adding song. Please try again.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -61,11 +90,11 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       return;
     }
 
-    await addSong({
-      title: formData.title.trim(),
-      author: formData.author.trim(),
-      content: formData.content.trim(),
-      folderId: formData.folderId || undefined
+    await saveNewSong({
+      title: formData.title,
+      author: formData.author,
+      content: formData.content,
+      folderId: formData.folderId,
     });
 
     // Reset form
@@ -75,8 +104,6 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       content: '',
       folderId: ''
     });
-
-    onClose();
   };
 
 
@@ -198,23 +225,7 @@ export default function AddSongForm({ isOpen, onClose }: AddSongFormProps) {
       return;
     }
 
-    setIsSaving(true);
-    setMessage(null);
-
-    try {
-      const newSong = await addSong({
-        ...songData,
-        title: songData.title.trim(),
-        author: songData.author.trim(),
-        content: songData.content.trim()
-      });
-      // Redirect to the newly created song page
-      router.push(`/song/${newSong.id}`);
-    } catch (error) {
-      console.error('Error adding song:', error);
-      setMessage({ type: 'error', text: '❌ Error adding song. Please try again.' });
-      setIsSaving(false);
-    }
+    await saveNewSong(songData, { redirect: true });
   };
 
   if (!isOpen) return null;

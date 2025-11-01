@@ -5,9 +5,10 @@ import { songService } from '@/lib/services/songService';
 import { renderStructuredSong } from '@/utils/structuredSong';
 
 export const playlistService = {
-  async getAllPlaylists(): Promise<Playlist[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    let query = supabase.from('playlists').select('*').order('created_at', { ascending: false });
+  async getAllPlaylists(clientSupabase?: any): Promise<Playlist[]> {
+    const client = clientSupabase || supabase;
+    const { data: { user } } = await client.auth.getUser();
+    let query = client.from('playlists').select('*').order('created_at', { ascending: false });
     if (!user) {
       // no playlists visible if not logged in
       return [];
@@ -15,7 +16,7 @@ export const playlistService = {
     query = query.eq('user_id', user.id);
     const { data, error } = await query;
     if (error) throw error;
-    return (data || []).map(p => ({
+    return (data || []).map((p: any) => ({
       id: p.id,
       name: p.name,
       description: p.description || undefined,
@@ -42,10 +43,11 @@ export const playlistService = {
     };
   },
 
-  async createPlaylist(name: string, description?: string, songIds: string[] = []): Promise<Playlist> {
-    const { data: { user } } = await supabase.auth.getUser();
+  async createPlaylist(name: string, description?: string, songIds: string[] = [], clientSupabase?: any): Promise<Playlist> {
+    const client = clientSupabase || supabase;
+    const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error('User must be authenticated to create playlists');
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('playlists')
       .insert([{ name, description: description || null, user_id: user.id, song_ids: songIds }])
       .select()
@@ -82,7 +84,8 @@ export const playlistService = {
   async createPlaylistFromMedley(
     name: string,
     medley: MedleyResult,
-    description?: string
+    description?: string,
+    clientSupabase?: any
   ): Promise<Playlist> {
     const isUuid = (value?: string) => !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
     let ids: string[] = medley.songs
@@ -92,9 +95,9 @@ export const playlistService = {
     // If some songs do not have UUID ids (e.g., sample data), try to resolve by title+author
     if (ids.length < medley.songs.length) {
       try {
-        const all = await songService.getAllSongs();
+        const allResult = await songService.getAllSongs(clientSupabase);
         const byKey = new Map<string, string>();
-        for (const s of all) {
+        for (const s of allResult.songs) {
           const key = `${(s.title || '').trim().toLowerCase()}__${(s.author || '').trim().toLowerCase()}`;
           if (isUuid(s.id)) byKey.set(key, s.id);
         }
@@ -122,7 +125,7 @@ export const playlistService = {
             folderId: m.folderId,
             key: m.key,
             capo: m.capo
-          });
+          }, clientSupabase);
           if (isUuid(created.id)) {
             ids.push(created.id);
             existingIdSet.add(created.id);
@@ -134,7 +137,7 @@ export const playlistService = {
     }
 
     const uniqueIds = Array.from(new Set(ids));
-    const playlist = await this.createPlaylist(name, description, uniqueIds);
+    const playlist = await this.createPlaylist(name, description, uniqueIds, clientSupabase);
     return playlist;
   }
 };

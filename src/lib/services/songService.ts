@@ -4,29 +4,28 @@ import { supabase } from '../supabase';
 
 // Service pour les chansons
 export const songService = {
-  // Récupérer toutes les chansons
+  // Récupérer toutes les chansons (sans contenu) avec pagination
   // Si connecté : uniquement les chansons de l'utilisateur
   // Si non connecté : uniquement les chansons publiques (user_id = null)
-  async getAllSongs(clientSupabase?: any): Promise<Song[]> {
+  async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 50): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase || supabase;
     const { data: { user } } = await client.auth.getUser();
     
-    console.log('user', user);
-    let query = client
+    let baseQuery = client
       .from('songs')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord', { count: 'exact' });
     
     // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
     if (!user) {
-      query = query.is('user_id', null);
+      baseQuery = baseQuery.is('user_id', null);
     } else {
       // Si connecté, récupérer uniquement les chansons de l'utilisateur
-      query = query.eq('user_id', user.id);
+      baseQuery = baseQuery.eq('user_id', user.id);
     }
 
-    const { data, error } = await query;
-    console.log('data', error);
+    const { data, error, count } = await baseQuery
+      .order('created_at', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
 
     if (error) {
       console.error('Error fetching songs:', error);
@@ -43,22 +42,21 @@ export const songService = {
       versionDescription: song.version_description,
       rating: song.rating,
       difficulty: song.difficulty,
-      artistUrl: song.artist_url,
       artistImageUrl: song.artist_image_url,
       songImageUrl: song.song_image_url,
-      sourceUrl: song.source_url,
-      sourceSite: song.source_site,
       viewCount: song.view_count || 0,
-      tabId: song.tab_id
+      key: song.key,
+      firstChord: song.first_chord,
+      lastChord: song.last_chord
     })) || [];
     
-    console.log('Mapped songs with folder IDs:', mappedSongs.map((s: Song) => ({ id: s.id, title: s.title, folderId: s.folderId })));
-    return mappedSongs;
+    return { songs: mappedSongs, total: count || 0 };
   },
 
   // Récupérer une chanson par ID
-  async getSongById(id: string): Promise<Song | null> {
-    const { data, error } = await supabase
+  async getSongById(id: string, clientSupabase?: any): Promise<Song | null> {
+    const client = clientSupabase || supabase;
+    const { data, error } = await client
       .from('songs')
       .select('*')
       .eq('id', id)
@@ -96,8 +94,6 @@ export const songService = {
     // Récupérer l'utilisateur (peut être null si non connecté)
     const { data: { user } } = await client.auth.getUser();
 
-    debugger;
-    console.log('songData', songData);
     // Parser le contenu texte en structure structurée
     const structuredSong = parseTextToStructuredSong(
       songData.title,
@@ -162,11 +158,10 @@ export const songService = {
   },
 
   // Mettre à jour une chanson
-  async updateSong(id: string, updates: SongEditData): Promise<Song> {
-    console.log('songService.updateSong called with:', { id, updates });
-    
+  async updateSong(id: string, updates: SongEditData, clientSupabase?: any): Promise<Song> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to update songs');
@@ -175,7 +170,6 @@ export const songService = {
     // Parser le nouveau contenu si fourni
     let sections = undefined;
     if (updates.content) {
-      console.log('Parsing content to structured song...');
       const structuredSong = parseTextToStructuredSong(
         updates.title,
         updates.author,
@@ -183,7 +177,6 @@ export const songService = {
         updates.folderId
       );
       sections = structuredSong.sections;
-      console.log('Parsed sections:', sections);
     }
 
     const updateData: any = {
@@ -208,9 +201,7 @@ export const songService = {
       updateData.sections = sections;
     }
 
-    console.log('Updating database with:', updateData);
-
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('songs')
       .update(updateData)
       .eq('id', id)
@@ -221,8 +212,6 @@ export const songService = {
       console.error('Error updating song:', error);
       throw error;
     }
-
-    console.log('Song updated successfully:', data);
 
     return {
       ...data,
@@ -244,11 +233,10 @@ export const songService = {
   },
 
   // Mettre à jour seulement le dossier d'une chanson
-  async updateSongFolder(id: string, folderId: string | undefined): Promise<Song> {
-    console.log('songService.updateSongFolder called with:', { id, folderId });
-    
+  async updateSongFolder(id: string, folderId: string | undefined, clientSupabase?: any): Promise<Song> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to update songs');
@@ -259,9 +247,7 @@ export const songService = {
       updated_at: new Date().toISOString()
     };
 
-    console.log('Updating song folder with:', updateData);
-
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('songs')
       .update(updateData)
       .eq('id', id)
@@ -272,8 +258,6 @@ export const songService = {
       console.error('Error updating song folder:', error);
       throw error;
     }
-
-    console.log('Song folder updated successfully:', data);
 
     return {
       ...data,
@@ -294,8 +278,9 @@ export const songService = {
   },
 
   // Incrémenter le compteur de vues d'une chanson
-  async incrementViewCount(songId: string): Promise<void> {
-    const { error } = await supabase.rpc('increment_view_count', {
+  async incrementViewCount(songId: string, clientSupabase?: any): Promise<void> {
+    const client = clientSupabase || supabase;
+    const { error } = await client.rpc('increment_view_count', {
       song_id: songId
     });
 
@@ -306,15 +291,16 @@ export const songService = {
   },
 
   // Supprimer une chanson
-  async deleteSong(id: string): Promise<void> {
+  async deleteSong(id: string, clientSupabase?: any): Promise<void> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to delete songs');
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from('songs')
       .delete()
       .eq('id', id);
@@ -326,9 +312,10 @@ export const songService = {
   },
 
   // Supprimer plusieurs chansons
-  async deleteSongs(ids: string[]): Promise<void> {
+   async deleteSongs(ids: string[], clientSupabase?: any): Promise<void> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to delete songs');
@@ -338,7 +325,7 @@ export const songService = {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from('songs')
       .delete()
       .in('id', ids);
@@ -350,15 +337,16 @@ export const songService = {
   },
 
   // Supprimer toutes les chansons de l'utilisateur
-  async deleteAllSongs(): Promise<void> {
+  async deleteAllSongs(clientSupabase?: any): Promise<void> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to delete songs');
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from('songs')
       .delete()
       .eq('user_id', user.id);
@@ -408,11 +396,11 @@ export const folderService = {
   // Récupérer tous les dossiers
   // Si connecté : uniquement les dossiers de l'utilisateur
   // Si non connecté : uniquement les dossiers publics (user_id = null)
-  async getAllFolders(): Promise<Folder[]> {
-    console.log('Fetching folders from database...');
-    const { data: { user } } = await supabase.auth.getUser();
+  async getAllFolders(clientSupabase?: any): Promise<Folder[]> {
+    const client = clientSupabase || supabase;
+    const { data: { user } } = await client.auth.getUser();
     
-    let query = supabase
+    let query = client
       .from('folders')
       .select('*')
       .order('created_at', { ascending: false });
@@ -431,20 +419,17 @@ export const folderService = {
       console.error('Error fetching folders:', error);
       throw error;
     }
-
-    console.log('Raw folders data:', data);
     
-    const mappedFolders = data?.map(folder => ({
+    const mappedFolders = data?.map((folder: any) => ({
       ...folder,
       createdAt: new Date(folder.created_at),
       updatedAt: new Date(folder.updated_at)
     })) || [];
     
-    console.log('Mapped folders:', mappedFolders);
     return mappedFolders;
   },
 
-  // Créer un nouveau dossier
+  // Créer un nouveau dossier  
   async createFolder(folderData: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>, clientSupabase?: any): Promise<Folder> {
     // Utiliser le client Supabase fourni ou le client par défaut
     const client = clientSupabase || supabase;
@@ -479,15 +464,16 @@ export const folderService = {
   },
 
   // Mettre à jour un dossier
-  async updateFolder(id: string, updates: Partial<Folder>): Promise<Folder> {
+  async updateFolder(id: string, updates: Partial<Folder>, clientSupabase?: any): Promise<Folder> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to update folders');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('folders')
       .update({
         name: updates.name,
@@ -511,15 +497,16 @@ export const folderService = {
   },
 
   // Supprimer un dossier
-  async deleteFolder(id: string): Promise<void> {
+  async deleteFolder(id: string, clientSupabase?: any): Promise<void> {
+    const client = clientSupabase || supabase;
     // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     
     if (!user) {
       throw new Error('User must be authenticated to delete folders');
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from('folders')
       .delete()
       .eq('id', id);
