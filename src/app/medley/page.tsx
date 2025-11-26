@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createServerClientSupabase } from '@/lib/supabase/server';
-import { songService, folderService } from '@/lib/services/songService';
+import { songService } from '@/lib/services/songService';
+import { folderService } from '@/lib/services/folderService';
 import MedleyPageClient from './MedleyPageClient';
 
 export default async function MedleyPage() {

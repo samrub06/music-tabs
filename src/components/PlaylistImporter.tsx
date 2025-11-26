@@ -2,7 +2,7 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { ImportProgress, ImportResult } from '@/lib/services/simplePlaylistImporter';
-import { folderService } from '@/lib/services/songService';
+import { folderService } from '@/lib/services/folderService';
 import { Folder } from '@/types';
 import { useEffect, useState } from 'react';
 

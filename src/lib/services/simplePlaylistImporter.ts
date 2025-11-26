@@ -1,6 +1,7 @@
 import { parsePlaylistWithAI } from './aiParserService';
 import { ScrapedSong, scrapeSongFromUrl, searchUltimateGuitarOnly } from './scraperService';
-import { folderService, songService } from './songService';
+import { songService } from './songService';
+import { folderService } from './folderService';
 
 export interface ParsedSong {
   title: string;
