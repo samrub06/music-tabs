@@ -1,91 +1,33 @@
-import { supabase } from '@/lib/supabase';
 import type { MedleyResult } from '@/lib/services/medleyService';
 import type { Playlist, Song } from '@/types';
-import { songService } from '@/lib/services/songService';
+import { songRepo } from '@/lib/services/songRepo';
+import { playlistRepo } from '@/lib/services/playlistRepo';
 import { renderStructuredSong } from '@/utils/structuredSong';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/db';
 
 export const playlistService = {
-  async getAllPlaylists(clientSupabase?: any): Promise<Playlist[]> {
-    const client = clientSupabase || supabase;
-    const { data: { user } } = await client.auth.getUser();
-    let query = client.from('playlists').select('*').order('created_at', { ascending: false });
-    if (!user) {
-      // no playlists visible if not logged in
-      return [];
-    }
-    query = query.eq('user_id', user.id);
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data || []).map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description || undefined,
-      createdAt: new Date(p.created_at),
-      updatedAt: new Date(p.updated_at),
-      songIds: (p.song_ids as string[]) || []
-    }));
+  async getAllPlaylists(clientSupabase: SupabaseClient<Database>): Promise<Playlist[]> {
+    return playlistRepo(clientSupabase).getAllPlaylists();
   },
 
-  async getPlaylist(playlistId: string): Promise<Playlist> {
-    const { data: playlist, error } = await supabase
-      .from('playlists')
-      .select('*')
-      .eq('id', playlistId)
-      .single();
-    if (error) throw error;
-    return {
-      id: playlist.id,
-      name: playlist.name,
-      description: playlist.description || undefined,
-      createdAt: new Date(playlist.created_at),
-      updatedAt: new Date(playlist.updated_at),
-      songIds: (playlist.song_ids as string[]) || []
-    };
+  async getPlaylist(playlistId: string, clientSupabase: SupabaseClient<Database>): Promise<Playlist> {
+    return playlistRepo(clientSupabase).getPlaylist(playlistId);
   },
 
-  async createPlaylist(name: string, description?: string, songIds: string[] = [], clientSupabase?: any): Promise<Playlist> {
-    const client = clientSupabase || supabase;
-    const { data: { user } } = await client.auth.getUser();
-    if (!user) throw new Error('User must be authenticated to create playlists');
-    const { data, error } = await client
-      .from('playlists')
-      .insert([{ name, description: description || null, user_id: user.id, song_ids: songIds }])
-      .select()
-      .single();
-    if (error) throw error;
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description || undefined,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      songIds: (data.song_ids as string[]) || []
-    };
+  async createPlaylist(name: string, description: string | undefined, songIds: string[] = [], clientSupabase: SupabaseClient<Database>): Promise<Playlist> {
+    return playlistRepo(clientSupabase).createPlaylist({ name, description, songIds });
   },
 
-  async setPlaylistSongs(playlistId: string, songIds: string[]): Promise<Playlist> {
-    const { data, error } = await supabase
-      .from('playlists')
-      .update({ song_ids: songIds, updated_at: new Date().toISOString() })
-      .eq('id', playlistId)
-      .select()
-      .single();
-    if (error) throw error;
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description || undefined,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      songIds: (data.song_ids as string[]) || []
-    };
+  async setPlaylistSongs(playlistId: string, songIds: string[], clientSupabase: SupabaseClient<Database>): Promise<Playlist> {
+    return playlistRepo(clientSupabase).updatePlaylist(playlistId, { songIds });
   },
 
   async createPlaylistFromMedley(
     name: string,
     medley: MedleyResult,
-    description?: string,
-    clientSupabase?: any
+    description: string | undefined,
+    clientSupabase: SupabaseClient<Database>
   ): Promise<Playlist> {
     const isUuid = (value?: string) => !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
     let ids: string[] = medley.songs
@@ -95,9 +37,9 @@ export const playlistService = {
     // If some songs do not have UUID ids (e.g., sample data), try to resolve by title+author
     if (ids.length < medley.songs.length) {
       try {
-        const allResult = await songService.getAllSongs(clientSupabase);
+        const allSongs = await songRepo(clientSupabase).getAllSongs();
         const byKey = new Map<string, string>();
-        for (const s of allResult.songs) {
+        for (const s of allSongs) {
           const key = `${(s.title || '').trim().toLowerCase()}__${(s.author || '').trim().toLowerCase()}`;
           if (isUuid(s.id)) byKey.set(key, s.id);
         }
@@ -118,14 +60,14 @@ export const playlistService = {
         if (isUuid(m.id) || existingIdSet.has(m.id)) continue;
         try {
           const content = renderStructuredSong(m as any, { maxWidth: 80, wordWrap: true, isMobile: false });
-          const created = await songService.createSong({
+          const created = await songRepo(clientSupabase).createSong({
             title: m.title,
             author: m.author || '',
             content,
             folderId: m.folderId,
             key: m.key,
             capo: m.capo
-          }, clientSupabase);
+          });
           if (isUuid(created.id)) {
             ids.push(created.id);
             existingIdSet.add(created.id);
@@ -137,9 +79,7 @@ export const playlistService = {
     }
 
     const uniqueIds = Array.from(new Set(ids));
-    const playlist = await this.createPlaylist(name, description, uniqueIds, clientSupabase);
+    const playlist = await playlistRepo(clientSupabase).createPlaylist({ name, description, songIds: uniqueIds });
     return playlist;
   }
 };
-
-

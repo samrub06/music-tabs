@@ -2,7 +2,8 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { ImportProgress, ImportResult } from '@/lib/services/simplePlaylistImporter';
-import { folderService } from '@/lib/services/folderService';
+import { folderRepo } from '@/lib/services/folderRepo';
+import { supabase } from '@/lib/supabase';
 import { Folder } from '@/types';
 import { useEffect, useState } from 'react';
 
@@ -31,7 +32,8 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
   useEffect(() => {
     const loadFolders = async () => {
       try {
-        const userFolders = await folderService.getAllFolders();
+        const repo = folderRepo(supabase);
+        const userFolders = await repo.getAllFolders();
         setFolders(userFolders);
       } catch (error) {
         console.error('Error loading folders:', error);

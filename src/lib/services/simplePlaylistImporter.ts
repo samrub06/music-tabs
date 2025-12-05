@@ -1,7 +1,9 @@
 import { parsePlaylistWithAI } from './aiParserService';
 import { ScrapedSong, scrapeSongFromUrl, searchUltimateGuitarOnly } from './scraperService';
-import { songService } from './songService';
-import { folderService } from './folderService';
+import { songRepo } from './songRepo';
+import { folderRepo } from './folderRepo';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/db';
 
 export interface ParsedSong {
   title: string;
@@ -130,9 +132,9 @@ export async function importPlaylistFromText(
         // Créer les dossiers et mapper les chansons
         for (const aiFolder of aiFolders) {
           console.log(`📁 Creating folder: ${aiFolder.name} with ${aiFolder.songs.length} songs`);
-          const folder = await folderService.createFolder({ 
+          const folder = await folderRepo(clientSupabase).createFolder({ 
             name: aiFolder.name,
-          }, clientSupabase);
+          });
           console.log(`✅ Folder created with ID: ${folder.id}`);
           
           // Ajouter le dossier aux résultats
@@ -351,9 +353,8 @@ async function importSongToDatabase(
     console.log(`📥 Importing to database: ${scrapedSong.title} by ${scrapedSong.author}`);
     
     // Vérifier si la chanson existe déjà pour cet utilisateur
-    const existingSongs = await songService.searchSongs(
-      `${scrapedSong.title} ${scrapedSong.author}`, 
-      clientSupabase
+    const existingSongs = await songRepo(clientSupabase).searchSongs(
+      `${scrapedSong.title} ${scrapedSong.author}`
     );
     
     const duplicate = existingSongs.find(song => 
@@ -395,7 +396,7 @@ async function importSongToDatabase(
       reviews: newSongData.reviews
     });
     
-    const createdSong = await songService.createSong(newSongData, clientSupabase);
+    const createdSong = await songRepo(clientSupabase).createSong(newSongData);
     console.log(`✅ Successfully imported: ${createdSong.title} (ID: ${createdSong.id})`);
     return 'success';
     

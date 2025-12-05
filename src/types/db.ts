@@ -156,6 +156,7 @@ export interface Database {
           user_id: string
           name: string
           description: string | null
+          song_ids: string[]
           created_at: string
           updated_at: string
         }
@@ -164,6 +165,7 @@ export interface Database {
           user_id: string
           name: string
           description?: string | null
+          song_ids?: string[]
           created_at?: string
           updated_at?: string
         }
@@ -172,56 +174,7 @@ export interface Database {
           user_id?: string
           name?: string
           description?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      playlist_items: {
-        Row: {
-          id: string
-          playlist_id: string
-          original_song_id: string | null
-          order_index: number
-          title: string
-          author: string | null
-          sections: Json
-          key: string | null
-          capo: number | null
-          first_chord: string | null
-          last_chord: string | null
-          song_image_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          playlist_id: string
-          original_song_id?: string | null
-          order_index: number
-          title: string
-          author?: string | null
-          sections?: Json
-          key?: string | null
-          capo?: number | null
-          first_chord?: string | null
-          last_chord?: string | null
-          song_image_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          playlist_id?: string
-          original_song_id?: string | null
-          order_index?: number
-          title?: string
-          author?: string | null
-          sections?: Json
-          key?: string | null
-          capo?: number | null
-          first_chord?: string | null
-          last_chord?: string | null
-          song_image_url?: string | null
+          song_ids?: string[]
           created_at?: string
           updated_at?: string
         }
@@ -243,4 +196,3 @@ export interface Database {
     }
   }
 }
-

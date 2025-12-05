@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createServerClientSupabase } from '@/lib/supabase/server'
-import { songService } from '@/lib/services/songService'
-import { folderService } from '@/lib/services/folderService'
-import { playlistService } from '@/lib/services/playlistService'
+import { songRepo } from '@/lib/services/songRepo'
+import { folderRepo } from '@/lib/services/folderRepo'
+import { playlistRepo } from '@/lib/services/playlistRepo'
 import DashboardClient from './DashboardClient'
 
 export const dynamic = 'force-dynamic'
@@ -17,15 +17,15 @@ export default async function DashboardPage() {
   }
 
   // Fetch data in parallel
-  const [songsResult, folders, playlists] = await Promise.all([
-    songService.getAllSongs(supabase),
-    folderService.getAllFolders(supabase),
-    playlistService.getAllPlaylists(supabase)
+  const [songs, folders, playlists] = await Promise.all([
+    songRepo(supabase).getAllSongs(),
+    folderRepo(supabase).getAllFolders(),
+    playlistRepo(supabase).getAllPlaylists()
   ])
 
   return (
     <DashboardClient 
-      songs={songsResult.songs}
+      songs={songs}
       folders={folders}
       playlists={playlists}
       userEmail={user.email}

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createServerClientSupabase } from '@/lib/supabase/server';
-import { songService } from '@/lib/services/songService';
-import { folderService } from '@/lib/services/folderService';
+import { songRepo } from '@/lib/services/songRepo';
+import { folderRepo } from '@/lib/services/folderRepo';
 import MedleyPageClient from './MedleyPageClient';
 
 export default async function MedleyPage() {
@@ -12,10 +12,10 @@ export default async function MedleyPage() {
     redirect('/');
   }
 
-  const [songsResult, folders] = await Promise.all([
-    songService.getAllSongs(supabase),
-    folderService.getAllFolders(supabase)
+  const [songs, folders] = await Promise.all([
+    songRepo(supabase).getAllSongs(),
+    folderRepo(supabase).getAllFolders()
   ]);
 
-  return <MedleyPageClient songs={songsResult.songs} folders={folders} />;
+  return <MedleyPageClient songs={songs} folders={folders} />;
 }

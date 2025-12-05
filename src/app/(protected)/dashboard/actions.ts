@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import { songService } from '@/lib/services/songService'
 import { folderService } from '@/lib/services/folderService'
 import { songRepo } from '@/lib/services/songRepo'
+import { folderRepo } from '@/lib/services/folderRepo'
 import { playlistService } from '@/lib/services/playlistService'
 import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
@@ -65,20 +66,23 @@ export async function deleteSongAction(id: string) {
 export async function addFolderAction(name: string) {
   const { name: validatedName } = createFolderSchema.parse({ name })
   const supabase = await createServerClientSupabase()
-  await folderService.createFolder({ name: validatedName }, supabase)
+  const repo = folderRepo(supabase as any)
+  await repo.createFolder({ name: validatedName })
   revalidatePath('/dashboard')
 }
 
 export async function renameFolderAction(id: string, name: string) {
   const { name: validatedName } = updateFolderSchema.parse({ name })
   const supabase = await createServerClientSupabase()
-  await folderService.updateFolder(id, { name: validatedName }, supabase)
+  const repo = folderRepo(supabase as any)
+  await repo.updateFolder(id, { name: validatedName })
   revalidatePath('/dashboard')
 }
 
 export async function deleteFolderAction(id: string) {
   const supabase = await createServerClientSupabase()
-  await folderService.deleteFolder(id, supabase)
+  const repo = folderRepo(supabase as any)
+  await repo.deleteFolder(id)
   revalidatePath('/dashboard')
 }
 

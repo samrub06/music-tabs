@@ -190,5 +190,46 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     if (error) {
       throw error
     }
+  },
+
+  async getAllSongs(): Promise<Song[]> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    let query = client
+      .from('songs')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (user) {
+      query = query.eq('user_id', user.id)
+    } else {
+      return []
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+
+    return (data || []).map(mapDbSongToDomain)
+  },
+
+  async searchSongs(query: string): Promise<Song[]> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    let dbQuery = client
+      .from('songs')
+      .select('*')
+      .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+      .order('created_at', { ascending: false })
+
+    if (user) {
+      dbQuery = dbQuery.eq('user_id', user.id)
+    } else {
+      return []
+    }
+
+    const { data, error } = await dbQuery
+    if (error) throw error
+
+    return (data || []).map(mapDbSongToDomain)
   }
 })
