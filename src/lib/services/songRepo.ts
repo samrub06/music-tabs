@@ -2,15 +2,25 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { NewSongData, Song, SongEditData, SongSection } from '@/types'
 import type { Database } from '@/types/db'
 import { parseTextToStructuredSong } from '@/utils/songParser'
+import { structuredSongToText } from '@/utils/structuredToText'
 
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
+  // Reconstruct content from sections since it's not stored in DB anymore
+  const sections = (dbSong.sections as unknown as SongSection[]) || []
+  
+  // Create a temporary song object to pass to structuredSongToText
+  // We only need sections for the conversion
+  const tempSong = { sections } as Song
+  const content = structuredSongToText(tempSong)
+
   return {
     ...dbSong,
+    content, // Add the reconstructed content
     folderId: dbSong.folder_id || undefined,
     createdAt: new Date(dbSong.created_at),
     updatedAt: new Date(dbSong.updated_at),
-    sections: (dbSong.sections as unknown as SongSection[]) || [],
+    sections: sections,
     reviews: dbSong.reviews || undefined,
     capo: dbSong.capo || undefined,
     key: dbSong.key || undefined,
@@ -52,7 +62,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         user_id: user?.id!, // RLS should handle this but for now we rely on explicit user check if needed, or simple insert
         title: songData.title,
         author: songData.author,
-        content: songData.content,
+        // content: songData.content, // Removed as it's not in DB schema
         folder_id: songData.folderId,
         format: 'structured',
         sections: structuredSong.sections as unknown as Database['public']['Tables']['songs']['Insert']['sections'],
@@ -102,7 +112,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const updateData: Database['public']['Tables']['songs']['Update'] = {
       title: updates.title,
       author: updates.author,
-      content: updates.content, // ensure content is updated too
+      // content: updates.content, // Removed as it's not in DB schema
       folder_id: updates.folderId,
       updated_at: new Date().toISOString(),
       version: updates.version ?? null,

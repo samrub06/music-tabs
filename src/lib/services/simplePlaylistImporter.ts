@@ -1,5 +1,5 @@
 import { parsePlaylistWithAI } from './aiParserService';
-import { ScrapedSong, scrapeSongFromUrl, searchUltimateGuitarOnly } from './scraperService';
+import { ScrapedSong, scrapeSongFromUrl, searchUltimateGuitarOnly, SearchResult } from './scraperService';
 import { songRepo } from './songRepo';
 import { folderRepo } from './folderRepo';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -33,6 +33,91 @@ export interface ImportProgress {
   total: number;
   currentSong: string;
   status: 'idle' | 'parsing' | 'searching' | 'importing' | 'completed' | 'error';
+}
+
+/**
+ * Traite une chanson individuelle : recherche, scraping et import
+ */
+async function processSong(
+  song: ParsedSong,
+  folderMap: Map<string, string>,
+  targetFolderId: string | undefined,
+  userId: string,
+  clientSupabase: any
+): Promise<{ 
+  status: 'success' | 'failed' | 'duplicate'; 
+  error?: string; 
+  title: string; 
+  artist: string 
+}> {
+  const searchQuery = `${song.artist} ${song.title}`;
+  console.log(`🎵 Processing: "${song.title}" by "${song.artist}"`);
+
+  try {
+    // 1. Chercher sur Ultimate Guitar
+    const searchResults = await searchUltimateGuitarOnly(searchQuery);
+    
+    if (searchResults.length === 0) {
+      return { status: 'failed', error: 'No results found', title: song.title, artist: song.artist };
+    }
+
+    // Prendre la première version
+    const bestVersion = searchResults[0];
+    
+    // 2. Scraper le contenu AVEC les métadonnées de recherche (FIX: pass bestVersion)
+    const scrapedSong = await scrapeSongFromUrl(bestVersion.url, bestVersion);
+    
+    if (!scrapedSong) {
+      return { status: 'failed', error: 'Failed to scrape content', title: song.title, artist: song.artist };
+    }
+
+    // 3. Construire l'objet final
+    const finalSong = {
+      title: song.title, 
+      author: song.artist,
+      content: scrapedSong.content,
+      source: 'Ultimate Guitar',
+      url: bestVersion.url,
+      reviews: scrapedSong.reviews,
+      capo: scrapedSong.capo,
+      key: scrapedSong.key,
+      rating: scrapedSong.rating,
+      difficulty: scrapedSong.difficulty,
+      version: scrapedSong.version,
+      versionDescription: scrapedSong.versionDescription,
+      artistUrl: scrapedSong.artistUrl,
+      artistImageUrl: scrapedSong.artistImageUrl,
+      songImageUrl: scrapedSong.songImageUrl,
+      sourceUrl: scrapedSong.url,
+      sourceSite: scrapedSong.source
+    };
+
+    // 4. Déterminer le dossier
+    const songKey = `${song.title}|${song.artist}`;
+    const songFolderId = folderMap.get(songKey) || targetFolderId;
+
+    // 5. Importer en DB
+    const importStatus = await importSongToDatabase(
+      finalSong, 
+      userId, 
+      songFolderId, 
+      clientSupabase
+    );
+
+    if (importStatus === 'error') {
+      return { status: 'failed', error: 'Database import failed', title: song.title, artist: song.artist };
+    }
+
+    return { status: importStatus, title: song.title, artist: song.artist };
+
+  } catch (error) {
+    return { 
+      status: 'failed', 
+      error: error instanceof Error ? error.message : 'Unknown error', 
+      title: song.title, 
+      artist: song.artist 
+    };
+  }
 }
 
 /**
@@ -116,8 +201,8 @@ export async function importPlaylistFromText(
     if (useAiOrganization) {
       console.log('📁 Step 2: Starting AI folder organization...');
       onProgress?.({
-        current: 30,
-        total: 100,
+        current: 0,
+        total: validSongs.length,
         currentSong: 'Organisation IA des dossiers...',
         status: 'parsing'
       });
@@ -161,152 +246,64 @@ export async function importPlaylistFromText(
       }
     }
 
-    // Étape 3: Pour chaque chanson, chercher la meilleure version sur Ultimate Guitar
-    console.log(`🎵 Step 3: Processing ${validSongs.length} songs...`);
-    for (let i = 0; i < validSongs.length; i++) {
-      const song = validSongs[i];
-      const searchQuery = `${song.artist} ${song.title}`;
-      console.log(`🎵 Processing song ${i + 1}/${validSongs.length}: "${song.title}" by "${song.artist}"`);
+    // Étape 3: Traitement par lots (Batching)
+    console.log(`🎵 Step 3: Processing ${validSongs.length} songs with batching...`);
+    const BATCH_SIZE = 3; // Limite de concurrence
+    let processedCount = 0;
+
+    for (let i = 0; i < validSongs.length; i += BATCH_SIZE) {
+      const batch = validSongs.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i/BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(validSongs.length/BATCH_SIZE);
+      
+      console.log(`📦 Processing batch ${batchNum}/${totalBatches} (${batch.length} songs)`);
       
       onProgress?.({
-        current: i,
+        current: processedCount,
         total: validSongs.length,
-        currentSong: `Recherche (${i + 1}/${validSongs.length}): ${song.title} par ${song.artist}`,
-        status: 'searching'
+        currentSong: `Traitement lot ${batchNum}/${totalBatches}...`,
+        status: 'importing'
       });
 
-      try {
-        // Chercher sur Ultimate Guitar
-        console.log(`🔍 Searching Ultimate Guitar for: "${searchQuery}"`);
-        const searchResults = await searchUltimateGuitarOnly(searchQuery);
-        console.log(`🔍 Search results: ${searchResults.length} versions found`);
-        
-        if (searchResults.length === 0) {
-          console.log(`❌ No results found for: "${searchQuery}"`);
-          result.failed++;
-          result.errors.push(`No results found for: ${searchQuery}`);
-          result.songs.push({
-            title: song.title,
-            artist: song.artist,
-            status: 'failed',
-            error: 'No results found'
-          });
-          continue;
-        }
+      // Exécuter le lot en parallèle
+      const batchResults = await Promise.all(batch.map(song => 
+        processSong(song, folderMap, targetFolderId, userId, clientSupabase)
+      ));
 
-        // Prendre la première version (déjà triée par nombre de reviews)
-        const bestVersion = searchResults[0];
-        
-        onProgress?.({
-          current: i,
-          total: validSongs.length,
-          currentSong: `Import (${i + 1}/${validSongs.length}): ${song.title} (${bestVersion.reviews} avis)`,
-          status: 'importing'
-        });
-
-        // Scraper le contenu de cette version
-        const scrapedSong = await scrapeSongFromUrl(bestVersion.url);
-        
-        if (!scrapedSong) {
-          result.failed++;
-          result.errors.push(`Failed to scrape content for: ${searchQuery}`);
-          result.songs.push({
-            title: song.title,
-            artist: song.artist,
-            status: 'failed',
-            error: 'Failed to scrape content'
-          });
-          continue;
-        }
-
-        // Créer la chanson finale en priorisant les données de la playlist
-        // IMPORTANT: Passer TOUTES les métadonnées scrappées
-        const finalSong = {
-          title: song.title, // Priorité absolue au titre de la playlist
-          author: song.artist, // Priorité absolue à l'artiste de la playlist
-          content: scrapedSong.content, // Contenu scrappé depuis Ultimate Guitar
-          source: 'Ultimate Guitar',
-          url: bestVersion.url,
-          // Passer toutes les métadonnées scrappées
-          reviews: scrapedSong.reviews,
-          capo: scrapedSong.capo,
-          key: scrapedSong.key,
-          rating: scrapedSong.rating,
-          difficulty: scrapedSong.difficulty,
-          version: scrapedSong.version,
-          versionDescription: scrapedSong.versionDescription,
-          artistUrl: scrapedSong.artistUrl,
-          artistImageUrl: scrapedSong.artistImageUrl,
-          songImageUrl: scrapedSong.songImageUrl,
-          sourceUrl: scrapedSong.url,
-          sourceSite: scrapedSong.source
-        };
-
-        console.log(`✅ Final song data: "${finalSong.title}" by "${finalSong.author}"`);
-        console.log(`📊 Metadata: key=${finalSong.key}, capo=${finalSong.capo}, rating=${finalSong.rating}, difficulty=${finalSong.difficulty}`);
-
-        // Déterminer le dossier de destination
-        const songKey = `${song.title}|${song.artist}`;
-        const songFolderId = folderMap.get(songKey) || targetFolderId;
-        
-        if (songFolderId && folderMap.has(songKey)) {
-          console.log(`📁 Using AI folder for "${song.title}" by "${song.artist}"`);
-        } else if (targetFolderId) {
-          console.log(`📁 Using target folder for "${song.title}" by "${song.artist}"`);
-        } else {
-          console.log(`📁 Using root folder for "${song.title}" by "${song.artist}"`);
-        }
-
-        // Importer dans la base de données
-        console.log(`💾 Importing song to database with folder ID: ${songFolderId || 'root'}`);
-        const importStatus = await importSongToDatabase(
-          finalSong, 
-          userId, 
-          songFolderId, 
-          clientSupabase
-        );
-        console.log(`💾 Import result: ${importStatus}`);
-
-        if (importStatus === 'success') {
-          console.log(`✅ Successfully imported: "${song.title}" by "${song.artist}"`);
+      // Agréger les résultats
+      for (const res of batchResults) {
+        processedCount++;
+        if (res.status === 'success') {
           result.success++;
-          result.songs.push({
-            title: song.title,
-            artist: song.artist,
-            status: 'success'
-          });
-        } else if (importStatus === 'duplicate') {
-          console.log(`⚠️ Duplicate found: "${song.title}" by "${song.artist}"`);
+          console.log(`✅ Imported: ${res.title}`);
+        } else if (res.status === 'duplicate') {
           result.duplicates++;
-          result.songs.push({
-            title: song.title,
-            artist: song.artist,
-            status: 'duplicate'
-          });
+          console.log(`⚠️ Duplicate: ${res.title}`);
         } else {
-          console.log(`❌ Failed to import: "${song.title}" by "${song.artist}"`);
           result.failed++;
-          result.errors.push(`Database import failed for: ${searchQuery}`);
-          result.songs.push({
-            title: song.title,
-            artist: song.artist,
-            status: 'failed',
-            error: 'Database import failed'
-          });
+          result.errors.push(`${res.title}: ${res.error}`);
+          console.error(`❌ Failed: ${res.title} - ${res.error}`);
         }
-
-        // Délai entre les imports pour être respectueux
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-      } catch (error) {
-        result.failed++;
-        result.errors.push(`Error processing ${song.title}: ${error}`);
+        
         result.songs.push({
-          title: song.title,
-          artist: song.artist,
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          title: res.title,
+          artist: res.artist,
+          status: res.status,
+          error: res.error
         });
+      }
+
+      // Update progress after batch
+      onProgress?.({
+        current: processedCount,
+        total: validSongs.length,
+        currentSong: `Importé: ${processedCount}/${validSongs.length}`,
+        status: 'importing'
+      });
+
+      // Petit délai entre les lots pour éviter le rate limiting
+      if (i + BATCH_SIZE < validSongs.length) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
     }
 
@@ -327,6 +324,7 @@ export async function importPlaylistFromText(
     });
 
   } catch (error) {
+    console.error('Global import error:', error);
     onProgress?.({
       current: 0,
       total: 0,
@@ -405,4 +403,3 @@ async function importSongToDatabase(
     return 'error';
   }
 }
-
