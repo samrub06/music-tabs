@@ -38,7 +38,8 @@ Règles importantes:
 - Le format est généralement: "Titre - Artiste" ou "Titre par Artiste"
 - Parfois il y a des versions comme "(ver 2)" qu'il faut ignorer
 - Les dates et types (Chords, Official) ne sont pas des titres
-- Retourne UNIQUEMENT un JSON valide avec ce format:
+- Retourne UNIQUEMENT du JSON valide, SANS balises markdown (comme \`\`\`json).
+- Format attendu:
 {
   "songs": [
     {"title": "Titre de la chanson", "artist": "Nom de l'artiste", "confidence": 0.95}
@@ -46,9 +47,7 @@ Règles importantes:
 }
 
 Texte à analyser:
-${text}
-
-JSON:`;
+${text}`;
 
     const response = await fetch(AI_CONFIG.OPENAI_API_URL, {
       method: 'POST',
@@ -61,7 +60,7 @@ JSON:`;
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en musique spécialisé dans l\'analyse de playlists. Tu retournes toujours du JSON valide.'
+            content: 'Tu es un expert en musique spécialisé dans l\'analyse de playlists. Tu retournes uniquement du JSON valide sans markdown.'
           },
           {
             role: 'user',
@@ -69,7 +68,8 @@ JSON:`;
           }
         ],
         temperature: AI_CONFIG.TEMPERATURE,
-        max_tokens: AI_CONFIG.MAX_TOKENS
+        max_tokens: AI_CONFIG.MAX_TOKENS,
+        response_format: { type: "json_object" } // Force JSON output for compatible models
       })
     });
 
@@ -78,22 +78,46 @@ JSON:`;
     }
 
     const data = await response.json();
-    const content = data.choices[0]?.message?.content;
+    let content = data.choices[0]?.message?.content;
 
     if (!content) {
       throw new Error('No content received from OpenAI');
     }
 
-    // Extraire le JSON de la réponse
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No JSON found in OpenAI response');
+    // Nettoyage du contenu : supprimer les blocs markdown ```json ... ```
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    
+    // Chercher le début et la fin du JSON
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
+    
+    if (firstBrace === -1 || lastBrace === -1) {
+      throw new Error('No JSON object found in OpenAI response');
     }
+    
+    const jsonString = content.substring(firstBrace, lastBrace + 1);
 
-    const parsedData = JSON.parse(jsonMatch[0]);
+    let parsedData;
+    try {
+      parsedData = JSON.parse(jsonString);
+    } catch (e) {
+      console.error('JSON Parse Error:', e);
+      // Tentative de récupération si JSON tronqué (simple heuristic)
+      if (e instanceof SyntaxError && e.message.includes('end of JSON input')) {
+        // Try to close the array and object
+        try {
+            const fixedJson = jsonString.replace(/,?\s*$/, '') + ']}';
+            parsedData = JSON.parse(fixedJson);
+        } catch (e2) {
+             throw new Error(`Failed to parse JSON even after fix attempt: ${(e as Error).message}`);
+        }
+      } else {
+         throw new Error(`Failed to parse JSON from OpenAI: ${(e as Error).message}`);
+      }
+    }
     
     if (!parsedData.songs || !Array.isArray(parsedData.songs)) {
-      throw new Error('Invalid JSON structure from OpenAI');
+      throw new Error('Invalid JSON structure from OpenAI: missing "songs" array');
     }
 
     console.log(`🤖 AI parsed ${parsedData.songs.length} songs`);
