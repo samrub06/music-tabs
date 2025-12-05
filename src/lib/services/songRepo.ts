@@ -1,8 +1,38 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { NewSongData, Song, SongEditData } from '@/types'
+import type { NewSongData, Song, SongEditData, SongSection } from '@/types'
+import type { Database } from '@/types/db'
 import { parseTextToStructuredSong } from '@/utils/songParser'
 
-export const songRepo = (client: SupabaseClient) => ({
+// Helper to map DB result to Domain Entity
+function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
+  return {
+    ...dbSong,
+    folderId: dbSong.folder_id || undefined,
+    createdAt: new Date(dbSong.created_at),
+    updatedAt: new Date(dbSong.updated_at),
+    sections: (dbSong.sections as unknown as SongSection[]) || [],
+    reviews: dbSong.reviews || undefined,
+    capo: dbSong.capo || undefined,
+    key: dbSong.key || undefined,
+    soundingKey: dbSong.sounding_key || undefined,
+    firstChord: dbSong.first_chord || undefined,
+    lastChord: dbSong.last_chord || undefined,
+    chordProgression: dbSong.chord_progression || undefined,
+    version: dbSong.version || undefined,
+    versionDescription: dbSong.version_description || undefined,
+    rating: dbSong.rating || undefined,
+    difficulty: dbSong.difficulty || undefined,
+    artistUrl: dbSong.artist_url || undefined,
+    artistImageUrl: dbSong.artist_image_url || undefined,
+    songImageUrl: dbSong.song_image_url || undefined,
+    sourceUrl: dbSong.source_url || undefined,
+    sourceSite: dbSong.source_site || undefined,
+    tabId: dbSong.tab_id || undefined,
+    viewCount: dbSong.view_count || 0
+  } as Song
+}
+
+export const songRepo = (client: SupabaseClient<Database>) => ({
   async createSong(songData: NewSongData): Promise<Song> {
     const { data: { user } } = await client.auth.getUser()
 
@@ -19,12 +49,13 @@ export const songRepo = (client: SupabaseClient) => ({
     const { data, error } = await client
       .from('songs')
       .insert([{
-        user_id: user?.id || null,
+        user_id: user?.id!, // RLS should handle this but for now we rely on explicit user check if needed, or simple insert
         title: songData.title,
         author: songData.author,
+        content: songData.content,
         folder_id: songData.folderId,
         format: 'structured',
-        sections: structuredSong.sections,
+        sections: structuredSong.sections as unknown as Database['public']['Tables']['songs']['Insert']['sections'],
         reviews: songData.reviews ?? 0,
         capo: songData.capo ?? null,
         key: songData.key ?? structuredSong.firstChord,
@@ -48,22 +79,7 @@ export const songRepo = (client: SupabaseClient) => ({
       throw error
     }
 
-    return {
-      ...data,
-      folderId: (data as any).folder_id,
-      createdAt: new Date((data as any).created_at),
-      updatedAt: new Date((data as any).updated_at),
-      version: (data as any).version,
-      versionDescription: (data as any).version_description,
-      rating: (data as any).rating,
-      difficulty: (data as any).difficulty,
-      artistUrl: (data as any).artist_url,
-      artistImageUrl: (data as any).artist_image_url,
-      songImageUrl: (data as any).song_image_url,
-      sourceUrl: (data as any).source_url,
-      sourceSite: (data as any).source_site,
-      tabId: (data as any).tab_id
-    } as unknown as Song
+    return mapDbSongToDomain(data)
   },
 
   async updateSong(id: string, updates: SongEditData): Promise<Song> {
@@ -83,9 +99,10 @@ export const songRepo = (client: SupabaseClient) => ({
       sections = structuredSong.sections
     }
 
-    const updateData: any = {
+    const updateData: Database['public']['Tables']['songs']['Update'] = {
       title: updates.title,
       author: updates.author,
+      content: updates.content, // ensure content is updated too
       folder_id: updates.folderId,
       updated_at: new Date().toISOString(),
       version: updates.version ?? null,
@@ -114,22 +131,7 @@ export const songRepo = (client: SupabaseClient) => ({
       throw error
     }
 
-    return {
-      ...data,
-      folderId: (data as any).folder_id,
-      createdAt: new Date((data as any).created_at),
-      updatedAt: new Date((data as any).updated_at),
-      version: (data as any).version,
-      versionDescription: (data as any).version_description,
-      rating: (data as any).rating,
-      difficulty: (data as any).difficulty,
-      artistUrl: (data as any).artist_url,
-      artistImageUrl: (data as any).artist_image_url,
-      songImageUrl: (data as any).song_image_url,
-      sourceUrl: (data as any).source_url,
-      sourceSite: (data as any).source_site,
-      tabId: (data as any).tab_id
-    } as unknown as Song
+    return mapDbSongToDomain(data)
   },
 
   async updateSongFolder(id: string, folderId?: string): Promise<Song> {
@@ -141,7 +143,7 @@ export const songRepo = (client: SupabaseClient) => ({
     const { data, error } = await client
       .from('songs')
       .update({
-        folder_id: folderId,
+        folder_id: folderId || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -152,21 +154,7 @@ export const songRepo = (client: SupabaseClient) => ({
       throw error
     }
 
-    return {
-      ...data,
-      folderId: (data as any).folder_id,
-      createdAt: new Date((data as any).created_at),
-      updatedAt: new Date((data as any).updated_at),
-      version: (data as any).version,
-      versionDescription: (data as any).version_description,
-      rating: (data as any).rating,
-      difficulty: (data as any).difficulty,
-      artistUrl: (data as any).artist_url,
-      artistImageUrl: (data as any).artist_image_url,
-      songImageUrl: (data as any).song_image_url,
-      sourceUrl: (data as any).source_url,
-      sourceSite: (data as any).source_site
-    } as unknown as Song
+    return mapDbSongToDomain(data)
   },
 
   async deleteSong(id: string): Promise<void> {
@@ -204,5 +192,3 @@ export const songRepo = (client: SupabaseClient) => ({
     }
   }
 })
-
-

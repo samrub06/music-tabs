@@ -5,6 +5,8 @@ import { folderService } from '@/lib/services/folderService'
 import { playlistService } from '@/lib/services/playlistService'
 import DashboardClient from './DashboardClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const supabase = await createServerClientSupabase()
   const { data: { user } } = await supabase.auth.getUser()
