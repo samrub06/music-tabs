@@ -94,3 +94,43 @@ export async function createPlaylistFromMedleyAction(name: string, medley: Medle
   return playlist
 }
 
+export async function cloneSongAction(songId: string, targetFolderId?: string) {
+  const supabase = await createServerClientSupabase()
+  const repo = songRepo(supabase as any)
+  
+  // 1. Fetch source song (assuming RLS allows reading public/trending songs)
+  const sourceSong = await repo.getSong(songId)
+  
+  if (!sourceSong) {
+    throw new Error('Song not found')
+  }
+  
+  // 2. Create new song for current user
+  const newSongData: NewSongData = {
+    title: sourceSong.title,
+    author: sourceSong.author,
+    content: sourceSong.content,
+    folderId: targetFolderId,
+    reviews: sourceSong.reviews,
+    capo: sourceSong.capo,
+    key: sourceSong.key,
+    soundingKey: sourceSong.soundingKey,
+    firstChord: sourceSong.firstChord,
+    lastChord: sourceSong.lastChord,
+    chordProgression: sourceSong.chordProgression,
+    version: sourceSong.version,
+    versionDescription: sourceSong.versionDescription,
+    rating: sourceSong.rating,
+    difficulty: sourceSong.difficulty,
+    artistUrl: sourceSong.artistUrl,
+    artistImageUrl: sourceSong.artistImageUrl,
+    songImageUrl: sourceSong.songImageUrl,
+    sourceUrl: sourceSong.sourceUrl,
+    sourceSite: sourceSong.sourceSite,
+    tabId: sourceSong.tabId
+  }
+  
+  const created = await repo.createSong(newSongData)
+  revalidatePath('/dashboard')
+  return created
+}

@@ -61,10 +61,9 @@ export interface Database {
       songs: {
         Row: {
           id: string
-          user_id: string
+          user_id: string | null
           title: string
           author: string | null
-          // content: string  <-- Removed
           folder_id: string | null
           created_at: string
           updated_at: string
@@ -88,13 +87,14 @@ export interface Database {
           view_count: number | null
           format: string | null
           sections: Json | null
+          is_public: boolean
+          is_trending: boolean
         }
         Insert: {
           id?: string
-          user_id: string
+          user_id?: string | null
           title: string
           author?: string | null
-          // content: string <-- Removed
           folder_id?: string | null
           created_at?: string
           updated_at?: string
@@ -118,13 +118,14 @@ export interface Database {
           view_count?: number | null
           format?: string | null
           sections?: Json | null
+          is_public?: boolean
+          is_trending?: boolean
         }
         Update: {
           id?: string
-          user_id?: string
+          user_id?: string | null
           title?: string
           author?: string | null
-          // content?: string <-- Removed
           folder_id?: string | null
           created_at?: string
           updated_at?: string
@@ -148,6 +149,8 @@ export interface Database {
           view_count?: number | null
           format?: string | null
           sections?: Json | null
+          is_public?: boolean
+          is_trending?: boolean
         }
       }
       playlists: {

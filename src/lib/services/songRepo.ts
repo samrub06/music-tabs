@@ -80,13 +80,30 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         song_image_url: songData.songImageUrl ?? null,
         source_url: songData.sourceUrl ?? null,
         source_site: songData.sourceSite ?? null,
-        tab_id: songData.tabId ?? null
+        tab_id: songData.tabId ?? null,
+        is_trending: false, // Default for user created songs
+        is_public: false    // Default for user created songs
       }])
       .select()
       .single()
 
     if (error) {
       throw error
+    }
+
+    return mapDbSongToDomain(data)
+  },
+
+  async getSong(id: string): Promise<Song | null> {
+    const { data, error } = await client
+      .from('songs')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching song:', error)
+      return null
     }
 
     return mapDbSongToDomain(data)
@@ -222,6 +239,19 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return (data || []).map(mapDbSongToDomain)
   },
 
+  async getTrendingSongs(): Promise<Song[]> {
+    const { data, error } = await client
+      .from('songs')
+      .select('*')
+      .eq('is_trending', true)
+      .order('created_at', { ascending: false }) // Ou un autre critère de tri si dispo (ex: rating)
+      .limit(50)
+
+    if (error) throw error
+
+    return (data || []).map(mapDbSongToDomain)
+  },
+
   async searchSongs(query: string): Promise<Song[]> {
     const { data: { user } } = await client.auth.getUser()
     
@@ -234,6 +264,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     if (user) {
       dbQuery = dbQuery.eq('user_id', user.id)
     } else {
+      // Si pas user, on peut chercher dans les chansons publiques ? 
+      // Pour l'instant on garde le comportement existant (vide si pas user)
       return []
     }
 

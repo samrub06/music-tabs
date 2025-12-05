@@ -10,7 +10,6 @@ export function parseTextToStructuredSong(
   capo?: number,
   key?: string
 ): StructuredSong {
-  debugger;
   const lines = content.split('\n');
   const sections: SongSection[] = [];
   let currentSection: SongSection | null = null;

@@ -10,6 +10,7 @@ Une application moderne de gestion de partitions et tablatures musicales constru
 - **Import/Export** : Importez des playlists depuis MyTabs (Ultimate Guitar) avec organisation IA
 - **Synchronisation cloud** : Toutes vos données sont sauvegardées dans Supabase avec authentification
 - **Chansons publiques** : Partagez vos chansons publiquement (optionnel)
+- **Tendances & Explore** : Découvrez les chansons populaires du moment (Ultimate Guitar)
 
 ### 🎵 Visualisation des Chansons
 - **Interface responsive** : Optimisée pour desktop et mobile
@@ -52,12 +53,16 @@ Créez un fichier `.env.local` :
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_for_cron_jobs
+CRON_SECRET=your_secret_for_cron_protection
+OPENAI_API_KEY=your_openai_key_for_ai_features
 ```
 
 4. **Configurer la base de données**
 Exécutez les migrations SQL dans le dossier `db/` dans votre projet Supabase :
 - `db/supabase-setup.sql` (schéma de base)
 - `db/fix-public-songs-rls.sql` (policies RLS)
+- `db/add-is-trending-field.sql` (support des tendances)
 
 5. **Démarrer en mode développement**
 ```bash
@@ -73,6 +78,24 @@ npm run build    # Build de production
 npm run start    # Démarrage du serveur de production
 npm run lint     # Vérification ESLint
 ```
+
+## 🔄 Mise à jour des Tendances (Cron Job)
+
+L'application récupère automatiquement les chansons tendances depuis Ultimate Guitar via une tâche planifiée (Cron).
+
+**Lancer manuellement (Local) :**
+```bash
+npx tsx scripts/test-trending.ts
+```
+
+**Via l'API (Production) :**
+```bash
+curl -X GET https://votre-site.vercel.app/api/cron/update-trending \
+  -H "Authorization: Bearer VOTRE_CRON_SECRET"
+```
+
+**Configuration Vercel :**
+La tâche est configurée dans `vercel.json` pour s'exécuter quotidiennement à minuit.
 
 ## 🛠️ Technologies Utilisées
 
