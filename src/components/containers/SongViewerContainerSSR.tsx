@@ -10,6 +10,7 @@ import { useAutoScroll } from '@/lib/hooks/useAutoScroll';
 import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
 import { songService } from '@/lib/services/songService';
+import { supabase } from '@/lib/supabase';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -51,7 +52,7 @@ export default function SongViewerContainerSSR({
   useEffect(() => {
     const incrementViewCount = async () => {
       try {
-        await songService.incrementViewCount(song.id);
+        await songService.incrementViewCount(song.id, supabase);
         console.log('View count incremented for song:', song.id);
       } catch (error) {
         console.error('Failed to increment view count:', error);

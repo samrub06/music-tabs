@@ -1,6 +1,5 @@
 import type { Folder, NewSongData, Song, SongEditData } from '@/types';
 import { parseTextToStructuredSong } from '@/utils/songParser';
-import { supabase } from '../supabase';
 
 // Service pour les chansons
 export const songService = {
@@ -8,7 +7,10 @@ export const songService = {
   // Si connecté : uniquement les chansons de l'utilisateur
   // Si non connecté : uniquement les chansons publiques (user_id = null)
   async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 50): Promise<{ songs: Song[], total: number }> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     const { data: { user } } = await client.auth.getUser();
     
     let baseQuery = client
@@ -55,7 +57,10 @@ export const songService = {
 
   // Récupérer une chanson par ID
   async getSongById(id: string, clientSupabase?: any): Promise<Song | null> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     const { data, error } = await client
       .from('songs')
       .select('*')
@@ -88,8 +93,10 @@ export const songService = {
 
   // Créer une nouvelle chanson
   async createSong(songData: NewSongData, clientSupabase?: any): Promise<Song> {
-    // Utiliser le client Supabase fourni ou le client par défaut
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     
     // Récupérer l'utilisateur (peut être null si non connecté)
     const { data: { user } } = await client.auth.getUser();
@@ -159,7 +166,10 @@ export const songService = {
 
   // Mettre à jour une chanson
   async updateSong(id: string, updates: SongEditData, clientSupabase?: any): Promise<Song> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     // Vérifier que l'utilisateur est connecté
     const { data: { user } } = await client.auth.getUser();
     
@@ -234,7 +244,10 @@ export const songService = {
 
   // Mettre à jour seulement le dossier d'une chanson
   async updateSongFolder(id: string, folderId: string | undefined, clientSupabase?: any): Promise<Song> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     // Vérifier que l'utilisateur est connecté
     const { data: { user } } = await client.auth.getUser();
     
@@ -279,7 +292,10 @@ export const songService = {
 
   // Incrémenter le compteur de vues d'une chanson
   async incrementViewCount(songId: string, clientSupabase?: any): Promise<void> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     const { error } = await client.rpc('increment_view_count', {
       song_id: songId
     });
@@ -292,7 +308,10 @@ export const songService = {
 
   // Supprimer une chanson
   async deleteSong(id: string, clientSupabase?: any): Promise<void> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     // Vérifier que l'utilisateur est connecté
     const { data: { user } } = await client.auth.getUser();
     
@@ -313,7 +332,10 @@ export const songService = {
 
   // Supprimer plusieurs chansons
    async deleteSongs(ids: string[], clientSupabase?: any): Promise<void> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     // Vérifier que l'utilisateur est connecté
     const { data: { user } } = await client.auth.getUser();
     
@@ -338,7 +360,10 @@ export const songService = {
 
   // Supprimer toutes les chansons de l'utilisateur
   async deleteAllSongs(clientSupabase?: any): Promise<void> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     // Vérifier que l'utilisateur est connecté
     const { data: { user } } = await client.auth.getUser();
     
@@ -359,7 +384,10 @@ export const songService = {
 
   // Rechercher des chansons
   async searchSongs(query: string, clientSupabase?: any): Promise<Song[]> {
-    const client = clientSupabase || supabase;
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
     const { data, error } = await client
       .from('songs')
       .select('*')
@@ -388,132 +416,5 @@ export const songService = {
       sourceSite: song.source_site,
       tabId: song.tab_id
     })) || [];
-  }
-};
-
-// Service pour les dossiers
-export const folderService = {
-  // Récupérer tous les dossiers
-  // Si connecté : uniquement les dossiers de l'utilisateur
-  // Si non connecté : uniquement les dossiers publics (user_id = null)
-  async getAllFolders(clientSupabase?: any): Promise<Folder[]> {
-    const client = clientSupabase || supabase;
-    const { data: { user } } = await client.auth.getUser();
-    
-    let query = client
-      .from('folders')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    // Si non connecté, récupérer uniquement les dossiers publics (sans user_id)
-    if (!user) {
-      query = query.is('user_id', null);
-    } else {
-      // Si connecté, récupérer uniquement les dossiers de l'utilisateur
-      query = query.eq('user_id', user.id);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching folders:', error);
-      throw error;
-    }
-    
-    const mappedFolders = data?.map((folder: any) => ({
-      ...folder,
-      createdAt: new Date(folder.created_at),
-      updatedAt: new Date(folder.updated_at)
-    })) || [];
-    
-    return mappedFolders;
-  },
-
-  // Créer un nouveau dossier  
-  async createFolder(folderData: Omit<Folder, 'id' | 'createdAt' | 'updatedAt'>, clientSupabase?: any): Promise<Folder> {
-    // Utiliser le client Supabase fourni ou le client par défaut
-    const client = clientSupabase || supabase;
-    
-    // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await client.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to create folders');
-    }
-
-    const { data, error } = await client
-      .from('folders')
-      .insert([{
-        user_id: user.id, // Ajouter user_id
-        name: folderData.name,
-        parent_id: folderData.parentId
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating folder:', error);
-      throw error;
-    }
-
-    return {
-      ...data,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
-    };
-  },
-
-  // Mettre à jour un dossier
-  async updateFolder(id: string, updates: Partial<Folder>, clientSupabase?: any): Promise<Folder> {
-    const client = clientSupabase || supabase;
-    // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await client.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to update folders');
-    }
-
-    const { data, error } = await client
-      .from('folders')
-      .update({
-        name: updates.name,
-        parent_id: updates.parentId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating folder:', error);
-      throw error;
-    }
-
-    return {
-      ...data,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
-    };
-  },
-
-  // Supprimer un dossier
-  async deleteFolder(id: string, clientSupabase?: any): Promise<void> {
-    const client = clientSupabase || supabase;
-    // Vérifier que l'utilisateur est connecté
-    const { data: { user } } = await client.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to delete folders');
-    }
-
-    const { error } = await client
-      .from('folders')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting folder:', error);
-      throw error;
-    }
   }
 };

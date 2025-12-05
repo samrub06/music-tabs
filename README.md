@@ -7,8 +7,9 @@ Une application moderne de gestion de partitions et tablatures musicales constru
 ### 📚 Gestion de Bibliothèque
 - **Organisation par dossiers** : Créez et gérez des dossiers pour organiser vos chansons
 - **Recherche avancée** : Recherchez dans les titres, auteurs et contenu des chansons
-- **Import/Export** : Importez des fichiers .txt et exportez votre bibliothèque en JSON
-- **Stockage local** : Toutes vos données sont sauvegardées localement dans votre navigateur
+- **Import/Export** : Importez des playlists depuis MyTabs (Ultimate Guitar) avec organisation IA
+- **Synchronisation cloud** : Toutes vos données sont sauvegardées dans Supabase avec authentification
+- **Chansons publiques** : Partagez vos chansons publiquement (optionnel)
 
 ### 🎵 Visualisation des Chansons
 - **Interface responsive** : Optimisée pour desktop et mobile
@@ -31,17 +32,35 @@ Une application moderne de gestion de partitions et tablatures musicales constru
 ### Prérequis
 - Node.js 18+ 
 - npm ou yarn
+- Compte Supabase (pour la base de données)
 
-### Installation
+### Configuration
+
+1. **Cloner le repository**
 ```bash
-# Cloner le repository
 git clone https://github.com/samrub06/music-tabs.git
 cd music-tabs
+```
 
-# Installer les dépendances
+2. **Installer les dépendances**
+```bash
 npm install
+```
 
-# Démarrer en mode développement
+3. **Configurer les variables d'environnement**
+Créez un fichier `.env.local` :
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4. **Configurer la base de données**
+Exécutez les migrations SQL dans le dossier `db/` dans votre projet Supabase :
+- `db/supabase-setup.sql` (schéma de base)
+- `db/fix-public-songs-rls.sql` (policies RLS)
+
+5. **Démarrer en mode développement**
+```bash
 npm run dev
 ```
 
@@ -62,7 +81,8 @@ npm run lint     # Vérification ESLint
 - **Styling** : Tailwind CSS
 - **Icons** : Heroicons
 - **State Management** : React Context + useReducer
-- **Storage** : localStorage (navigateur)
+- **Database** : Supabase (PostgreSQL avec RLS)
+- **Authentication** : Supabase Auth
 
 ## 📖 Guide d'Utilisation
 
@@ -93,30 +113,38 @@ npm run lint     # Vérification ESLint
 ```
 music-tabs/
 ├── src/
-│   ├── app/                 # Pages Next.js (App Router)
-│   │   ├── globals.css     # Styles globaux
-│   │   ├── layout.tsx      # Layout racine
-│   │   └── page.tsx        # Page d'accueil
+│   ├── app/                 # Next.js App Router
+│   │   ├── (protected)/    # Routes protégées
+│   │   │   └── dashboard/  # Dashboard utilisateur
+│   │   │       ├── page.tsx        # Server Component (RSC)
+│   │   │       ├── actions.ts      # Server Actions
+│   │   │       └── DashboardClient.tsx  # Client Component
+│   │   ├── song/[id]/      # Page de visualisation
+│   │   └── api/            # API Routes
 │   ├── components/         # Composants React
-│   │   ├── AddSongForm.tsx # Formulaire d'ajout
-│   │   ├── ChordDiagram.tsx # Diagrammes d'accords
-│   │   ├── Header.tsx      # En-tête
-│   │   ├── Sidebar.tsx     # Navigation latérale
-│   │   ├── SongList.tsx    # Liste des chansons
-│   │   └── SongViewer.tsx  # Visualiseur de chanson
-│   ├── context/            # Gestion d'état
-│   │   └── AppContext.tsx  # Context principal
-│   ├── data/               # Données
-│   │   └── sampleData.json # Données d'exemple
+│   │   ├── containers/     # Client Components avec logique
+│   │   ├── presentational/ # Composants "dumb"
+│   │   └── ...
+│   ├── lib/
+│   │   ├── supabase/       # Clients Supabase
+│   │   │   └── server.ts  # Client SSR (serveur uniquement)
+│   │   ├── supabase.ts     # Client navigateur
+│   │   └── services/       # Data Access Layer
+│   │       ├── songRepo.ts      # Repo explicite (client-injected)
+│   │       ├── folderService.ts # Service dossiers
+│   │       └── ...
 │   ├── types/              # Types TypeScript
-│   │   └── index.ts        # Définitions de types
-│   └── utils/              # Utilitaires
-│       └── chords.ts       # Logique des accords
-├── public/                 # Fichiers statiques
-├── tailwind.config.ts      # Configuration Tailwind
-├── tsconfig.json          # Configuration TypeScript
-└── package.json           # Dépendances
+│   │   └── index.ts
+│   └── utils/              # Utilitaires purs
+│       └── ...
+├── db/                     # Migrations SQL
+│   └── *.sql
+├── docs/                   # Documentation
+│   └── architecture-and-conventions.md  # Architecture détaillée
+└── ...
 ```
+
+> 📖 **Pour comprendre l'architecture en détail**, consultez [`docs/architecture-and-conventions.md`](./docs/architecture-and-conventions.md)
 
 ## 🎼 Format des Chansons
 
