@@ -11,7 +11,6 @@ export const AI_CONFIG = {
   
   // Configuration par défaut
   TEMPERATURE: 0.1,
-  MAX_TOKENS: 4000,
   
   // URLs des APIs
   OPENAI_API_URL: 'https://api.openai.com/v1/chat/completions'
