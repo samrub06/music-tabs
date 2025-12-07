@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createServerClientSupabase } from '@/lib/supabase/server';
+import { createSafeServerClient } from '@/lib/supabase/server';
 import { songService } from '@/lib/services/songService';
 import SongViewerContainerSSR from '@/components/containers/SongViewerContainerSSR';
 import { updateSongAction, deleteSongAction } from './actions';
@@ -9,7 +9,7 @@ export default async function SongPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const supabase = await createServerClientSupabase();
+  const supabase = await createSafeServerClient();
   const { id } = await params;
   const songId = id;
 

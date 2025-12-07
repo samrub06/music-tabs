@@ -1,11 +1,11 @@
-import { createServerClientSupabase } from '@/lib/supabase/server'
+import { createSafeServerClient } from '@/lib/supabase/server'
 import { songRepo } from '@/lib/services/songRepo'
 import ExploreClient from './ExploreClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }> }) {
-  const supabase = await createServerClientSupabase()
+  const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   const params = await searchParams

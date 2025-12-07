@@ -2,27 +2,50 @@
 
 import AddSongForm from '@/components/AddSongForm'
 import SongTable from '@/components/SongTable'
+import SongGallery from '@/components/SongGallery'
+import Pagination from '@/components/Pagination'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Bars3Icon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 interface DashboardClientProps {
   songs: Song[]
+  total: number
+  page: number
+  limit: number
+  initialView?: 'gallery' | 'table'
+  initialQuery?: string
   folders: Folder[]
   playlists?: Playlist[]
   userEmail?: string
 }
 
-export default function DashboardClient({ songs, folders, playlists = [], userEmail }: DashboardClientProps) {
+export default function DashboardClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', folders, playlists = [], userEmail }: DashboardClientProps) {
   const { t } = useLanguage()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
   const [showAddSong, setShowAddSong] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const qFromUrl = searchParams?.get('q') ?? initialQuery
+  const [searchQuery, setSearchQuery] = useState(qFromUrl)
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+
+  const applyQuery = (next: { q?: string; view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    if (next.q !== undefined) params.set('q', next.q)
+    if (next.view) params.set('view', next.view)
+    if (next.page) params.set('page', String(next.page))
+    if (next.limit) params.set('limit', String(next.limit))
+    else if (!params.has('limit')) params.set('limit', String(limit))
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   return (
     <>
@@ -75,7 +98,7 @@ export default function DashboardClient({ songs, folders, playlists = [], userEm
 
         {/* Search Bar and Add Button */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-center gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-3 sm:gap-4">
             {/* Search Bar */}
             <div className="flex-1 sm:max-w-2xl">
               <div className="relative">
@@ -85,10 +108,47 @@ export default function DashboardClient({ songs, folders, playlists = [], userEm
                 <input
                   type="text"
                   placeholder={t('songs.search')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  defaultValue={qFromUrl}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value
+                      setSearchQuery(val)
+                      applyQuery({ q: val, page: 1 })
+                    }
+                  }}
                   className="block w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
+              </div>
+            </div>
+
+            {/* View toggle */}
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <div className="inline-flex rounded-md shadow-sm border">
+                <select
+                  value={limit}
+                  onChange={(e) => applyQuery({ limit: Number(e.target.value), page: 1 })}
+                  className="block w-full py-1.5 pl-3 pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={10000}>All</option>
+                </select>
+              </div>
+
+              <div className="inline-flex rounded-md shadow-sm border">
+                <button
+                  className={`px-3 py-1.5 text-sm ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                >
+                  Gallery
+                </button>
+                <button
+                  className={`px-3 py-1.5 text-sm ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => applyQuery({ view: 'table', page: 1 })}
+                >
+                  Table
+                </button>
               </div>
             </div>
 
@@ -106,21 +166,33 @@ export default function DashboardClient({ songs, folders, playlists = [], userEm
           </div>
         </div>
 
-        {/* Song table */}
-        <SongTable
-          songs={songs}
-          folders={folders}
-          playlists={playlists}
-          currentFolder={currentFolder}
-          currentPlaylistId={currentPlaylistId}
-          searchQuery={searchQuery}
-          hasUser={true}
-          onFolderChange={updateSongFolderAction}
-          onDeleteSongs={deleteSongsAction}
-          onDeleteAllSongs={deleteAllSongsAction}
-          onCurrentFolderChange={setCurrentFolder}
-          onUpdateSong={updateSongAction}
-        />
+        {/* Content */}
+        {songs && songs.length > 0 ? (
+          view === 'table' ? (
+            <>
+              <SongTable
+                songs={songs}
+                folders={folders}
+                playlists={playlists}
+                currentFolder={currentFolder}
+                currentPlaylistId={currentPlaylistId}
+                searchQuery={searchQuery}
+                hasUser={true}
+                onFolderChange={updateSongFolderAction}
+                onDeleteSongs={deleteSongsAction}
+                onDeleteAllSongs={deleteAllSongsAction}
+                onCurrentFolderChange={setCurrentFolder}
+                onUpdateSong={updateSongAction}
+              />
+              <Pagination page={page} limit={limit} total={total} />
+            </>
+          ) : (
+            <>
+              <SongGallery songs={songs} />
+              <Pagination page={page} limit={limit} total={total} />
+            </>
+          )
+        ) : null}
         </div>
       </div>
 

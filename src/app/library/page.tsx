@@ -1,9 +1,9 @@
-import { createServerClientSupabase } from '@/lib/supabase/server'
+import { createSafeServerClient } from '@/lib/supabase/server'
 import LibraryClient from './LibraryClient'
 import { songService } from '@/lib/services/songService'
 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }> }) {
-  const supabase = await createServerClientSupabase()
+  const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))

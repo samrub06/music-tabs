@@ -10,12 +10,12 @@ import { playlistService } from '@/lib/services/playlistService'
 import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
 import type { MedleyResult } from '@/lib/services/medleyService'
-import { createServerClientSupabase } from '@/lib/supabase/server'
+import { createActionServerClient } from '@/lib/supabase/server'
 import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema } from '@/lib/validation/schemas'
 
 export async function addSongAction(payload: NewSongData) {
   const validatedPayload = createSongSchema.parse(payload)
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   const normalizedPayload: NewSongData = {
     ...validatedPayload,
@@ -28,7 +28,7 @@ export async function addSongAction(payload: NewSongData) {
 
 export async function updateSongAction(id: string, updates: SongEditData) {
   const validatedUpdates = updateSongSchema.parse(updates)
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   const normalizedUpdates: SongEditData = {
     ...validatedUpdates,
@@ -42,7 +42,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
 
 export async function updateSongFolderAction(id: string, folderId?: string) {
   // Simple ID validation could be added here, but folderId is optional/nullable
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.updateSongFolder(id, folderId)
   revalidatePath('/dashboard')
@@ -51,21 +51,21 @@ export async function updateSongFolderAction(id: string, folderId?: string) {
 export async function deleteSongsAction(ids: string[]) {
   // Simple validation for array of strings
   if (!Array.isArray(ids)) throw new Error('Invalid input')
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.deleteSongs(ids)
   revalidatePath('/dashboard')
 }
 
 export async function deleteAllSongsAction() {
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.deleteAllSongs()
   revalidatePath('/dashboard')
 }
 
 export async function deleteSongAction(id: string) {
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
   revalidatePath('/dashboard')
@@ -73,7 +73,7 @@ export async function deleteSongAction(id: string) {
 
 export async function addFolderAction(name: string) {
   const { name: validatedName } = createFolderSchema.parse({ name })
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.createFolder({ name: validatedName })
   revalidatePath('/dashboard')
@@ -81,14 +81,14 @@ export async function addFolderAction(name: string) {
 
 export async function renameFolderAction(id: string, name: string) {
   const { name: validatedName } = updateFolderSchema.parse({ name })
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.updateFolder(id, { name: validatedName })
   revalidatePath('/dashboard')
 }
 
 export async function deleteFolderAction(id: string) {
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.deleteFolder(id)
   revalidatePath('/dashboard')
@@ -96,14 +96,14 @@ export async function deleteFolderAction(id: string) {
 
 export async function createPlaylistFromMedleyAction(name: string, medley: MedleyResult) {
   const { name: validatedName } = createPlaylistSchema.parse({ name })
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const playlist = await playlistService.createPlaylistFromMedley(validatedName, medley, undefined, supabase)
   revalidatePath('/dashboard')
   return playlist
 }
 
 export async function cloneSongAction(songId: string, targetFolderId?: string) {
-  const supabase = await createServerClientSupabase()
+  const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   
   // 1. Fetch source song (assuming RLS allows reading public/trending songs)
