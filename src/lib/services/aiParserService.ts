@@ -18,21 +18,35 @@ export interface AIParseResult {
 }
 
 /**
- * Parse le texte de playlist avec l'aide de l'IA
+ * Divise le texte en morceaux plus petits pour éviter les limites de tokens
  */
-export async function parsePlaylistWithAI(text: string): Promise<AIParseResult> {
-  try {
-    // Vérifier si l'API key OpenAI est configurée
-    if (!isAIAvailable()) {
-      console.warn('OpenAI API key not configured');
-      return {
-        songs: [],
-        success: false,
-        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env.local file'
-      };
-    }
+function chunkText(text: string, linesPerChunk: number = 50): string[] {
+  const lines = text.split('\n');
+  const chunks: string[] = [];
+  let currentChunk: string[] = [];
 
-    const prompt = `Tu es un expert en musique. Analyse ce texte copié depuis une playlist Ultimate Guitar et extrais les titres et artistes des chansons.
+  for (const line of lines) {
+    if (line.trim().length === 0) continue;
+    
+    currentChunk.push(line);
+    if (currentChunk.length >= linesPerChunk) {
+      chunks.push(currentChunk.join('\n'));
+      currentChunk = [];
+    }
+  }
+  
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.join('\n'));
+  }
+  
+  return chunks;
+}
+
+/**
+ * Parse un morceau de texte avec l'IA
+ */
+async function parseChunkWithAI(text: string): Promise<AIParsedSong[]> {
+  const prompt = `Tu es un expert en musique. Analyse ce texte copié depuis une playlist Ultimate Guitar et extrais les titres et artistes des chansons.
 
 Règles importantes:
 - Le format est généralement: "Titre - Artiste" ou "Titre par Artiste"
@@ -49,6 +63,7 @@ Règles importantes:
 Texte à analyser:
 ${text}`;
 
+  try {
     const response = await fetch(AI_CONFIG.OPENAI_API_URL, {
       method: 'POST',
       headers: {
@@ -69,7 +84,7 @@ ${text}`;
         ],
         temperature: AI_CONFIG.TEMPERATURE,
         max_tokens: AI_CONFIG.MAX_TOKENS,
-        response_format: { type: "json_object" } // Force JSON output for compatible models
+        response_format: { type: "json_object" }
       })
     });
 
@@ -84,10 +99,9 @@ ${text}`;
       throw new Error('No content received from OpenAI');
     }
 
-    // Nettoyage du contenu : supprimer les blocs markdown ```json ... ```
+    // Nettoyage du contenu
     content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
     
-    // Chercher le début et la fin du JSON
     const firstBrace = content.indexOf('{');
     const lastBrace = content.lastIndexOf('}');
     
@@ -102,17 +116,41 @@ ${text}`;
       parsedData = JSON.parse(jsonString);
     } catch (e) {
       console.error('JSON Parse Error:', e);
-      // Tentative de récupération si JSON tronqué (simple heuristic)
-      if (e instanceof SyntaxError && e.message.includes('end of JSON input')) {
-        // Try to close the array and object
-        try {
-            const fixedJson = jsonString.replace(/,?\s*$/, '') + ']}';
-            parsedData = JSON.parse(fixedJson);
-        } catch (e2) {
-             throw new Error(`Failed to parse JSON even after fix attempt: ${(e as Error).message}`);
+      const errorMessage = (e as Error).message;
+      
+      // Tentative de récupération si JSON tronqué ou malformé
+      if (e instanceof SyntaxError && (
+          errorMessage.includes('end of JSON input') || 
+          errorMessage.includes("Expected ',' or ']'")
+      )) {
+        console.log('Attempting to fix truncated JSON...');
+        
+        // Extraction par regex des objets complets
+        // On cherche des motifs {"title": "...", "artist": "...", ...}
+        // Cette regex est simpliste mais devrait fonctionner pour le format attendu
+        const matches = jsonString.match(/\{[^{}]*"title"[^{}]*"artist"[^{}]*\}/g);
+        
+        if (matches && matches.length > 0) {
+          const validSongs = matches.map(s => {
+             try { return JSON.parse(s); } catch { return null; }
+          }).filter(s => s !== null);
+          
+          if (validSongs.length > 0) {
+            parsedData = { songs: validSongs };
+          } else {
+            throw new Error(`Failed to recover JSON: ${errorMessage}`);
+          }
+        } else {
+             // Fallback: essayer de fermer le tableau
+             try {
+                const fixedJson = jsonString.replace(/,?\s*$/, '') + ']}';
+                parsedData = JSON.parse(fixedJson);
+             } catch (e2) {
+                throw new Error(`Failed to parse JSON even after fix attempt: ${errorMessage}`);
+             }
         }
       } else {
-         throw new Error(`Failed to parse JSON from OpenAI: ${(e as Error).message}`);
+         throw new Error(`Failed to parse JSON from OpenAI: ${errorMessage}`);
       }
     }
     
@@ -120,11 +158,49 @@ ${text}`;
       throw new Error('Invalid JSON structure from OpenAI: missing "songs" array');
     }
 
-    console.log(`🤖 AI parsed ${parsedData.songs.length} songs`);
+    return parsedData.songs;
+
+  } catch (error) {
+    console.error('Error parsing chunk:', error);
+    return []; // Retourner un tableau vide en cas d'erreur pour ce chunk, pour ne pas bloquer tout le processus
+  }
+}
+
+/**
+ * Parse le texte de playlist avec l'aide de l'IA (avec gestion des chunks)
+ */
+export async function parsePlaylistWithAI(text: string): Promise<AIParseResult> {
+  try {
+    // Vérifier si l'API key OpenAI est configurée
+    if (!isAIAvailable()) {
+      console.warn('OpenAI API key not configured');
+      return {
+        songs: [],
+        success: false,
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env.local file'
+      };
+    }
+
+    // Découper le texte en chunks
+    const chunks = chunkText(text, 50); // 50 lignes par chunk
+    console.log(`🤖 Text split into ${chunks.length} chunks for processing`);
+
+    const allSongs: AIParsedSong[] = [];
+    
+    // Traiter les chunks en série pour éviter les limites de rate
+    for (let i = 0; i < chunks.length; i++) {
+      console.log(`🤖 Processing chunk ${i + 1}/${chunks.length}...`);
+      const chunkSongs = await parseChunkWithAI(chunks[i]);
+      if (chunkSongs.length > 0) {
+        allSongs.push(...chunkSongs);
+      }
+    }
+
+    console.log(`🤖 AI parsed total of ${allSongs.length} songs`);
     
     return {
-      songs: parsedData.songs,
-      success: true
+      songs: allSongs,
+      success: allSongs.length > 0
     };
 
   } catch (error) {
@@ -143,7 +219,7 @@ ${text}`;
  */
 export async function testAIParser(text: string): Promise<void> {
   console.log('🧪 Testing AI parser...');
-  console.log('Input:', text);
+  console.log('Input length:', text.length);
   
   const result = await parsePlaylistWithAI(text);
   
