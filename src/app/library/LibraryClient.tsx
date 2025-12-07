@@ -1,11 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Song } from '@/types'
 import SongGallery from '@/components/SongGallery'
 import SongTable from '@/components/SongTable'
 import Pagination from '@/components/Pagination'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 
 interface LibraryClientProps {
   songs: Song[]
@@ -14,12 +15,14 @@ interface LibraryClientProps {
   limit: number
   initialView?: 'gallery' | 'table'
   initialQuery?: string
+  userId?: string
 }
 
-export default function LibraryClient({ songs, total, page, limit, initialView = 'gallery', initialQuery = '' }: LibraryClientProps) {
+export default function LibraryClient({ songs, total, page, limit, initialView = 'gallery', initialQuery = '', userId }: LibraryClientProps) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
+  const [cloningId, setCloningId] = useState<string | null>(null)
 
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
   const q = searchParams?.get('q') ?? initialQuery
@@ -40,6 +43,25 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  const handleAddToLibrary = async (song: Song) => {
+    // If not logged in, redirect to login
+    if (!userId) {
+      router.push('/login?next=/library')
+      return
+    }
+
+    try {
+      setCloningId(song.id)
+      await cloneSongAction(song.id)
+      router.refresh()
+      // You might want to show a toast/notification here
+    } catch (error) {
+      console.error('Error cloning song:', error)
+    } finally {
+      setCloningId(null)
+    }
+  }
+
   const content = useMemo(() => {
     if (view === 'table') {
       return (
@@ -47,15 +69,22 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
           songs={songs}
           folders={[]}
           playlists={[]}
-          hasUser={false}
+          hasUser={!!userId}
           onFolderChange={async () => {}}
           onDeleteSongs={async () => {}}
           onDeleteAllSongs={async () => {}}
         />
       )
     }
-    return <SongGallery songs={songs} />
-  }, [view, songs])
+    return (
+      <SongGallery 
+        songs={songs} 
+        showAddButton={true}
+        onAddClick={handleAddToLibrary}
+        addingId={cloningId}
+      />
+    )
+  }, [view, songs, userId, cloningId])
 
   return (
     <div className="p-3 sm:p-6 overflow-y-auto">
@@ -91,4 +120,3 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
     </div>
   )
 }
-

@@ -1,6 +1,6 @@
 import { createSafeServerClient } from '@/lib/supabase/server'
 import LibraryClient from './LibraryClient'
-import { songService } from '@/lib/services/songService'
+import { songRepo } from '@/lib/services/songRepo'
 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }> }) {
   const supabase = await createSafeServerClient()
@@ -11,7 +11,19 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const q = params?.q || ''
 
-  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q)
+  // Fetch public/trending songs instead of user's personal songs
+  // This replaces the old "Explore" logic
+  const { songs, total } = await songRepo(supabase).getTrendingSongsPaged(page, limit, q)
 
-  return <LibraryClient songs={songs} total={total} page={page} limit={limit} initialView={view} initialQuery={q} />
+  return (
+    <LibraryClient 
+      songs={songs} 
+      total={total} 
+      page={page} 
+      limit={limit} 
+      initialView={view} 
+      initialQuery={q} 
+      userId={user?.id}
+    />
+  )
 }

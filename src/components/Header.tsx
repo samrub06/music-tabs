@@ -85,7 +85,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                 >
                   <FolderOpenIcon className="h-5 w-5" />
-                  <span>Explore</span>
+                  <span>Library</span>
                 </Link>
                 <Link
                   href="/dashboard"
