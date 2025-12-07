@@ -131,9 +131,9 @@ ${text}`;
         const matches = jsonString.match(/\{[^{}]*"title"[^{}]*"artist"[^{}]*\}/g);
         
         if (matches && matches.length > 0) {
-          const validSongs = matches.map(s => {
+          const validSongs = matches.map((s: string) => {
              try { return JSON.parse(s); } catch { return null; }
-          }).filter(s => s !== null);
+          }).filter((s: any) => s !== null);
           
           if (validSongs.length > 0) {
             parsedData = { songs: validSongs };
