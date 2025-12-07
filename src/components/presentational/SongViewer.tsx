@@ -44,6 +44,7 @@ interface SongViewerProps {
   onNextSong?: () => void;
   canPrevSong?: boolean;
   canNextSong?: boolean;
+  isAuthenticated?: boolean;
 }
 
 export default function SongViewer({
@@ -79,7 +80,8 @@ export default function SongViewer({
   onPrevSong,
   onNextSong,
   canPrevSong,
-  canNextSong
+  canNextSong,
+  isAuthenticated = false
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -138,6 +140,7 @@ export default function SongViewer({
             onSave={onSave}
             onCancelEdit={onCancelEdit}
             onChordClick={onChordClick}
+            isAuthenticated={isAuthenticated}
           />
         </div>
 

@@ -16,12 +16,14 @@ interface SongViewerContainerSSRProps {
   song: Song;
   onUpdate: (id: string, updates: any) => Promise<any>;
   onDelete: (id: string) => Promise<void>;
+  isAuthenticated?: boolean;
 }
 
 export default function SongViewerContainerSSR({ 
   song, 
   onUpdate,
-  onDelete 
+  onDelete,
+  isAuthenticated = false
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
 
@@ -129,7 +131,8 @@ export default function SongViewerContainerSSR({
     onPrevSong: () => {}, // Remove navigation for now
     onNextSong: () => {}, // Remove navigation for now
     canPrevSong: false,
-    canNextSong: false
+    canNextSong: false,
+    isAuthenticated
   };
 
   return <SongViewer {...songViewerProps} />;

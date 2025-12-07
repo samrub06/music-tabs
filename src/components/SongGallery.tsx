@@ -19,7 +19,29 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
           key={song.id} 
           className="group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border border-gray-200 hover:border-gray-300 relative flex flex-col"
         >
-          <Link href={`/song/${song.id}`} className="flex-1">
+          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            {showAddButton && onAddClick && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAddClick(song);
+                }}
+                disabled={addingId === song.id}
+                className="p-1.5 rounded-full bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed transform hover:scale-110 transition-all"
+                title="Ajouter à ma bibliothèque"
+              >
+                {addingId === song.id ? (
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
+          <Link href={`/song/${song.id}`} className="flex-1 flex flex-col">
             <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
               {song.songImageUrl ? (
                 <img 
@@ -54,16 +76,6 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
               </div>
             </div>
           </Link>
-          {showAddButton && onAddClick && (
-            <button
-              onClick={() => onAddClick(song)}
-              disabled={addingId === song.id}
-              className="m-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
-              title="Ajouter à ma bibliothèque"
-            >
-              {addingId === song.id ? 'Ajout...' : 'Ajouter'}
-            </button>
-          )}
         </div>
       ))}
     </div>

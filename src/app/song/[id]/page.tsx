@@ -15,6 +15,7 @@ export default async function SongPage({
 
   // Load song from database
   const song = await songService.getSongById(songId, supabase);
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!song) {
     redirect('/library');
@@ -25,6 +26,7 @@ export default async function SongPage({
       song={song} 
       onUpdate={updateSongAction}
       onDelete={deleteSongAction}
+      isAuthenticated={!!user}
     />
   );
 }
