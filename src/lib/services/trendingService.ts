@@ -108,17 +108,17 @@ export const trendingService = {
       // 2. Réinitialiser le flag is_trending pour toutes les chansons (optionnel, ou garder l'historique ?)
       // Pour l'instant, on garde l'historique ou on pourrait faire un reset. 
       // Reset est mieux pour avoir vraiment les "actuelles".
-      await supabase
-        .from('songs')
-        .update({ is_trending: false } as any) // Cast because types might not be fully updated in runtime
+      await (supabase
+        .from('songs') as any)
+        .update({ is_trending: false } as any)
         .eq('is_trending', true);
 
       // 3. Traiter chaque chanson
       for (const song of topSongs) {
         try {
           // Vérifier si existe déjà (par titre/artiste)
-          const { data: existingSongs } = await supabase
-            .from('songs')
+          const { data: existingSongs } = await (supabase
+            .from('songs') as any)
             .select('id, is_trending, is_public')
             .ilike('title', song.title)
             .ilike('author', song.artist)
@@ -127,8 +127,8 @@ export const trendingService = {
           if (existingSongs && existingSongs.length > 0) {
             // Existe déjà : mettre à jour le flag trending
             const existing = existingSongs[0];
-            await supabase
-              .from('songs')
+            await (supabase
+              .from('songs') as any)
               .update({ is_trending: true, is_public: true } as any)
               .eq('id', existing.id);
             
@@ -193,7 +193,7 @@ export const trendingService = {
                 scrapedSong.content
              );
 
-             const { error: insertError } = await supabase.from('songs').insert({
+            const { error: insertError } = await (supabase.from('songs') as any).insert({
                 title: scrapedSong.title,
                 author: scrapedSong.author,
                 // sections: structuredSong.sections, // ATTENTION: Schema mismatch solved previously
@@ -218,7 +218,7 @@ export const trendingService = {
                 source_site: 'Ultimate Guitar',
                 format: 'structured',
                 user_id: null // System owned
-             });
+             } as any);
 
              if (insertError) {
                console.error('Error inserting trending song:', insertError);

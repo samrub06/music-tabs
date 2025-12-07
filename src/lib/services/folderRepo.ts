@@ -41,8 +41,8 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to create folders')
 
-    const { data, error } = await client
-      .from('folders')
+    const { data, error } = await (client
+      .from('folders') as any)
       .insert([{
         user_id: user.id,
         name: folderData.name
@@ -59,8 +59,8 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to update folders')
 
-    const { data, error } = await client
-      .from('folders')
+    const { data, error } = await (client
+      .from('folders') as any)
       .update({
         name: updates.name,
         updated_at: new Date().toISOString()

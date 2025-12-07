@@ -35,6 +35,9 @@ export const createSongSchema = z.object({
 })
 
 export const updateSongSchema = createSongSchema.partial().extend({
+  title: z.string().min(1, 'Title is required'),
+  author: z.string().min(1, 'Author is required'),
+  content: z.string().min(1, 'Content is required'),
   folderId: z.string().uuid().optional().nullable()
 })
 

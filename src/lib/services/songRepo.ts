@@ -56,8 +56,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       songData.key
     )
 
-    const { data, error } = await client
-      .from('songs')
+    const { data, error } = await (client
+      .from('songs') as any)
       .insert([{
         user_id: user?.id!, // RLS should handle this but for now we rely on explicit user check if needed, or simple insert
         title: songData.title,
@@ -147,9 +147,9 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       updateData.sections = sections
     }
 
-    const { data, error } = await client
-      .from('songs')
-      .update(updateData)
+    const { data, error } = await (client
+      .from('songs') as any)
+      .update(updateData as any)
       .eq('id', id)
       .select()
       .single()
@@ -167,12 +167,12 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       throw new Error('User must be authenticated to update songs')
     }
 
-    const { data, error } = await client
-      .from('songs')
+    const { data, error } = await (client
+      .from('songs') as any)
       .update({
         folder_id: folderId || null,
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .eq('id', id)
       .select()
       .single()

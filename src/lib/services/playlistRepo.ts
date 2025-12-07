@@ -50,8 +50,8 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to create playlists')
 
-    const { data: result, error } = await client
-      .from('playlists')
+    const { data: result, error } = await (client
+      .from('playlists') as any)
       .insert([{
         user_id: user.id,
         name: data.name,
@@ -77,9 +77,9 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     if (updates.description !== undefined) updateData.description = updates.description
     if (updates.songIds !== undefined) updateData.song_ids = updates.songIds
 
-    const { data, error } = await client
-      .from('playlists')
-      .update(updateData)
+    const { data, error } = await (client
+      .from('playlists') as any)
+      .update(updateData as any)
       .eq('id', id)
       .select()
       .single()
