@@ -257,7 +257,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const to = page * limit - 1
     let builder = (client.from('songs') as any)
       .select('*', { count: 'exact' })
-      .eq('is_trending', true)
+      .or('is_trending.eq.true,is_public.eq.true')
       .order('created_at', { ascending: false })
     if (q && q.trim()) {
       const query = q.trim()
