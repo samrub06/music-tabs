@@ -182,7 +182,7 @@ export async function parsePlaylistWithAI(text: string): Promise<AIParseResult> 
     }
 
     // Découper le texte en chunks
-    const chunks = chunkText(text, 50); // 50 lignes par chunk
+    const chunks = chunkText(text, 100); // 50 lignes par chunk
     console.log(`🤖 Text split into ${chunks.length} chunks for processing`);
 
     const allSongs: AIParsedSong[] = [];
