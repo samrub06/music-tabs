@@ -4,16 +4,25 @@ import ExploreClient from './ExploreClient'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ExplorePage() {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }> }) {
   const supabase = await createServerClientSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   
-  // Fetch trending songs
-  const trendingSongs = await songRepo(supabase).getTrendingSongs()
+  const params = await searchParams
+  const page = Math.max(1, parseInt(params?.page || '1', 10))
+  const limit = Math.max(1, parseInt(params?.limit || '24', 10))
+  const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
+  const q = params?.q || ''
+  const { songs, total } = await songRepo(supabase).getTrendingSongsPaged(page, limit, q)
 
   return (
     <ExploreClient 
-      initialSongs={trendingSongs}
+      songs={songs}
+      total={total}
+      page={page}
+      limit={limit}
+      initialView={view}
+      initialQuery={q}
       userId={user?.id}
     />
   )

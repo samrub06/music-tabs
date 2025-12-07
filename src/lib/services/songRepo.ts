@@ -245,11 +245,28 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .select('*')
       .eq('is_trending', true)
       .order('created_at', { ascending: false }) // Ou un autre critère de tri si dispo (ex: rating)
-      .limit(50)
+      .limit(24)
 
     if (error) throw error
 
     return (data || []).map(mapDbSongToDomain)
+  },
+
+  async getTrendingSongsPaged(page: number, limit: number, q?: string): Promise<{ songs: Song[]; total: number }> {
+    const from = (page - 1) * limit
+    const to = page * limit - 1
+    let builder = (client.from('songs') as any)
+      .select('*', { count: 'exact' })
+      .eq('is_trending', true)
+      .order('created_at', { ascending: false })
+    if (q && q.trim()) {
+      const query = q.trim()
+      builder = builder.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+    }
+    const { data, error, count } = await builder.range(from, to)
+
+    if (error) throw error
+    return { songs: (data || []).map(mapDbSongToDomain), total: count || 0 }
   },
 
   async searchSongs(query: string): Promise<Song[]> {

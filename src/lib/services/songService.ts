@@ -6,7 +6,7 @@ export const songService = {
   // Récupérer toutes les chansons (sans contenu) avec pagination
   // Si connecté : uniquement les chansons de l'utilisateur
   // Si non connecté : uniquement les chansons publiques (user_id = null)
-  async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 50): Promise<{ songs: Song[], total: number }> {
+  async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 100, q?: string): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
       throw new Error('Supabase client is required');
@@ -23,6 +23,11 @@ export const songService = {
     } else {
       // Si connecté, récupérer uniquement les chansons de l'utilisateur
       baseQuery = baseQuery.eq('user_id', user.id);
+    }
+
+    if (q && q.trim()) {
+      const query = q.trim()
+      baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
     }
 
     const { data, error, count } = await baseQuery
