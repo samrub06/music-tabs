@@ -67,10 +67,17 @@ export function useAuth() {
 
   const signInWithGoogle = async () => {
     try {
+      // Determine the base URL dynamically
+      // When running on localhost, window.location.origin will be http://localhost:3000
+      // When in production, it will be your production URL
+      const redirectUrl = `${window.location.origin}/api/auth/callback`;
+      
+      console.log('Initiating Google Sign-In with redirect URL:', redirectUrl);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `/api/auth/callback`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -103,4 +110,3 @@ export function useAuth() {
     signOut,
   };
 }
-

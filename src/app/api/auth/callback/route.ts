@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
   const next = searchParams.get('next') ?? '/'
 
   if (code) {
+    console.log('Exchanging code for session...', code)
     const supabase = await createActionServerClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
