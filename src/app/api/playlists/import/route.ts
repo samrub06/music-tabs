@@ -2,6 +2,11 @@ import { importPlaylistFromText, ImportProgress } from '@/lib/services/simplePla
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Configure le temps maximum d'exécution (en secondes)
+// 60s (Hobby) ou jusqu'à 300s (Pro). 
+// Note: Sur le plan Hobby Vercel, le max est souvent bloqué à 10s ou 60s selon la configuration.
+export const maxDuration = 300; 
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
