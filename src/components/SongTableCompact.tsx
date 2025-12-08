@@ -40,3 +40,5 @@ export default function SongTableCompact({ songs }: SongTableCompactProps) {
   )
 }
 
+
+

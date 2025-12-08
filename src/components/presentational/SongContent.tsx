@@ -100,7 +100,7 @@ export default function SongContent({
               Chanson complète masquée
             </h3>
             <p className="text-gray-600 mb-6">
-              Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque.
+              Connectez-vous pour accéder à l&apos;intégralité de la chanson et l&apos;ajouter à votre bibliothèque.
             </p>
             <div className="flex flex-col gap-3">
               <Link
