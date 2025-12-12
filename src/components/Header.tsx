@@ -102,17 +102,17 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* Logo - Centered */}
           <button 
             onClick={handleLogoClick}
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
+            className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
             aria-label={t('common.backToHome')}
           >
             <span className="text-xl md:text-2xl">🌶️</span>
-            <span className="text-lg font-semibold text-gray-900">
+            <span className="hidden sm:inline text-lg font-semibold text-gray-900">
               {t('common.appName')}
             </span>
           </button>
           
           {/* Right side: Playlist Generator + Auth + Language */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
      
             {/* User menu */}
             {!loading && (
@@ -121,16 +121,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <>
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-2 p-0.5 sm:p-1 rounded-full hover:bg-gray-100 transition-colors"
                     >
                       {profile?.avatar_url ? (
                         <img 
                           src={profile.avatar_url} 
                           alt={profile.full_name || 'User'} 
-                          className="h-9 w-9 rounded-full object-cover border-2 border-gray-200"
+                          className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-gray-200"
                         />
                       ) : (
-                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-gray-200">
+                        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm border-2 border-gray-200">
                           {getInitials(profile?.full_name, profile?.email)}
                         </div>
                       )}
@@ -205,10 +205,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <div className="relative">
               <button
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                className="flex items-center space-x-1 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors min-w-[36px] sm:min-w-0"
                 aria-label={t('common.selectLanguage')}
               >
-                <span className="text-lg font-medium">{currentLanguage.flag}</span>
+                <span className="text-base sm:text-lg font-medium">{currentLanguage.flag}</span>
               </button>
               
               {showLanguageMenu && (

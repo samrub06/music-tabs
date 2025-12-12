@@ -322,7 +322,7 @@ export default function SongTable({
   const showEmptyState = songs.length === 0;
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white shadow-sm rounded-lg border border-gray-200">
       {/* Filter Bar */}
       <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex flex-col gap-2 sm:gap-0 sm:flex-row sm:items-center sm:justify-between">
@@ -398,6 +398,26 @@ export default function SongTable({
               Trier
             </button>
 
+            {/* Sort Direction Button */}
+            {(() => {
+              const currentSortOption = sortOptions.find(opt => opt.field === sortField);
+              return (
+                <button
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  className="px-3 py-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center gap-1.5"
+                  title={`Trier ${sortDirection === 'asc' ? 'croissant' : 'décroissant'}`}
+                >
+                  <span>{currentSortOption?.icon || '📝'}</span>
+                  <span className="truncate max-w-[60px]">{currentSortOption?.label || 'Titre'}</span>
+                  {sortDirection === 'asc' ? (
+                    <ChevronUpIcon className="h-4 w-4 flex-shrink-0" />
+                  ) : (
+                    <ChevronDownIcon className="h-4 w-4 flex-shrink-0" />
+                  )}
+                </button>
+              );
+            })()}
+
             {/* Column Config - Hidden on mobile */}
             <div className="hidden sm:block">
               <ColumnConfig 
@@ -433,7 +453,7 @@ export default function SongTable({
           )}
 
           {showMobileSort && (
-            <div className="sm:hidden mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="sm:hidden mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-50 relative">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Trier par</h4>
               <div className="grid grid-cols-2 gap-2">
                 {sortOptions.map((option) => (
@@ -451,6 +471,11 @@ export default function SongTable({
                   >
                     <span>{option.icon}</span>
                     <span className="truncate">{option.label}</span>
+                    {sortField === option.field && (
+                      sortDirection === 'asc' ? 
+                        <ChevronUpIcon className="h-4 w-4 ml-auto" /> : 
+                        <ChevronDownIcon className="h-4 w-4 ml-auto" />
+                    )}
                   </button>
                 ))}
               </div>

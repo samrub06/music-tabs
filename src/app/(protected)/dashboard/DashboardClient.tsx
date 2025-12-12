@@ -6,11 +6,12 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Bars3Icon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useSidebar } from '@/context/SidebarContext'
 
 interface DashboardClientProps {
   songs: Song[]
@@ -40,7 +41,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   }, [qFromUrl])
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { sidebarOpen, setSidebarOpen } = useSidebar()
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
 
   const applyQuery = (next: { q?: string; view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
