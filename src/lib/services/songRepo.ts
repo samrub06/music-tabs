@@ -109,6 +109,32 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return mapDbSongToDomain(data)
   },
 
+  async getSongByTabId(tabId: string): Promise<Song | null> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) {
+      return null
+    }
+
+    const { data, error } = await client
+      .from('songs')
+      .select('*')
+      .eq('tab_id', tabId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (error) {
+      // If no row found, it's not an error, just return null
+      if (error.code === 'PGRST116') {
+        return null
+      }
+      console.error('Error fetching song by tabId:', error)
+      return null
+    }
+
+    return mapDbSongToDomain(data)
+  },
+
   async updateSong(id: string, updates: SongEditData): Promise<Song> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) {

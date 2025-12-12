@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -28,28 +29,56 @@ const COLUMN_DEFINITIONS = [
 
 export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnConfigProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        buttonRef.current &&
+        menuRef.current &&
+        !buttonRef.current.contains(event.target as Node) &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const menuContent = isOpen ? (
+    <>
+      {/* Overlay pour fermer le menu */}
+      <div 
+        className="fixed inset-0 z-[100]" 
+        onClick={() => setIsOpen(false)}
+      />
+      
+      {/* Menu de configuration */}
+      <div 
+        ref={menuRef}
+        className="fixed w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[101]"
+        style={{
+          top: `${position.top}px`,
+          right: `${position.right}px`
+        }}
       >
-        <Cog6ToothIcon className="h-4 w-4" />
-        <span>Colonnes</span>
-        <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <>
-          {/* Overlay pour fermer le menu */}
-          <div 
-            className="fixed inset-0 z-10" 
-            onClick={() => setIsOpen(false)}
-          />
-          
-          {/* Menu de configuration */}
-          <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
             <div className="p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Afficher les colonnes</h3>
               
@@ -105,8 +134,22 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
               </div>
             </div>
           </div>
-        </>
-      )}
+    </>
+  ) : null;
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+      >
+        <Cog6ToothIcon className="h-4 w-4" />
+        <span>Colonnes</span>
+        <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {typeof window !== 'undefined' && createPortal(menuContent, document.body)}
     </div>
   );
 }

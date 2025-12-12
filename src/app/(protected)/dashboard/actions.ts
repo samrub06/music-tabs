@@ -17,6 +17,15 @@ export async function addSongAction(payload: NewSongData) {
   const validatedPayload = createSongSchema.parse(payload)
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
+  
+  // Vérifier si tabId est présent et si une chanson avec ce tabId existe déjà
+  if (validatedPayload.tabId) {
+    const existingSong = await repo.getSongByTabId(validatedPayload.tabId)
+    if (existingSong) {
+      throw new Error('Cette chanson existe déjà dans votre bibliothèque')
+    }
+  }
+  
   const normalizedPayload: NewSongData = {
     ...validatedPayload,
     folderId: validatedPayload.folderId ?? undefined

@@ -6,8 +6,8 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Bars3Icon } from '@heroicons/react/24/outline'
-import { useMemo, useState } from 'react'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Bars3Icon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -32,6 +32,12 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   const [showAddSong, setShowAddSong] = useState(false)
   const qFromUrl = searchParams?.get('q') ?? initialQuery
   const [searchQuery, setSearchQuery] = useState(qFromUrl)
+  const [localSearchValue, setLocalSearchValue] = useState(qFromUrl)
+
+  // Sync localSearchValue with URL changes
+  useEffect(() => {
+    setLocalSearchValue(qFromUrl)
+  }, [qFromUrl])
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -108,7 +114,8 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                 <input
                   type="text"
                   placeholder={t('songs.search')}
-                  defaultValue={qFromUrl}
+                  value={localSearchValue}
+                  onChange={(e) => setLocalSearchValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const val = (e.target as HTMLInputElement).value
@@ -116,8 +123,22 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       applyQuery({ q: val, page: 1 })
                     }
                   }}
-                  className="block w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
+                {localSearchValue && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setLocalSearchValue('')
+                      setSearchQuery('')
+                      applyQuery({ q: '', page: 1 })
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    type="button"
+                  >
+                    <XMarkIcon className="h-4 sm:h-5 w-4 sm:w-5" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -136,18 +157,20 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                 </select>
               </div>
 
-              <div className="inline-flex rounded-md shadow-sm border">
+              <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
                 <button
-                  className={`px-3 py-1.5 text-sm ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
+                  className={`px-2 sm:px-3 py-1.5 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                  title="Gallery View"
                 >
-                  Gallery
+                  <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
                 <button
-                  className={`px-3 py-1.5 text-sm ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
+                  className={`px-2 sm:px-3 py-1.5 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'table', page: 1 })}
+                  title="Table View"
                 >
-                  Table
+                  <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>

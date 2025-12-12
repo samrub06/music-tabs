@@ -1,7 +1,7 @@
 'use client';
 
 import { useLanguage } from '@/context/LanguageContext';
-import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { NewSongData, Folder } from '@/types';
@@ -76,7 +76,8 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
       onClose();
     } catch (error) {
       console.error('Error adding song:', error);
-      setMessage({ type: 'error', text: '❌ Error adding song. Please try again.' });
+      const errorMessage = error instanceof Error ? error.message : '❌ Error adding song. Please try again.';
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setIsSaving(false);
     }
@@ -245,6 +246,27 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
           </button>
         </div>
 
+        {/* Message d'erreur/succès */}
+        {message && (
+          <div className={`mb-4 p-3 rounded-md ${
+            message.type === 'error' 
+              ? 'bg-red-50 border border-red-200 text-red-800' 
+              : message.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-800'
+              : 'bg-blue-50 border border-blue-200 text-blue-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span>{message.text}</span>
+              <button
+                onClick={() => setMessage(null)}
+                className="text-gray-400 hover:text-gray-600 ml-2"
+              >
+                <span className="text-xl">×</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Online Search */}
           <div className="space-y-4">
@@ -258,17 +280,34 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {t('songForm.songTitle')} ou {t('songForm.artist')}
                 </label>
-                <input
-                  type="text"
-                  ref={searchInputRef}
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder={t('songForm.searchPlaceholder')}
-                  disabled={isSearching}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    ref={searchInputRef}
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder={t('songForm.searchPlaceholder')}
+                    disabled={isSearching}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSearchQuery('')
+                        setSearchResults([])
+                        setShowSearchResults(false)
+                      }}
+                      className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600"
+                      type="button"
+                      disabled={isSearching}
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -420,7 +459,10 @@ Avec les accords alignés...`}
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={handleReset}
+                  onClick={() => {
+                    handleReset();
+                    onClose();
+                  }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                 >
                   {t('songForm.cancel')}

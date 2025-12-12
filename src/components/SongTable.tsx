@@ -13,6 +13,7 @@ import {
   ArrowsUpDownIcon
 } from '@heroicons/react/24/outline';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import EditSongForm from './EditSongForm';
 import FolderDropdown from './FolderDropdown';
 import ColumnConfig from './ColumnConfig';
@@ -64,14 +65,34 @@ export default function SongTable({
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'viewCount', 'folder']);
   const [showMobileSort, setShowMobileSort] = useState(false);
+  const [folderFilterPosition, setFolderFilterPosition] = useState({ top: 0, right: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const folderFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const folderFilterMenuRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate folder filter dropdown position
+  useEffect(() => {
+    if (showFolderFilter && folderFilterButtonRef.current) {
+      const rect = folderFilterButtonRef.current.getBoundingClientRect();
+      setFolderFilterPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+  }, [showFolderFilter]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowFolderFilter(false);
+      if (folderFilterButtonRef.current && folderFilterMenuRef.current) {
+        if (
+          showFolderFilter &&
+          !folderFilterButtonRef.current.contains(event.target as Node) &&
+          !folderFilterMenuRef.current.contains(event.target as Node)
+        ) {
+          setShowFolderFilter(false);
+        }
       }
       if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
         setShowMobileSort(false);
@@ -439,8 +460,9 @@ export default function SongTable({
           {/* Desktop Controls */}
           <div className="hidden sm:flex items-center gap-3">
             {/* Folder Filter Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative">
               <button
+                ref={folderFilterButtonRef}
                 onClick={() => setShowFolderFilter(!showFolderFilter)}
                 className="inline-flex items-center justify-between px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-auto"
               >
@@ -455,53 +477,69 @@ export default function SongTable({
                 <ChevronDownIcon className="h-4 w-4 ml-2 flex-shrink-0" />
               </button>
 
-              {showFolderFilter && (
-                <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                  <div className="py-1">
-                    <button
-                      onClick={() => {
-                        onCurrentFolderChange?.(null);
-                        setShowFolderFilter(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm ${
-                        currentFolder === null
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {t('songs.allSongs')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        onCurrentFolderChange?.('unorganized');
-                        setShowFolderFilter(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm ${
-                        currentFolder === 'unorganized'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {t('songs.unorganized')}
-                    </button>
-                    {folders.map((folder) => (
+              {showFolderFilter && typeof window !== 'undefined' && createPortal(
+                <>
+                  {/* Overlay */}
+                  <div 
+                    className="fixed inset-0 z-[100]" 
+                    onClick={() => setShowFolderFilter(false)}
+                  />
+                  {/* Menu */}
+                  <div 
+                    ref={folderFilterMenuRef}
+                    className="fixed w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[101]"
+                    style={{
+                      top: `${folderFilterPosition.top}px`,
+                      right: `${folderFilterPosition.right}px`
+                    }}
+                  >
+                    <div className="py-1">
                       <button
-                        key={folder.id}
                         onClick={() => {
-                          onCurrentFolderChange?.(folder.id);
+                          onCurrentFolderChange?.(null);
                           setShowFolderFilter(false);
                         }}
                         className={`w-full text-left px-4 py-2 text-sm ${
-                          currentFolder === folder.id
+                          currentFolder === null
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        {folder.name}
+                        {t('songs.allSongs')}
                       </button>
-                    ))}
+                      <button
+                        onClick={() => {
+                          onCurrentFolderChange?.('unorganized');
+                          setShowFolderFilter(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          currentFolder === 'unorganized'
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {t('songs.unorganized')}
+                      </button>
+                      {folders.map((folder) => (
+                        <button
+                          key={folder.id}
+                          onClick={() => {
+                            onCurrentFolderChange?.(folder.id);
+                            setShowFolderFilter(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm ${
+                            currentFolder === folder.id
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {folder.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </>,
+                document.body
               )}
             </div>
             
@@ -577,10 +615,6 @@ export default function SongTable({
                   <SortButton field="updatedAt">{t('songs.modified')}</SortButton>
                 </th>
               )}
-              <th className="px-2 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <span className="hidden sm:inline">{t('songs.actions')}</span>
-                <span className="sm:hidden">Actions</span>
-              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">

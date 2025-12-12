@@ -2,7 +2,7 @@
 
 import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
-import { MusicalNoteIcon, PlayIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
 
 interface SongTableRowProps {
@@ -207,22 +207,6 @@ export default function SongTableRow({
           {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
         </td>
       )}
-
-      {/* Actions */}
-      <td className="px-2 sm:px-6 py-3 sm:py-4 text-right text-sm font-medium">
-        <div className="flex items-center justify-end">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              router.push(`/song/${song.id}`)
-            }}
-            className="text-blue-600 hover:text-blue-900 p-2 sm:p-1 rounded-lg hover:bg-blue-50 min-h-[44px] sm:min-h-0 min-w-[44px] sm:min-w-0 flex items-center justify-center"
-            title={t('songs.open')}
-          >
-            <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" />
-          </button>
-        </div>
-      </td>
     </tr>
   )
 }
