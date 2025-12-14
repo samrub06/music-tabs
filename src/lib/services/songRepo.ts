@@ -94,6 +94,61 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return mapDbSongToDomain(data)
   },
 
+  /**
+   * Creates a system-owned song (user_id = null) for trending/public songs
+   * Bypasses authentication check and allows setting is_trending and is_public flags
+   */
+  async createSystemSong(
+    songData: NewSongData,
+    options: { isTrending?: boolean; isPublic?: boolean } = {}
+  ): Promise<Song> {
+    const structuredSong = parseTextToStructuredSong(
+      songData.title,
+      songData.author,
+      songData.content,
+      songData.folderId,
+      songData.reviews,
+      songData.capo,
+      songData.key
+    )
+
+    const { data, error } = await (client
+      .from('songs') as any)
+      .insert([{
+        user_id: null, // System owned
+        title: songData.title,
+        author: songData.author,
+        folder_id: songData.folderId ?? null,
+        format: 'structured',
+        sections: structuredSong.sections as unknown as Database['public']['Tables']['songs']['Insert']['sections'],
+        reviews: songData.reviews ?? 0,
+        capo: songData.capo ?? null,
+        key: songData.key ?? structuredSong.firstChord,
+        first_chord: structuredSong.firstChord ?? null,
+        last_chord: structuredSong.lastChord ?? null,
+        version: songData.version ?? null,
+        version_description: songData.versionDescription ?? null,
+        rating: songData.rating ?? null,
+        difficulty: songData.difficulty ?? null,
+        artist_url: songData.artistUrl ?? null,
+        artist_image_url: songData.artistImageUrl ?? null,
+        song_image_url: songData.songImageUrl ?? null,
+        source_url: songData.sourceUrl ?? null,
+        source_site: songData.sourceSite ?? null,
+        tab_id: songData.tabId ?? null,
+        is_trending: options.isTrending ?? false,
+        is_public: options.isPublic ?? false
+      }])
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return mapDbSongToDomain(data)
+  },
+
   async getSong(id: string): Promise<Song | null> {
     const { data, error } = await client
       .from('songs')

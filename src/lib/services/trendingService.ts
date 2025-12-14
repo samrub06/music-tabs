@@ -3,7 +3,6 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/db';
 import { scrapeSongFromUrl, ScrapedSong } from './scraperService';
 import { songRepo } from './songRepo';
-import { parseTextToStructuredSong } from '@/utils/songParser';
 
 export interface TrendingSong {
   title: string;
@@ -149,85 +148,33 @@ export const trendingService = {
             });
 
             if (scrapedSong) {
-              await songRepo(supabase).createSong({
-                title: scrapedSong.title,
-                author: scrapedSong.author,
-                content: scrapedSong.content,
-                // Pas de user_id pour les chansons système (null) - mais createSong attend un user auth...
-                // Problème: createSong utilise auth.getUser().
-                // Solution: Utiliser supabase.from('songs').insert() directement ici pour contourner auth user check
-                // ou modifier createSong pour accepter un userId null/système.
-                // On va faire l'insert manuel ici pour plus de contrôle.
-                is_trending: true,
-                is_public: true,
-                rating: scrapedSong.rating,
-                difficulty: scrapedSong.difficulty,
-                reviews: scrapedSong.reviews,
-                key: scrapedSong.key,
-                capo: scrapedSong.capo,
-                version: scrapedSong.version,
-                artistUrl: scrapedSong.artistUrl,
-                artistImageUrl: scrapedSong.artistImageUrl,
-                songImageUrl: scrapedSong.songImageUrl,
-                sourceUrl: scrapedSong.url,
-                sourceSite: 'Ultimate Guitar',
-              } as any); // Cast as any car createSong dans Repo force l'auth pour l'instant, on va utiliser insert direct
-              
-              // WORKAROUND: songRepo.createSong check auth. On va faire un insert direct.
-              /*
-              const { error } = await supabase.from('songs').insert({
-                 ... mappings ...
-              })
-              */
-             
-             // Mieux: Adapter songRepo plus tard, pour l'instant insert manuel ici pour bypasser auth check du repo
-             // Mais on a besoin de `parseTextToStructuredSong`... qui est importé dans repo.
-             // On va utiliser une version simplifiée ou modifier le repo pour accepter l'insertion système.
-             // Le plus propre est d'ajouter une méthode `createSystemSong` au repo ou permettre createSong de bypasser user check.
-             
-             // Pour l'instant, je vais dupliquer la logique d'insert simple ici pour avancer.
-             
-             const structuredSong = parseTextToStructuredSong(
-                scrapedSong.title,
-                scrapedSong.author,
-                scrapedSong.content
-             );
-
-            const { error: insertError } = await (supabase.from('songs') as any).insert({
-                title: scrapedSong.title,
-                author: scrapedSong.author,
-                // sections: structuredSong.sections, // ATTENTION: Schema mismatch solved previously
-                // Le Repo utilise sections, mais on a fixé le type.
-                // Wait, le schema DB utilise `sections` jsonb.
-                // Le type TS a `sections`.
-                sections: structuredSong.sections as any, 
-                is_trending: true,
-                is_public: true,
-                rating: scrapedSong.rating,
-                difficulty: scrapedSong.difficulty,
-                reviews: scrapedSong.reviews,
-                key: scrapedSong.key,
-                capo: scrapedSong.capo,
-                first_chord: structuredSong.firstChord,
-                last_chord: structuredSong.lastChord,
-                version: scrapedSong.version,
-                artist_url: scrapedSong.artistUrl,
-                artist_image_url: scrapedSong.artistImageUrl,
-                song_image_url: scrapedSong.songImageUrl,
-                source_url: scrapedSong.url,
-                source_site: 'Ultimate Guitar',
-                format: 'structured',
-                user_id: null // System owned
-             } as any);
-
-             if (insertError) {
-               console.error('Error inserting trending song:', insertError);
-               stats.errors++;
-             } else {
-               stats.added++;
-               console.log(`Added new trending song: ${song.title}`);
-             }
-
+              try {
+                await songRepo(supabase).createSystemSong({
+                  title: scrapedSong.title,
+                  author: scrapedSong.author,
+                  content: scrapedSong.content,
+                  rating: scrapedSong.rating,
+                  difficulty: scrapedSong.difficulty,
+                  reviews: scrapedSong.reviews,
+                  key: scrapedSong.key,
+                  capo: scrapedSong.capo,
+                  version: scrapedSong.version,
+                  artistUrl: scrapedSong.artistUrl,
+                  artistImageUrl: scrapedSong.artistImageUrl,
+                  songImageUrl: scrapedSong.songImageUrl,
+                  sourceUrl: scrapedSong.url,
+                  sourceSite: 'Ultimate Guitar',
+                }, {
+                  isTrending: true,
+                  isPublic: true
+                });
+                
+                stats.added++;
+                console.log(`Added new trending song: ${song.title}`);
+              } catch (insertError) {
+                console.error('Error inserting trending song:', insertError);
+                stats.errors++;
+              }
             } else {
               console.error(`Failed to scrape content for: ${song.title}`);
               stats.errors++;
