@@ -36,18 +36,7 @@ export default function LibrarySidebar({ onClose }: LibrarySidebarProps) {
   return (
     <aside className="w-72 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold text-gray-900">Filtres</h2>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-1 text-gray-400 hover:text-gray-600"
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+       
 
         {/* Décennies */}
         <div className="mb-6">
