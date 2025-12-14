@@ -11,6 +11,12 @@ export interface TrendingSong {
   rating?: number;
   reviews?: number;
   difficulty?: string;
+  version?: number;
+  versionDescription?: string;
+  artistUrl?: string;
+  artistImageUrl?: string;
+  songImageUrl?: string;
+  tabId?: number;
 }
 
 /**
@@ -63,15 +69,38 @@ export const trendingService = {
         return [];
       }
 
-      // Mapper les résultats
-      return tabs.map((tab: any) => ({
-        title: tab.song_name,
-        artist: tab.artist_name,
-        url: tab.tab_url,
-        rating: tab.rating,
-        reviews: tab.votes,
-        difficulty: tab.difficulty,
-      }));
+      // Mapper les résultats avec toutes les métadonnées disponibles
+      const mappedTabs = tabs.map((tab: any) => {
+        const trendingSong: TrendingSong = {
+          title: tab.song_name,
+          artist: tab.artist_name,
+          url: tab.tab_url,
+          rating: tab.rating,
+          reviews: tab.votes,
+          difficulty: tab.difficulty,
+          version: tab.version,
+          versionDescription: tab.version_description,
+          artistUrl: tab.artist_url,
+          artistImageUrl: tab.artist_cover?.web_artist_cover?.small,
+          songImageUrl: tab.album_cover?.web_album_cover?.small,
+          tabId: tab.tab_id,
+        };
+        
+        // Log pour debug: afficher les métadonnées extraites
+        console.log(`📊 Extracted trending song: ${trendingSong.title} by ${trendingSong.artist}`, {
+          hasRating: !!trendingSong.rating,
+          hasReviews: !!trendingSong.reviews,
+          hasDifficulty: !!trendingSong.difficulty,
+          hasVersion: !!trendingSong.version,
+          hasArtistUrl: !!trendingSong.artistUrl,
+          hasArtistImage: !!trendingSong.artistImageUrl,
+          hasSongImage: !!trendingSong.songImageUrl,
+        });
+        
+        return trendingSong;
+      });
+      
+      return mappedTabs;
 
     } catch (error) {
       console.error('Error fetching trending songs:', error);
@@ -137,15 +166,35 @@ export const trendingService = {
             // N'existe pas : scraper et créer
             console.log(`New trending song found: ${song.title}. Scraping...`);
             
-            const scrapedSong = await scrapeSongFromUrl(song.url, {
+            // Créer un SearchResult complet avec toutes les métadonnées extraites depuis la page Explore
+            // Cela garantit que scrapeUltimateGuitar() utilise d'abord ces données (priorité)
+            const searchResult = {
               title: song.title,
               author: song.artist,
               url: song.url,
               source: 'Ultimate Guitar',
-              rating: song.rating,
               reviews: song.reviews,
-              difficulty: song.difficulty
+              version: song.version,
+              rating: song.rating,
+              difficulty: song.difficulty,
+              artistUrl: song.artistUrl,
+              artistImageUrl: song.artistImageUrl,
+              songImageUrl: song.songImageUrl,
+              versionDescription: song.versionDescription,
+            };
+            
+            console.log(`🔍 Scraping with full metadata:`, {
+              title: searchResult.title,
+              hasRating: !!searchResult.rating,
+              hasReviews: !!searchResult.reviews,
+              hasDifficulty: !!searchResult.difficulty,
+              hasVersion: !!searchResult.version,
+              hasArtistUrl: !!searchResult.artistUrl,
+              hasArtistImage: !!searchResult.artistImageUrl,
+              hasSongImage: !!searchResult.songImageUrl,
             });
+            
+            const scrapedSong = await scrapeSongFromUrl(song.url, searchResult);
 
             if (scrapedSong) {
               try {
