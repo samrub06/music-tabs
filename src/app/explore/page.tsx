@@ -4,7 +4,7 @@ import ExploreClient from './ExploreClient'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }> }) {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string; genre?: string; difficulty?: string; decade?: string }> }) {
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -13,7 +13,11 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const limit = Math.max(1, parseInt(params?.limit || '24', 10))
   const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const q = params?.q || ''
-  const { songs, total } = await songRepo(supabase).getTrendingSongsPaged(page, limit, q)
+  const genre = params?.genre || undefined
+  const difficulty = params?.difficulty || undefined
+  const decade = params?.decade ? parseInt(params.decade, 10) : undefined
+  
+  const { songs, total } = await songRepo(supabase).getTrendingSongsPaged(page, limit, q, genre, difficulty, decade)
 
   return (
     <ExploreClient 

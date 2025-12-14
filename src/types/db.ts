@@ -89,6 +89,8 @@ export interface Database {
           sections: Json | null
           is_public: boolean
           is_trending: boolean
+          genre: string | null
+          decade: number | null
         }
         Insert: {
           id?: string
@@ -120,6 +122,8 @@ export interface Database {
           sections?: Json | null
           is_public?: boolean
           is_trending?: boolean
+          genre?: string | null
+          decade?: number | null
         }
         Update: {
           id?: string
@@ -151,6 +155,8 @@ export interface Database {
           sections?: Json | null
           is_public?: boolean
           is_trending?: boolean
+          genre?: string | null
+          decade?: number | null
         }
       }
       playlists: {

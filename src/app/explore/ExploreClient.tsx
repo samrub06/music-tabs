@@ -28,6 +28,38 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
   const pathname = usePathname()
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
   const q = searchParams?.get('q') ?? initialQuery
+  const currentGenre = searchParams?.get('genre') || null
+  const currentDifficulty = searchParams?.get('difficulty') || null
+  const currentDecade = searchParams?.get('decade') || null
+
+  const genres = [
+    { id: '4', name: 'Rock' },
+    { id: '14', name: 'Pop' },
+    { id: '666', name: 'Folk' },
+    { id: '45', name: 'World Music' },
+    { id: '1781', name: 'Reggae' },
+  ]
+
+  const difficulties = [
+    { id: '1', name: 'Absolute Beginner' },
+    { id: '2', name: 'Beginner' },
+  ]
+
+  const decades = [
+    { year: 2020, name: '2020s' },
+    { year: 2010, name: '2010s' },
+  ]
+
+  const updateFilter = (type: 'genre' | 'difficulty' | 'decade', value: string | number | null) => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    if (value) {
+      params.set(type, String(value))
+    } else {
+      params.delete(type)
+    }
+    params.set('page', '1')
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   const handleAddToLibrary = async (song: Song) => {
     if (!userId) {
@@ -71,6 +103,99 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
           <div className="inline-flex rounded-md shadow-sm border">
             <a href="?view=gallery" className={`px-3 py-1.5 text-sm ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}>Gallery</a>
             <a href="?view=table" className={`px-3 py-1.5 text-sm ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}>Table</a>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu de filtres */}
+      <div className="mb-6 space-y-4">
+        {/* Genres */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Genres</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => updateFilter('genre', null)}
+              className={`px-3 py-1.5 text-sm rounded-md border ${
+                !currentGenre 
+                  ? 'bg-gray-900 text-white border-gray-900' 
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Tous
+            </button>
+            {genres.map((genre) => (
+              <button
+                key={genre.id}
+                onClick={() => updateFilter('genre', genre.id)}
+                className={`px-3 py-1.5 text-sm rounded-md border ${
+                  currentGenre === genre.id
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {genre.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Niveaux */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Niveaux</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => updateFilter('difficulty', null)}
+              className={`px-3 py-1.5 text-sm rounded-md border ${
+                !currentDifficulty
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Tous
+            </button>
+            {difficulties.map((difficulty) => (
+              <button
+                key={difficulty.id}
+                onClick={() => updateFilter('difficulty', difficulty.id)}
+                className={`px-3 py-1.5 text-sm rounded-md border ${
+                  currentDifficulty === difficulty.id
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {difficulty.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Décennies */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">Décennies</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => updateFilter('decade', null)}
+              className={`px-3 py-1.5 text-sm rounded-md border ${
+                !currentDecade
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Toutes
+            </button>
+            {decades.map((decade) => (
+              <button
+                key={decade.year}
+                onClick={() => updateFilter('decade', decade.year)}
+                className={`px-3 py-1.5 text-sm rounded-md border ${
+                  currentDecade === String(decade.year)
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {decade.name}
+              </button>
+            ))}
           </div>
         </div>
       </div>

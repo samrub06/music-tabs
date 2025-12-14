@@ -74,6 +74,8 @@ export interface StructuredSong {
   sourceSite?: string;
   viewCount?: number;
   tabId?: string;
+  genre?: string;
+  decade?: number;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)

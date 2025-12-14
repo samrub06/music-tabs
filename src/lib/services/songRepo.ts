@@ -38,7 +38,9 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     sourceUrl: dbSong.source_url || undefined,
     sourceSite: dbSong.source_site || undefined,
     tabId: dbSong.tab_id || undefined,
-    viewCount: dbSong.view_count || 0
+    viewCount: dbSong.view_count || 0,
+    genre: dbSong.genre || undefined,
+    decade: dbSong.decade || undefined
   } as Song
 }
 
@@ -100,7 +102,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
    */
   async createSystemSong(
     songData: NewSongData,
-    options: { isTrending?: boolean; isPublic?: boolean } = {}
+    options: { isTrending?: boolean; isPublic?: boolean; genre?: string; decade?: number } = {}
   ): Promise<Song> {
     const structuredSong = parseTextToStructuredSong(
       songData.title,
@@ -137,7 +139,9 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         source_site: songData.sourceSite ?? null,
         tab_id: songData.tabId ?? null,
         is_trending: options.isTrending ?? false,
-        is_public: options.isPublic ?? false
+        is_public: options.isPublic ?? false,
+        genre: options.genre ?? null,
+        decade: options.decade ?? null
       }])
       .select()
       .single()
@@ -333,13 +337,32 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return (data || []).map(mapDbSongToDomain)
   },
 
-  async getTrendingSongsPaged(page: number, limit: number, q?: string): Promise<{ songs: Song[]; total: number }> {
+  async getTrendingSongsPaged(
+    page: number, 
+    limit: number, 
+    q?: string,
+    genre?: string,
+    difficulty?: string,
+    decade?: number
+  ): Promise<{ songs: Song[]; total: number }> {
     const from = (page - 1) * limit
     const to = page * limit - 1
     let builder = (client.from('songs') as any)
       .select('*', { count: 'exact' })
       .or('is_trending.eq.true,is_public.eq.true')
       .order('created_at', { ascending: false })
+    
+    // Appliquer les filtres
+    if (genre) {
+      builder = builder.eq('genre', genre)
+    }
+    if (difficulty) {
+      builder = builder.eq('difficulty', difficulty)
+    }
+    if (decade) {
+      builder = builder.eq('decade', decade)
+    }
+    
     if (q && q.trim()) {
       const query = q.trim()
       builder = builder.or(`title.ilike.%${query}%,author.ilike.%${query}%`)

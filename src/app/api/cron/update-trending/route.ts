@@ -30,12 +30,12 @@ export async function GET(request: Request) {
       }
     });
 
-    console.log('Starting trending songs update...');
-    const stats = await trendingService.updateTrendingDatabase(supabase);
+    console.log('Starting trending songs update by categories...');
+    const stats = await trendingService.updateTrendingDatabaseByCategories(supabase, 15);
     
     return NextResponse.json({
       success: true,
-      message: 'Trending songs updated successfully',
+      message: 'Trending songs updated successfully by categories',
       stats
     });
 
