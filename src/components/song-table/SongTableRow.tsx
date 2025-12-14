@@ -52,44 +52,46 @@ export default function SongTableRow({
       )}
       
       {/* Title with image */}
-      <td className="px-2 sm:px-6 py-3 sm:py-4">
-        <div className="flex items-center">
-          {song?.songImageUrl ? (
-            <img 
-              src={song.songImageUrl} 
-              alt={song.title}
-              width={40}
-              height={40}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover mr-2 sm:mr-3 flex-shrink-0"
-            />
-          ) : (
-            <MusicalNoteIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-900 truncate max-w-[150px] sm:max-w-none">
-              {song.title}
-            </div>
-            {/* Mobile metadata */}
-            <div className="sm:hidden text-xs text-gray-500 mt-1">
-              <div className="flex items-center space-x-2 flex-wrap">
-                <span className="truncate max-w-[120px]">{song.author}</span>
-                {song.key && (
-                  <>
-                    <span className="text-gray-300">•</span>
-                    <span className="text-purple-600 font-medium">🎵 {song.key}</span>
-                  </>
-                )}
-                {song.rating && (
-                  <>
-                    <span className="text-gray-300">•</span>
-                    <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
-                  </>
-                )}
+      {visibleColumns.includes('title') && (
+        <td className="px-2 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center">
+            {song?.songImageUrl ? (
+              <img 
+                src={song.songImageUrl} 
+                alt={song.title}
+                width={40}
+                height={40}
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover mr-2 sm:mr-3 flex-shrink-0"
+              />
+            ) : (
+              <MusicalNoteIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-900 truncate max-w-[150px] sm:max-w-none">
+                {song.title}
+              </div>
+              {/* Mobile metadata */}
+              <div className="sm:hidden text-xs text-gray-500 mt-1">
+                <div className="flex items-center space-x-2 flex-wrap">
+                  <span className="truncate max-w-[120px]">{song.author}</span>
+                  {song.key && (
+                    <>
+                      <span className="text-gray-300">•</span>
+                      <span className="text-purple-600 font-medium">🎵 {song.key}</span>
+                    </>
+                  )}
+                  {song.rating && (
+                    <>
+                      <span className="text-gray-300">•</span>
+                      <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </td>
+        </td>
+      )}
 
       {/* Author */}
       {visibleColumns.includes('author') && (

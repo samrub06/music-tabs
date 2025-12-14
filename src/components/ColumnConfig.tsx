@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { 
   Cog6ToothIcon, 
   EyeIcon, 
@@ -29,19 +28,8 @@ const COLUMN_DEFINITIONS = [
 
 export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnConfigProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, right: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + window.scrollY + 8,
-        right: window.innerWidth - rect.right
-      });
-    }
-  }, [isOpen]);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -62,23 +50,31 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
     }
   }, [isOpen]);
 
-  const menuContent = isOpen ? (
-    <>
-      {/* Overlay pour fermer le menu */}
-      <div 
-        className="fixed inset-0 z-[100]" 
-        onClick={() => setIsOpen(false)}
-      />
-      
-      {/* Menu de configuration */}
-      <div 
-        ref={menuRef}
-        className="fixed w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[101]"
-        style={{
-          top: `${position.top}px`,
-          right: `${position.right}px`
-        }}
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
+        <Cog6ToothIcon className="h-4 w-4" />
+        <span>Colonnes</span>
+        <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Overlay pour fermer le menu */}
+          <div 
+            className="fixed inset-0 z-[100]" 
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Menu de configuration */}
+          <div 
+            ref={menuRef}
+            className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[101]"
+          >
             <div className="p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Afficher les colonnes</h3>
               
@@ -89,13 +85,18 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
                   return (
                     <label
                       key={column.key}
-                      className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                      className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
+                        column.key === 'title' 
+                          ? 'cursor-not-allowed opacity-60' 
+                          : 'cursor-pointer hover:bg-gray-50'
+                      }`}
                     >
                       <input
                         type="checkbox"
                         checked={isVisible}
                         onChange={() => onToggleColumn(column.key)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        disabled={column.key === 'title'}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:cursor-not-allowed"
                       />
                       <span className="text-lg">{column.icon}</span>
                       <span className="text-sm text-gray-700 flex-1">{column.label}</span>
@@ -134,22 +135,8 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
               </div>
             </div>
           </div>
-    </>
-  ) : null;
-
-  return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-      >
-        <Cog6ToothIcon className="h-4 w-4" />
-        <span>Colonnes</span>
-        <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {typeof window !== 'undefined' && createPortal(menuContent, document.body)}
+        </>
+      )}
     </div>
   );
 }

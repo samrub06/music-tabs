@@ -281,17 +281,17 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
                   {t('songForm.songTitle')} ou {t('songForm.artist')}
                 </label>
                 <div className="relative">
-                  <input
-                    type="text"
-                    ref={searchInputRef}
-                    autoFocus
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                <input
+                  type="text"
+                  ref={searchInputRef}
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('songForm.searchPlaceholder')}
-                    disabled={isSearching}
-                  />
+                  placeholder={t('songForm.searchPlaceholder')}
+                  disabled={isSearching}
+                />
                   {searchQuery && (
                     <button
                       onClick={(e) => {

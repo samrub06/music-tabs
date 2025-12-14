@@ -13,14 +13,14 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { setSidebarOpen } = useSidebar()
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header onMenuClick={() => setSidebarOpen(true)} />
+        <div className="min-h-screen flex flex-col bg-gray-50">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
 
-      {/* Main content - no sidebar for now */}
-      <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden">
-        {children}
-      </div>
-    </div>
+          {/* Main content - no sidebar for now */}
+          <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden">
+            {children}
+          </div>
+        </div>
   )
 }
 

@@ -13,7 +13,6 @@ import {
   ArrowsUpDownIcon
 } from '@heroicons/react/24/outline';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import EditSongForm from './EditSongForm';
 import FolderDropdown from './FolderDropdown';
 import ColumnConfig from './ColumnConfig';
@@ -64,23 +63,21 @@ export default function SongTable({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'viewCount', 'folder']);
+  
+  // Ensure 'title' is always in visibleColumns (required column)
+  useEffect(() => {
+    setVisibleColumns(prev => {
+      if (!prev.includes('title')) {
+        return [...prev, 'title'];
+      }
+      return prev;
+    });
+  }, []);
   const [showMobileSort, setShowMobileSort] = useState(false);
-  const [folderFilterPosition, setFolderFilterPosition] = useState({ top: 0, right: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const folderFilterButtonRef = useRef<HTMLButtonElement>(null);
   const folderFilterMenuRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Calculate folder filter dropdown position
-  useEffect(() => {
-    if (showFolderFilter && folderFilterButtonRef.current) {
-      const rect = folderFilterButtonRef.current.getBoundingClientRect();
-      setFolderFilterPosition({
-        top: rect.bottom + window.scrollY + 8,
-        right: window.innerWidth - rect.right
-      });
-    }
-  }, [showFolderFilter]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -103,7 +100,7 @@ export default function SongTable({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showFolderFilter]);
 
   // Filter songs based on search query and folder/playlist
   const filteredSongs = useMemo(() => {
@@ -210,6 +207,10 @@ export default function SongTable({
   };
 
   const handleToggleColumn = (column: string) => {
+    // Prevent hiding 'title' column as it's required
+    if (column === 'title') {
+      return;
+    }
     setVisibleColumns(prev => {
       if (prev.includes(column)) {
         return prev.filter(col => col !== column);
@@ -502,7 +503,7 @@ export default function SongTable({
                 <ChevronDownIcon className="h-4 w-4 ml-2 flex-shrink-0" />
               </button>
 
-              {showFolderFilter && typeof window !== 'undefined' && createPortal(
+              {showFolderFilter && (
                 <>
                   {/* Overlay */}
                   <div 
@@ -512,11 +513,7 @@ export default function SongTable({
                   {/* Menu */}
                   <div 
                     ref={folderFilterMenuRef}
-                    className="fixed w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[101]"
-                    style={{
-                      top: `${folderFilterPosition.top}px`,
-                      right: `${folderFilterPosition.right}px`
-                    }}
+                    className="absolute top-full right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[101]"
                   >
                     <div className="py-1">
                       <button
@@ -563,8 +560,7 @@ export default function SongTable({
                       ))}
                     </div>
                   </div>
-                </>,
-                document.body
+                </>
               )}
             </div>
             
@@ -592,9 +588,11 @@ export default function SongTable({
                   />
                 </th>
               )}
-              <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <SortButton field="title">{t('songs.title')}</SortButton>
-              </th>
+              {visibleColumns.includes('title') && (
+                <th className="px-2 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <SortButton field="title">{t('songs.title')}</SortButton>
+                </th>
+              )}
               {visibleColumns.includes('author') && (
                 <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <SortButton field="author">{t('songs.artist')}</SortButton>

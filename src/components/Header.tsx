@@ -145,37 +145,37 @@ export default function Header({ onMenuClick }: HeaderProps) {
                         />
                         {/* Menu */}
                         <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-[55] border border-gray-200">
-                          <div className="px-4 py-3 border-b border-gray-200">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {profile?.full_name || 'User'}
-                            </p>
-                            <p className="text-xs text-gray-500 truncate">
-                              {profile?.email}
-                            </p>
-                          </div>
-                          
-                          <button
-                            onClick={() => {
-                              setShowPlaylistImporter(true);
-                              setShowUserMenu(false);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                          >
-                            <CloudArrowDownIcon className="h-5 w-5" />
-                            <span>Importer Ultimate Guitar</span>
-                          </button>
-                         
-                          <button
-                            onClick={() => {
-                              signOut();
-                              setShowUserMenu(false);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                          >
-                            <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                            <span>{t('auth.signOut')}</span>
-                          </button>
+                        <div className="px-4 py-3 border-b border-gray-200">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {profile?.full_name || 'User'}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {profile?.email}
+                          </p>
                         </div>
+                        
+                        <button
+                          onClick={() => {
+                            setShowPlaylistImporter(true);
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <CloudArrowDownIcon className="h-5 w-5" />
+                          <span>Importer Ultimate Guitar</span>
+                        </button>
+                       
+                        <button
+                          onClick={() => {
+                            signOut();
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                        >
+                          <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                          <span>{t('auth.signOut')}</span>
+                        </button>
+                      </div>
                       </>
                     )}
                   </>
@@ -228,19 +228,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   />
                   {/* Menu */}
                   <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[55] border border-gray-200">
-                    {languages.map((language) => (
-                      <button
-                        key={language.code}
-                        onClick={() => handleLanguageChange(language.code)}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2 ${
-                          language.code === currentLanguage.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                        }`}
-                      >
-                        <span>{language.flag}</span>
-                        <span>{language.name}</span>
-                      </button>
-                    ))}
-                  </div>
+                  {languages.map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => handleLanguageChange(language.code)}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2 ${
+                        language.code === currentLanguage.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      }`}
+                    >
+                      <span>{language.flag}</span>
+                      <span>{language.name}</span>
+                    </button>
+                  ))}
+                </div>
                 </>
               )}
             </div>
