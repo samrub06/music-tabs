@@ -83,6 +83,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         source_url: songData.sourceUrl ?? null,
         source_site: songData.sourceSite ?? null,
         tab_id: songData.tabId ?? null,
+        genre: songData.genre ?? null,
         is_trending: false, // Default for user created songs
         is_public: false    // Default for user created songs
       }])
@@ -226,7 +227,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       song_image_url: updates.songImageUrl ?? null,
       source_url: updates.sourceUrl ?? null,
       source_site: updates.sourceSite ?? null,
-      tab_id: updates.tabId ?? null
+      tab_id: updates.tabId ?? null,
+      genre: updates.genre ?? null
     }
     if (sections) {
       updateData.sections = sections

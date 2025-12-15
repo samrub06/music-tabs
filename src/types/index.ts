@@ -102,6 +102,7 @@ export interface NewSongData {
   sourceUrl?: string;
   sourceSite?: string;
   tabId?: string;
+  genre?: string;
 }
 
 // Type pour l'édition de chanson (avec contenu texte)
@@ -128,6 +129,7 @@ export interface SongEditData {
   sourceUrl?: string;
   sourceSite?: string;
   tabId?: string;
+  genre?: string;
 }
 
 export interface AppState {

@@ -89,7 +89,9 @@ async function processSong(
       artistImageUrl: scrapedSong.artistImageUrl,
       songImageUrl: scrapedSong.songImageUrl,
       sourceUrl: scrapedSong.url,
-      sourceSite: scrapedSong.source
+      sourceSite: scrapedSong.source,
+      tabId: scrapedSong.tabId,
+      songGenre: scrapedSong.songGenre
     };
 
     // 4. Déterminer le dossier
@@ -383,7 +385,9 @@ async function importSongToDatabase(
       artistImageUrl: scrapedSong.artistImageUrl,
       songImageUrl: scrapedSong.songImageUrl,
       sourceUrl: scrapedSong.url,
-      sourceSite: scrapedSong.source
+      sourceSite: scrapedSong.source,
+      tabId: scrapedSong.tabId ? scrapedSong.tabId.toString() : undefined,
+      genre: scrapedSong.songGenre
     };
     
     console.log(`💾 Creating song with metadata:`, {

@@ -215,7 +215,8 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
       songImageUrl: scraped.songImageUrl,
       sourceUrl: scraped.url,
       sourceSite: scraped.source,
-      tabId: scraped.tabId
+      tabId: scraped.tabId,
+      genre: (scraped as any).songGenre || (scraped as any).genre
     } as NewSongData;
   }
 

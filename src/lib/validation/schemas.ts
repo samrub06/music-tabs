@@ -31,7 +31,8 @@ export const createSongSchema = z.object({
   songImageUrl: z.string().url().optional().or(z.literal('')),
   sourceUrl: z.string().url().optional().or(z.literal('')),
   sourceSite: z.string().optional(),
-  tabId: z.union([z.string(), z.number().transform(String)]).optional()
+  tabId: z.union([z.string(), z.number().transform(String)]).optional(),
+  genre: z.string().optional()
 })
 
 export const updateSongSchema = createSongSchema.partial().extend({

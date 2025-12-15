@@ -59,6 +59,7 @@ export interface ScrapedSong {
   artistImageUrl?: string;
   songImageUrl?: string;
   tabId?: number;
+  songGenre?: string;
 }
 
 export interface SearchResult {
@@ -277,7 +278,9 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     if (tabView.meta) {
       const metaKeys = Object.keys(tabView.meta);
       console.log('🔍 Métadonnées disponibles:', metaKeys);
-      
+          // tabView.meta.genre= pop
+          // tabView.meta.difficulty= 2020
+          
       // Construire une chaîne de métadonnées pour la recherche de capo
       metadataContent = Object.entries(tabView.meta)
         .map(([key, value]) => `${key}: ${value}`)
@@ -285,17 +288,21 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     }
     
     // Chercher aussi dans les informations de tuning et autres métadonnées
-    if (tab.tuning) {
+    if (tabView.meta.tuning) {
       metadataContent += `\nTuning: ${tab.tuning}`;
     }
-    if (tab.key) {
+    /* if (tabView.meta.tonality) {
       const capitalizedKey = tab.key.charAt(0).toUpperCase() + tab.key.slice(1);
       metadataContent += `\nKey: ${capitalizedKey}`;
-    }
-    if (tab.difficulty) {
+    } */
+    if (tabView.meta.difficulty) {
       metadataContent += `\nDifficulty: ${tab.difficulty}`;
     }
-    
+    if (tabView.meta.song_genre) {
+      metadataContent += `\nGenre: ${tabView.meta.song_genre}`;
+    }
+ 
+ 
     // Combiner le contenu principal avec les métadonnées
     const fullContent = metadataContent + '\n\n' + content;
     
@@ -311,11 +318,12 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     const version = searchResult?.version || tab?.version || tabView.version;
     const versionDescription = searchResult?.versionDescription || tab?.version_description || tabView.version_description;
     const rating = searchResult?.rating || tab?.rating || tabView.rating;
-    const difficulty = searchResult?.difficulty || tab?.difficulty || tabView.difficulty;
+    const difficulty = searchResult?.difficulty || tab?.difficulty || tabView.ug_difficulty;
     const artistUrl = searchResult?.artistUrl || tab?.artist_url || tabView.artist_url;
     const artistImageUrl = searchResult?.artistImageUrl || tab?.artist_cover?.web_artist_cover?.small || tabView.artist_cover?.web_artist_cover?.small;
     const songImageUrl = searchResult?.songImageUrl || tab?.album_cover?.web_album_cover?.small || tabView.album_cover?.web_album_cover?.small;
     const tabId = data.store?.page?.data?.tab?.id;
+    const songGenre = tabView.meta?.song_genre || tabView.meta?.genre || undefined;
     
     
     // Ajouter la description de version au début du contenu si elle existe
@@ -329,7 +337,7 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     const capo = detectCapo(fullContent);
     
     console.log(`🎵 Extracted from Ultimate Guitar: "${title}" by "${author}"${key ? ` (Key: ${key})` : ''}${capo ? ` (Capo: ${capo})` : ''}${version ? ` (Version: ${version})` : ''}${rating ? ` (Rating: ${rating})` : ''}${difficulty ? ` (Difficulty: ${difficulty})` : ''}`);
-    console.log('🔍 Final extracted data:', { rating, difficulty, version, artistUrl, artistImageUrl, songImageUrl });
+    console.log('🔍 Final extracted data:', { rating, difficulty, version, artistUrl, artistImageUrl, songImageUrl, songGenre });
     
     // Debug: montrer ce qu'on a trouvé
     if (title === 'Sans titre' || author === 'Auteur inconnu') {
@@ -355,7 +363,8 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
       artistUrl,
       artistImageUrl,
       songImageUrl,
-      tabId
+      tabId,
+      songGenre
     };
   } catch (error) {
     console.error('Error scraping guitar tabs:', error);
@@ -1121,8 +1130,12 @@ async function importSongToDatabase(scrapedSong: ScrapedSong, userId: string, ta
       artistImageUrl: scrapedSong.artistImageUrl,
       songImageUrl: scrapedSong.songImageUrl,
       sourceUrl: scrapedSong.url,
-      sourceSite: scrapedSong.source
+      sourceSite: scrapedSong.source,
+      tabId: scrapedSong.tabId ? scrapedSong.tabId.toString() : undefined,
+      genre: scrapedSong.songGenre || undefined
     };
+    
+    console.log(`💾 Saving song with genre: "${newSongData.genre}" and tabId: "${newSongData.tabId}"`);
     
     const createdSong = await songService.createSong(newSongData, clientSupabase);
     console.log(`✅ Successfully imported: ${createdSong.title} (ID: ${createdSong.id})`);

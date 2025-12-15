@@ -15,7 +15,7 @@ export const songService = {
     
     let baseQuery = client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord', { count: 'exact' });
+      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre', { count: 'exact' });
     
     // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
     if (!user) {
@@ -54,7 +54,9 @@ export const songService = {
       viewCount: song.view_count || 0,
       key: song.key,
       firstChord: song.first_chord,
-      lastChord: song.last_chord
+      lastChord: song.last_chord,
+      tabId: song.tab_id,
+      genre: song.genre
     })) || [];
     
     return { songs: mappedSongs, total: count || 0 };
@@ -92,7 +94,8 @@ export const songService = {
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
       sourceSite: data.source_site,
-      tabId: data.tab_id
+      tabId: data.tab_id,
+      genre: data.genre
     };
   },
 
@@ -140,7 +143,8 @@ export const songService = {
         song_image_url: songData.songImageUrl || null,
         source_url: songData.sourceUrl || null,
         source_site: songData.sourceSite || null,
-        tab_id: songData.tabId || null
+        tab_id: songData.tabId || null,
+        genre: songData.genre || null
       }])
       .select()
       .single();
@@ -165,7 +169,8 @@ export const songService = {
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
       sourceSite: data.source_site,
-      tabId: data.tab_id
+      tabId: data.tab_id,
+      genre: data.genre
     };
   },
 
@@ -209,7 +214,8 @@ export const songService = {
       song_image_url: updates.songImageUrl || null,
       source_url: updates.sourceUrl || null,
       source_site: updates.sourceSite || null,
-      tab_id: updates.tabId || null
+      tab_id: updates.tabId || null,
+      genre: updates.genre || null
     };
 
     if (sections) {
@@ -243,7 +249,8 @@ export const songService = {
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
       sourceSite: data.source_site,
-      tabId: data.tab_id
+      tabId: data.tab_id,
+      genre: data.genre
     };
   },
 
@@ -291,7 +298,9 @@ export const songService = {
       artistImageUrl: data.artist_image_url,
       songImageUrl: data.song_image_url,
       sourceUrl: data.source_url,
-      sourceSite: data.source_site
+      sourceSite: data.source_site,
+      tabId: data.tab_id,
+      genre: data.genre
     };
   },
 
@@ -419,7 +428,8 @@ export const songService = {
       songImageUrl: song.song_image_url,
       sourceUrl: song.source_url,
       sourceSite: song.source_site,
-      tabId: song.tab_id
+      tabId: song.tab_id,
+      genre: song.genre
     })) || [];
   }
 };
