@@ -35,6 +35,16 @@ export interface ImportProgress {
   status: 'idle' | 'parsing' | 'searching' | 'importing' | 'completed' | 'error';
 }
 
+// Map to track genre folders (name -> id)
+interface GenreFolderMap {
+  [key: string]: string;
+}
+
+// Map to track concurrent folder creation (genre -> Promise<string>)
+interface PendingFolderCreations {
+  [key: string]: Promise<string>;
+}
+
 /**
  * Traite une chanson individuelle : recherche, scraping et import
  */
@@ -43,7 +53,9 @@ async function processSong(
   folderMap: Map<string, string>,
   targetFolderId: string | undefined,
   userId: string,
-  clientSupabase: any
+  clientSupabase: any,
+  genreToFolderId: GenreFolderMap,
+  pendingFolderCreations: PendingFolderCreations
 ): Promise<{ 
   status: 'success' | 'failed' | 'duplicate'; 
   error?: string; 
@@ -64,7 +76,7 @@ async function processSong(
     // Prendre la première version
     const bestVersion = searchResults[0];
     
-    // 2. Scraper le contenu AVEC les métadonnées de recherche (FIX: pass bestVersion)
+    // 2. Scraper le contenu AVEC les métadonnées de recherche
     const scrapedSong = await scrapeSongFromUrl(bestVersion.url, bestVersion);
     
     if (!scrapedSong) {
@@ -95,8 +107,49 @@ async function processSong(
     };
 
     // 4. Déterminer le dossier
-    const songKey = `${song.title}|${song.artist}`;
-    const songFolderId = folderMap.get(songKey) || targetFolderId;
+    // Priority: 
+    // 1. Explicit mapping from AI (folderMap)
+    // 2. Explicit target folder selected by user (targetFolderId)
+    // 3. Genre-based auto-organization (if genre exists)
+    let songFolderId = folderMap.get(`${song.title}|${song.artist}`) || targetFolderId;
+
+    if (!songFolderId && finalSong.songGenre) {
+      const genreKey = finalSong.songGenre.toLowerCase().trim();
+      
+      if (genreKey) {
+        // Check if we already have a folder ID for this genre
+        if (genreToFolderId[genreKey]) {
+          songFolderId = genreToFolderId[genreKey];
+        } else if (pendingFolderCreations[genreKey]) {
+          // Wait for pending creation
+          songFolderId = await pendingFolderCreations[genreKey];
+        } else {
+          // Create new folder for genre
+          // Create promise immediately to block other concurrent requests for same genre
+          const creationPromise = (async () => {
+            try {
+              console.log(`📁 Auto-creating folder for genre: ${finalSong.songGenre}`);
+              const newFolder = await folderRepo(clientSupabase).createFolder({ 
+                name: finalSong.songGenre!
+              });
+              
+              const newId = newFolder.id;
+              genreToFolderId[genreKey] = newId; // Update cache
+              return newId;
+            } catch (err) {
+              console.error(`Failed to create genre folder ${finalSong.songGenre}:`, err);
+              // Remove from pending so we can retry or fail gracefully next time, 
+              // but here we just return undefined to skip folder assignment
+              delete pendingFolderCreations[genreKey];
+              return undefined as unknown as string;
+            }
+          })();
+          
+          pendingFolderCreations[genreKey] = creationPromise;
+          songFolderId = await creationPromise;
+        }
+      }
+    }
 
     // 5. Importer en DB
     const importStatus = await importSongToDatabase(
@@ -157,7 +210,24 @@ export async function importPlaylistFromText(
     aiFolders: []
   };
 
+  // Initialize genre mapping state
+  const genreToFolderId: GenreFolderMap = {};
+  const pendingFolderCreations: PendingFolderCreations = {};
+
   try {
+    // Pre-load existing folders to populate genreToFolderId
+    if (clientSupabase) {
+      try {
+        const existingFolders = await folderRepo(clientSupabase).getAllFolders();
+        existingFolders.forEach(f => {
+          genreToFolderId[f.name.toLowerCase().trim()] = f.id;
+        });
+        console.log(`📁 Loaded ${existingFolders.length} existing folders for genre matching`);
+      } catch (err) {
+        console.warn('Failed to load existing folders:', err);
+      }
+    }
+
     // Étape 1: Parser le texte avec l'IA
     console.log('🤖 Step 1: Starting AI parsing...');
     onProgress?.({
@@ -218,22 +288,32 @@ export async function importPlaylistFromText(
         
         // Créer les dossiers et mapper les chansons
         for (const aiFolder of aiFolders) {
-          console.log(`📁 Creating folder: ${aiFolder.name} with ${aiFolder.songs.length} songs`);
-          const folder = await folderRepo(clientSupabase).createFolder({ 
-            name: aiFolder.name,
-          });
-          console.log(`✅ Folder created with ID: ${folder.id}`);
-          
-          // Ajouter le dossier aux résultats
-          result.aiFolders!.push({
-            id: folder.id,
-            name: folder.name,
-            songsCount: aiFolder.songs.length
-          });
+          // Check if folder already exists (via genre/name map) to avoid duplicates even here
+          const folderNameKey = aiFolder.name.toLowerCase().trim();
+          let folderId = genreToFolderId[folderNameKey];
+
+          if (!folderId) {
+             console.log(`📁 Creating folder: ${aiFolder.name} with ${aiFolder.songs.length} songs`);
+             const folder = await folderRepo(clientSupabase).createFolder({ 
+               name: aiFolder.name,
+             });
+             console.log(`✅ Folder created with ID: ${folder.id}`);
+             folderId = folder.id;
+             genreToFolderId[folderNameKey] = folderId; // Update cache
+
+             // Ajouter le dossier aux résultats
+            result.aiFolders!.push({
+              id: folder.id,
+              name: folder.name,
+              songsCount: aiFolder.songs.length
+            });
+          } else {
+             console.log(`📁 Using existing folder for group: ${aiFolder.name}`);
+          }
           
           for (const song of aiFolder.songs) {
-            folderMap.set(`${song.title}|${song.artist}`, folder.id);
-            console.log(`🎵 Mapped "${song.title}" by "${song.artist}" to folder "${folder.name}"`);
+            folderMap.set(`${song.title}|${song.artist}`, folderId);
+            console.log(`🎵 Mapped "${song.title}" by "${song.artist}" to folder "${aiFolder.name}"`);
           }
         }
         
@@ -269,7 +349,7 @@ export async function importPlaylistFromText(
 
       // Exécuter le lot en parallèle
       const batchResults = await Promise.all(batch.map(song => 
-        processSong(song, folderMap, targetFolderId, userId, clientSupabase)
+        processSong(song, folderMap, targetFolderId, userId, clientSupabase, genreToFolderId, pendingFolderCreations)
       ));
 
       // Agréger les résultats

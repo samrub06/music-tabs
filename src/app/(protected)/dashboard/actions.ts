@@ -25,10 +25,37 @@ export async function addSongAction(payload: NewSongData) {
       throw new Error('Cette chanson existe déjà dans votre bibliothèque')
     }
   }
+
+  // Auto-organization logic: if no folderId provided but genre exists, find or create genre folder
+  let finalFolderId = validatedPayload.folderId ?? undefined
+  
+  if (!finalFolderId && validatedPayload.genre) {
+    const genreName = validatedPayload.genre.trim()
+    if (genreName) {
+      const fRepo = folderRepo(supabase)
+      const folders = await fRepo.getAllFolders()
+      
+      // Check for existing folder (case-insensitive)
+      const existingFolder = folders.find(f => f.name.toLowerCase() === genreName.toLowerCase())
+      
+      if (existingFolder) {
+        finalFolderId = existingFolder.id
+      } else {
+        // Create new folder for this genre
+        try {
+          const newFolder = await fRepo.createFolder({ name: genreName })
+          finalFolderId = newFolder.id
+        } catch (error) {
+          console.error('Failed to auto-create genre folder:', error)
+          // Fallback to no folder if creation fails
+        }
+      }
+    }
+  }
   
   const normalizedPayload: NewSongData = {
     ...validatedPayload,
-    folderId: validatedPayload.folderId ?? undefined
+    folderId: finalFolderId
   }
   const created = await repo.createSong(normalizedPayload)
   revalidatePath('/dashboard')

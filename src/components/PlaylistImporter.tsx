@@ -272,7 +272,7 @@ Feb 1, 2022 	Chords`;
                 }}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="ai-organization">🤖 Organisation IA automatique</option>
+                <option value="ai-organization">🤖 Organisation Auto (IA / Genre)</option>
                 <option value="">Aucun dossier (racine)</option>
                 {folders.map((folder) => (
                   <option key={folder.id} value={folder.id}>
@@ -282,7 +282,7 @@ Feb 1, 2022 	Chords`;
               </select>
               {useAiOrganization && (
                 <p className="mt-1 text-xs text-purple-600">
-                  L&apos;IA créera automatiquement des dossiers organisés et placera chaque chanson dans le bon dossier
+                  L&apos;IA organisera vos chansons par dossier (Artiste ou Genre).
                 </p>
               )}
             </div>
