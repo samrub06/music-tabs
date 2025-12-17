@@ -19,7 +19,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
-  const limit = Math.max(1, parseInt(params?.limit || '24', 10))
+  const limit = Math.max(1, parseInt(params?.limit || '50', 10))
   const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const q = params?.q || ''
 

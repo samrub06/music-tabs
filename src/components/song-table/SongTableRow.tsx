@@ -36,7 +36,7 @@ export default function SongTableRow({
       {/* Checkbox column */}
       {hasUser && (
         <td 
-          className="px-2 sm:px-6 py-3 sm:py-4"
+          className="px-2 sm:px-4 py-2"
           onClick={(e) => e.stopPropagation()}
         >
           <input
@@ -53,7 +53,7 @@ export default function SongTableRow({
       
       {/* Title with image */}
       {visibleColumns.includes('title') && (
-        <td className="px-2 sm:px-6 py-3 sm:py-4">
+        <td className="px-2 sm:px-4 py-2">
           <div className="flex items-center">
             {song?.songImageUrl ? (
               <img 
@@ -95,7 +95,7 @@ export default function SongTableRow({
 
       {/* Author */}
       {visibleColumns.includes('author') && (
-        <td className="hidden sm:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden sm:table-cell px-4 py-2 whitespace-nowrap">
           <div className="flex items-center space-x-2">
             {song.artistImageUrl && (
               <img 
@@ -113,7 +113,7 @@ export default function SongTableRow({
 
       {/* Key */}
       {visibleColumns.includes('key') && (
-        <td className="hidden md:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {song.key ? (
               <span className="text-purple-600 font-medium">{song.key}</span>
@@ -126,7 +126,7 @@ export default function SongTableRow({
 
       {/* Rating */}
       {visibleColumns.includes('rating') && (
-        <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {song.rating ? (
               <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
@@ -139,7 +139,7 @@ export default function SongTableRow({
 
       {/* Reviews */}
       {visibleColumns.includes('reviews') && (
-        <td className="hidden xl:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden xl:table-cell px-4 py-2 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {song.reviews && song.reviews > 0 ? (
               <span className="text-gray-600 font-medium">👥 {song.reviews}</span>
@@ -152,7 +152,7 @@ export default function SongTableRow({
 
       {/* Difficulty */}
       {visibleColumns.includes('difficulty') && (
-        <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {song.difficulty ? (
               <span className="text-blue-600 font-medium">🎸 {song.difficulty}</span>
@@ -165,7 +165,7 @@ export default function SongTableRow({
 
       {/* Version */}
       {visibleColumns.includes('version') && (
-        <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {song.version ? (
               <span className="text-green-600 font-medium">🔢 v{song.version}</span>
@@ -178,7 +178,7 @@ export default function SongTableRow({
 
       {/* View Count */}
       {visibleColumns.includes('viewCount') && (
-        <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
           <div className="text-sm text-gray-900">
             {song.viewCount && song.viewCount > 0 ? (
               <span className="text-blue-600 font-medium">👁️ {song.viewCount}</span>
@@ -191,7 +191,7 @@ export default function SongTableRow({
 
       {/* Folder */}
       {visibleColumns.includes('folder') && (
-        <td className="hidden md:table-cell px-6 py-3 sm:py-4 whitespace-nowrap">
+        <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
           <div onClick={(e) => e.stopPropagation()}>
             <FolderDropdown
               currentFolderId={song.folderId}
@@ -205,7 +205,7 @@ export default function SongTableRow({
 
       {/* Updated At */}
       {visibleColumns.includes('updatedAt') && (
-        <td className="hidden lg:table-cell px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-500">
+        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap text-sm text-gray-500">
           {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
         </td>
       )}
