@@ -6,7 +6,15 @@ import { createActionServerClient } from '@/lib/supabase/server'
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  
+  // Default to dashboard if no next param provided
+  let next = searchParams.get('next') ?? '/dashboard'
+
+  // Basic sanitization to prevent open redirects
+  // Ensure it starts with / and is not a protocol-relative URL (//)
+  if (!next.startsWith('/') || next.startsWith('//')) {
+    next = '/dashboard'
+  }
 
   if (code) {
     console.log('Exchanging code for session...', code)

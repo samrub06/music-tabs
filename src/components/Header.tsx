@@ -76,6 +76,24 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <Bars3Icon className="h-6 w-6" />
               </button>
             )}
+
+            {/* Mobile icon navigation - Always visible on mobile */}
+            <nav className="flex md:hidden items-center">
+              <Link
+                href="/library"
+                className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <FolderOpenIcon className="h-6 w-6" />
+                <span className="sr-only">Library</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <RectangleStackIcon className="h-6 w-6" />
+                <span className="sr-only">My Songs</span>
+              </Link>
+            </nav>
             
             {/* Authenticated navigation - Desktop */}
             {user && (
