@@ -15,6 +15,7 @@ import {
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
+import { NOTES } from '@/utils/chords';
 
 interface SongHeaderProps {
   song: Song;
@@ -65,6 +66,38 @@ export default function SongHeader({
   canNextSong
 }: SongHeaderProps) {
   const [showControls, setShowControls] = useState(false);
+
+  // Calculate current key based on original key and transpose value
+  const getCurrentKey = () => {
+    if (!song.key) return null;
+    const originalKeyIndex = NOTES.indexOf(song.key);
+    if (originalKeyIndex === -1) return null;
+    const currentKeyIndex = (originalKeyIndex + transposeValue + 12) % 12;
+    return NOTES[currentKeyIndex];
+  };
+
+  // Handle key selection from dropdown
+  const handleKeySelect = (targetKey: string) => {
+    if (!song.key) return;
+    const originalKeyIndex = NOTES.indexOf(song.key);
+    const targetKeyIndex = NOTES.indexOf(targetKey);
+    if (originalKeyIndex === -1 || targetKeyIndex === -1) return;
+    
+    // Calculate the transpose value needed to reach the target key
+    let newTransposeValue = targetKeyIndex - originalKeyIndex;
+    
+    // Normalize to range -11 to +11 (prefer smaller absolute values)
+    if (newTransposeValue > 6) {
+      newTransposeValue -= 12;
+    } else if (newTransposeValue < -6) {
+      newTransposeValue += 12;
+    }
+    
+    onSetTransposeValue(newTransposeValue);
+  };
+
+  const currentKey = getCurrentKey();
+
   return (
     <div className="flex-shrink-0 border-b border-gray-200">
       {/* Mobile Header - Compact */}
@@ -211,9 +244,9 @@ export default function SongHeader({
                 <button
                   onClick={() => onSetTransposeValue(Math.max(transposeValue - 1, -11))}
                   disabled={transposeValue <= -11}
-                  className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                  className="p-3 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center"
                 >
-                  <MinusIcon className="h-4 w-4" />
+                  <MinusIcon className="h-5 w-5" />
                 </button>
                 <div className="bg-white rounded-lg px-3 py-1 min-w-[50px] text-center shadow-sm">
                   <span className="text-sm font-bold text-gray-900">
@@ -223,12 +256,35 @@ export default function SongHeader({
                 <button
                   onClick={() => onSetTransposeValue(Math.min(transposeValue + 1, 11))}
                   disabled={transposeValue >= 11}
-                  className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                  className="p-3 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center"
                 >
-                  <PlusIcon className="h-4 w-4" />
+                  <PlusIcon className="h-5 w-5" />
                 </button>
               </div>
             </div>
+
+            {/* Key Selector */}
+            {song.key && (
+              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
+                <span className="text-xs font-medium text-purple-700">Tonalité:</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-purple-600">
+                    {song.key} → {currentKey || song.key}
+                  </span>
+                  <select
+                    value={currentKey || song.key}
+                    onChange={(e) => handleKeySelect(e.target.value)}
+                    className="bg-white border border-purple-300 text-purple-800 text-sm font-medium rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[40px]"
+                  >
+                    {NOTES.filter(note => !note.includes('#')).map((note) => (
+                      <option key={note} value={note}>
+                        {note}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* Font Size Controls */}
             <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 w-full">
@@ -343,24 +399,46 @@ export default function SongHeader({
           </div>
 
           {/* Transpose Controls */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => onSetTransposeValue(Math.max(transposeValue - 1, -11))}
-              disabled={transposeValue <= -11}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-            >
-              <MinusIcon className="h-4 w-4" />
-            </button>
-            <span className="text-sm font-medium min-w-[3rem] text-center">
-              {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-            </span>
-            <button
-              onClick={() => onSetTransposeValue(Math.min(transposeValue + 1, 11))}
-              disabled={transposeValue >= 11}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-            >
-              <PlusIcon className="h-4 w-4" />
-            </button>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => onSetTransposeValue(Math.max(transposeValue - 1, -11))}
+                disabled={transposeValue <= -11}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <MinusIcon className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-medium min-w-[3rem] text-center">
+                {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+              </span>
+              <button
+                onClick={() => onSetTransposeValue(Math.min(transposeValue + 1, 11))}
+                disabled={transposeValue >= 11}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <PlusIcon className="h-4 w-4" />
+              </button>
+            </div>
+            
+            {/* Key Selector for Desktop */}
+            {song.key && (
+              <div className="flex items-center space-x-2 bg-purple-50 border border-purple-200 rounded-lg px-3 py-1">
+                <span className="text-xs text-purple-600 font-medium">
+                  {song.key} → {currentKey || song.key}
+                </span>
+                <select
+                  value={currentKey || song.key}
+                  onChange={(e) => handleKeySelect(e.target.value)}
+                  className="bg-white border border-purple-300 text-purple-800 text-xs font-medium rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {NOTES.filter(note => !note.includes('#')).map((note) => (
+                    <option key={note} value={note}>
+                      {note}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Auto-scroll Controls */}
