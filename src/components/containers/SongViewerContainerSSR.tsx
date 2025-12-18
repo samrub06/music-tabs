@@ -39,7 +39,37 @@ export default function SongViewerContainerSSR({
   const [useCapo, setUseCapo] = useState<boolean>(song.capo !== undefined && song.capo !== null);
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [manualBpm, setManualBpm] = useState<number | null>(null);
+  const [hasUsedNext, setHasUsedNext] = useState(false);
   
+  // Load hasUsedNext from sessionStorage on mount and sync current song index
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('hasUsedNext');
+      setHasUsedNext(stored === 'true');
+      
+      // Sync current song index in navigation data
+      const navigationDataStr = sessionStorage.getItem('songNavigation');
+      if (navigationDataStr) {
+        try {
+          const navigationData = JSON.parse(navigationDataStr);
+          const { songList } = navigationData;
+          const currentIndex = songList.findIndex(id => id === song.id);
+          
+          if (currentIndex >= 0 && currentIndex !== navigationData.currentIndex) {
+            // Update index if it doesn't match
+            const updatedData = {
+              ...navigationData,
+              currentIndex
+            };
+            sessionStorage.setItem('songNavigation', JSON.stringify(updatedData));
+          }
+        } catch (error) {
+          console.error('Error syncing navigation data:', error);
+        }
+      }
+    }
+  }, [song.id]);
+
   // Custom hooks
   const {
     isEditing,
@@ -122,6 +152,67 @@ export default function SongViewerContainerSSR({
     setUseCapo(value);
   };
 
+  // Navigation handlers
+  const handleNextSong = () => {
+    if (typeof window === 'undefined') return;
+    
+    const navigationDataStr = sessionStorage.getItem('songNavigation');
+    if (!navigationDataStr) return;
+    
+    try {
+      const navigationData = JSON.parse(navigationDataStr);
+      const { songList, currentIndex } = navigationData;
+      
+      if (currentIndex < songList.length - 1) {
+        const nextIndex = currentIndex + 1;
+        const nextSongId = songList[nextIndex];
+        
+        // Update current index in sessionStorage
+        const updatedData = {
+          ...navigationData,
+          currentIndex: nextIndex
+        };
+        sessionStorage.setItem('songNavigation', JSON.stringify(updatedData));
+        
+        // Mark that Next has been used
+        sessionStorage.setItem('hasUsedNext', 'true');
+        setHasUsedNext(true);
+        
+        // Navigate to next song
+        router.push(`/song/${nextSongId}`);
+      }
+    } catch (error) {
+      console.error('Error parsing navigation data:', error);
+    }
+  };
+
+  const handlePrevSong = () => {
+    if (!hasUsedNext) return;
+    
+    // Use browser history to go back
+    if (typeof window !== 'undefined') {
+      window.history.back();
+    }
+  };
+
+  // Calculate navigation availability
+  const canNextSong = (() => {
+    if (typeof window === 'undefined') return false;
+    
+    const navigationDataStr = sessionStorage.getItem('songNavigation');
+    if (!navigationDataStr) return false;
+    
+    try {
+      const navigationData = JSON.parse(navigationDataStr);
+      const { songList, currentIndex } = navigationData;
+      return currentIndex < songList.length - 1;
+    } catch {
+      return false;
+    }
+  })();
+
+  const canPrevSong = hasUsedNext;
+
   // Transpose song for display
   // When "no capo" is selected, transpose down by capo amount to compensate
   const effectiveTranspose = transposeValue - (useCapo ? 0 : (song.capo || 0));
@@ -172,10 +263,10 @@ export default function SongViewerContainerSSR({
     useCapo,
     onToggleCapo: handleToggleCapo,
     onNavigateBack: () => router.push('/dashboard'),
-    onPrevSong: () => {}, // Remove navigation for now
-    onNextSong: () => {}, // Remove navigation for now
-    canPrevSong: false,
-    canNextSong: false,
+    onPrevSong: handlePrevSong,
+    onNextSong: handleNextSong,
+    canPrevSong: canPrevSong,
+    canNextSong: canNextSong,
     isAuthenticated
   };
 

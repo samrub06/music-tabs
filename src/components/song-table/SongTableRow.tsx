@@ -3,10 +3,11 @@
 import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
 import { MusicalNoteIcon } from '@heroicons/react/24/outline'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 interface SongTableRowProps {
   song: Song
+  songs: Song[] // Full list of songs for navigation
   folders: Folder[]
   visibleColumns: string[]
   isSelected: boolean
@@ -18,6 +19,7 @@ interface SongTableRowProps {
 
 export default function SongTableRow({
   song,
+  songs,
   folders,
   visibleColumns,
   isSelected,
@@ -27,10 +29,29 @@ export default function SongTableRow({
   t
 }: SongTableRowProps) {
   const router = useRouter()
+  const pathname = usePathname()
+
+  const handleSongClick = () => {
+    // Save song list to sessionStorage for navigation
+    if (typeof window !== 'undefined') {
+      const songList = songs.map(s => s.id)
+      const currentIndex = songs.findIndex(s => s.id === song.id)
+      const navigationData = {
+        songList,
+        currentIndex: currentIndex >= 0 ? currentIndex : 0,
+        sourceUrl: pathname || window.location.pathname
+      }
+      sessionStorage.setItem('songNavigation', JSON.stringify(navigationData))
+      sessionStorage.removeItem('hasUsedNext') // Reset hasUsedNext when navigating to a new song
+    }
+    
+    // Navigate to song page
+    router.push(`/song/${song.id}`)
+  }
 
   return (
     <tr
-      onClick={() => router.push(`/song/${song.id}`)}
+      onClick={handleSongClick}
       className="hover:bg-gray-50 cursor-pointer transition-colors"
     >
       {/* Checkbox column */}

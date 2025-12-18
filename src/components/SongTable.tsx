@@ -655,6 +655,7 @@ export default function SongTable({
                 <SongTableRow
                   key={song.id}
                   song={song}
+                  songs={sortedSongs}
                   folders={folders}
                   visibleColumns={visibleColumns}
                   isSelected={selectedSongs.has(song.id)}

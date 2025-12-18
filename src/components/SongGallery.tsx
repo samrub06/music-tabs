@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 import { MusicalNoteIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 
@@ -12,6 +13,27 @@ interface SongGalleryProps {
 }
 
 export default function SongGallery({ songs, showAddButton, onAddClick, addingId }: SongGalleryProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const handleSongClick = (clickedSong: Song, event: React.MouseEvent) => {
+    // Save song list to sessionStorage for navigation
+    if (typeof window !== 'undefined') {
+      const songList = songs.map(s => s.id)
+      const currentIndex = songs.findIndex(s => s.id === clickedSong.id)
+      const navigationData = {
+        songList,
+        currentIndex: currentIndex >= 0 ? currentIndex : 0,
+        sourceUrl: pathname || window.location.pathname
+      }
+      sessionStorage.setItem('songNavigation', JSON.stringify(navigationData))
+      sessionStorage.removeItem('hasUsedNext') // Reset hasUsedNext when navigating to a new song
+    }
+    
+    // Navigate to song page
+    router.push(`/song/${clickedSong.id}`)
+  }
+
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
       {songs.map((song) => (
@@ -19,7 +41,7 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
           key={song.id} 
           className="group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border border-gray-200 hover:border-gray-300 relative flex flex-col"
         >
-          <Link href={`/song/${song.id}`} className="flex-1">
+          <div onClick={(e) => handleSongClick(song, e)} className="flex-1 cursor-pointer">
             <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
               {song.songImageUrl ? (
                 <img 
@@ -48,7 +70,7 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
                 )}
               </div>
             </div>
-          </Link>
+          </div>
           {showAddButton && onAddClick && (
             <button
               onClick={() => onAddClick(song)}
