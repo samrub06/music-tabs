@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 import { NOTES, generateAllKeys } from '@/utils/chords';
+import BpmSelectorPopover from './BpmSelectorPopover';
 
 interface SongHeaderProps {
   song: Song;
@@ -35,6 +36,11 @@ interface SongHeaderProps {
   onSetTransposeValue: (value: number) => void;
   onToggleAutoScroll: () => void;
   onSetAutoScrollSpeed: (speed: number) => void;
+  metronome: {
+    isActive: boolean;
+    bpm: number | null;
+  };
+  onToggleMetronome: () => void;
   onResetScroll: () => void;
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
@@ -43,6 +49,8 @@ interface SongHeaderProps {
   onNextSong?: () => void;
   canPrevSong?: boolean;
   canNextSong?: boolean;
+  manualBpm?: number | null;
+  onSetManualBpm?: (bpm: number) => void;
 }
 
 export default function SongHeader({
@@ -60,6 +68,8 @@ export default function SongHeader({
   onSetTransposeValue,
   onToggleAutoScroll,
   onSetAutoScrollSpeed,
+  metronome,
+  onToggleMetronome,
   onResetScroll,
   onIncreaseFontSize,
   onDecreaseFontSize,
@@ -67,12 +77,16 @@ export default function SongHeader({
   onPrevSong,
   onNextSong,
   canPrevSong,
-  canNextSong
+  canNextSong,
+  manualBpm,
+  onSetManualBpm
 }: SongHeaderProps) {
   const [showControls, setShowControls] = useState(false);
+  const [showBpmPopover, setShowBpmPopover] = useState(false);
 
   // Get the base chord (firstChord or fallback to key or default)
   const getBaseChord = () => {
+    // console.log('SongHeader render', { bpm: song.bpm, manualBpm, hasHandler: !!onSetManualBpm });
     return song.firstChord || song.key || 'C';
   };
 
@@ -225,6 +239,64 @@ export default function SongHeader({
               </button>
             </div>
           </div>
+          
+          {/* Metronome Controls */}
+          {(song.bpm || onSetManualBpm) && (
+            <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full mt-2 relative">
+              <span className="text-xs font-medium text-gray-700">Métronome:</span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    if (song.bpm || manualBpm) {
+                      onToggleMetronome();
+                    } else {
+                      setShowBpmPopover(!showBpmPopover);
+                    }
+                  }}
+                  className={`p-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                    metronome.isActive
+                      ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
+                      : 'bg-white text-gray-400 hover:text-gray-600 border-2 border-gray-200'
+                  }`}
+                  title={(song.bpm || manualBpm) ? `Métronome ${manualBpm || song.bpm} BPM` : 'Définir BPM'}
+                >
+                  {metronome.isActive ? (
+                    <PauseIcon className="h-4 w-4" />
+                  ) : (
+                    <PlayIcon className="h-4 w-4" />
+                  )}
+                </button>
+                {showBpmPopover && onSetManualBpm ? (
+                  <BpmSelectorPopover
+                    initialBpm={manualBpm || song.bpm || 100}
+                    onApply={(bpm) => {
+                      onSetManualBpm(bpm);
+                      setShowBpmPopover(false);
+                    }}
+                    onClose={() => setShowBpmPopover(false)}
+                  />
+                ) : (song.bpm || manualBpm) ? (
+                  <div 
+                    className="bg-white rounded-lg px-2 py-1 min-w-[50px] text-center shadow-sm cursor-pointer hover:bg-gray-50"
+                    onClick={() => setShowBpmPopover(true)}
+                  >
+                    <span className="text-xs font-bold text-gray-900">
+                      {manualBpm || song.bpm} BPM
+                    </span>
+                  </div>
+                ) : (
+                  <div 
+                    className="bg-white rounded-lg px-2 py-1 text-center shadow-sm cursor-pointer hover:bg-gray-50"
+                    onClick={() => setShowBpmPopover(true)}
+                  >
+                    <span className="text-xs text-gray-500">
+                      Définir
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Additional Controls Toggle */}
@@ -428,14 +500,6 @@ export default function SongHeader({
                   </div>
                 </>
               )}
-              {song.bpm && (
-                <>
-                  {(song.author || (song.capo !== undefined && song.capo !== null)) && <span className="text-gray-300">•</span>}
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm text-blue-600 font-medium">BPM: {song.bpm}</span>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>
@@ -574,6 +638,57 @@ export default function SongHeader({
               ↑ Haut
             </button>
           </div>
+
+          {/* Metronome Controls */}
+          {(song.bpm || onSetManualBpm) && (
+            <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2 relative">
+              <button
+                onClick={() => {
+                  if (song.bpm || manualBpm) {
+                    onToggleMetronome();
+                  } else {
+                    setShowBpmPopover(!showBpmPopover);
+                  }
+                }}
+                className={`p-2 rounded-full ${
+                  metronome.isActive
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'text-gray-400 hover:text-gray-600 hover:bg-white'
+                }`}
+                title={(song.bpm || manualBpm) ? `Métronome ${manualBpm || song.bpm} BPM` : 'Définir BPM'}
+              >
+                {metronome.isActive ? (
+                  <PauseIcon className="h-4 w-4" />
+                ) : (
+                  <PlayIcon className="h-4 w-4" />
+                )}
+              </button>
+              {showBpmPopover && onSetManualBpm ? (
+                <BpmSelectorPopover
+                  initialBpm={manualBpm || song.bpm || 100}
+                  onApply={(bpm) => {
+                    onSetManualBpm(bpm);
+                    setShowBpmPopover(false);
+                  }}
+                  onClose={() => setShowBpmPopover(false)}
+                />
+              ) : (song.bpm || manualBpm) ? (
+                <span 
+                  className="text-xs text-gray-600 min-w-[3rem] text-center cursor-pointer hover:text-gray-900"
+                  onClick={() => setShowBpmPopover(true)}
+                >
+                  {manualBpm || song.bpm} BPM
+                </span>
+              ) : (
+                <span 
+                  className="text-xs text-gray-500 cursor-pointer hover:text-gray-700"
+                  onClick={() => setShowBpmPopover(true)}
+                >
+                  Définir
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Font Size Controls */}
           <div className="flex items-center space-x-1 bg-gray-100 rounded-md p-1">

@@ -23,6 +23,11 @@ interface SongViewerProps {
     isActive: boolean;
     speed: number;
   };
+  metronome: {
+    isActive: boolean;
+    bpm: number | null;
+  };
+  onToggleMetronome: () => void;
   contentRef: RefObject<HTMLDivElement>;
   onEditContentChange: (content: string) => void;
   onSave: () => void;
@@ -47,6 +52,8 @@ interface SongViewerProps {
   canPrevSong?: boolean;
   canNextSong?: boolean;
   isAuthenticated?: boolean;
+  manualBpm?: number | null;
+  onSetManualBpm?: (bpm: number) => void;
 }
 
 export default function SongViewer({
@@ -62,6 +69,8 @@ export default function SongViewer({
   selectedInstrument,
   transposeValue,
   autoScroll,
+  metronome,
+  onToggleMetronome,
   contentRef,
   onEditContentChange,
   onSave,
@@ -85,7 +94,9 @@ export default function SongViewer({
   onNextSong,
   canPrevSong,
   canNextSong,
-  isAuthenticated = false
+  isAuthenticated = false,
+  manualBpm,
+  onSetManualBpm
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -121,6 +132,8 @@ export default function SongViewer({
         onSetTransposeValue={onSetTransposeValue}
         onToggleAutoScroll={onToggleAutoScroll}
         onSetAutoScrollSpeed={onSetAutoScrollSpeed}
+        metronome={metronome}
+        onToggleMetronome={onToggleMetronome}
         onResetScroll={onResetScroll}
         onIncreaseFontSize={onIncreaseFontSize}
         onDecreaseFontSize={onDecreaseFontSize}
@@ -129,6 +142,8 @@ export default function SongViewer({
         onNextSong={onNextSong}
         canPrevSong={!!canPrevSong}
         canNextSong={!!canNextSong}
+        manualBpm={manualBpm}
+        onSetManualBpm={onSetManualBpm}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">

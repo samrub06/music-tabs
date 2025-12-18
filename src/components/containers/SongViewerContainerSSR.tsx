@@ -9,6 +9,7 @@ import { useSongEditor } from '@/lib/hooks/useSongEditor';
 import { useAutoScroll } from '@/lib/hooks/useAutoScroll';
 import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
+import { useMetronome } from '@/lib/hooks/useMetronome';
 import { songService } from '@/lib/services/songService';
 import { supabase } from '@/lib/supabase';
 import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
@@ -36,6 +37,8 @@ export default function SongViewerContainerSSR({
     speed: calculateSpeedFromBPM(song.bpm) 
   });
   const [useCapo, setUseCapo] = useState<boolean>(song.capo !== undefined && song.capo !== null);
+  const [metronomeActive, setMetronomeActive] = useState(false);
+  const [manualBpm, setManualBpm] = useState<number | null>(null);
   
   // Custom hooks
   const {
@@ -90,6 +93,13 @@ export default function SongViewerContainerSSR({
     toggleAutoScroll: () => setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive }))
   });
 
+  // Metronome functionality
+  useMetronome({
+    bpm: manualBpm || song.bpm,
+    isActive: metronomeActive,
+    onToggle: () => setMetronomeActive(prev => !prev)
+  });
+
   // Business logic handlers
   const handleDelete = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
@@ -136,6 +146,13 @@ export default function SongViewerContainerSSR({
     selectedInstrument,
     transposeValue,
     autoScroll,
+    metronome: {
+      isActive: metronomeActive,
+      bpm: manualBpm || song.bpm || null
+    },
+    manualBpm,
+    onSetManualBpm: setManualBpm,
+    onToggleMetronome: () => setMetronomeActive(prev => !prev),
     contentRef,
     onEditContentChange: setEditContent,
     onSave: handleSave,
