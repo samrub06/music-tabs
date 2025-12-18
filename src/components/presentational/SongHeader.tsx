@@ -26,6 +26,8 @@ interface SongHeaderProps {
     speed: number;
   };
   fontSize: number;
+  useCapo: boolean;
+  onToggleCapo: (value: boolean) => void;
   onNavigateBack: () => void;
   onToggleEdit: () => void;
   onDelete: () => void;
@@ -49,6 +51,8 @@ export default function SongHeader({
   transposeValue,
   autoScroll,
   fontSize,
+  useCapo,
+  onToggleCapo,
   onNavigateBack,
   onToggleEdit,
   onDelete,
@@ -137,6 +141,11 @@ export default function SongHeader({
             {song.author && (
               <p className="text-xs text-gray-600 truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>
                 Par {song.author}
+              </p>
+            )}
+            {song.bpm && (
+              <p className="text-xs text-blue-600 font-medium">
+                {song.bpm} BPM
               </p>
             )}
           </div>
@@ -306,6 +315,35 @@ export default function SongHeader({
               </div>
             )}
 
+            {/* Capo Toggle */}
+            {song.capo !== undefined && song.capo !== null && (
+              <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 w-full">
+                <span className="text-xs font-medium text-orange-700">Capo:</span>
+                <div className="flex rounded-md shadow-sm w-full max-w-[200px]">
+                  <button
+                    onClick={() => onToggleCapo(true)}
+                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-l-md border ${
+                      useCapo
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-50'
+                    }`}
+                  >
+                    🎸 Capo {song.capo}
+                  </button>
+                  <button
+                    onClick={() => onToggleCapo(false)}
+                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-r-md border-t border-r border-b ${
+                      !useCapo
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-50'
+                    }`}
+                  >
+                    Pas de capo
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Font Size Controls */}
             <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 w-full">
               <span className="text-xs font-medium text-blue-700">Taille:</span>
@@ -360,12 +398,41 @@ export default function SongHeader({
                   Par {song.author}
                 </p>
               )}
-              {song.capo && (
+              {song.capo !== undefined && song.capo !== null && (
                 <>
                   {song.author && <span className="text-gray-300">•</span>}
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-2">
                     <span className="text-sm text-blue-600 font-medium">🎸</span>
-                    <span className="text-sm text-blue-600 font-medium">Capo {song.capo}</span>
+                    <div className="flex rounded-md shadow-sm">
+                      <button
+                        onClick={() => onToggleCapo(true)}
+                        className={`px-2 py-1 text-xs font-medium rounded-l-md border ${
+                          useCapo
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                        }`}
+                      >
+                        Capo {song.capo}
+                      </button>
+                      <button
+                        onClick={() => onToggleCapo(false)}
+                        className={`px-2 py-1 text-xs font-medium rounded-r-md border-t border-r border-b ${
+                          !useCapo
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                        }`}
+                      >
+                        Pas de capo
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+              {song.bpm && (
+                <>
+                  {(song.author || (song.capo !== undefined && song.capo !== null)) && <span className="text-gray-300">•</span>}
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm text-blue-600 font-medium">BPM: {song.bpm}</span>
                   </div>
                 </>
               )}

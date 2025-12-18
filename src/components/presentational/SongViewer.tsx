@@ -39,6 +39,8 @@ interface SongViewerProps {
   onSetSelectedInstrument: (instrument: 'piano' | 'guitar') => void;
   onSetTransposeValue: (value: number) => void;
   onSetAutoScrollSpeed: (speed: number) => void;
+  useCapo: boolean;
+  onToggleCapo: (value: boolean) => void;
   onNavigateBack: () => void;
   onPrevSong?: () => void;
   onNextSong?: () => void;
@@ -76,6 +78,8 @@ export default function SongViewer({
   onSetSelectedInstrument,
   onSetTransposeValue,
   onSetAutoScrollSpeed,
+  useCapo,
+  onToggleCapo,
   onNavigateBack,
   onPrevSong,
   onNextSong,
@@ -108,6 +112,8 @@ export default function SongViewer({
         transposeValue={transposeValue}
         autoScroll={autoScroll}
         fontSize={fontSize}
+        useCapo={useCapo}
+        onToggleCapo={onToggleCapo}
         onNavigateBack={onNavigateBack}
         onToggleEdit={onToggleEdit}
         onDelete={onDelete}

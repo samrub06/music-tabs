@@ -288,68 +288,32 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
         aria-hidden="true"
       />
       
-      {/* Display BPM and Strumming Pattern if available */}
-      {(song.bpm || (song.versionDescription && (song.versionDescription.includes('Strumming Pattern') || song.versionDescription.includes('Strumming:')))) && (() => {
-        // Extract strumming info from versionDescription
-        let strummingDisplay = '';
-        if (song.versionDescription) {
-          if (song.versionDescription.includes('Strumming Pattern:')) {
-            strummingDisplay = song.versionDescription.split('Strumming Pattern:')[1]?.trim() || '';
-          } else if (song.versionDescription.includes('Strumming:')) {
-            strummingDisplay = song.versionDescription.split('Strumming:')[1]?.trim() || '';
-          }
-        }
+      {song.sections.map((section: any, sectionIndex: number) => {
+        // Filtrer la section Version Description
+        if (section.name === 'Version Description') return null;
         
         return (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-            <div className="text-base font-bold text-blue-900 mb-3" style={{ 
-              fontSize: `${optimalFontSize + 2}px`,
-              fontFamily: 'system-ui, -apple-system, sans-serif'
+          <div key={sectionIndex} className="mb-6 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+            {/* Section header */}
+            <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ 
+              fontSize: `${optimalFontSize + 4}px`,
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              maxWidth: '100%'
             }}>
-              🎸 Strumming Information
+              [{section.name}]
             </div>
-            {song.bpm && (
-              <div className="text-gray-800 mb-2" style={{ 
-                fontSize: `${optimalFontSize}px`,
-                fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
-              }}>
-                <strong className="text-blue-700">BPM:</strong> <span className="font-semibold">{song.bpm}</span>
-              </div>
-            )}
-            {strummingDisplay && (
-              <div className="text-gray-800 whitespace-pre-line mt-2" style={{ 
-                fontSize: `${optimalFontSize}px`,
-                fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
-                lineHeight: optimalLineHeight
-              }}>
-                {strummingDisplay}
-              </div>
-            )}
+            
+            {/* Section lines */}
+            <div className="space-y-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+              {section.lines.map((line: any, lineIndex: number) => 
+                renderSongLine(line, lineIndex)
+              )}
+            </div>
           </div>
         );
-      })()}
-      
-      {song.sections.map((section: any, sectionIndex: number) => (
-        <div key={sectionIndex} className="mb-6 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          {/* Section header */}
-          <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ 
-            fontSize: `${optimalFontSize + 4}px`,
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            wordBreak: 'break-word',
-            overflowWrap: 'break-word',
-            maxWidth: '100%'
-          }}>
-            [{section.name}]
-          </div>
-          
-          {/* Section lines */}
-          <div className="space-y-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-            {section.lines.map((line: any, lineIndex: number) => 
-              renderSongLine(line, lineIndex)
-            )}
-          </div>
-        </div>
-      ))}
+      })}
     </div>
   );
 }

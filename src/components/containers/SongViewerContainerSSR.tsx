@@ -11,6 +11,7 @@ import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
 import { songService } from '@/lib/services/songService';
 import { supabase } from '@/lib/supabase';
+import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -30,7 +31,11 @@ export default function SongViewerContainerSSR({
   // Local state instead of AppContext
   const [selectedInstrument, setSelectedInstrument] = useState<'piano' | 'guitar'>('piano');
   const [transposeValue, setTransposeValue] = useState(0);
-  const [autoScroll, setAutoScroll] = useState({ isActive: false, speed: 2.5 });
+  const [autoScroll, setAutoScroll] = useState({ 
+    isActive: false, 
+    speed: calculateSpeedFromBPM(song.bpm) 
+  });
+  const [useCapo, setUseCapo] = useState<boolean>(song.capo !== undefined && song.capo !== null);
   
   // Custom hooks
   const {
@@ -49,6 +54,20 @@ export default function SongViewerContainerSSR({
   
   // Refs
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Sync useCapo state when song changes
+  useEffect(() => {
+    setUseCapo(song.capo !== undefined && song.capo !== null);
+  }, [song.capo]);
+
+  // Update auto-scroll speed when song BPM changes
+  useEffect(() => {
+    const newSpeed = calculateSpeedFromBPM(song.bpm);
+    setAutoScroll(prev => ({ 
+      ...prev, 
+      speed: newSpeed 
+    }));
+  }, [song.bpm]);
 
   // Increment view count when component mounts
   useEffect(() => {
@@ -89,8 +108,14 @@ export default function SongViewerContainerSSR({
     }
   };
 
+  const handleToggleCapo = (value: boolean) => {
+    setUseCapo(value);
+  };
+
   // Transpose song for display
-  const transposedSong = transposeStructuredSong(song, transposeValue);
+  // When "no capo" is selected, transpose down by capo amount to compensate
+  const effectiveTranspose = transposeValue - (useCapo ? 0 : (song.capo || 0));
+  const transposedSong = transposeStructuredSong(song, effectiveTranspose);
   const transposedContent = renderStructuredSong(transposedSong, {
     maxWidth: 80,
     wordWrap: true,
@@ -127,6 +152,8 @@ export default function SongViewerContainerSSR({
     onSetSelectedInstrument: setSelectedInstrument,
     onSetTransposeValue: setTransposeValue,
     onSetAutoScrollSpeed: (speed: number) => setAutoScroll(prev => ({ ...prev, speed })),
+    useCapo,
+    onToggleCapo: handleToggleCapo,
     onNavigateBack: () => router.push('/dashboard'),
     onPrevSong: () => {}, // Remove navigation for now
     onNextSong: () => {}, // Remove navigation for now
