@@ -42,7 +42,7 @@ interface GenreFolderMap {
 
 // Map to track concurrent folder creation (genre -> Promise<string>)
 interface PendingFolderCreations {
-  [key: string]: Promise<string>;
+  [key: string]: Promise<string> | undefined;
 }
 
 /**
@@ -120,7 +120,7 @@ async function processSong(
         // Check if we already have a folder ID for this genre
         if (genreToFolderId[genreKey]) {
           songFolderId = genreToFolderId[genreKey];
-        } else if (pendingFolderCreations[genreKey]) {
+        } else if (genreKey in pendingFolderCreations) {
           // Wait for pending creation
           songFolderId = await pendingFolderCreations[genreKey];
         } else {
