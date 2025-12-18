@@ -15,7 +15,7 @@ import {
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
-import { NOTES } from '@/utils/chords';
+import { NOTES, generateAllKeys } from '@/utils/chords';
 
 interface SongHeaderProps {
   song: Song;
@@ -67,24 +67,44 @@ export default function SongHeader({
 }: SongHeaderProps) {
   const [showControls, setShowControls] = useState(false);
 
-  // Calculate current key based on original key and transpose value
+  // Get the base chord (firstChord or fallback to key or default)
+  const getBaseChord = () => {
+    return song.firstChord || song.key || 'C';
+  };
+
+  // Generate all available keys based on the base chord quality
+  const getAvailableKeys = () => {
+    const baseChord = getBaseChord();
+    return generateAllKeys(baseChord);
+  };
+
+  // Calculate current key based on firstChord (or key) and transpose value
   const getCurrentKey = () => {
-    if (!song.key) return null;
-    const originalKeyIndex = NOTES.indexOf(song.key);
-    if (originalKeyIndex === -1) return null;
-    const currentKeyIndex = (originalKeyIndex + transposeValue + 12) % 12;
-    return NOTES[currentKeyIndex];
+    const baseChord = getBaseChord();
+    const availableKeys = getAvailableKeys();
+    
+    // The base chord is always at index 0 since generateAllKeys starts from the base chord
+    const baseIndex = 0;
+    
+    // Calculate the new index after transposition
+    const currentIndex = (baseIndex + transposeValue + 12) % 12;
+    return availableKeys[currentIndex];
   };
 
   // Handle key selection from dropdown
   const handleKeySelect = (targetKey: string) => {
-    if (!song.key) return;
-    const originalKeyIndex = NOTES.indexOf(song.key);
-    const targetKeyIndex = NOTES.indexOf(targetKey);
-    if (originalKeyIndex === -1 || targetKeyIndex === -1) return;
+    const availableKeys = getAvailableKeys();
+    
+    // Find the index of the target key in the available keys
+    const targetIndex = availableKeys.findIndex(key => key === targetKey);
+    
+    if (targetIndex === -1) return;
+    
+    // The base chord is always at index 0
+    const baseIndex = 0;
     
     // Calculate the transpose value needed to reach the target key
-    let newTransposeValue = targetKeyIndex - originalKeyIndex;
+    let newTransposeValue = targetIndex - baseIndex;
     
     // Normalize to range -11 to +11 (prefer smaller absolute values)
     if (newTransposeValue > 6) {
@@ -264,21 +284,21 @@ export default function SongHeader({
             </div>
 
             {/* Key Selector */}
-            {song.key && (
+            {(song.firstChord || song.key) && (
               <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
                 <span className="text-xs font-medium text-purple-700">Tonalité:</span>
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-purple-600">
-                    {song.key} → {currentKey || song.key}
+                    {getBaseChord()} → {currentKey || getBaseChord()}
                   </span>
                   <select
-                    value={currentKey || song.key}
+                    value={currentKey || getBaseChord()}
                     onChange={(e) => handleKeySelect(e.target.value)}
                     className="bg-white border border-purple-300 text-purple-800 text-sm font-medium rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[40px]"
                   >
-                    {NOTES.filter(note => !note.includes('#')).map((note) => (
-                      <option key={note} value={note}>
-                        {note}
+                    {getAvailableKeys().map((key) => (
+                      <option key={key} value={key}>
+                        {key}
                       </option>
                     ))}
                   </select>
@@ -421,19 +441,19 @@ export default function SongHeader({
             </div>
             
             {/* Key Selector for Desktop */}
-            {song.key && (
+            {(song.firstChord || song.key) && (
               <div className="flex items-center space-x-2 bg-purple-50 border border-purple-200 rounded-lg px-3 py-1">
                 <span className="text-xs text-purple-600 font-medium">
-                  {song.key} → {currentKey || song.key}
+                  {getBaseChord()} → {currentKey || getBaseChord()}
                 </span>
                 <select
-                  value={currentKey || song.key}
+                  value={currentKey || getBaseChord()}
                   onChange={(e) => handleKeySelect(e.target.value)}
                   className="bg-white border border-purple-300 text-purple-800 text-xs font-medium rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  {NOTES.filter(note => !note.includes('#')).map((note) => (
-                    <option key={note} value={note}>
-                      {note}
+                  {getAvailableKeys().map((key) => (
+                    <option key={key} value={key}>
+                      {key}
                     </option>
                   ))}
                 </select>

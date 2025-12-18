@@ -60,6 +60,7 @@ export interface ScrapedSong {
   songImageUrl?: string;
   tabId?: number;
   songGenre?: string;
+  bpm?: number;
 }
 
 export interface SearchResult {
@@ -254,6 +255,29 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
       console.log('🔍 Available keys in data.store.page.data:', Object.keys(data.store?.page?.data || {}));
       return null;
     }
+
+    // Extraire les données de strumming
+    let strummingInfo = '';
+    let bpm: number | undefined;
+
+    if (tabView.strumming && Array.isArray(tabView.strumming) && tabView.strumming.length > 0) {
+      const strummingData = tabView.strumming[0]; // Prendre le premier pattern
+      if (strummingData) {
+        if (strummingData.bpm) {
+          bpm = strummingData.bpm;
+        }
+        
+        // Construire une description textuelle du strumming
+        const parts: string[] = [];
+        if (strummingData.bpm) parts.push(`BPM: ${strummingData.bpm}`);
+        if (strummingData.denuminator) parts.push(`Denominator: ${strummingData.denuminator}`);
+        if (strummingData.is_triplet) parts.push('Triplet: Yes');
+        
+        if (parts.length > 0) {
+          strummingInfo = `Strumming: ${parts.join(', ')}`;
+        }
+      }
+    }
     
     // Debug: afficher toutes les clés disponibles dans tabView
     console.log('🔍 TabView structure:', {
@@ -325,11 +349,20 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     const tabId = data.store?.page?.data?.tab?.id;
     const songGenre = tabView.meta?.song_genre || tabView.meta?.genre || undefined;
     
+    // Combiner la description de version avec les infos de strumming si elles existent
+    let finalVersionDescription = versionDescription || '';
+    if (strummingInfo) {
+      if (finalVersionDescription) {
+        finalVersionDescription += '\n\n' + strummingInfo;
+      } else {
+        finalVersionDescription = strummingInfo;
+      }
+    }
     
     // Ajouter la description de version au début du contenu si elle existe
     let finalContent = content;
-    if (versionDescription) {
-      finalContent = `[Version Description]\n${versionDescription}\n\n${content}`;
+    if (finalVersionDescription) {
+      finalContent = `[Version Description]\n${finalVersionDescription}\n\n${content}`;
     }
 
     // Détecter la tonalité et le capo dans le contenu complet (métadonnées + contenu)
@@ -357,14 +390,15 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
       capo,
       key,
       version,
-      versionDescription,
+      versionDescription: finalVersionDescription,
       rating,
       difficulty,
       artistUrl,
       artistImageUrl,
       songImageUrl,
       tabId,
-      songGenre
+      songGenre,
+      bpm
     };
   } catch (error) {
     console.error('Error scraping guitar tabs:', error);
@@ -1132,7 +1166,8 @@ async function importSongToDatabase(scrapedSong: ScrapedSong, userId: string, ta
       sourceUrl: scrapedSong.url,
       sourceSite: scrapedSong.source,
       tabId: scrapedSong.tabId ? scrapedSong.tabId.toString() : undefined,
-      genre: scrapedSong.songGenre || undefined
+      genre: scrapedSong.songGenre || undefined,
+      bpm: scrapedSong.bpm
     };
     
     console.log(`💾 Saving song with genre: "${newSongData.genre}" and tabId: "${newSongData.tabId}"`);

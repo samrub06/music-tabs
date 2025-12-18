@@ -76,6 +76,7 @@ export interface StructuredSong {
   tabId?: string;
   genre?: string;
   decade?: number;
+  bpm?: number;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)
@@ -103,6 +104,7 @@ export interface NewSongData {
   sourceSite?: string;
   tabId?: string;
   genre?: string;
+  bpm?: number;
 }
 
 // Type pour l'édition de chanson (avec contenu texte)
@@ -130,6 +132,7 @@ export interface SongEditData {
   sourceSite?: string;
   tabId?: string;
   genre?: string;
+  bpm?: number;
 }
 
 export interface AppState {

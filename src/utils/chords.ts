@@ -133,6 +133,32 @@ export function transposeChord(chord: string, semitones: number): string {
   return cleanedNote + parsed.quality;
 }
 
+// Generate all 12 keys based on chord quality (major/minor)
+// If chord is minor (contains 'm' but not 'maj'), generates all minor keys
+// If chord is major, generates all major keys
+export function generateAllKeys(chord: string): string[] {
+  if (!chord) return NOTES.filter(note => !note.includes('#')); // Default to major keys
+  
+  const parsed = parseChord(chord);
+  if (!parsed) return NOTES.filter(note => !note.includes('#'));
+  
+  // Determine if chord is minor
+  // Check if quality contains 'm' but not 'maj' (to handle cases like 'Amaj7')
+  const isMinor = parsed.quality.includes('m') && !parsed.quality.includes('maj');
+  
+  // Extract base quality (just 'm' for minor, empty for major)
+  const baseQuality = isMinor ? 'm' : '';
+  
+  // Generate all 12 keys by transposing from 0 to 11 semitones
+  const keys: string[] = [];
+  for (let semitones = 0; semitones < 12; semitones++) {
+    const transposedChord = transposeChord(parsed.root + baseQuality, semitones);
+    keys.push(transposedChord);
+  }
+  
+  return keys;
+}
+
 // Transpose all chords in a text (smart line-by-line approach)
 export function transposeText(text: string, semitones: number): string {
   if (semitones === 0) return text;

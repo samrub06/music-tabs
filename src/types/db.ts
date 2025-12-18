@@ -91,6 +91,7 @@ export interface Database {
           is_trending: boolean
           genre: string | null
           decade: number | null
+          bpm: number | null
         }
         Insert: {
           id?: string
@@ -124,6 +125,7 @@ export interface Database {
           is_trending?: boolean
           genre?: string | null
           decade?: number | null
+          bpm?: number | null
         }
         Update: {
           id?: string
@@ -157,6 +159,7 @@ export interface Database {
           is_trending?: boolean
           genre?: string | null
           decade?: number | null
+          bpm?: number | null
         }
       }
       playlists: {

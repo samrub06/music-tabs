@@ -40,7 +40,8 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     tabId: dbSong.tab_id || undefined,
     viewCount: dbSong.view_count || 0,
     genre: dbSong.genre || undefined,
-    decade: dbSong.decade || undefined
+    decade: dbSong.decade || undefined,
+    bpm: dbSong.bpm || undefined
   } as Song
 }
 
@@ -84,6 +85,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         source_site: songData.sourceSite ?? null,
         tab_id: songData.tabId ?? null,
         genre: songData.genre ?? null,
+        bpm: songData.bpm ?? null,
         is_trending: false, // Default for user created songs
         is_public: false    // Default for user created songs
       }])
@@ -139,6 +141,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         source_url: songData.sourceUrl ?? null,
         source_site: songData.sourceSite ?? null,
         tab_id: songData.tabId ?? null,
+        bpm: songData.bpm ?? null,
         is_trending: options.isTrending ?? false,
         is_public: options.isPublic ?? false,
         genre: options.genre ?? null,
@@ -228,7 +231,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       source_url: updates.sourceUrl ?? null,
       source_site: updates.sourceSite ?? null,
       tab_id: updates.tabId ?? null,
-      genre: updates.genre ?? null
+      genre: updates.genre ?? null,
+      bpm: updates.bpm ?? null
     }
     if (sections) {
       updateData.sections = sections
