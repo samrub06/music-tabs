@@ -32,7 +32,8 @@ export const createSongSchema = z.object({
   sourceUrl: z.string().url().optional().or(z.literal('')),
   sourceSite: z.string().optional(),
   tabId: z.union([z.string(), z.number().transform(String)]).optional(),
-  genre: z.string().optional()
+  genre: z.string().optional(),
+  bpm: z.number().int().positive().optional()
 })
 
 export const updateSongSchema = createSongSchema.partial().extend({

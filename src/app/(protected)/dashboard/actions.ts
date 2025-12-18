@@ -172,7 +172,8 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
     sourceUrl: sourceSong.sourceUrl,
     sourceSite: sourceSong.sourceSite,
     tabId: sourceSong.tabId,
-    genre: sourceSong.genre
+    genre: sourceSong.genre,
+    bpm: sourceSong.bpm
   }
   
   const created = await repo.createSong(newSongData)

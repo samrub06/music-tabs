@@ -260,22 +260,54 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     let strummingInfo = '';
     let bpm: number | undefined;
 
-    if (tabView.strumming && Array.isArray(tabView.strumming) && tabView.strumming.length > 0) {
-      const strummingData = tabView.strumming[0]; // Prendre le premier pattern
-      if (strummingData) {
+    if (tabView.strummings && Array.isArray(tabView.strummings) && tabView.strummings.length > 0) {
+      // Extraire BPM du premier pattern (généralement tous les patterns ont le même BPM)
+      if (tabView.strummings[0]?.bpm) {
+        bpm = tabView.strummings[0].bpm;
+      }
+      
+      // Construire une description textuelle pour tous les patterns de strumming
+      const allPatterns: string[] = [];
+      
+      tabView.strummings.forEach((strummingData: any, index: number) => {
+        if (!strummingData) return;
+        
+        const patternParts: string[] = [];
+        
+        // Ajouter le nom de la partie si disponible
+        if (strummingData.part !== undefined && strummingData.part !== '') {
+          patternParts.push(`${strummingData.part}:`);
+        } else {
+          patternParts.push(`Pattern ${index + 1}:`);
+        }
+        
+        // Ajouter les détails du pattern
         if (strummingData.bpm) {
-          bpm = strummingData.bpm;
+          patternParts.push(`  BPM: ${strummingData.bpm}`);
+        }
+        if (strummingData.denuminator) {
+          patternParts.push(`  Denominator: ${strummingData.denuminator}`);
+        }
+        if (strummingData.is_triplet !== undefined) {
+          patternParts.push(`  Triplet: ${strummingData.is_triplet === 1 || strummingData.is_triplet === true ? 'Yes' : 'No'}`);
         }
         
-        // Construire une description textuelle du strumming
-        const parts: string[] = [];
-        if (strummingData.bpm) parts.push(`BPM: ${strummingData.bpm}`);
-        if (strummingData.denuminator) parts.push(`Denominator: ${strummingData.denuminator}`);
-        if (strummingData.is_triplet) parts.push('Triplet: Yes');
-        
-        if (parts.length > 0) {
-          strummingInfo = `Strumming: ${parts.join(', ')}`;
+        // Extraire les mesures si elles existent
+        if (strummingData.measures && Array.isArray(strummingData.measures) && strummingData.measures.length > 0) {
+          const measureValues = strummingData.measures.map((m: any) => {
+            // Handle both {measure: X} and direct number formats
+            return typeof m === 'object' && m.measure !== undefined ? m.measure : m;
+          });
+          patternParts.push(`  Measures: [${measureValues.join(', ')}]`);
         }
+        
+        if (patternParts.length > 0) {
+          allPatterns.push(patternParts.join('\n'));
+        }
+      });
+      
+      if (allPatterns.length > 0) {
+        strummingInfo = 'Strumming Patterns:\n' + allPatterns.join('\n\n');
       }
     }
     
