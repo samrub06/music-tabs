@@ -13,7 +13,7 @@ interface SongGalleryProps {
 
 export default function SongGallery({ songs, showAddButton, onAddClick, addingId }: SongGalleryProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
       {songs.map((song) => (
         <div 
           key={song.id} 
@@ -29,12 +29,12 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <MusicalNoteIcon className="h-12 w-12 text-gray-400" />
+                  <MusicalNoteIcon className="h-10 w-10 text-gray-400" />
                 </div>
               )}
             </div>
-            <div className="p-2 sm:p-3">
-              <h3 className="font-medium text-gray-900 text-xs sm:text-sm line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors min-h-[2.5rem]">
+            <div className="p-1.5 sm:p-2">
+              <h3 className="font-medium text-gray-900 text-xs sm:text-sm truncate mb-1 group-hover:text-blue-600 transition-colors">
                 {song.title}
               </h3>
               <p className="text-xs text-gray-600 truncate mb-2">
@@ -44,11 +44,6 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
                 {song.rating && (
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 border border-yellow-200">
                     ⭐ {song.rating.toFixed(1)}
-                  </span>
-                )}
-                {song.difficulty && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200">
-                    🎸
                   </span>
                 )}
               </div>

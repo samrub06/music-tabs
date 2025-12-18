@@ -10,7 +10,7 @@ export default function LibraryLoading() {
       </div>
 
       {/* Songs Grid Skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
           <div 
             key={i}
@@ -18,11 +18,11 @@ export default function LibraryLoading() {
           >
             {/* Image Skeleton */}
             <div className="relative w-full aspect-square bg-gray-100 flex items-center justify-center">
-              <MusicalNoteIcon className="h-12 w-12 text-gray-200 animate-pulse" />
+              <MusicalNoteIcon className="h-10 w-10 text-gray-200 animate-pulse" />
             </div>
 
             {/* Content Skeleton */}
-            <div className="p-2 sm:p-3">
+            <div className="p-1.5 sm:p-2">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
               <div className="h-3 bg-gray-100 rounded w-1/2 mb-2 animate-pulse"></div>
               

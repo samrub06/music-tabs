@@ -513,12 +513,12 @@ function ChordDiagramsGrid({ song, onChordClick, fontSize }: ChordDiagramsGridPr
   }
   
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+    <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-4">
       {allChords.map((chord: string) => (
         <button
           key={chord}
           onClick={() => onChordClick(chord)}
-          className="group p-2 sm:p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+          className="group p-1.5 sm:p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
         >
           <div className="text-center w-full">
             <div 
