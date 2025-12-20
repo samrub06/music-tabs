@@ -19,6 +19,8 @@ import ColumnConfig from './ColumnConfig';
 import SongTableHeader from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
 import SongTableEmptyState from './song-table/SongTableEmptyState';
+import MoveToFolderModal from './MoveToFolderModal';
+import Snackbar from './Snackbar';
 
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt' | 'key' | 'rating' | 'reviews' | 'difficulty' | 'version' | 'viewCount';
 type SortDirection = 'asc' | 'desc';
@@ -62,6 +64,8 @@ export default function SongTable({
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
+  const [showMoveModal, setShowMoveModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'viewCount', 'folder']);
   
   // Ensure 'title' is always in visibleColumns (required column)
@@ -242,6 +246,31 @@ export default function SongTable({
     }
   };
 
+  // Handle bulk move to folder
+  const handleBulkMove = async (folderId: string | undefined) => {
+    try {
+      const songIds = Array.from(selectedSongs);
+      const count = songIds.length;
+      // Move all selected songs to the folder
+      await Promise.all(songIds.map(songId => onFolderChange(songId, folderId)));
+      
+      // Find folder name for success message
+      const folderName = folderId 
+        ? folders.find(f => f.id === folderId)?.name || 'le dossier'
+        : 'Sans dossier'
+      
+      setSuccessMessage(`${count} ${count === 1 ? 'chanson déplacée' : 'chansons déplacées'} vers ${folderName}`)
+      
+      // Clear selection after successful move
+      setSelectedSongs(new Set());
+    } catch (error) {
+      console.error('Error moving songs:', error);
+      // Show error to user
+      alert('Erreur lors du déplacement des chansons. Veuillez réessayer.');
+      throw error;
+    }
+  };
+
   // Handle song selection
   const handleSelectSong = (songId: string, checked: boolean) => {
     const newSelectedSongs = new Set(selectedSongs);
@@ -338,6 +367,7 @@ export default function SongTable({
               onCancelSelection={() => setSelectedSongs(new Set())}
               onDeleteSelected={() => handleBulkDelete('selected')}
               onDeleteAll={() => handleBulkDelete('all')}
+              onMoveToFolder={selectedSongs.size > 0 ? () => setShowMoveModal(true) : undefined}
               t={t}
             />
           </div>
@@ -716,6 +746,24 @@ export default function SongTable({
           </div>
         </div>
       )}
+
+      {/* Move to Folder Modal */}
+      <MoveToFolderModal
+        isOpen={showMoveModal}
+        onClose={() => setShowMoveModal(false)}
+        folders={folders}
+        onMove={handleBulkMove}
+        songCount={selectedSongs.size}
+      />
+
+      {/* Success Snackbar */}
+      <Snackbar
+        message={successMessage || ''}
+        isOpen={!!successMessage}
+        onClose={() => setSuccessMessage(null)}
+        type="success"
+        duration={3000}
+      />
     </div>
   );
 }

@@ -12,6 +12,9 @@ import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSidebar } from '@/context/SidebarContext'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import DragDropOverlay from '@/components/DragDropOverlay'
+import Snackbar from '@/components/Snackbar'
 
 interface DashboardClientProps {
   songs: Song[]
@@ -43,6 +46,64 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
   const { sidebarOpen, setSidebarOpen } = useSidebar()
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+  
+  // Drag and Drop state
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [draggedSong, setDraggedSong] = useState<Song | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  
+  // Configure sensors for drag and drop (including touch for mobile)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before drag starts (prevents accidental drags)
+      },
+    })
+  )
+  
+  // Handle drag start
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event
+    setActiveId(active.id as string)
+    // Find the song being dragged
+    const song = songs.find(s => s.id === active.id)
+    setDraggedSong(song || null)
+  }
+  
+  // Handle drag end (drop)
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    setActiveId(null)
+    setDraggedSong(null)
+    setError(null)
+    
+    if (!over) return
+    
+    const songId = active.id as string
+    const dropTarget = over.id as string
+    
+    // Check if dropped on a folder (folder IDs start with 'folder-')
+    if (typeof dropTarget === 'string' && dropTarget.startsWith('folder-')) {
+      const folderId = dropTarget.replace('folder-', '') || undefined
+      
+      try {
+        await updateSongFolderAction(songId, folderId)
+        
+        // Find folder name for success message
+        const folderName = folderId 
+          ? folders.find(f => f.id === folderId)?.name || 'le dossier'
+          : 'Sans dossier'
+        const songTitle = draggedSong?.title || 'la chanson'
+        
+        setSuccessMessage(`"${songTitle}" déplacée vers ${folderName}`)
+      } catch (error) {
+        console.error('Error moving song to folder:', error)
+        setError('Erreur lors du déplacement de la chanson. Veuillez réessayer.')
+      }
+    }
+  }
 
   const applyQuery = (next: { q?: string; view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -55,7 +116,11 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   }
 
   return (
-    <>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="flex-1 flex overflow-hidden">
         {/* Mobile sidebar backdrop */}
         {sidebarOpen && (
@@ -88,6 +153,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
             currentFolder={currentFolder}
             onFolderChange={setCurrentFolder}
             onClose={() => setSidebarOpen(false)}
+            onMoveSong={updateSongFolderAction}
           />
         </div>
 
@@ -245,7 +311,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
             </>
           ) : (
             <>
-              <SongGallery songs={songs} />
+              <SongGallery songs={songs} hasUser={true} />
               <div className="hidden sm:block">
                 <Pagination page={page} limit={limit} total={total} />
               </div>
@@ -291,7 +357,41 @@ export default function DashboardClient({ songs, total, page, limit, initialView
         onClose={() => setShowAddSong(false)}
         folders={folders}
       />
-    </>
+      
+      {/* Drag overlay */}
+      <DragOverlay>
+        {draggedSong ? (
+          <div className="opacity-90 bg-white rounded-lg shadow-lg border-2 border-blue-500 p-3 max-w-[200px]">
+            <div className="font-medium text-sm text-gray-900 truncate">{draggedSong.title}</div>
+            <div className="text-xs text-gray-600 truncate">{draggedSong.author}</div>
+          </div>
+        ) : null}
+      </DragOverlay>
+      
+      {/* Drag Drop Overlay - visible on mobile during drag */}
+      <DragDropOverlay 
+        folders={folders}
+        isDragging={activeId !== null}
+      />
+
+      {/* Success Snackbar */}
+      <Snackbar
+        message={successMessage || ''}
+        isOpen={!!successMessage}
+        onClose={() => setSuccessMessage(null)}
+        type="success"
+        duration={3000}
+      />
+
+      {/* Error Snackbar */}
+      <Snackbar
+        message={error || ''}
+        isOpen={!!error}
+        onClose={() => setError(null)}
+        type="error"
+        duration={5000}
+      />
+    </DndContext>
   )
 }
 

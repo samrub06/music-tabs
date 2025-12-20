@@ -10,6 +10,7 @@ interface SongTableHeaderProps {
   onCancelSelection: () => void
   onDeleteSelected: () => void
   onDeleteAll: () => void
+  onMoveToFolder?: () => void
   t: (key: string) => string
 }
 
@@ -23,6 +24,7 @@ export default function SongTableHeader({
   onCancelSelection,
   onDeleteSelected,
   onDeleteAll,
+  onMoveToFolder,
   t
 }: SongTableHeaderProps) {
   return (
@@ -34,6 +36,7 @@ export default function SongTableHeader({
           onCancelSelection={onCancelSelection}
           onDeleteSelected={onDeleteSelected}
           onDeleteAll={onDeleteAll}
+          onMoveToFolder={onMoveToFolder}
           t={t}
         />
       ) : (
@@ -49,13 +52,22 @@ export default function SongTableHeader({
   )
 }
 
-function BulkActions({ selectedCount, showDeleteAll, onCancelSelection, onDeleteSelected, onDeleteAll, t }: any) {
+function BulkActions({ selectedCount, showDeleteAll, onCancelSelection, onDeleteSelected, onDeleteAll, onMoveToFolder, t }: any) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
       <span className="text-sm font-medium text-blue-700">
         {selectedCount} {selectedCount !== 1 ? t('songs.songCountPlural') : t('songs.songCount')} {t('songs.selected')}
       </span>
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        {onMoveToFolder && (
+          <button
+            onClick={onMoveToFolder}
+            className="inline-flex items-center justify-center px-4 py-3 sm:px-3 sm:py-1.5 border border-blue-300 shadow-sm text-sm font-medium rounded-lg text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[48px] sm:min-h-0"
+          >
+            <span className="sm:hidden">Déplacer vers...</span>
+            <span className="hidden sm:inline">Déplacer vers...</span>
+          </button>
+        )}
         <button
           onClick={onDeleteSelected}
           className="inline-flex items-center justify-center px-4 py-3 sm:px-3 sm:py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 min-h-[48px] sm:min-h-0"

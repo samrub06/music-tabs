@@ -2,8 +2,10 @@
 
 import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
-import { MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon, Bars3Icon } from '@heroicons/react/24/outline'
 import { useRouter, usePathname } from 'next/navigation'
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 
 interface SongTableRowProps {
   song: Song
@@ -31,7 +33,27 @@ export default function SongTableRow({
   const router = useRouter()
   const pathname = usePathname()
 
+  // Make row draggable if user is authenticated
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: song.id,
+    disabled: !hasUser,
+  })
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  }
+
   const handleSongClick = () => {
+    // Don't navigate if dragging
+    if (isDragging) return
+    
     // Save song list to sessionStorage for navigation
     if (typeof window !== 'undefined') {
       const songList = songs.map(s => s.id)
@@ -51,8 +73,13 @@ export default function SongTableRow({
 
   return (
     <tr
+      ref={setNodeRef}
+      style={{
+        ...style,
+        touchAction: hasUser ? 'none' : 'auto',
+      }}
       onClick={handleSongClick}
-      className="hover:bg-gray-50 cursor-pointer transition-colors"
+      className={`hover:bg-gray-50 cursor-pointer transition-colors ${isDragging ? 'z-50 opacity-50' : ''}`}
     >
       {/* Checkbox column */}
       {hasUser && (
@@ -60,15 +87,29 @@ export default function SongTableRow({
           className="px-2 sm:px-4 py-2"
           onClick={(e) => e.stopPropagation()}
         >
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={(e) => {
-              e.stopPropagation()
-              onSelect(e.target.checked)
-            }}
-            className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-          />
+          <div className="flex items-center gap-2">
+            {/* Drag handle - only visible on mobile */}
+            <div
+              className="sm:hidden"
+              {...listeners}
+              {...attributes}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Bars3Icon 
+                className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing"
+                style={{ touchAction: 'none' }}
+              />
+            </div>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => {
+                e.stopPropagation()
+                onSelect(e.target.checked)
+              }}
+              className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+            />
+          </div>
         </td>
       )}
       

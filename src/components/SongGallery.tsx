@@ -4,23 +4,61 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { MusicalNoteIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 
 interface SongGalleryProps {
   songs: Song[]
   showAddButton?: boolean
   onAddClick?: (song: Song) => void
   addingId?: string | null
+  hasUser?: boolean
 }
 
-export default function SongGallery({ songs, showAddButton, onAddClick, addingId }: SongGalleryProps) {
-  const router = useRouter()
-  const pathname = usePathname()
+// Draggable song card component
+function DraggableSongCard({ 
+  song, 
+  songs, 
+  pathname, 
+  router, 
+  showAddButton, 
+  onAddClick, 
+  addingId,
+  hasUser 
+}: { 
+  song: Song
+  songs: Song[]
+  pathname: string | null
+  router: any
+  showAddButton?: boolean
+  onAddClick?: (song: Song) => void
+  addingId?: string | null
+  hasUser?: boolean
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: song.id,
+    disabled: !hasUser,
+  })
 
-  const handleSongClick = (clickedSong: Song, event: React.MouseEvent) => {
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const handleSongClick = () => {
+    // Don't navigate if dragging
+    if (isDragging) return
+    
     // Save song list to sessionStorage for navigation
     if (typeof window !== 'undefined') {
       const songList = songs.map(s => s.id)
-      const currentIndex = songs.findIndex(s => s.id === clickedSong.id)
+      const currentIndex = songs.findIndex(s => s.id === song.id)
       const navigationData = {
         songList,
         currentIndex: currentIndex >= 0 ? currentIndex : 0,
@@ -31,17 +69,25 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
     }
     
     // Navigate to song page
-    router.push(`/song/${clickedSong.id}`)
+    router.push(`/song/${song.id}`)
   }
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
-      {songs.map((song) => (
-        <div 
-          key={song.id} 
-          className="group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border border-gray-200 hover:border-gray-300 relative flex flex-col"
-        >
-          <div onClick={(e) => handleSongClick(song, e)} className="flex-1 cursor-pointer">
+    <div 
+      ref={setNodeRef}
+      style={{
+        ...style,
+        touchAction: hasUser ? 'none' : 'auto',
+      }}
+      className={`group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border-2 relative flex flex-col ${
+        isDragging 
+          ? 'z-50 shadow-xl border-blue-500 opacity-75' 
+          : 'border-gray-200 hover:border-gray-300'
+      }`}
+      {...(hasUser ? listeners : {})}
+      {...(hasUser ? attributes : {})}
+    >
+      <div onClick={handleSongClick} className="flex-1 cursor-pointer">
             <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
               {song.songImageUrl ? (
                 <img 
@@ -71,17 +117,38 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
               </div>
             </div>
           </div>
-          {showAddButton && onAddClick && (
-            <button
-              onClick={() => onAddClick(song)}
-              disabled={addingId === song.id}
-              className="m-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
-              title="Ajouter à ma bibliothèque"
-            >
-              {addingId === song.id ? 'Ajout...' : 'Ajouter'}
-            </button>
-          )}
-        </div>
+        {showAddButton && onAddClick && (
+          <button
+            onClick={() => onAddClick(song)}
+            disabled={addingId === song.id}
+            className="m-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
+            title="Ajouter à ma bibliothèque"
+          >
+            {addingId === song.id ? 'Ajout...' : 'Ajouter'}
+          </button>
+        )}
+      </div>
+    )
+}
+
+export default function SongGallery({ songs, showAddButton, onAddClick, addingId, hasUser = false }: SongGalleryProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
+      {songs.map((song) => (
+        <DraggableSongCard
+          key={song.id}
+          song={song}
+          songs={songs}
+          pathname={pathname}
+          router={router}
+          showAddButton={showAddButton}
+          onAddClick={onAddClick}
+          addingId={addingId}
+          hasUser={hasUser}
+        />
       ))}
     </div>
   )

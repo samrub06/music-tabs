@@ -16,6 +16,8 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Song, Folder, Playlist } from '@/types';
 import { addFolderAction, renameFolderAction, deleteFolderAction } from '@/app/(protected)/dashboard/actions';
+import { useDroppable } from '@dnd-kit/core';
+import React from 'react';
 
 interface DashboardSidebarProps {
   songs: Song[];
@@ -24,6 +26,46 @@ interface DashboardSidebarProps {
   currentFolder: string | null;
   onFolderChange: (folderId: string | null) => void;
   onClose?: () => void;
+  onMoveSong?: (songId: string, folderId: string | undefined) => Promise<void>;
+}
+
+// Component for droppable folder
+function DroppableFolder({ 
+  folderId, 
+  folderName, 
+  songCount, 
+  isActive, 
+  onFolderChange, 
+  onClose,
+  children 
+}: { 
+  folderId: string | null; 
+  folderName: string; 
+  songCount: number; 
+  isActive: boolean; 
+  onFolderChange: (folderId: string | null) => void; 
+  onClose?: () => void;
+  children: React.ReactNode;
+}) {
+  const dropId = folderId ? `folder-${folderId}` : 'folder-null';
+  const { setNodeRef, isOver } = useDroppable({
+    id: dropId,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all ${
+        isOver
+          ? 'bg-blue-200 border-2 border-blue-500 border-dashed scale-105 shadow-lg'
+          : isActive
+            ? 'bg-blue-100 text-blue-700'
+            : 'text-gray-700 hover:bg-gray-100'
+      }`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default function DashboardSidebar({ 
@@ -32,7 +74,8 @@ export default function DashboardSidebar({
   playlists,
   currentFolder, 
   onFolderChange,
-  onClose 
+  onClose,
+  onMoveSong
 }: DashboardSidebarProps) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -141,38 +184,52 @@ export default function DashboardSidebar({
           <>
             {/* All Songs */}
             <div className="space-y-1">
-              <button
-                onClick={() => {
-                  onFolderChange(null);
-                  onClose?.();
-                }}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  currentFolder === null ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                }`}
+              <DroppableFolder
+                folderId={null}
+                folderName={t('sidebar.allSongs')}
+                songCount={songs.length}
+                isActive={currentFolder === null}
+                onFolderChange={onFolderChange}
+                onClose={onClose}
               >
-                <MusicalNoteIcon className="mr-3 h-5 w-5" />
-                {t('sidebar.allSongs')}
+                <button
+                  onClick={() => {
+                    onFolderChange(null);
+                    onClose?.();
+                  }}
+                  className="flex-1 flex items-center text-left w-full"
+                >
+                  <MusicalNoteIcon className="mr-3 h-5 w-5" />
+                  {t('sidebar.allSongs')}
+                </button>
                 <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                   {songs.length}
                 </span>
-              </button>
+              </DroppableFolder>
 
               {unorganizedSongs > 0 && (
-                <button
-                  onClick={() => {
-                    onFolderChange('unorganized');
-                    onClose?.();
-                  }}
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    currentFolder === 'unorganized' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                <DroppableFolder
+                  folderId={null}
+                  folderName={t('sidebar.unorganizedSongs')}
+                  songCount={unorganizedSongs}
+                  isActive={currentFolder === 'unorganized'}
+                  onFolderChange={onFolderChange}
+                  onClose={onClose}
                 >
-                  <FolderIcon className="mr-3 h-5 w-5" />
-                  {t('sidebar.unorganizedSongs')}
+                  <button
+                    onClick={() => {
+                      onFolderChange('unorganized');
+                      onClose?.();
+                    }}
+                    className="flex-1 flex items-center text-left w-full"
+                  >
+                    <FolderIcon className="mr-3 h-5 w-5" />
+                    {t('sidebar.unorganizedSongs')}
+                  </button>
                   <span className="ml-auto text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
                     {unorganizedSongs}
                   </span>
-                </button>
+                </DroppableFolder>
               )}
             </div>
 
@@ -231,11 +288,14 @@ export default function DashboardSidebar({
 
               <div className="space-y-1">
                 {folders.map((folder) => (
-                  <div
+                  <DroppableFolder
                     key={folder.id}
-                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      currentFolder === folder.id ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    folderId={folder.id}
+                    folderName={folder.name}
+                    songCount={getSongCountByFolder(folder.id)}
+                    isActive={currentFolder === folder.id}
+                    onFolderChange={onFolderChange}
+                    onClose={onClose}
                   >
                     {editingFolder === folder.id ? (
                       <div className="flex-1 flex items-center space-x-1">
@@ -299,7 +359,7 @@ export default function DashboardSidebar({
                         </div>
                       </>
                     )}
-                  </div>
+                  </DroppableFolder>
                 ))}
               </div>
 
