@@ -94,23 +94,36 @@ export default function DashboardClient({ songs, total, page, limit, initialView
         {/* Main content */}
         <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Dashboard
-          </h1>
-          <p className="text-sm text-gray-600">
-            Bienvenue, {userEmail || 'Utilisateur'}
-          </p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              Dashboard
+            </h1>
+            <p className="text-sm text-gray-600">
+              Bienvenue, {userEmail || 'Utilisateur'}
+            </p>
+          </div>
+          {/* Add Song Button */}
+          <div className="flex-shrink-0">
+            <button
+              onClick={() => setShowAddSong(true)}
+              className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
+              <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
+              <span className="hidden sm:inline">{t('songs.addNew')}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Search Bar and Add Button */}
+        {/* Search Bar */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="flex flex-row items-center gap-2 sm:gap-4 overflow-x-auto">
             {/* Search Bar */}
-            <div className="flex-1 sm:max-w-2xl">
+            <div className="flex-1 min-w-0 sm:max-w-2xl">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
@@ -124,7 +137,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       applyQuery({ q: val, page: 1 })
                     }
                   }}
-                  className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="block w-full pl-7 sm:pl-10 pr-7 sm:pr-10 py-1.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
                 />
                 {localSearchValue && (
                   <button
@@ -134,22 +147,22 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       setSearchQuery('')
                       applyQuery({ q: '', page: 1 })
                     }}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
                     type="button"
                   >
-                    <XMarkIcon className="h-4 sm:h-5 w-4 sm:w-5" />
+                    <XMarkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* View toggle */}
-            <div className="flex items-center gap-3 self-start sm:self-auto">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <div className="inline-flex rounded-md shadow-sm border">
                 <select
                   value={limit}
                   onChange={(e) => applyQuery({ limit: Number(e.target.value), page: 1 })}
-                  className="block w-full py-1.5 pl-3 pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="block w-full py-2 sm:py-1.5 pl-2 sm:pl-3 pr-6 sm:pr-8 text-sm sm:text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -160,32 +173,20 @@ export default function DashboardClient({ songs, total, page, limit, initialView
 
               <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
                 <button
-                  className={`px-2 sm:px-3 py-1.5 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`px-2.5 sm:px-3 py-2 sm:py-1.5 text-sm sm:text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'gallery', page: 1 })}
                   title="Gallery View"
                 >
-                  <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Squares2X2Icon className="h-4 w-4 sm:h-4 sm:w-4" />
                 </button>
                 <button
-                  className={`px-2 sm:px-3 py-1.5 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`px-2.5 sm:px-3 py-2 sm:py-1.5 text-sm sm:text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'table', page: 1 })}
                   title="Table View"
                 >
-                  <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <TableCellsIcon className="h-4 w-4 sm:h-4 sm:w-4" />
                 </button>
               </div>
-            </div>
-
-            {/* Add Song Button */}
-            <div className="flex-shrink-0">
-              <button
-                onClick={() => setShowAddSong(true)}
-                className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
-              >
-                <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
-                <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
-                <span className="hidden sm:inline">{t('songs.addNew')}</span>
-              </button>
             </div>
           </div>
         </div>
@@ -208,12 +209,76 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                 onCurrentFolderChange={setCurrentFolder}
                 onUpdateSong={updateSongAction}
               />
-              <Pagination page={page} limit={limit} total={total} />
+              <div className="hidden sm:block">
+                <Pagination page={page} limit={limit} total={total} />
+              </div>
+              {/* Compact Pagination for Mobile - En bas */}
+              {(() => {
+                const totalPages = Math.max(1, Math.ceil(total / limit))
+                const canPrev = page > 1
+                const canNext = page < totalPages
+                
+                if (totalPages <= 1) return null
+                
+                return (
+                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page - 1 })}
+                      disabled={!canPrev}
+                    >
+                      ‹
+                    </button>
+                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page + 1 })}
+                      disabled={!canNext}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )
+              })()}
             </>
           ) : (
             <>
               <SongGallery songs={songs} />
-              <Pagination page={page} limit={limit} total={total} />
+              <div className="hidden sm:block">
+                <Pagination page={page} limit={limit} total={total} />
+              </div>
+              {/* Compact Pagination for Mobile - En bas */}
+              {(() => {
+                const totalPages = Math.max(1, Math.ceil(total / limit))
+                const canPrev = page > 1
+                const canNext = page < totalPages
+                
+                if (totalPages <= 1) return null
+                
+                return (
+                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page - 1 })}
+                      disabled={!canPrev}
+                    >
+                      ‹
+                    </button>
+                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page + 1 })}
+                      disabled={!canNext}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )
+              })()}
             </>
           )
         ) : null}
