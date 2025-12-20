@@ -20,6 +20,7 @@ interface SongContentProps {
   onCancelEdit: () => void;
   onChordClick: (chord: string) => void;
   isAuthenticated?: boolean;
+  bpm?: number | null;
 }
 
 export default function SongContent({
@@ -34,7 +35,8 @@ export default function SongContent({
   onSave,
   onCancelEdit,
   onChordClick,
-  isAuthenticated = false
+  isAuthenticated = false,
+  bpm
 }: SongContentProps) {
   if (isEditing) {
     return (
@@ -83,6 +85,11 @@ export default function SongContent({
             Accords utilisés
           </h3>
           <ChordDiagramsGrid song={transposedSong} onChordClick={onChordClick} fontSize={fontSize} />
+          {bpm && (
+            <p className="text-sm text-blue-600 font-medium mt-4">
+              {bpm} BPM
+            </p>
+          )}
         </div>
 
         {/* Song Content */}

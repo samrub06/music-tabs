@@ -162,6 +162,7 @@ export default function SongViewer({
             onCancelEdit={onCancelEdit}
             onChordClick={onChordClick}
             isAuthenticated={isAuthenticated}
+            bpm={manualBpm || song.bpm || undefined}
           />
         </div>
 

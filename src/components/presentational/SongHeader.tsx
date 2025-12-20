@@ -150,21 +150,34 @@ export default function SongHeader({
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </button>
-          <div className="flex-1 text-center px-1 min-w-0">
-            <h1 className="text-sm font-bold text-gray-900 truncate max-w-full" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>
+          
+          {/* Song Image */}
+          <div className="flex-shrink-0">
+            {song.songImageUrl ? (
+              <img 
+                src={song.songImageUrl} 
+                alt={song.title}
+                className="w-8 h-8 rounded-lg object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                <MusicalNoteIcon className="h-6 w-6 text-gray-400" />
+              </div>
+            )}
+          </div>
+          
+          {/* Title and Artist */}
+          <div className="flex-1 min-w-0 px-1">
+            <h1 className="text-sm font-bold text-gray-900 truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>
               {song.title}
             </h1>
             {song.author && (
               <p className="text-xs text-gray-600 truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>
-                Par {song.author}
-              </p>
-            )}
-            {song.bpm && (
-              <p className="text-xs text-blue-600 font-medium">
-                {song.bpm} BPM
+                {song.author}
               </p>
             )}
           </div>
+          
           {onPrevSong && onNextSong && (
             <div className="flex items-center space-x-1">
               <button
