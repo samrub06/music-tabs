@@ -49,6 +49,7 @@ interface SongHeaderProps {
   onNextSong?: () => void;
   canPrevSong?: boolean;
   canNextSong?: boolean;
+  nextSongInfo?: { title: string; author?: string } | null;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
 }
@@ -78,6 +79,7 @@ export default function SongHeader({
   onNextSong,
   canPrevSong,
   canNextSong,
+  nextSongInfo,
   manualBpm,
   onSetManualBpm
 }: SongHeaderProps) {
@@ -179,26 +181,39 @@ export default function SongHeader({
           </div>
           
           {onPrevSong && onNextSong && (
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={onPrevSong}
                 disabled={!canPrevSong}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none"
+                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none flex-shrink-0"
                 style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                 title="Précédente"
                 aria-label="Chanson précédente"
               >
-                <ArrowLeftIcon className="h-4 w-4" />
+                <ArrowLeftIcon className="h-5 w-5" />
               </button>
+              {nextSongInfo && canNextSong && (
+                <div className="flex flex-col items-center min-w-0 max-w-[80px]">
+                  <span className="text-xs text-gray-500 truncate w-full text-center">Suivante:</span>
+                  <span className="text-xs font-semibold text-gray-700 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>
+                    {nextSongInfo.title}
+                  </span>
+                  {nextSongInfo.author && (
+                    <span className="text-xs text-gray-500 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.author) ? 'rtl' : 'ltr'}>
+                      {nextSongInfo.author}
+                    </span>
+                  )}
+                </div>
+              )}
               <button
                 onClick={onNextSong}
                 disabled={!canNextSong}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none"
+                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none flex-shrink-0"
                 style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                 title="Suivante"
                 aria-label="Chanson suivante"
               >
-                <ArrowRightIcon className="h-4 w-4" />
+                <ArrowRightIcon className="h-5 w-5" />
               </button>
             </div>
           )}
@@ -527,22 +542,35 @@ export default function SongHeader({
 
         <div className="flex items-center space-x-2">
           {onPrevSong && onNextSong && (
-            <div className="flex items-center space-x-1 mr-2">
+            <div className="flex items-center space-x-2 mr-2">
               <button
                 onClick={onPrevSong}
                 disabled={!canPrevSong}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
                 title="Chanson précédente"
               >
-                <ArrowLeftIcon className="h-4 w-4" />
+                <ArrowLeftIcon className="h-5 w-5" />
               </button>
+              {nextSongInfo && canNextSong && (
+                <div className="flex flex-col items-center min-w-0 max-w-[100px]">
+                  <span className="text-xs text-gray-500 truncate w-full text-center">Suivante:</span>
+                  <span className="text-sm font-semibold text-gray-700 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>
+                    {nextSongInfo.title}
+                  </span>
+                  {nextSongInfo.author && (
+                    <span className="text-xs text-gray-500 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.author) ? 'rtl' : 'ltr'}>
+                      {nextSongInfo.author}
+                    </span>
+                  )}
+                </div>
+              )}
               <button
                 onClick={onNextSong}
                 disabled={!canNextSong}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
                 title="Chanson suivante"
               >
-                <ArrowRightIcon className="h-4 w-4" />
+                <ArrowRightIcon className="h-5 w-5" />
               </button>
             </div>
           )}

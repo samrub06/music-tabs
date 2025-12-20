@@ -51,6 +51,7 @@ interface SongViewerProps {
   onNextSong?: () => void;
   canPrevSong?: boolean;
   canNextSong?: boolean;
+  nextSongInfo?: { title: string; author?: string } | null;
   isAuthenticated?: boolean;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
@@ -94,6 +95,7 @@ export default function SongViewer({
   onNextSong,
   canPrevSong,
   canNextSong,
+  nextSongInfo,
   isAuthenticated = false,
   manualBpm,
   onSetManualBpm
@@ -142,6 +144,7 @@ export default function SongViewer({
         onNextSong={onNextSong}
         canPrevSong={!!canPrevSong}
         canNextSong={!!canNextSong}
+        nextSongInfo={nextSongInfo}
         manualBpm={manualBpm}
         onSetManualBpm={onSetManualBpm}
       />

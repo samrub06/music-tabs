@@ -40,6 +40,7 @@ export default function SongViewerContainerSSR({
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [manualBpm, setManualBpm] = useState<number | null>(null);
   const [hasUsedNext, setHasUsedNext] = useState(false);
+  const [nextSongInfo, setNextSongInfo] = useState<{ title: string; author?: string } | null>(null);
   
   // Load hasUsedNext from sessionStorage on mount and sync current song index
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function SongViewerContainerSSR({
         try {
           const navigationData = JSON.parse(navigationDataStr);
           const { songList } = navigationData;
-          const currentIndex = songList.findIndex(id => id === song.id);
+          const currentIndex = songList.findIndex((id: string) => id === song.id);
           
           if (currentIndex >= 0 && currentIndex !== navigationData.currentIndex) {
             // Update index if it doesn't match
@@ -62,6 +63,23 @@ export default function SongViewerContainerSSR({
               currentIndex
             };
             sessionStorage.setItem('songNavigation', JSON.stringify(updatedData));
+          }
+          
+          // Load next song info if available
+          if (currentIndex >= 0 && currentIndex < songList.length - 1) {
+            const nextSongId = songList[currentIndex + 1];
+            songService.getSongById(nextSongId, supabase).then(nextSong => {
+              if (nextSong) {
+                setNextSongInfo({
+                  title: nextSong.title,
+                  author: nextSong.author
+                });
+              }
+            }).catch(err => {
+              console.error('Error loading next song info:', err);
+            });
+          } else {
+            setNextSongInfo(null);
           }
         } catch (error) {
           console.error('Error syncing navigation data:', error);
@@ -267,6 +285,7 @@ export default function SongViewerContainerSSR({
     onNextSong: handleNextSong,
     canPrevSong: canPrevSong,
     canNextSong: canNextSong,
+    nextSongInfo: nextSongInfo,
     isAuthenticated
   };
 
