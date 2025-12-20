@@ -144,7 +144,9 @@ export default function SongHeader({
         <div className="flex items-center justify-between p-2 gap-2 w-full max-w-full">
           <button
             onClick={onNavigateBack}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0"
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none"
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Retour"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </button>
@@ -168,16 +170,20 @@ export default function SongHeader({
               <button
                 onClick={onPrevSong}
                 disabled={!canPrevSong}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none"
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                 title="Précédente"
+                aria-label="Chanson précédente"
               >
                 <ArrowLeftIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={onNextSong}
                 disabled={!canNextSong}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none"
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
                 title="Suivante"
+                aria-label="Chanson suivante"
               >
                 <ArrowRightIcon className="h-4 w-4" />
               </button>
@@ -185,7 +191,9 @@ export default function SongHeader({
           )}
           <button
             onClick={onToggleEdit}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0"
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none"
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            aria-label="Éditer"
           >
             <PencilIcon className="h-4 w-4" />
           </button>
