@@ -42,6 +42,7 @@ export interface Database {
           name: string
           created_at: string
           updated_at: string
+          display_order: number | null
         }
         Insert: {
           id?: string
@@ -49,6 +50,7 @@ export interface Database {
           name: string
           created_at?: string
           updated_at?: string
+          display_order?: number | null
         }
         Update: {
           id?: string
@@ -56,6 +58,7 @@ export interface Database {
           name?: string
           created_at?: string
           updated_at?: string
+          display_order?: number | null
         }
       }
       songs: {

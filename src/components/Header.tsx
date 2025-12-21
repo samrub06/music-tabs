@@ -2,7 +2,7 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -93,6 +93,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <RectangleStackIcon className="h-6 w-6" />
                 <span className="sr-only">My Songs</span>
               </Link>
+              <Link
+                href="/folders"
+                className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <FolderIcon className="h-6 w-6" />
+                <span className="sr-only">Folders</span>
+              </Link>
             </nav>
             
             {/* Authenticated navigation - Desktop */}
@@ -111,6 +118,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 >
                   <RectangleStackIcon className="h-5 w-5" />
                   <span>My Songs</span>
+                </Link>
+                <Link
+                  href="/folders"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <FolderIcon className="h-5 w-5" />
+                  <span>Folders</span>
                 </Link>
                
               </nav>

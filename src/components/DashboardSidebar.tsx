@@ -132,6 +132,19 @@ export default function DashboardSidebar({
       .slice(0, 10);
   }, [songs]);
 
+  // Sort folders by displayOrder
+  const sortedFolders = useMemo(() => {
+    return [...folders].sort((a, b) => {
+      const orderA = a.displayOrder ?? Infinity;
+      const orderB = b.displayOrder ?? Infinity;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      // If displayOrder is the same or both undefined, sort by createdAt as fallback
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [folders]);
+
   return (
     <aside className="w-72 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4">
@@ -287,7 +300,7 @@ export default function DashboardSidebar({
               )}
 
               <div className="space-y-1">
-                {folders.map((folder) => (
+                {sortedFolders.map((folder) => (
                   <DroppableFolder
                     key={folder.id}
                     folderId={folder.id}
@@ -363,7 +376,7 @@ export default function DashboardSidebar({
                 ))}
               </div>
 
-              {folders.length === 0 && !showAddForm && (
+              {sortedFolders.length === 0 && !showAddForm && (
                 <p className="text-sm text-gray-500 italic">{t('sidebar.noFolders')}</p>
               )}
             </div>

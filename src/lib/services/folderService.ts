@@ -18,5 +18,9 @@ export const folderService = {
 
   async deleteFolder(id: string, clientSupabase: SupabaseClient<Database>): Promise<void> {
     return folderRepo(clientSupabase).deleteFolder(id)
+  },
+
+  async updateFolderOrder(folderId: string, newOrder: number, clientSupabase: SupabaseClient<Database>): Promise<Folder> {
+    return folderRepo(clientSupabase).updateFolderOrder(folderId, newOrder)
   }
 }

@@ -113,6 +113,7 @@ export async function addFolderAction(name: string) {
   const repo = folderRepo(supabase)
   await repo.createFolder({ name: validatedName })
   revalidatePath('/dashboard')
+  revalidatePath('/folders')
 }
 
 export async function renameFolderAction(id: string, name: string) {
@@ -121,6 +122,8 @@ export async function renameFolderAction(id: string, name: string) {
   const repo = folderRepo(supabase)
   await repo.updateFolder(id, { name: validatedName })
   revalidatePath('/dashboard')
+  revalidatePath('/folders')
+  revalidatePath('/folders', 'layout')
 }
 
 export async function deleteFolderAction(id: string) {
@@ -128,6 +131,8 @@ export async function deleteFolderAction(id: string) {
   const repo = folderRepo(supabase)
   await repo.deleteFolder(id)
   revalidatePath('/dashboard')
+  revalidatePath('/folders')
+  revalidatePath('/folders', 'layout')
 }
 
 export async function createPlaylistFromMedleyAction(name: string, medley: MedleyResult) {

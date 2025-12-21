@@ -8,6 +8,7 @@ function mapDbFolderToDomain(dbFolder: Database['public']['Tables']['folders']['
     id: dbFolder.id,
     name: dbFolder.name,
     parentId: undefined, // Schema doesn't seem to have parent_id in the DB definition I saw earlier, but service used it. Let's check types/db.ts
+    displayOrder: dbFolder.display_order ?? undefined,
     createdAt: new Date(dbFolder.created_at),
     updatedAt: new Date(dbFolder.updated_at)
   }
@@ -20,6 +21,7 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     let query = client
       .from('folders')
       .select('*')
+      .order('display_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
     if (user) {
@@ -41,11 +43,23 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to create folders')
 
+    // Get the maximum display_order for this user to set the new folder's order
+    const { data: existingFolders } = await client
+      .from('folders')
+      .select('display_order')
+      .eq('user_id', user.id)
+      .order('display_order', { ascending: false, nullsFirst: false })
+      .limit(1)
+
+    const maxOrder = existingFolders?.[0]?.display_order
+    const newOrder = maxOrder !== undefined && maxOrder !== null ? maxOrder + 1.0 : 1.0
+
     const { data, error } = await (client
       .from('folders') as any)
       .insert([{
         user_id: user.id,
-        name: folderData.name
+        name: folderData.name,
+        display_order: newOrder
       }])
       .select()
       .single()
@@ -80,6 +94,25 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
 
     const { error } = await client.from('folders').delete().eq('id', id)
     if (error) throw error
+  },
+
+  async updateFolderOrder(folderId: string, newOrder: number): Promise<Folder> {
+    const { data: { user } } = await client.auth.getUser()
+    if (!user) throw new Error('User must be authenticated to update folder order')
+
+    const { data, error } = await (client
+      .from('folders') as any)
+      .update({
+        display_order: newOrder,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', folderId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return mapDbFolderToDomain(data)
   }
 })
 

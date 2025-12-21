@@ -5,6 +5,7 @@ export interface Folder {
   id: string;
   name: string;
   parentId?: string;
+  displayOrder?: number;
   createdAt: Date;
   updatedAt: Date;
 }
