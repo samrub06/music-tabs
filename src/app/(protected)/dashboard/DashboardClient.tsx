@@ -32,14 +32,17 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [showAddSong, setShowAddSong] = useState(false)
-  const qFromUrl = searchParams?.get('q') ?? initialQuery
-  const [searchQuery, setSearchQuery] = useState(qFromUrl)
-  const [localSearchValue, setLocalSearchValue] = useState(qFromUrl)
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
+  const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
 
-  // Sync localSearchValue with URL changes
+  // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
-    setLocalSearchValue(qFromUrl)
-  }, [qFromUrl])
+    const timer = setTimeout(() => {
+      setSearchQuery(localSearchValue)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [localSearchValue])
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(undefined)
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
@@ -103,9 +106,31 @@ export default function DashboardClient({ songs, total, page, limit, initialView
     }
   }
 
-  const applyQuery = (next: { q?: string; view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
+  // Filter songs by search query (for gallery view - table view filters internally)
+  const filteredSongs = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return songs
+    }
+
+    const query = searchQuery.toLowerCase().trim()
+    return songs.filter(song => 
+      song.title.toLowerCase().includes(query) ||
+      song.author.toLowerCase().includes(query) ||
+      // Search in all sections and lines for structured songs
+      song.sections?.some(section => 
+        section.name.toLowerCase().includes(query) ||
+        section.lines.some(line => 
+          line.lyrics?.toLowerCase().includes(query) ||
+          line.chords?.some(chord => chord.chord.toLowerCase().includes(query))
+        )
+      )
+    )
+  }, [songs, searchQuery])
+
+  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
-    if (next.q !== undefined) params.set('q', next.q)
+    // Remove 'q' param if it exists (cleanup old URLs)
+    params.delete('q')
     if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
@@ -157,13 +182,6 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                   placeholder={t('songs.search')}
                   value={localSearchValue}
                   onChange={(e) => setLocalSearchValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const val = (e.target as HTMLInputElement).value
-                      setSearchQuery(val)
-                      applyQuery({ q: val, page: 1 })
-                    }
-                  }}
                   className="block w-full pl-10 sm:pl-10 pr-10 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                 />
                 {localSearchValue && (
@@ -172,7 +190,6 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       e.stopPropagation()
                       setLocalSearchValue('')
                       setSearchQuery('')
-                      applyQuery({ q: '', page: 1 })
                     }}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 touch-manipulation"
                     type="button"
@@ -296,7 +313,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
             </>
           ) : (
             <>
-              <SongGallery songs={songs} hasUser={true} />
+              <SongGallery songs={filteredSongs} hasUser={true} />
               <div className="hidden sm:block">
                 <Pagination page={page} limit={limit} total={total} />
               </div>

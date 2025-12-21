@@ -34,16 +34,19 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [showAddSong, setShowAddSong] = useState(false)
-  const qFromUrl = searchParams?.get('searchQuery') ?? initialQuery
-  const [searchQuery, setSearchQuery] = useState(qFromUrl)
-  const [localSearchValue, setLocalSearchValue] = useState(qFromUrl)
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
+  const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder)
 
-  // Sync localSearchValue with URL changes
+  // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
-    setLocalSearchValue(qFromUrl)
-  }, [qFromUrl])
+    const timer = setTimeout(() => {
+      setSearchQuery(localSearchValue)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [localSearchValue])
 
   // Handle songId from URL - navigate to song page if present
   useEffect(() => {
@@ -144,9 +147,26 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return filtered
   }, [songs, currentFolder])
 
-  // Sort filtered songs by folder
+  // Sort filtered songs by folder and filter by search query
   const sortedSongs = useMemo(() => {
     let sorted = [...filteredSongs]
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      sorted = sorted.filter(song => 
+        song.title.toLowerCase().includes(query) ||
+        song.author.toLowerCase().includes(query) ||
+        // Search in all sections and lines for structured songs
+        song.sections?.some(section => 
+          section.name.toLowerCase().includes(query) ||
+          section.lines.some(line => 
+            line.lyrics?.toLowerCase().includes(query) ||
+            line.chords?.some(chord => chord.chord.toLowerCase().includes(query))
+          )
+        )
+      )
+    }
 
     // Sort by folder displayOrder, then by folder name
     sorted.sort((a, b) => {
@@ -178,16 +198,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     })
 
     return sorted
-  }, [filteredSongs, folders, sortOrder])
+  }, [filteredSongs, folders, sortOrder, searchQuery])
 
-  const applyQuery = (next: { searchQuery?: string; view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
+  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
-    // Remove old 'q' param if it exists
+    // Remove old 'q' and 'searchQuery' params if they exist (cleanup old URLs)
     params.delete('q')
-    if (next.searchQuery !== undefined) {
-      if (next.searchQuery) params.set('searchQuery', next.searchQuery)
-      else params.delete('searchQuery')
-    }
+    params.delete('searchQuery')
     if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
@@ -259,13 +276,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   placeholder={t('songs.search')}
                   value={localSearchValue}
                   onChange={(e) => setLocalSearchValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const val = (e.target as HTMLInputElement).value
-                      setSearchQuery(val)
-                      applyQuery({ searchQuery: val, page: 1 })
-                    }
-                  }}
                   className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
                 {localSearchValue && (
@@ -274,7 +284,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                       e.stopPropagation()
                       setLocalSearchValue('')
                       setSearchQuery('')
-                      applyQuery({ searchQuery: '', page: 1 })
                     }}
                     className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
                     type="button"
