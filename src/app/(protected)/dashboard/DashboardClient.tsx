@@ -145,12 +145,12 @@ export default function DashboardClient({ songs, total, page, limit, initialView
 
         {/* Search Bar */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex flex-row items-center gap-2 sm:gap-4 overflow-x-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
             {/* Search Bar */}
-            <div className="flex-1 min-w-0 sm:max-w-2xl">
+            <div className="w-full sm:flex-1 sm:min-w-0 sm:max-w-2xl">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
@@ -164,7 +164,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       applyQuery({ q: val, page: 1 })
                     }
                   }}
-                  className="block w-full pl-7 sm:pl-10 pr-7 sm:pr-10 py-1.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
+                  className="block w-full pl-10 sm:pl-10 pr-10 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                 />
                 {localSearchValue && (
                   <button
@@ -174,17 +174,18 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       setSearchQuery('')
                       applyQuery({ q: '', page: 1 })
                     }}
-                    className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 touch-manipulation"
                     type="button"
+                    aria-label="Clear search"
                   >
-                    <XMarkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 )}
               </div>
             </div>
 
             {/* Folder Filter */}
-            <div className="inline-flex rounded-md shadow-sm border">
+            <div className="w-full sm:w-auto inline-flex rounded-md shadow-sm border">
               <select
                 value={selectedFolder || ''}
                 onChange={(e) => {
@@ -192,7 +193,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                   setSelectedFolder(folderId)
                   setCurrentFolder(folderId || null)
                 }}
-                className="block w-full py-2 sm:py-1.5 pl-2 sm:pl-3 pr-6 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                className="block w-full py-2.5 sm:py-1.5 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
               >
                 <option value="">All Folders</option>
                 {folders.map((folder) => (
@@ -204,12 +205,12 @@ export default function DashboardClient({ songs, total, page, limit, initialView
             </div>
 
             {/* View toggle */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
               <div className="inline-flex rounded-md shadow-sm border">
                 <select
                   value={limit}
                   onChange={(e) => applyQuery({ limit: Number(e.target.value), page: 1 })}
-                  className="block w-full py-2 sm:py-1.5 pl-2 sm:pl-3 pr-6 sm:pr-8 text-sm sm:text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="block w-full py-2.5 sm:py-1.5 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>

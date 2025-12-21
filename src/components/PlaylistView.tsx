@@ -1,14 +1,17 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
 import { 
   MusicalNoteIcon, 
   PlayIcon,
   ChartBarIcon,
   KeyIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { PlaylistResult, PlaylistSong } from '@/lib/services/playlistGeneratorService';
+import Snackbar from '@/components/Snackbar';
 
 interface PlaylistViewProps {
   playlist: PlaylistResult;
@@ -18,6 +21,13 @@ interface PlaylistViewProps {
 
 export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist }: PlaylistViewProps) {
   const router = useRouter();
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [playlistName, setPlaylistName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const getScoreColor = (score: number) => {
     if (score >= 0.8) return 'text-green-600 bg-green-100';
@@ -35,6 +45,56 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
     if (adjustment === 0) return '';
     if (adjustment > 0) return `+${adjustment}`;
     return `${adjustment}`;
+  };
+
+  // Focus input when modal opens
+  useEffect(() => {
+    if (showNameModal && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [showNameModal]);
+
+  const handleOpenModal = () => {
+    const defaultName = `Playlist ${new Date().toLocaleString('fr-FR')}`;
+    setPlaylistName(defaultName);
+    setShowNameModal(true);
+  };
+
+  const handleCloseModal = () => {
+    if (isSaving) return;
+    setShowNameModal(false);
+    setPlaylistName('');
+  };
+
+  const handleSavePlaylist = async () => {
+    if (!onCreatePlaylist || !playlistName.trim() || isSaving) return;
+    
+    setIsSaving(true);
+    try {
+      await onCreatePlaylist(playlistName.trim(), playlist);
+      setShowNameModal(false);
+      setPlaylistName('');
+      setSnackbarMessage('Playlist enregistrée');
+      setSnackbarType('success');
+      setShowSnackbar(true);
+    } catch (e) {
+      setSnackbarMessage('Erreur lors de la sauvegarde de la playlist');
+      setSnackbarType('error');
+      setShowSnackbar(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSavePlaylist();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCloseModal();
+    }
   };
 
   const handleStartPlaylist = () => {
@@ -87,17 +147,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
           </div>
           {onCreatePlaylist && (
             <button
-              onClick={async () => {
-                if (!onCreatePlaylist) return;
-                const defaultName = `Playlist ${new Date().toLocaleString('fr-FR')}`;
-                const name = prompt('Nom de la playlist ?', defaultName) || defaultName;
-                try {
-                  await onCreatePlaylist(name, playlist);
-                  alert('Playlist enregistrée');
-                } catch (e) {
-                  alert('Erreur lors de la sauvegarde de la playlist');
-                }
-              }}
+              onClick={handleOpenModal}
               className="px-3 py-2 text-sm rounded-md bg-gray-600 text-white hover:bg-gray-700"
             >
               Sauvegarder
@@ -221,6 +271,69 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
           <p className="text-gray-500">Aucune chanson dans la playlist</p>
         </div>
       )}
+
+      {/* Playlist Name Modal */}
+      {showNameModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 max-w-[90vw] shadow-lg rounded-md bg-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Nom de la playlist
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={isSaving}
+                aria-label="Fermer"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="playlist-name" className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de la playlist
+              </label>
+              <input
+                id="playlist-name"
+                ref={inputRef}
+                type="text"
+                value={playlistName}
+                onChange={(e) => setPlaylistName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isSaving}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Nom de la playlist"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6">
+              <button
+                onClick={handleCloseModal}
+                disabled={isSaving}
+                className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-lg shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-[52px] sm:min-h-0 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSavePlaylist}
+                disabled={isSaving || !playlistName.trim()}
+                className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-600 text-white text-base font-medium rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 min-h-[52px] sm:min-h-0 disabled:opacity-50"
+              >
+                {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Snackbar */}
+      <Snackbar
+        message={snackbarMessage || ''}
+        isOpen={showSnackbar}
+        onClose={() => setShowSnackbar(false)}
+        type={snackbarType}
+      />
     </div>
   );
 }

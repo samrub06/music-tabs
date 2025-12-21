@@ -23,3 +23,4 @@ WHERE public.folders.id = subquery.id;
 -- Create index for better query performance when sorting by display_order
 CREATE INDEX idx_folders_display_order ON public.folders(user_id, display_order NULLS LAST);
 
+

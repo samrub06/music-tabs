@@ -5,7 +5,7 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -301,24 +301,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Sort Order Toggle */}
-              <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
-                <button
-                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center ${sortOrder === 'asc' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                  onClick={() => handleSortOrderChange('asc')}
-                  title="Sort Ascending"
-                >
-                  <ArrowUpIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-                <button
-                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center border-l ${sortOrder === 'desc' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                  onClick={() => handleSortOrderChange('desc')}
-                  title="Sort Descending"
-                >
-                  <ArrowDownIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
               </div>
 
               {/* Limit selector */}
