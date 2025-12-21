@@ -109,18 +109,18 @@ function SortableFolderItem({ folder, songCount, onFolderClick }: SortableFolder
     >
       <div className="p-3 sm:p-4">
         <div className="flex items-center space-x-3">
-          <div
-            {...attributes}
-            {...listeners}
+            <div
+              {...attributes}
+              {...listeners}
             className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded flex-shrink-0"
-            onClick={(e) => e.stopPropagation()}
-          >
+              onClick={(e) => e.stopPropagation()}
+            >
             <FolderIcon className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
-          </div>
-          <div className="flex-1 min-w-0">
+            </div>
+            <div className="flex-1 min-w-0">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-              {folder.name}
-            </h3>
+                {folder.name}
+              </h3>
             <div className="flex items-center space-x-1.5 mt-0.5">
               <MusicalNoteIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
               <span className="text-sm text-gray-500">{songCount}</span>
@@ -375,15 +375,15 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             <SortableContext items={filteredFolders.map(f => f.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3">
                 {filteredFolders.map((folder) => (
-                  <SortableFolderItem
-                    key={folder.id}
-                    folder={folder}
-                    songCount={getSongCount(folder.id)}
-                    onFolderClick={handleFolderClick}
-                  />
-                ))}
-              </div>
-            </SortableContext>
+                <SortableFolderItem
+                  key={folder.id}
+                  folder={folder}
+                  songCount={getSongCount(folder.id)}
+                  onFolderClick={handleFolderClick}
+                />
+              ))}
+            </div>
+          </SortableContext>
           ) : (
             <SortableContext items={filteredFolders.map(f => f.id)} strategy={verticalListSortingStrategy}>
               <div className="overflow-x-auto">
