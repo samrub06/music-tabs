@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
@@ -75,18 +75,26 @@ function DraggableSongCard({
   return (
     <div 
       ref={setNodeRef}
-      style={{
-        ...style,
-        touchAction: hasUser ? 'none' : 'auto',
-      }}
+      style={style}
       className={`group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border-2 relative flex flex-col ${
         isDragging 
           ? 'z-50 shadow-xl border-blue-500 opacity-75' 
           : 'border-gray-200 hover:border-gray-300'
       }`}
-      {...(hasUser ? listeners : {})}
-      {...(hasUser ? attributes : {})}
     >
+      {/* Drag handle - positioned in bottom-right corner */}
+      {hasUser && (
+        <div
+          {...listeners}
+          {...attributes}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute bottom-2 right-2 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-md shadow-md cursor-grab active:cursor-grabbing hover:bg-white transition-colors touch-none"
+          style={{ touchAction: 'none' }}
+          aria-label="Drag to move song"
+        >
+          <ArrowsUpDownIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+        </div>
+      )}
       <div onClick={handleSongClick} className="flex-1 cursor-pointer">
             <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
               {song.songImageUrl ? (
