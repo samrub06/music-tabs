@@ -2,9 +2,9 @@ import { redirect } from 'next/navigation';
 import { createSafeServerClient } from '@/lib/supabase/server';
 import { songRepo } from '@/lib/services/songRepo';
 import { folderRepo } from '@/lib/services/folderRepo';
-import MedleyPageClient from './MedleyPageClient';
+import PlaylistPageClient from './PlaylistPageClient';
 
-export default async function MedleyPage() {
+export default async function PlaylistPage() {
   const supabase = await createSafeServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -17,5 +17,6 @@ export default async function MedleyPage() {
     folderRepo(supabase).getAllFolders()
   ]);
 
-  return <MedleyPageClient songs={songs} folders={folders} />;
+  return <PlaylistPageClient songs={songs} folders={folders} />;
 }
+

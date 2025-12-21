@@ -9,7 +9,7 @@ import { folderRepo } from '@/lib/services/folderRepo'
 import { playlistService } from '@/lib/services/playlistService'
 import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
-import type { MedleyResult } from '@/lib/services/medleyService'
+import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
 import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema } from '@/lib/validation/schemas'
 
@@ -135,12 +135,12 @@ export async function deleteFolderAction(id: string) {
   revalidatePath('/folders', 'layout')
 }
 
-export async function createPlaylistFromMedleyAction(name: string, medley: MedleyResult) {
+export async function createPlaylistFromGeneratedPlaylistAction(name: string, playlist: PlaylistResult) {
   const { name: validatedName } = createPlaylistSchema.parse({ name })
   const supabase = await createActionServerClient()
-  const playlist = await playlistService.createPlaylistFromMedley(validatedName, medley, undefined, supabase)
+  const savedPlaylist = await playlistService.createPlaylistFromGeneratedPlaylist(validatedName, playlist, undefined, supabase)
   revalidatePath('/dashboard')
-  return playlist
+  return savedPlaylist
 }
 
 export async function cloneSongAction(songId: string, targetFolderId?: string) {

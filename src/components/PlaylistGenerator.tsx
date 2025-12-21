@@ -1,38 +1,50 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   MusicalNoteIcon, 
   SparklesIcon,
   FolderIcon,
   ClockIcon,
   KeyIcon,
-  PlayIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  TagIcon
 } from '@heroicons/react/24/outline';
-import { MedleyResult, generateMedleySequence, getRandomSongs } from '@/lib/services/medleyService';
+import { PlaylistResult, generatePlaylistSequence, getRandomSongs } from '@/lib/services/playlistGeneratorService';
 import { Song, Folder } from '@/types';
 
-interface MedleyGeneratorProps {
+interface PlaylistGeneratorProps {
   songs: Song[];
   folders: Folder[];
-  onMedleyGenerated: (result: MedleyResult) => void;
+  onPlaylistGenerated: (result: PlaylistResult) => void;
 }
 
-export default function MedleyGenerator({ songs, folders, onMedleyGenerated }: MedleyGeneratorProps) {
+export default function PlaylistGenerator({ songs, folders, onPlaylistGenerated }: PlaylistGeneratorProps) {
   
   const [targetKey, setTargetKey] = useState('');
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
+  const [selectedGenre, setSelectedGenre] = useState<string>('');
   const [useRandomSelection, setUseRandomSelection] = useState(false);
   const [maxSongs, setMaxSongs] = useState(10);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedMedley, setGeneratedMedley] = useState<MedleyResult | null>(null);
+  const [generatedPlaylist, setGeneratedPlaylist] = useState<PlaylistResult | null>(null);
 
   const availableKeys = [
     'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
     'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m', 'Bm'
   ];
+
+  // Extract unique genres from songs
+  const availableGenres = useMemo(() => {
+    const genreSet = new Set<string>();
+    songs.forEach(song => {
+      if (song.genre) {
+        genreSet.add(song.genre);
+      }
+    });
+    return Array.from(genreSet).sort();
+  }, [songs]);
 
   const handleFolderToggle = (folderId: string) => {
     setSelectedFolders(prev => {
@@ -56,32 +68,8 @@ export default function MedleyGenerator({ songs, folders, onMedleyGenerated }: M
     });
   };
 
-  const handleGenerateMedley = async () => {
+  const handleGeneratePlaylist = async () => {
     setIsGenerating(true);
-    /* import { MedleyResult, MedleySong } from '@/lib/services/
-medleyService';
-    
-    try {
-      const response = await fetch('/api/medley/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          targetKey: targetKey || undefined,
-          selectedFolders: selectedFolders.length > 0 ? 
-          selectedFolders : undefined,
-          selectedSongs: selectedSongs.length > 0 ? 
-          selectedSongs : undefined,
-          useRandomSelection,
-          maxSongs
-        }),
-      if (!response.ok) {
-        throw new Error('Failed to generate medley');
-      }
-
-      const result: MedleyResult = await response.json();
- */
     try {
       // Start from all songs in context
       let candidateSongs = [...songs];
@@ -104,20 +92,21 @@ medleyService';
         candidateSongs = getRandomSongs(candidateSongs, maxSongs);
       }
 
-      // Generate medley locally
-      const result: MedleyResult = generateMedleySequence(candidateSongs, {
+      // Generate playlist locally
+      const result: PlaylistResult = generatePlaylistSequence(candidateSongs, {
         targetKey: targetKey || undefined,
         selectedFolders: selectedFolders.length > 0 ? selectedFolders : undefined,
         selectedSongs: selectedSongs.length > 0 ? selectedSongs : undefined,
+        genre: selectedGenre || undefined,
         useRandomSelection,
         maxSongs
       });
 
-      setGeneratedMedley(result);
-      onMedleyGenerated(result);
+      setGeneratedPlaylist(result);
+      onPlaylistGenerated(result);
     } catch (error) {
-      console.error('Error generating medley:', error);
-      alert('Erreur lors de la génération du medley');
+      console.error('Error generating playlist:', error);
+      alert('Erreur lors de la génération de la playlist');
     } finally {
       setIsGenerating(false);
     }
@@ -131,6 +120,10 @@ medleyService';
         selectedFolders.includes(song.folderId || 'unorganized')
       );
     }
+
+    if (selectedGenre) {
+      filtered = filtered.filter(song => song.genre === selectedGenre);
+    }
     
     return filtered;
   };
@@ -142,7 +135,7 @@ medleyService';
       <div className="flex items-center mb-6">
         <SparklesIcon className="h-6 w-6 text-purple-600 mr-3" />
         <h2 className="text-xl font-semibold text-gray-900">
-          Générateur de Medley
+          Générateur de Playlist
         </h2>
       </div>
 
@@ -151,7 +144,7 @@ medleyService';
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <KeyIcon className="h-4 w-4 inline mr-1" />
-            Tonalité cible (optionnel)
+            Tonalité préférée (optionnel)
           </label>
           <select
             value={targetKey}
@@ -163,7 +156,30 @@ medleyService';
               <option key={key} value={key}>{key}</option>
             ))}
           </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Toutes les chansons seront automatiquement transposées à cette tonalité
+          </p>
         </div>
+
+        {/* Genre Selection */}
+        {availableGenres.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <TagIcon className="h-4 w-4 inline mr-1" />
+              Genre (optionnel)
+            </label>
+            <select
+              value={selectedGenre}
+              onChange={(e) => setSelectedGenre(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            >
+              <option value="">Tous les genres</option>
+              {availableGenres.map(genre => (
+                <option key={genre} value={genre}>{genre}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Folder Selection */}
         <div>
@@ -257,7 +273,7 @@ medleyService';
 
         {/* Generate Button */}
         <button
-          onClick={handleGenerateMedley}
+          onClick={handleGeneratePlaylist}
           disabled={isGenerating}
           className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
@@ -269,30 +285,30 @@ medleyService';
           ) : (
             <>
               <SparklesIcon className="h-5 w-5 mr-2" />
-              Générer le medley
+              Générer la playlist
             </>
           )}
         </button>
       </div>
 
-      {/* Generated Medley Preview */}
-      {generatedMedley && (
+      {/* Generated Playlist Preview */}
+      {generatedPlaylist && (
         <div className="mt-6 p-4 bg-purple-50 rounded-lg">
           <h3 className="text-lg font-semibold text-purple-900 mb-2">
-            Medley généré
+            Playlist générée
           </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-medium">Chansons:</span> {generatedMedley.songs.length}
+              <span className="font-medium">Chansons:</span> {generatedPlaylist.songs.length}
             </div>
             <div>
-              <span className="font-medium">Score:</span> {Math.round(generatedMedley.totalScore * 100)}%
+              <span className="font-medium">Score:</span> {Math.round(generatedPlaylist.totalScore * 100)}%
             </div>
             <div>
-              <span className="font-medium">Durée estimée:</span> {Math.round(generatedMedley.estimatedDuration)} min
+              <span className="font-medium">Durée estimée:</span> {Math.round(generatedPlaylist.estimatedDuration)} min
             </div>
             <div>
-              <span className="font-medium">Tonalités:</span> {generatedMedley.keyProgression.join(' → ')}
+              <span className="font-medium">Tonalité:</span> {generatedPlaylist.keyProgression[0] || 'N/A'}
             </div>
           </div>
         </div>
@@ -300,3 +316,4 @@ medleyService';
     </div>
   );
 }
+

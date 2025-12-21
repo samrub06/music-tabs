@@ -4,11 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 import { 
-  generateMedleySequence, 
+  generatePlaylistSequence, 
   getSongsFromFolders, 
   getRandomSongs,
-  MedleyOptions 
-} from '@/lib/services/medleyService';
+  PlaylistOptions 
+} from '@/lib/services/playlistGeneratorService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +17,10 @@ export async function POST(request: NextRequest) {
       targetKey, 
       selectedFolders = [], 
       selectedSongs = [], 
+      genre,
       useRandomSelection = false,
       maxSongs = 10 
-    }: MedleyOptions = body;
-
-
+    }: PlaylistOptions = body;
 
     // Try to get songs from Supabase first, fallback to local file
     let songs = [];
@@ -93,40 +92,43 @@ export async function POST(request: NextRequest) {
       console.log('After random selection:', candidateSongs.length);
     }
 
-    console.log('Final candidate songs for medley:', candidateSongs.length);
+    console.log('Final candidate songs for playlist:', candidateSongs.length);
     console.log('Sample candidate songs:', candidateSongs.slice(0, 3).map((s: any) => ({ 
       id: s.id, 
       title: s.title, 
       key: s.key, 
       firstChord: s.firstChord, 
-      lastChord: s.lastChord 
+      lastChord: s.lastChord,
+      genre: s.genre
     })));
 
     console.log(targetKey)
     console.log(candidateSongs)
 
-    // Generate medley sequence
-    const medleyResult = generateMedleySequence(candidateSongs, {
+    // Generate playlist sequence
+    const playlistResult = generatePlaylistSequence(candidateSongs, {
       targetKey,
       selectedFolders,
       selectedSongs,
+      genre,
       useRandomSelection,
       maxSongs
     });
 
-    console.log('Generated medley result:', {
-      songsCount: medleyResult.songs.length,
-      totalScore: medleyResult.totalScore,
-      keyProgression: medleyResult.keyProgression
+    console.log('Generated playlist result:', {
+      songsCount: playlistResult.songs.length,
+      totalScore: playlistResult.totalScore,
+      keyProgression: playlistResult.keyProgression
     });
 
-    return NextResponse.json(medleyResult);
+    return NextResponse.json(playlistResult);
 
   } catch (error) {
-    console.error('Error generating medley:', error);
+    console.error('Error generating playlist:', error);
     return NextResponse.json(
-      { error: 'Failed to generate medley' }, 
+      { error: 'Failed to generate playlist' }, 
       { status: 500 }
     );
   }
 }
+

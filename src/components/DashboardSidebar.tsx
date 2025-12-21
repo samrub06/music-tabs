@@ -148,17 +148,17 @@ export default function DashboardSidebar({
   return (
     <aside className="w-72 bg-white shadow-sm border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4">
-        {/* Create Medley Button */}
+        {/* Create Playlist Button */}
         <div className="mb-4">
           <button
             onClick={() => {
-              router.push('/medley');
+              router.push('/playlist');
               onClose?.();
             }}
             className="w-full flex items-center justify-center px-4 py-3 bg-purple-200 border border-purple-300 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-300 transition-colors shadow-sm"
           >
             <SparklesIcon className="h-5 w-5 mr-2" />
-            Créer un medley
+            Créer une playlist
           </button>
         </div>
 

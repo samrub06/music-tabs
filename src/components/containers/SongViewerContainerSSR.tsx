@@ -41,20 +41,37 @@ export default function SongViewerContainerSSR({
   const [manualBpm, setManualBpm] = useState<number | null>(null);
   const [hasUsedNext, setHasUsedNext] = useState(false);
   const [nextSongInfo, setNextSongInfo] = useState<{ title: string; author?: string } | null>(null);
+  const [isFromPlaylist, setIsFromPlaylist] = useState(false);
+  const [playlistTargetKey, setPlaylistTargetKey] = useState<string | null>(null);
   
   // Load hasUsedNext from sessionStorage on mount and sync current song index
+  // Also check for playlist context and apply automatic transposition
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = sessionStorage.getItem('hasUsedNext');
       setHasUsedNext(stored === 'true');
       
-      // Sync current song index in navigation data
+      // Sync current song index in navigation data and check for playlist context
       const navigationDataStr = sessionStorage.getItem('songNavigation');
       if (navigationDataStr) {
         try {
           const navigationData = JSON.parse(navigationDataStr);
-          const { songList } = navigationData;
+          const { songList, playlistContext } = navigationData;
           const currentIndex = songList.findIndex((id: string) => id === song.id);
+          
+          // Check if we're in a playlist context
+          if (playlistContext && playlistContext.isPlaylist) {
+            setIsFromPlaylist(true);
+            setPlaylistTargetKey(playlistContext.targetKey || null);
+            
+            // Find the current song's key adjustment
+            const currentSongData = playlistContext.songs.find((s: any) => s.id === song.id);
+            if (currentSongData && currentSongData.keyAdjustment !== undefined) {
+              // Apply the key adjustment automatically
+              setTransposeValue(currentSongData.keyAdjustment);
+              console.log(`Applied playlist transposition: ${currentSongData.keyAdjustment} semitones for song ${song.id}`);
+            }
+          }
           
           if (currentIndex >= 0 && currentIndex !== navigationData.currentIndex) {
             // Update index if it doesn't match

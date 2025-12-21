@@ -3,31 +3,31 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon } from '@heroicons/react/24/outline';
-import MedleyGenerator from '@/components/MedleyGenerator';
-import MedleyPlaylist from '@/components/MedleyPlaylist';
-import { MedleyResult } from '@/lib/services/medleyService';
+import PlaylistGenerator from '@/components/PlaylistGenerator';
+import PlaylistView from '@/components/PlaylistView';
+import { PlaylistResult } from '@/lib/services/playlistGeneratorService';
 import { Song, Folder } from '@/types';
-import { createPlaylistFromMedleyAction } from '@/app/(protected)/dashboard/actions';
+import { createPlaylistFromGeneratedPlaylistAction } from '@/app/(protected)/dashboard/actions';
 
-interface MedleyPageClientProps {
+interface PlaylistPageClientProps {
   songs: Song[];
   folders: Folder[];
 }
 
-export default function MedleyPageClient({ songs, folders }: MedleyPageClientProps) {
+export default function PlaylistPageClient({ songs, folders }: PlaylistPageClientProps) {
   const router = useRouter();
-  const [generatedMedley, setGeneratedMedley] = useState<MedleyResult | null>(null);
+  const [generatedPlaylist, setGeneratedPlaylist] = useState<PlaylistResult | null>(null);
 
-  const handleMedleyGenerated = (result: MedleyResult) => {
-    setGeneratedMedley(result);
+  const handlePlaylistGenerated = (result: PlaylistResult) => {
+    setGeneratedPlaylist(result);
   };
 
   const handleSongSelect = (song: any) => {
     router.push(`/song/${song.id}`);
   };
 
-  const handleCreatePlaylist = async (name: string, medley: MedleyResult) => {
-    await createPlaylistFromMedleyAction(name, medley);
+  const handleCreatePlaylist = async (name: string, playlist: PlaylistResult) => {
+    await createPlaylistFromGeneratedPlaylistAction(name, playlist);
   };
 
   return (
@@ -37,28 +37,28 @@ export default function MedleyPageClient({ songs, folders }: MedleyPageClientPro
         <div className="mb-8">
           <div className="flex items-center mb-4">
             <SparklesIcon className="h-8 w-8 text-purple-600 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-900">Créer un medley</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Créer une playlist</h1>
           </div>
           <p className="text-gray-600">
-            Utilisez l&apos;IA pour créer un medley parfait en analysant les tonalités et la compatibilité des accords
+            Générez une playlist parfaite en sélectionnant des dossiers ou des genres, et en choisissant une tonalité préférée. Toutes les chansons seront automatiquement transposées à cette tonalité.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Medley Generator */}
+          {/* Playlist Generator */}
           <div>
-            <MedleyGenerator 
+            <PlaylistGenerator 
               songs={songs} 
               folders={folders} 
-              onMedleyGenerated={handleMedleyGenerated} 
+              onPlaylistGenerated={handlePlaylistGenerated} 
             />
           </div>
 
-          {/* Generated Medley */}
+          {/* Generated Playlist */}
           <div>
-            {generatedMedley ? (
-              <MedleyPlaylist 
-                medley={generatedMedley} 
+            {generatedPlaylist ? (
+              <PlaylistView 
+                playlist={generatedPlaylist} 
                 onSongSelect={handleSongSelect}
                 onCreatePlaylist={handleCreatePlaylist}
               />
@@ -67,10 +67,10 @@ export default function MedleyPageClient({ songs, folders }: MedleyPageClientPro
                 <div className="text-center py-12">
                   <SparklesIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Aucun medley généré
+                    Aucune playlist générée
                   </h3>
                   <p className="text-gray-500">
-                    Configurez vos préférences et générez votre premier medley
+                    Configurez vos préférences et générez votre première playlist
                   </p>
                 </div>
               </div>

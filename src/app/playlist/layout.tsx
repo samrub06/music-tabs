@@ -13,7 +13,7 @@ import { ReactNode, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Folder, Song, Playlist } from '@/types'
 
-export default function MedleyLayout({ children }: { children: ReactNode }) {
+export default function PlaylistLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, loading: authLoading } = useAuthContext()
   const { supabase } = useSupabase()
