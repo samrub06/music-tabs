@@ -95,6 +95,7 @@ export interface Database {
           genre: string | null
           decade: number | null
           bpm: number | null
+          all_chords: string[] | null
         }
         Insert: {
           id?: string
@@ -129,6 +130,7 @@ export interface Database {
           genre?: string | null
           decade?: number | null
           bpm?: number | null
+          all_chords?: string[] | null
         }
         Update: {
           id?: string
@@ -163,6 +165,7 @@ export interface Database {
           genre?: string | null
           decade?: number | null
           bpm?: number | null
+          all_chords?: string[] | null
         }
       }
       playlists: {

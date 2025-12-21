@@ -3,6 +3,7 @@ import type { NewSongData, Song, SongEditData, SongSection } from '@/types'
 import type { Database } from '@/types/db'
 import { parseTextToStructuredSong } from '@/utils/songParser'
 import { structuredSongToText } from '@/utils/structuredToText'
+import { extractAllChords } from '@/utils/structuredSong'
 
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
@@ -41,7 +42,8 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     viewCount: dbSong.view_count || 0,
     genre: dbSong.genre || undefined,
     decade: dbSong.decade || undefined,
-    bpm: dbSong.bpm || undefined
+    bpm: dbSong.bpm || undefined,
+    allChords: dbSong.all_chords || undefined
   } as Song
 }
 
@@ -59,6 +61,9 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       songData.key
     )
 
+    // Extract all unique chords from the song
+    const allChords = extractAllChords(structuredSong)
+
     const { data, error } = await (client
       .from('songs') as any)
       .insert([{
@@ -74,6 +79,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         key: songData.key ?? structuredSong.firstChord,
         first_chord: structuredSong.firstChord ?? null,
         last_chord: structuredSong.lastChord ?? null,
+        all_chords: allChords.length > 0 ? allChords : null,
         version: songData.version ?? null,
         version_description: songData.versionDescription ?? null,
         rating: songData.rating ?? null,
@@ -117,6 +123,9 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       songData.key
     )
 
+    // Extract all unique chords from the song
+    const allChords = extractAllChords(structuredSong)
+
     const { data, error } = await (client
       .from('songs') as any)
       .insert([{
@@ -131,6 +140,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         key: songData.key ?? structuredSong.firstChord,
         first_chord: structuredSong.firstChord ?? null,
         last_chord: structuredSong.lastChord ?? null,
+        all_chords: allChords.length > 0 ? allChords : null,
         version: songData.version ?? null,
         version_description: songData.versionDescription ?? null,
         rating: songData.rating ?? null,

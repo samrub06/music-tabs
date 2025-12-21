@@ -1,5 +1,6 @@
 import type { Folder, NewSongData, Song, SongEditData } from '@/types';
 import { parseTextToStructuredSong } from '@/utils/songParser';
+import { extractAllChords } from '@/utils/structuredSong';
 
 // Service pour les chansons
 export const songService = {
@@ -15,7 +16,7 @@ export const songService = {
     
     let baseQuery = client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre, bpm', { count: 'exact' });
+      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, all_chords, tab_id, genre, bpm', { count: 'exact' });
     
     // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
     if (!user) {
@@ -42,6 +43,7 @@ export const songService = {
     const mappedSongs: Song[] = (data as any[])?.map((song: any) => ({
       ...song,
       folderId: song.folder_id, // Map folder_id to folderId
+      allChords: song.all_chords || undefined,
       createdAt: new Date(song.created_at),
       updatedAt: new Date(song.updated_at),
       // Mapper les nouveaux champs Ultimate Guitar
@@ -83,6 +85,7 @@ export const songService = {
     return {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
+      allChords: data.all_chords || undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       // Mapper les nouveaux champs Ultimate Guitar
@@ -122,6 +125,9 @@ export const songService = {
       songData.key
     );
 
+    // Extract all unique chords from the song
+    const allChords = extractAllChords(structuredSong);
+
     const { data, error } = await client
       .from('songs')
       .insert([{
@@ -136,6 +142,7 @@ export const songService = {
         key: songData.key || structuredSong.firstChord,
         first_chord: structuredSong.firstChord || null,
         last_chord: structuredSong.lastChord || null,
+        all_chords: allChords.length > 0 ? allChords : null,
         version: songData.version || null,
         version_description: songData.versionDescription || null,
         rating: songData.rating || null,
@@ -160,6 +167,7 @@ export const songService = {
     return {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
+      allChords: data.all_chords || undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       // Mapper les nouveaux champs Ultimate Guitar
@@ -242,6 +250,7 @@ export const songService = {
     return {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
+      allChords: data.all_chords || undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       // Mapper les nouveaux champs Ultimate Guitar
@@ -293,6 +302,7 @@ export const songService = {
     return {
       ...data,
       folderId: data.folder_id, // Map folder_id to folderId
+      allChords: data.all_chords || undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
       // Mapper les nouveaux champs Ultimate Guitar

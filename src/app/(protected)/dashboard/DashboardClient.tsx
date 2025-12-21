@@ -9,6 +9,7 @@ import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIco
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
+import { songHasOnlyEasyChords } from '@/utils/chordDifficulty'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
@@ -46,6 +47,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(undefined)
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
+  const [easyChordsOnly, setEasyChordsOnly] = useState(false)
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
   
   // Drag and Drop state
@@ -106,26 +108,34 @@ export default function DashboardClient({ songs, total, page, limit, initialView
     }
   }
 
-  // Filter songs by search query (for gallery view - table view filters internally)
+  // Filter songs by search query and easy chords filter (for gallery view - table view filters internally)
   const filteredSongs = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return songs
-    }
+    let filtered = songs
 
-    const query = searchQuery.toLowerCase().trim()
-    return songs.filter(song => 
-      song.title.toLowerCase().includes(query) ||
-      song.author.toLowerCase().includes(query) ||
-      // Search in all sections and lines for structured songs
-      song.sections?.some(section => 
-        section.name.toLowerCase().includes(query) ||
-        section.lines.some(line => 
-          line.lyrics?.toLowerCase().includes(query) ||
-          line.chords?.some(chord => chord.chord.toLowerCase().includes(query))
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      filtered = filtered.filter(song => 
+        song.title.toLowerCase().includes(query) ||
+        song.author.toLowerCase().includes(query) ||
+        // Search in all sections and lines for structured songs
+        song.sections?.some(section => 
+          section.name.toLowerCase().includes(query) ||
+          section.lines.some(line => 
+            line.lyrics?.toLowerCase().includes(query) ||
+            line.chords?.some(chord => chord.chord.toLowerCase().includes(query))
+          )
         )
       )
-    )
-  }, [songs, searchQuery])
+    }
+
+    // Filter by easy chords only
+    if (easyChordsOnly) {
+      filtered = filtered.filter(song => songHasOnlyEasyChords(song.allChords))
+    }
+
+    return filtered
+  }, [songs, searchQuery, easyChordsOnly])
 
   const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -219,6 +229,19 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Easy Chords Only Filter */}
+            <div className="w-full sm:w-auto flex items-center">
+              <label className="flex items-center gap-2 px-3 py-2.5 sm:py-1.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 rounded-md border border-gray-300 bg-white">
+                <input
+                  type="checkbox"
+                  checked={easyChordsOnly}
+                  onChange={(e) => setEasyChordsOnly(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span>Accords faciles</span>
+              </label>
             </div>
 
             {/* View toggle */}

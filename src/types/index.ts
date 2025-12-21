@@ -78,6 +78,7 @@ export interface StructuredSong {
   genre?: string;
   decade?: number;
   bpm?: number;
+  allChords?: string[];
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)
