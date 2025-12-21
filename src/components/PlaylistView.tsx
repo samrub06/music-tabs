@@ -117,7 +117,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
             Démarrer la playlist
           </button>
           <p className="mt-2 text-xs text-center text-gray-500">
-            Cliquez pour commencer à jouer la première chanson. Utilisez le bouton "Suivante" pour naviguer entre les chansons.
+            Cliquez pour&quot; commencer à jouer la première chanson. Utilisez le bouton &quot;Suivante&quot; pour naviguer entre les chansons.
           </p>
         </div>
       )}
