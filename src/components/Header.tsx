@@ -26,7 +26,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   const handleLogoClick = () => {
     if (user) {
-      router.push('/dashboard');
+      router.push('/songs');
     } else {
       router.push('/library');
     }
@@ -87,11 +87,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <span className="sr-only">Library</span>
               </Link>
               <Link
-                href="/dashboard"
+                href="/songs"
                 className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               >
                 <RectangleStackIcon className="h-6 w-6" />
-                <span className="sr-only">My Songs</span>
+                <span className="sr-only">Songs</span>
               </Link>
               <Link
                 href="/folders"
@@ -113,11 +113,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <span>Library</span>
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/songs"
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                 >
                   <RectangleStackIcon className="h-5 w-5" />
-                  <span>My Songs</span>
+                  <span>Songs</span>
                 </Link>
                 <Link
                   href="/folders"

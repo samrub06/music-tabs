@@ -6,17 +6,17 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
-import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
+import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSidebar } from '@/context/SidebarContext'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
 
-interface DashboardClientProps {
+interface SongsClientProps {
   songs: Song[]
   total: number
   page: number
@@ -25,25 +25,51 @@ interface DashboardClientProps {
   initialQuery?: string
   folders: Folder[]
   playlists?: Playlist[]
-  userEmail?: string
+  initialSongId?: string
+  initialFolder?: string
+  initialSortOrder?: 'asc' | 'desc'
 }
 
-export default function DashboardClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', folders, playlists = [], userEmail }: DashboardClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc' }: SongsClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [showAddSong, setShowAddSong] = useState(false)
-  const qFromUrl = searchParams?.get('q') ?? initialQuery
+  const qFromUrl = searchParams?.get('searchQuery') ?? initialQuery
   const [searchQuery, setSearchQuery] = useState(qFromUrl)
   const [localSearchValue, setLocalSearchValue] = useState(qFromUrl)
+  const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder)
 
   // Sync localSearchValue with URL changes
   useEffect(() => {
     setLocalSearchValue(qFromUrl)
   }, [qFromUrl])
-  const [selectedFolder, setSelectedFolder] = useState<string | undefined>(undefined)
-  const [currentFolder, setCurrentFolder] = useState<string | null>(null)
+
+  // Handle songId from URL - navigate to song page if present
+  useEffect(() => {
+    const songIdFromUrl = searchParams?.get('songId')
+    if (songIdFromUrl) {
+      // Navigate to song page and remove songId from URL
+      router.push(`/song/${songIdFromUrl}`)
+    }
+  }, [searchParams?.get('songId'), router])
+
+  const [currentFolder, setCurrentFolder] = useState<string | null>(selectedFolder || null)
+
+  // Sync folder and sortOrder from URL
+  useEffect(() => {
+    const folderFromUrl = searchParams?.get('folder')
+    const sortOrderFromUrl = searchParams?.get('sortOrder')
+    if (folderFromUrl !== null) {
+      setSelectedFolder(folderFromUrl || undefined)
+      setCurrentFolder(folderFromUrl || null)
+    }
+    if (sortOrderFromUrl === 'desc' || sortOrderFromUrl === 'asc') {
+      setSortOrder(sortOrderFromUrl)
+    }
+  }, [searchParams])
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
   const { sidebarOpen, setSidebarOpen } = useSidebar()
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
@@ -106,14 +132,93 @@ export default function DashboardClient({ songs, total, page, limit, initialView
     }
   }
 
-  const applyQuery = (next: { q?: string; view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
+  // Filter songs by folder first
+  const filteredSongs = useMemo(() => {
+    let filtered = [...songs]
+
+    // Filter by folder (same logic as SongTable)
+    if (currentFolder === 'unorganized') {
+      filtered = filtered.filter(song => !song.folderId)
+    } else if (currentFolder) {
+      filtered = filtered.filter(song => song.folderId === currentFolder)
+    }
+    // If currentFolder is null, show all songs
+
+    return filtered
+  }, [songs, currentFolder])
+
+  // Sort filtered songs by folder
+  const sortedSongs = useMemo(() => {
+    let sorted = [...filteredSongs]
+
+    // Sort by folder displayOrder, then by folder name
+    sorted.sort((a, b) => {
+      const folderA = folders.find(f => f.id === a.folderId)
+      const folderB = folders.find(f => f.id === b.folderId)
+      
+      // Get displayOrder (use Infinity if no folder or no displayOrder)
+      const orderA = folderA?.displayOrder ?? Infinity
+      const orderB = folderB?.displayOrder ?? Infinity
+      
+      // If both have displayOrder, sort by it
+      if (orderA !== Infinity && orderB !== Infinity) {
+        if (sortOrder === 'asc') {
+          return orderA - orderB
+        } else {
+          return orderB - orderA
+        }
+      }
+      
+      // Fallback to folder name comparison
+      const nameA = folderA?.name || ''
+      const nameB = folderB?.name || ''
+      
+      if (sortOrder === 'asc') {
+        return nameA.localeCompare(nameB)
+      } else {
+        return nameB.localeCompare(nameA)
+      }
+    })
+
+    return sorted
+  }, [filteredSongs, folders, sortOrder])
+
+  const applyQuery = (next: { searchQuery?: string; view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
-    if (next.q !== undefined) params.set('q', next.q)
+    // Remove old 'q' param if it exists
+    params.delete('q')
+    if (next.searchQuery !== undefined) {
+      if (next.searchQuery) params.set('searchQuery', next.searchQuery)
+      else params.delete('searchQuery')
+    }
     if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
     else if (!params.has('limit')) params.set('limit', String(limit))
+    if (next.songId !== undefined) {
+      if (next.songId) params.set('songId', next.songId)
+      else params.delete('songId')
+    }
+    if (next.folder !== undefined) {
+      if (next.folder) params.set('folder', next.folder)
+      else params.delete('folder')
+    }
+    if (next.sortOrder !== undefined) {
+      if (next.sortOrder) params.set('sortOrder', next.sortOrder)
+      else params.delete('sortOrder')
+    }
     router.push(`${pathname}?${params.toString()}`)
+  }
+
+  const handleFolderChange = (folderId: string | undefined) => {
+    setSelectedFolder(folderId)
+    setCurrentFolder(folderId || null)
+    applyQuery({ folder: folderId, page: 1 })
+  }
+
+  const handleSortOrderChange = (order: 'asc' | 'desc') => {
+    setSortOrder(order)
+    applyQuery({ sortOrder: order, page: 1 })
   }
 
   return (
@@ -164,11 +269,8 @@ export default function DashboardClient({ songs, total, page, limit, initialView
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Dashboard
+              Songs
             </h1>
-            <p className="text-sm text-gray-600">
-              Bienvenue, {userEmail || 'Utilisateur'}
-            </p>
           </div>
           {/* Add Song Button */}
           <div className="flex-shrink-0">
@@ -185,12 +287,12 @@ export default function DashboardClient({ songs, total, page, limit, initialView
 
         {/* Search Bar */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex flex-row items-center gap-2 sm:gap-4 overflow-x-auto">
-            {/* Search Bar */}
-            <div className="flex-1 min-w-0 sm:max-w-2xl">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            {/* Search Bar - Full width on mobile, flexible on desktop */}
+            <div className="w-full sm:flex-1 sm:min-w-0 sm:max-w-2xl">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-4 w-4 text-gray-400" />
+                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
@@ -201,10 +303,10 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                     if (e.key === 'Enter') {
                       const val = (e.target as HTMLInputElement).value
                       setSearchQuery(val)
-                      applyQuery({ q: val, page: 1 })
+                      applyQuery({ searchQuery: val, page: 1 })
                     }
                   }}
-                  className="block w-full pl-7 sm:pl-10 pr-7 sm:pr-10 py-1.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm"
+                  className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
                 {localSearchValue && (
                   <button
@@ -212,44 +314,59 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                       e.stopPropagation()
                       setLocalSearchValue('')
                       setSearchQuery('')
-                      applyQuery({ q: '', page: 1 })
+                      applyQuery({ searchQuery: '', page: 1 })
                     }}
                     className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
                     type="button"
                   >
-                    <XMarkIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 )}
               </div>
             </div>
 
-            {/* Folder Filter */}
-            <div className="inline-flex rounded-md shadow-sm border">
-              <select
-                value={selectedFolder || ''}
-                onChange={(e) => {
-                  const folderId = e.target.value || undefined
-                  setSelectedFolder(folderId)
-                  setCurrentFolder(folderId || null)
-                }}
-                className="block w-full py-2 sm:py-1.5 pl-2 sm:pl-3 pr-6 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-              >
-                <option value="">All Folders</option>
-                {folders.map((folder) => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Controls Row - Wrap to second line on mobile */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {/* Folder Filter */}
+              <div className="inline-flex rounded-md shadow-sm border min-w-[140px] sm:min-w-0">
+                <select
+                  value={selectedFolder || ''}
+                  onChange={(e) => handleFolderChange(e.target.value || undefined)}
+                  className="block w-full py-2.5 sm:py-2 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">All Folders</option>
+                  {folders.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* View toggle */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {/* Sort Order Toggle */}
+              <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
+                <button
+                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center ${sortOrder === 'asc' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  onClick={() => handleSortOrderChange('asc')}
+                  title="Sort Ascending"
+                >
+                  <ArrowUpIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+                <button
+                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center border-l ${sortOrder === 'desc' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  onClick={() => handleSortOrderChange('desc')}
+                  title="Sort Descending"
+                >
+                  <ArrowDownIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+              </div>
+
+              {/* Limit selector */}
               <div className="inline-flex rounded-md shadow-sm border">
                 <select
                   value={limit}
                   onChange={(e) => applyQuery({ limit: Number(e.target.value), page: 1 })}
-                  className="block w-full py-2 sm:py-1.5 pl-2 sm:pl-3 pr-6 sm:pr-8 text-sm sm:text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="block w-full py-2.5 sm:py-2 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -258,20 +375,21 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                 </select>
               </div>
 
+              {/* View toggle */}
               <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
                 <button
-                  className={`px-2.5 sm:px-3 py-2 sm:py-1.5 text-sm sm:text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'gallery', page: 1 })}
                   title="Gallery View"
                 >
-                  <Squares2X2Icon className="h-4 w-4 sm:h-4 sm:w-4" />
+                  <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
                 <button
-                  className={`px-2.5 sm:px-3 py-2 sm:py-1.5 text-sm sm:text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'table', page: 1 })}
                   title="Table View"
                 >
-                  <TableCellsIcon className="h-4 w-4 sm:h-4 sm:w-4" />
+                  <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
@@ -279,11 +397,11 @@ export default function DashboardClient({ songs, total, page, limit, initialView
         </div>
 
         {/* Content */}
-        {songs && songs.length > 0 ? (
+        {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' ? (
             <>
               <SongTable
-                songs={songs}
+                songs={sortedSongs}
                 folders={folders}
                 playlists={playlists}
                 currentFolder={currentFolder}
@@ -295,7 +413,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                 onDeleteAllSongs={deleteAllSongsAction}
                 onCurrentFolderChange={(folderId) => {
                   setCurrentFolder(folderId)
-                  setSelectedFolder(folderId || undefined)
+                  handleFolderChange(folderId || undefined)
                 }}
                 onUpdateSong={updateSongAction}
               />
@@ -335,7 +453,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
             </>
           ) : (
             <>
-              <SongGallery songs={songs} hasUser={true} />
+              <SongGallery songs={sortedSongs} hasUser={true} />
               <div className="hidden sm:block">
                 <Pagination page={page} limit={limit} total={total} />
               </div>

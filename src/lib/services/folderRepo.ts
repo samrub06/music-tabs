@@ -44,7 +44,7 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     if (!user) throw new Error('User must be authenticated to create folders')
 
     // Get the maximum display_order for this user to set the new folder's order
-    const { data: existingFolders } = await client
+    const { data: existingFolders }: { data: { display_order: number | null }[] | null } = await client
       .from('folders')
       .select('display_order')
       .eq('user_id', user.id)
@@ -116,3 +116,4 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
   }
 })
 
+ 
