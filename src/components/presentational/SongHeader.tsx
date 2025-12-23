@@ -52,6 +52,8 @@ interface SongHeaderProps {
   nextSongInfo?: { title: string; author?: string } | null;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
+  easyChordMode: boolean;
+  onToggleEasyChordMode: () => void;
 }
 
 export default function SongHeader({
@@ -81,7 +83,9 @@ export default function SongHeader({
   canNextSong,
   nextSongInfo,
   manualBpm,
-  onSetManualBpm
+  onSetManualBpm,
+  easyChordMode,
+  onToggleEasyChordMode
 }: SongHeaderProps) {
   const [showControls, setShowControls] = useState(false);
   const [showBpmPopover, setShowBpmPopover] = useState(false);
@@ -374,6 +378,21 @@ export default function SongHeader({
               </button>
             </div>
 
+            {/* Easy Chord Mode Toggle */}
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 w-full">
+              <span className="text-xs font-medium text-green-700">Mode Accords Faciles:</span>
+              <button
+                onClick={onToggleEasyChordMode}
+                className={`px-4 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+                  easyChordMode
+                    ? 'bg-green-600 text-white border-2 border-green-700'
+                    : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
+                }`}
+              >
+                {easyChordMode ? 'Activé' : 'Désactivé'}
+              </button>
+            </div>
+
             {/* Transpose Controls */}
             <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full">
               <span className="text-xs font-medium text-gray-700">Ton:</span>
@@ -597,6 +616,19 @@ export default function SongHeader({
               🎸 Guitare
             </button>
           </div>
+
+          {/* Easy Chord Mode Toggle */}
+          <button
+            onClick={onToggleEasyChordMode}
+            className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+              easyChordMode
+                ? 'bg-green-600 text-white border-2 border-green-700'
+                : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
+            }`}
+            title="Mode Accords Faciles"
+          >
+            {easyChordMode ? '✓ Accords Faciles' : 'Accords Faciles'}
+          </button>
 
           {/* Transpose Controls */}
           <div className="flex items-center space-x-2">

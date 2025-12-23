@@ -44,6 +44,8 @@ interface SongViewerProps {
   onSetSelectedInstrument: (instrument: 'piano' | 'guitar') => void;
   onSetTransposeValue: (value: number) => void;
   onSetAutoScrollSpeed: (speed: number) => void;
+  easyChordMode: boolean;
+  onToggleEasyChordMode: () => void;
   useCapo: boolean;
   onToggleCapo: (value: boolean) => void;
   onNavigateBack: () => void;
@@ -98,7 +100,9 @@ export default function SongViewer({
   nextSongInfo,
   isAuthenticated = false,
   manualBpm,
-  onSetManualBpm
+  onSetManualBpm,
+  easyChordMode,
+  onToggleEasyChordMode
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -147,6 +151,8 @@ export default function SongViewer({
         nextSongInfo={nextSongInfo}
         manualBpm={manualBpm}
         onSetManualBpm={onSetManualBpm}
+        easyChordMode={easyChordMode}
+        onToggleEasyChordMode={onToggleEasyChordMode}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">

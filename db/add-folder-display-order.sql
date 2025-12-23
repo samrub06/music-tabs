@@ -25,3 +25,4 @@ CREATE INDEX idx_folders_display_order ON public.folders(user_id, display_order 
 
 
 
+

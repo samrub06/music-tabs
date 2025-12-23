@@ -13,6 +13,7 @@ import { useMetronome } from '@/lib/hooks/useMetronome';
 import { songService } from '@/lib/services/songService';
 import { supabase } from '@/lib/supabase';
 import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
+import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -32,6 +33,8 @@ export default function SongViewerContainerSSR({
   // Local state instead of AppContext
   const [selectedInstrument, setSelectedInstrument] = useState<'piano' | 'guitar'>('piano');
   const [transposeValue, setTransposeValue] = useState(0);
+  const [easyChordMode, setEasyChordMode] = useState(false);
+  const [savedTransposeValue, setSavedTransposeValue] = useState(0);
   const [autoScroll, setAutoScroll] = useState({ 
     isActive: false, 
     speed: calculateSpeedFromBPM(song.bpm) 
@@ -127,6 +130,11 @@ export default function SongViewerContainerSSR({
   useEffect(() => {
     setUseCapo(song.capo !== undefined && song.capo !== null);
   }, [song.capo]);
+
+  // Reset saved transpose value when song changes
+  useEffect(() => {
+    setSavedTransposeValue(0);
+  }, [song.id]);
 
   // Update auto-scroll speed when song BPM changes
   useEffect(() => {
@@ -248,6 +256,29 @@ export default function SongViewerContainerSSR({
 
   const canPrevSong = hasUsedNext;
 
+  // Handle Easy Chord Mode
+  useEffect(() => {
+    if (easyChordMode && song.allChords) {
+      // Calculate best transposition for easy chords
+      const bestTransposition = findBestEasyChordTransposition(song.allChords);
+      setTransposeValue(bestTransposition.semitones);
+    } else if (!easyChordMode) {
+      // Restore saved transpose value when mode is disabled
+      setTransposeValue(savedTransposeValue);
+    }
+  }, [easyChordMode, song.allChords, savedTransposeValue, song.id]);
+
+  // Handle manual transpose changes
+  const handleSetTransposeValue = (value: number) => {
+    if (easyChordMode) {
+      // If user manually changes transpose while easy chord mode is on, disable the mode
+      setEasyChordMode(false);
+    }
+    // Save the manual change
+    setSavedTransposeValue(value);
+    setTransposeValue(value);
+  };
+
   // Transpose song for display
   // When "no capo" is selected, transpose down by capo amount to compensate
   const effectiveTranspose = transposeValue - (useCapo ? 0 : (song.capo || 0));
@@ -293,8 +324,10 @@ export default function SongViewerContainerSSR({
     onToggleEdit: handleToggleEdit,
     onCloseChordDiagram: handleCloseChordDiagram,
     onSetSelectedInstrument: setSelectedInstrument,
-    onSetTransposeValue: setTransposeValue,
+    onSetTransposeValue: handleSetTransposeValue,
     onSetAutoScrollSpeed: (speed: number) => setAutoScroll(prev => ({ ...prev, speed })),
+    easyChordMode,
+    onToggleEasyChordMode: () => setEasyChordMode(prev => !prev),
     useCapo,
     onToggleCapo: handleToggleCapo,
     onNavigateBack: () => router.push('/dashboard'),

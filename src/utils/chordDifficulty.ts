@@ -3,6 +3,8 @@
  * Used to filter songs for beginners
  */
 
+import { transposeChord } from '@/utils/chords';
+
 // List of easy chords for beginners (no barre chords, no sharps/flats)
 const EASY_CHORDS = new Set([
   // Major chords
@@ -108,5 +110,55 @@ export function songHasOnlyEasyChords(allChords: string[] | null | undefined): b
   
   // Check each chord - all must be easy
   return allChords.every(chord => isEasyChord(chord));
+}
+
+/**
+ * Find the best transposition that maximizes the number of easy chords
+ * @param allChords Array of all unique chords in the song
+ * @returns Object with semitones (transposition value) and easyCount (number of easy chords after transposition)
+ */
+export function findBestEasyChordTransposition(allChords: string[] | null | undefined): { semitones: number; easyCount: number } {
+  // If no chords, return no transposition needed
+  if (!allChords || allChords.length === 0) {
+    return { semitones: 0, easyCount: 0 };
+  }
+
+  // Check if all chords are already easy
+  const currentEasyCount = allChords.filter(chord => isEasyChord(chord)).length;
+  if (currentEasyCount === allChords.length) {
+    return { semitones: 0, easyCount: allChords.length };
+  }
+
+  let bestTransposition = { semitones: 0, easyCount: currentEasyCount };
+
+  // Test all possible transpositions from -11 to +11 semitones
+  for (let semitones = -11; semitones <= 11; semitones++) {
+    if (semitones === 0) continue; // Already checked above
+
+    // Transpose all chords and count easy ones
+    let easyCount = 0;
+    for (const chord of allChords) {
+      try {
+        const transposedChord = transposeChord(chord, semitones);
+        if (isEasyChord(transposedChord)) {
+          easyCount++;
+        }
+      } catch (error) {
+        // If transposition fails, skip this chord
+        console.warn(`Failed to transpose chord ${chord} by ${semitones} semitones:`, error);
+      }
+    }
+
+    // Update best transposition if this one has more easy chords
+    // If tied, prefer the transposition with smaller absolute value
+    if (
+      easyCount > bestTransposition.easyCount ||
+      (easyCount === bestTransposition.easyCount && Math.abs(semitones) < Math.abs(bestTransposition.semitones))
+    ) {
+      bestTransposition = { semitones, easyCount };
+    }
+  }
+
+  return bestTransposition;
 }
 

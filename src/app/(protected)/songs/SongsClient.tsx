@@ -9,7 +9,6 @@ import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIco
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
-import { songHasOnlyEasyChords } from '@/utils/chordDifficulty'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
@@ -73,7 +72,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
   }, [searchParams])
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
-  const [easyChordsOnly, setEasyChordsOnly] = useState(false)
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
   
   // Drag and Drop state
@@ -170,11 +168,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       )
     }
 
-    // Filter by easy chords only
-    if (easyChordsOnly) {
-      sorted = sorted.filter(song => songHasOnlyEasyChords(song.allChords))
-    }
-
     // Sort by folder displayOrder, then by folder name
     sorted.sort((a, b) => {
       const folderA = folders.find(f => f.id === a.folderId)
@@ -205,7 +198,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     })
 
     return sorted
-  }, [filteredSongs, folders, sortOrder, searchQuery, easyChordsOnly])
+  }, [filteredSongs, folders, sortOrder, searchQuery])
 
   const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -317,19 +310,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                     </option>
                   ))}
                 </select>
-              </div>
-
-              {/* Easy Chords Only Filter */}
-              <div className="inline-flex items-center">
-                <label className="flex items-center gap-2 px-3 py-2.5 sm:py-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 rounded-md border border-gray-300 bg-white">
-                  <input
-                    type="checkbox"
-                    checked={easyChordsOnly}
-                    onChange={(e) => setEasyChordsOnly(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Accords faciles</span>
-                </label>
               </div>
 
               {/* Limit selector */}

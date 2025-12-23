@@ -9,7 +9,6 @@ import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIco
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
-import { songHasOnlyEasyChords } from '@/utils/chordDifficulty'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
@@ -47,7 +46,6 @@ export default function DashboardClient({ songs, total, page, limit, initialView
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(undefined)
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
-  const [easyChordsOnly, setEasyChordsOnly] = useState(false)
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
   
   // Drag and Drop state
@@ -129,13 +127,8 @@ export default function DashboardClient({ songs, total, page, limit, initialView
       )
     }
 
-    // Filter by easy chords only
-    if (easyChordsOnly) {
-      filtered = filtered.filter(song => songHasOnlyEasyChords(song.allChords))
-    }
-
     return filtered
-  }, [songs, searchQuery, easyChordsOnly])
+  }, [songs, searchQuery])
 
   const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -192,7 +185,7 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                   placeholder={t('songs.search')}
                   value={localSearchValue}
                   onChange={(e) => setLocalSearchValue(e.target.value)}
-                  className="block w-full pl-10 sm:pl-10 pr-10 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                  className="block w-full pl-10 sm:pl-10 pr-10 sm:pr-10 py-2.5 sm:py-1.5 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                 />
                 {localSearchValue && (
                   <button
@@ -229,19 +222,6 @@ export default function DashboardClient({ songs, total, page, limit, initialView
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Easy Chords Only Filter */}
-            <div className="w-full sm:w-auto flex items-center">
-              <label className="flex items-center gap-2 px-3 py-2.5 sm:py-1.5 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 rounded-md border border-gray-300 bg-white">
-                <input
-                  type="checkbox"
-                  checked={easyChordsOnly}
-                  onChange={(e) => setEasyChordsOnly(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>Accords faciles</span>
-              </label>
             </div>
 
             {/* View toggle */}
