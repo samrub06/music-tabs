@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 import { NOTES, generateAllKeys } from '@/utils/chords';
+import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import BpmSelectorPopover from './BpmSelectorPopover';
 
 interface SongHeaderProps {
@@ -141,6 +142,9 @@ export default function SongHeader({
   };
 
   const currentKey = getCurrentKey();
+
+  // Check if all chords are already easy - if so, hide the Easy Chord Mode button
+  const hasOnlyEasyChords = songHasOnlyEasyChords(song.allChords);
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200">
@@ -378,20 +382,22 @@ export default function SongHeader({
               </button>
             </div>
 
-            {/* Easy Chord Mode Toggle */}
-            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 w-full">
-              <span className="text-xs font-medium text-green-700">Mode Accords Faciles:</span>
-              <button
-                onClick={onToggleEasyChordMode}
-                className={`px-4 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
-                  easyChordMode
-                    ? 'bg-green-600 text-white border-2 border-green-700'
-                    : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
-                }`}
-              >
-                {easyChordMode ? 'Activé' : 'Désactivé'}
-              </button>
-            </div>
+            {/* Easy Chord Mode Toggle - Only show if not all chords are already easy */}
+            {!hasOnlyEasyChords && (
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 w-full">
+                <span className="text-xs font-medium text-green-700">Mode Accords Faciles:</span>
+                <button
+                  onClick={onToggleEasyChordMode}
+                  className={`px-4 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+                    easyChordMode
+                      ? 'bg-green-600 text-white border-2 border-green-700'
+                      : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
+                  }`}
+                >
+                  {easyChordMode ? 'Activé' : 'Désactivé'}
+                </button>
+              </div>
+            )}
 
             {/* Transpose Controls */}
             <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full">
@@ -617,18 +623,20 @@ export default function SongHeader({
             </button>
           </div>
 
-          {/* Easy Chord Mode Toggle */}
-          <button
-            onClick={onToggleEasyChordMode}
-            className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-              easyChordMode
-                ? 'bg-green-600 text-white border-2 border-green-700'
-                : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
-            }`}
-            title="Mode Accords Faciles"
-          >
-            {easyChordMode ? '✓ Accords Faciles' : 'Accords Faciles'}
-          </button>
+          {/* Easy Chord Mode Toggle - Only show if not all chords are already easy */}
+          {!hasOnlyEasyChords && (
+            <button
+              onClick={onToggleEasyChordMode}
+              className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                easyChordMode
+                  ? 'bg-green-600 text-white border-2 border-green-700'
+                  : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
+              }`}
+              title="Mode Accords Faciles"
+            >
+              {easyChordMode ? '✓ Accords Faciles' : 'Accords Faciles'}
+            </button>
+          )}
 
           {/* Transpose Controls */}
           <div className="flex items-center space-x-2">

@@ -113,49 +113,77 @@ export function songHasOnlyEasyChords(allChords: string[] | null | undefined): b
 }
 
 /**
- * Find the best transposition that maximizes the number of easy chords
- * @param allChords Array of all unique chords in the song
+ * Find the best transposition that maximizes the number of easy chords (accords magiques)
+ * This function checks if all chords are already "magical" (easy). If yes, no transposition is needed.
+ * Otherwise, it finds the closest transposition that maximizes the number of easy chords.
+ * 
+ * @param allChords Array of all unique chords in the song (from all_chords field in database)
  * @returns Object with semitones (transposition value) and easyCount (number of easy chords after transposition)
  */
 export function findBestEasyChordTransposition(allChords: string[] | null | undefined): { semitones: number; easyCount: number } {
-  // If no chords, return no transposition needed
+  // Handle edge cases: no chords or empty array
   if (!allChords || allChords.length === 0) {
     return { semitones: 0, easyCount: 0 };
   }
 
-  // Check if all chords are already easy
-  const currentEasyCount = allChords.filter(chord => isEasyChord(chord)).length;
-  if (currentEasyCount === allChords.length) {
-    return { semitones: 0, easyCount: allChords.length };
+  // Step 1: Vérification initiale - Check if all chords are already "magical" (easy)
+  const totalChords = allChords.length;
+  let easyChordsCount = 0;
+  
+  for (const chord of allChords) {
+    if (isEasyChord(chord)) {
+      easyChordsCount++;
+    }
   }
 
-  let bestTransposition = { semitones: 0, easyCount: currentEasyCount };
+  // If all chords are already easy, no transposition needed
+  if (easyChordsCount === totalChords) {
+    return { semitones: 0, easyCount: totalChords };
+  }
+
+  // Step 2: Recherche de transposition optimale
+  // Start with current state (no transposition) as the baseline
+  let bestTransposition = { semitones: 0, easyCount: easyChordsCount };
 
   // Test all possible transpositions from -11 to +11 semitones
-  for (let semitones = -11; semitones <= 11; semitones++) {
-    if (semitones === 0) continue; // Already checked above
-
-    // Transpose all chords and count easy ones
-    let easyCount = 0;
-    for (const chord of allChords) {
-      try {
-        const transposedChord = transposeChord(chord, semitones);
-        if (isEasyChord(transposedChord)) {
-          easyCount++;
+  // We iterate in a way that tests closer transpositions first (±1, ±2, etc.)
+  // This ensures that if multiple transpositions have the same score, we prefer the closest one
+  for (let offset = 1; offset <= 11; offset++) {
+    // Test both positive and negative transpositions at the same distance
+    const semitonesOptions = [offset, -offset];
+    
+    for (const semitones of semitonesOptions) {
+      let transposedEasyCount = 0;
+      
+      // Transpose all chords and count how many become easy after transposition
+      for (const chord of allChords) {
+        try {
+          const transposedChord = transposeChord(chord, semitones);
+          if (isEasyChord(transposedChord)) {
+            transposedEasyCount++;
+          }
+        } catch (error) {
+          // If transposition fails for a chord, skip it (don't count as easy)
+          // This handles invalid chord formats gracefully
+          console.warn(`Failed to transpose chord "${chord}" by ${semitones} semitones:`, error);
         }
-      } catch (error) {
-        // If transposition fails, skip this chord
-        console.warn(`Failed to transpose chord ${chord} by ${semitones} semitones:`, error);
       }
-    }
 
-    // Update best transposition if this one has more easy chords
-    // If tied, prefer the transposition with smaller absolute value
-    if (
-      easyCount > bestTransposition.easyCount ||
-      (easyCount === bestTransposition.easyCount && Math.abs(semitones) < Math.abs(bestTransposition.semitones))
-    ) {
-      bestTransposition = { semitones, easyCount };
+      // Update best transposition if:
+      // 1. This transposition has more easy chords, OR
+      // 2. Same number of easy chords but this one has a smaller absolute value (closer to 0)
+      const isBetter = transposedEasyCount > bestTransposition.easyCount ||
+        (transposedEasyCount === bestTransposition.easyCount && 
+         Math.abs(semitones) < Math.abs(bestTransposition.semitones));
+      
+      if (isBetter) {
+        bestTransposition = { semitones, easyCount: transposedEasyCount };
+      }
+      
+      // If we found a transposition that makes ALL chords easy, we can stop early
+      if (bestTransposition.easyCount === totalChords) {
+        return bestTransposition;
+      }
     }
   }
 
