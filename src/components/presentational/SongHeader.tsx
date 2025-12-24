@@ -225,6 +225,22 @@ export default function SongHeader({
               </button>
             </div>
           )}
+          {/* Capo Toggle - Compact in header */}
+          {song.capo !== undefined && song.capo !== null && (
+            <button
+              onClick={() => onToggleCapo(!useCapo)}
+              className={`p-1.5 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none transition-colors ${
+                useCapo
+                  ? 'bg-orange-100 text-orange-600'
+                  : 'text-gray-400 hover:text-gray-600 bg-gray-50'
+              }`}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              aria-label={useCapo ? `Capo ${song.capo}` : 'Sans capo'}
+              title={useCapo ? `Capo ${song.capo}` : 'Sans capo'}
+            >
+              <span className="text-[10px] leading-none font-semibold">🎸{useCapo ? song.capo : ''}</span>
+            </button>
+          )}
           <button
             onClick={onToggleEdit}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none"
@@ -283,64 +299,6 @@ export default function SongHeader({
               </button>
             </div>
           </div>
-          
-          {/* Metronome Controls */}
-          {(song.bpm || onSetManualBpm) && (
-            <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full mt-2 relative">
-              <span className="text-xs font-medium text-gray-700">Métronome:</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    if (song.bpm || manualBpm) {
-                      onToggleMetronome();
-                    } else {
-                      setShowBpmPopover(!showBpmPopover);
-                    }
-                  }}
-                  className={`p-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                    metronome.isActive
-                      ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
-                      : 'bg-white text-gray-400 hover:text-gray-600 border-2 border-gray-200'
-                  }`}
-                  title={(song.bpm || manualBpm) ? `Métronome ${manualBpm || song.bpm} BPM` : 'Définir BPM'}
-                >
-                  {metronome.isActive ? (
-                    <PauseIcon className="h-4 w-4" />
-                  ) : (
-                    <PlayIcon className="h-4 w-4" />
-                  )}
-                </button>
-                {showBpmPopover && onSetManualBpm ? (
-                  <BpmSelectorPopover
-                    initialBpm={manualBpm || song.bpm || 100}
-                    onApply={(bpm) => {
-                      onSetManualBpm(bpm);
-                      setShowBpmPopover(false);
-                    }}
-                    onClose={() => setShowBpmPopover(false)}
-                  />
-                ) : (song.bpm || manualBpm) ? (
-                  <div 
-                    className="bg-white rounded-lg px-2 py-1 min-w-[50px] text-center shadow-sm cursor-pointer hover:bg-gray-50"
-                    onClick={() => setShowBpmPopover(true)}
-                  >
-                    <span className="text-xs font-bold text-gray-900">
-                      {manualBpm || song.bpm} BPM
-                    </span>
-                  </div>
-                ) : (
-                  <div 
-                    className="bg-white rounded-lg px-2 py-1 text-center shadow-sm cursor-pointer hover:bg-gray-50"
-                    onClick={() => setShowBpmPopover(true)}
-                  >
-                    <span className="text-xs text-gray-500">
-                      Définir
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Additional Controls Toggle */}
@@ -381,6 +339,64 @@ export default function SongHeader({
                 🎸 Guitare
               </button>
             </div>
+
+            {/* Metronome Controls */}
+            {(song.bpm || onSetManualBpm) && (
+              <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full relative">
+                <span className="text-xs font-medium text-gray-700">Métronome:</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      if (song.bpm || manualBpm) {
+                        onToggleMetronome();
+                      } else {
+                        setShowBpmPopover(!showBpmPopover);
+                      }
+                    }}
+                    className={`p-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center ${
+                      metronome.isActive
+                        ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
+                        : 'bg-white text-gray-400 hover:text-gray-600 border-2 border-gray-200'
+                    }`}
+                    title={(song.bpm || manualBpm) ? `Métronome ${manualBpm || song.bpm} BPM` : 'Définir BPM'}
+                  >
+                    {metronome.isActive ? (
+                      <PauseIcon className="h-4 w-4" />
+                    ) : (
+                      <PlayIcon className="h-4 w-4" />
+                    )}
+                  </button>
+                  {showBpmPopover && onSetManualBpm ? (
+                    <BpmSelectorPopover
+                      initialBpm={manualBpm || song.bpm || 100}
+                      onApply={(bpm) => {
+                        onSetManualBpm(bpm);
+                        setShowBpmPopover(false);
+                      }}
+                      onClose={() => setShowBpmPopover(false)}
+                    />
+                  ) : (song.bpm || manualBpm) ? (
+                    <div 
+                      className="bg-white rounded-lg px-2 py-1 min-w-[50px] text-center shadow-sm cursor-pointer hover:bg-gray-50"
+                      onClick={() => setShowBpmPopover(true)}
+                    >
+                      <span className="text-xs font-bold text-gray-900">
+                        {manualBpm || song.bpm} BPM
+                      </span>
+                    </div>
+                  ) : (
+                    <div 
+                      className="bg-white rounded-lg px-2 py-1 text-center shadow-sm cursor-pointer hover:bg-gray-50"
+                      onClick={() => setShowBpmPopover(true)}
+                    >
+                      <span className="text-xs text-gray-500">
+                        Définir
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Easy Chord Mode Toggle - Only show if not all chords are already easy */}
             {!hasOnlyEasyChords && (
@@ -444,35 +460,6 @@ export default function SongHeader({
                       </option>
                     ))}
                   </select>
-                </div>
-              </div>
-            )}
-
-            {/* Capo Toggle */}
-            {song.capo !== undefined && song.capo !== null && (
-              <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 w-full">
-                <span className="text-xs font-medium text-orange-700">Capo:</span>
-                <div className="flex rounded-md shadow-sm w-full max-w-[200px]">
-                  <button
-                    onClick={() => onToggleCapo(true)}
-                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-l-md border ${
-                      useCapo
-                        ? 'bg-orange-600 text-white border-orange-600'
-                        : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-50'
-                    }`}
-                  >
-                    🎸 Capo {song.capo}
-                  </button>
-                  <button
-                    onClick={() => onToggleCapo(false)}
-                    className={`flex-1 px-3 py-2 text-xs font-medium rounded-r-md border-t border-r border-b ${
-                      !useCapo
-                        ? 'bg-orange-600 text-white border-orange-600'
-                        : 'bg-white text-orange-700 border-orange-300 hover:bg-orange-50'
-                    }`}
-                  >
-                    Pas de capo
-                  </button>
                 </div>
               </div>
             )}
