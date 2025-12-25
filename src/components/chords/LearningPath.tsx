@@ -30,7 +30,7 @@ export default function LearningPath({ chords, progress, knownChordIds }: Learni
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Votre Progression d'Apprentissage</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">Votre Progression d&apos;Apprentissage</h2>
       
       {/* Overall Progress */}
       <div className="mb-6">

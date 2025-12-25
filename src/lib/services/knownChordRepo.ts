@@ -10,7 +10,7 @@ export const knownChordRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
 
-    return (data || []).map(row => row.chord_id)
+    return (data || []).map((row: { chord_id: string }) => row.chord_id)
   },
 
   async markKnown(userId: string, chordId: string): Promise<void> {

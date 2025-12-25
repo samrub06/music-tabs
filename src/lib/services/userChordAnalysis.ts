@@ -69,7 +69,7 @@ export async function getUserKnownChords(
   const knownChords = new Set<string>()
   
   if (songs) {
-    for (const song of songs) {
+    for (const song of songs as { all_chords: string[] }[]) {
       if (song.all_chords && Array.isArray(song.all_chords)) {
         for (const chord of song.all_chords) {
           if (typeof chord === 'string' && chord.trim()) {
@@ -130,7 +130,7 @@ export async function getUserChordProgress(
   }
 
   if (allChords) {
-    for (const chord of allChords) {
+    for (const chord of allChords as { name: string, difficulty: string }[]) {
       const normalized = normalizeChord(chord.name)
       const isKnown = knownChords.has(normalized)
       
