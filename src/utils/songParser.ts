@@ -194,6 +194,9 @@ function calculateChordPositions(chordLine: string, lyricLine: string): ChordPos
   const positions: ChordPosition[] = [];
   const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
   
+  // Track positions to avoid duplicates
+  const positionMap = new Map<number, ChordPosition>();
+  
   let match;
   while ((match = chordPattern.exec(chordLine)) !== null) {
     const chord = match[1];
@@ -214,11 +217,22 @@ function calculateChordPositions(chordLine: string, lyricLine: string): ChordPos
     const maxPos = lyricLine.trim().length;
     lyricPosition = Math.min(lyricPosition, maxPos);
     
-    positions.push({
-      chord,
-      position: lyricPosition
-    });
+    // Check if we already have a chord at this exact position
+    // If yes, skip this duplicate (keep the first one found)
+    if (!positionMap.has(lyricPosition)) {
+      const chordPosition: ChordPosition = {
+        chord,
+        position: lyricPosition
+      };
+      positionMap.set(lyricPosition, chordPosition);
+      positions.push(chordPosition);
+    }
+    // If duplicate found at same position, skip it
+    // This prevents multiple chords from being displayed at the same position
   }
+  
+  // Sort positions by position value to maintain order
+  positions.sort((a, b) => a.position - b.position);
   
   return positions;
 }

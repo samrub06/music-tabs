@@ -325,6 +325,89 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
   );
 }
 
+// Helper function to group chords by position and calculate horizontal offsets
+interface ChordWithOffset {
+  chord: string;
+  position: number;
+  horizontalOffset: number;
+  originalIndex: number;
+}
+
+function groupChordsByPosition(
+  chords: Array<{ chord: string; position: number }>,
+  fontSize: number,
+  charWidth: number,
+  spacing: number = 50
+): ChordWithOffset[] {
+  // Create a map to group chords by position
+  const positionGroups = new Map<number, Array<{ chord: string; originalIndex: number }>>();
+  
+  chords.forEach((chordPos, index) => {
+    if (!positionGroups.has(chordPos.position)) {
+      positionGroups.set(chordPos.position, []);
+    }
+    positionGroups.get(chordPos.position)!.push({
+      chord: chordPos.chord,
+      originalIndex: index
+    });
+  });
+  
+  // Calculate text width for a chord using canvas for precise measurement
+  const getChordWidth = (chord: string): number => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+      // Fallback: estimate width based on character count with better approximation
+      return chord.length * charWidth * 1.1; // Slight padding for safety
+    }
+    context.font = `${fontSize}px Monaco, "Lucida Console", "Courier New", monospace`;
+    const measuredWidth = context.measureText(chord).width;
+    // Add a small padding to ensure no overlap
+    return measuredWidth + 2;
+  };
+  
+  // Process each position group and calculate offsets
+  const result: ChordWithOffset[] = [];
+  
+  positionGroups.forEach((chordGroup, position) => {
+    // If only one chord at this position, no offset needed
+    if (chordGroup.length === 1) {
+      result.push({
+        chord: chordGroup[0].chord,
+        position,
+        horizontalOffset: 0,
+        originalIndex: chordGroup[0].originalIndex
+      });
+      return;
+    }
+    
+    // Multiple chords at same position - place them sequentially
+    let cumulativeOffset = 0;
+    
+    chordGroup.forEach(({ chord, originalIndex }, index) => {
+      result.push({
+        chord,
+        position,
+        horizontalOffset: cumulativeOffset,
+        originalIndex
+      });
+      
+      // Calculate the width of this chord
+      const chordWidth = getChordWidth(chord);
+      
+      // Add this chord's width plus spacing for the next chord
+      // Use dynamic spacing based on font size for better visual separation
+      const dynamicSpacing = Math.max(spacing, fontSize * 0.3);
+      cumulativeOffset += chordWidth + dynamicSpacing;
+    });
+  });
+  
+  // Sort by original index to maintain order
+  result.sort((a, b) => a.originalIndex - b.originalIndex);
+  
+  return result;
+}
+
 // Component for precise chord-over-lyrics alignment
 interface ChordOverLyricsLineProps {
   line: any;
@@ -378,28 +461,35 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
           maxWidth: '100%',
           overflow: 'hidden'
         }}>
-          {line.chords.map((chordPos: any, chordIndex: number) => {
-            // Ensure chord doesn't go beyond lyrics length
-            const safePosition = Math.min(chordPos.position, line.lyrics.length);
-            const leftOffset = Math.min(safePosition * charWidth, containerWidth - 50); // Prevent overflow
+          {(() => {
+            // Group chords by position and calculate horizontal offsets
+            const groupedChords = groupChordsByPosition(line.chords, fontSize, charWidth);
             
-            return (
-              <button
-                key={chordIndex}
-                onClick={() => onChordClick(chordPos.chord)}
-                className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
-                style={{ 
-                  left: isHebrew ? 'auto' : `${leftOffset}px`,
-                  right: isHebrew ? `${leftOffset}px` : 'auto',
-                  fontSize: `${fontSize}px`,
-                  lineHeight: 1.4,
-                  maxWidth: 'calc(100vw - 40px)'
-                }}
-              >
-                {chordPos.chord}
-              </button>
-            );
-          })}
+            return groupedChords.map((chordWithOffset, chordIndex) => {
+              // Ensure chord doesn't go beyond lyrics length
+              const safePosition = Math.min(chordWithOffset.position, line.lyrics.length);
+              const baseLeftOffset = Math.min(safePosition * charWidth, containerWidth - 50); // Prevent overflow
+              // Add horizontal offset for chords at the same position
+              const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
+              
+              return (
+                <button
+                  key={chordIndex}
+                  onClick={() => onChordClick(chordWithOffset.chord)}
+                  className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
+                  style={{ 
+                    left: isHebrew ? 'auto' : `${leftOffset}px`,
+                    right: isHebrew ? `${leftOffset}px` : 'auto',
+                    fontSize: `${fontSize}px`,
+                    lineHeight: 1.4,
+                    maxWidth: 'calc(100vw - 40px)'
+                  }}
+                >
+                  {chordWithOffset.chord}
+                </button>
+              );
+            });
+          })()}
         </div>
         {/* Lyrics line */}
         <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
@@ -459,26 +549,34 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
               maxWidth: '100%',
               overflow: 'hidden'
             }}>
-              {wrappedLine.chords.map((chordPos, chordIndex) => {
-                const leftOffset = Math.max(0, Math.min(chordPos.position * (fontSize * 0.58), measurementOptions.containerWidth - 50));
+              {(() => {
+                // Group chords by position and calculate horizontal offsets
+                const charWidth = fontSize * 0.58;
+                const groupedChords = groupChordsByPosition(wrappedLine.chords, fontSize, charWidth);
                 
-                return (
-                  <button
-                    key={chordIndex}
-                    onClick={() => onChordClick(chordPos.chord)}
-                    className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
-                    style={{ 
-                      left: isHebrew ? 'auto' : `${leftOffset}px`,
-                      right: isHebrew ? `${leftOffset}px` : 'auto',
-                      fontSize: `${fontSize}px`,
-                      lineHeight,
-                      maxWidth: 'calc(100vw - 40px)'
-                    }}
-                  >
-                    {chordPos.chord}
-                  </button>
-                );
-              })}
+                return groupedChords.map((chordWithOffset, chordIndex) => {
+                  const baseLeftOffset = Math.max(0, Math.min(chordWithOffset.position * charWidth, measurementOptions.containerWidth - 50));
+                  // Add horizontal offset for chords at the same position
+                  const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
+                  
+                  return (
+                    <button
+                      key={chordIndex}
+                      onClick={() => onChordClick(chordWithOffset.chord)}
+                      className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
+                      style={{ 
+                        left: isHebrew ? 'auto' : `${leftOffset}px`,
+                        right: isHebrew ? `${leftOffset}px` : 'auto',
+                        fontSize: `${fontSize}px`,
+                        lineHeight,
+                        maxWidth: 'calc(100vw - 40px)'
+                      }}
+                    >
+                      {chordWithOffset.chord}
+                    </button>
+                  );
+                });
+              })()}
             </div>
             {/* Lyrics line */}
             <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
