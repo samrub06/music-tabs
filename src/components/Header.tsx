@@ -86,20 +86,31 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <GlobeAltIcon className="h-6 w-6" />
                 <span className="sr-only">Library</span>
               </Link>
-              <Link
-                href="/songs"
-                className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-              >
-                <RectangleStackIcon className="h-6 w-6" />
-                <span className="sr-only">Songs</span>
-              </Link>
-              <Link
-                href="/folders"
-                className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-              >
-                <FolderIcon className="h-6 w-6" />
-                <span className="sr-only">Folders</span>
-              </Link>
+              {user && (
+                <>
+                  <Link
+                    href="/songs"
+                    className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  >
+                    <RectangleStackIcon className="h-6 w-6" />
+                    <span className="sr-only">Songs</span>
+                  </Link>
+                  <Link
+                    href="/folders"
+                    className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  >
+                    <FolderIcon className="h-6 w-6" />
+                    <span className="sr-only">Folders</span>
+                  </Link>
+                  <Link
+                    href="/chords"
+                    className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  >
+                    <MusicalNoteIcon className="h-6 w-6" />
+                    <span className="sr-only">Chords</span>
+                  </Link>
+                </>
+              )}
             </nav>
             
             {/* Authenticated navigation - Desktop */}
@@ -126,7 +137,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <FolderIcon className="h-5 w-5" />
                   <span>Folders</span>
                 </Link>
-               
+                <Link
+                  href="/chords"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <MusicalNoteIcon className="h-5 w-5" />
+                  <span>Chords</span>
+                </Link>
               </nav>
             )}
           </div>

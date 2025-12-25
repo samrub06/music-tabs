@@ -190,3 +190,70 @@ export function findBestEasyChordTransposition(allChords: string[] | null | unde
   return bestTransposition;
 }
 
+/**
+ * Calculate chord difficulty based on chord structure
+ * @param chord Chord object with chordData
+ * @returns 'beginner' | 'intermediate' | 'advanced'
+ */
+export function getChordDifficulty(chord: { chordData: { barres: any[]; position: number }; name: string }): 'beginner' | 'intermediate' | 'advanced' {
+  // Beginner: accords ouverts, pas de barres, position 0
+  if (chord.chordData.barres.length === 0 && chord.chordData.position === 0) {
+    // Check if it's a simple open chord by name
+    const simpleOpenChords = ['C', 'D', 'E', 'G', 'A', 'Am', 'Dm', 'Em', 'C7', 'D7', 'E7', 'G7', 'A7', 'Am7', 'Dm7', 'Em7'];
+    if (simpleOpenChords.some(c => chord.name.includes(c) && !chord.name.includes('Barre'))) {
+      return 'beginner';
+    }
+    // If no barres and position 0, likely beginner
+    return 'beginner';
+  }
+  
+  // Intermediate: barres simples, position basse (1-3)
+  if (chord.chordData.barres.length === 1 && chord.chordData.position <= 3) {
+    return 'intermediate';
+  }
+  
+  // Advanced: barres multiples, position haute (>3), ou accords complexes
+  if (chord.chordData.barres.length > 1 || chord.chordData.position > 3) {
+    return 'advanced';
+  }
+  
+  // Check chord name for complex patterns
+  const chordName = chord.name.toUpperCase();
+  if (chordName.includes('DIM') || chordName.includes('AUG') || 
+      chordName.includes('9') || chordName.includes('11') || chordName.includes('13')) {
+    return 'advanced';
+  }
+  
+  // Default to intermediate if unclear
+  return 'intermediate';
+}
+
+/**
+ * Calculate learning order for a chord
+ * Lower numbers = learn first
+ * @param chord Chord object
+ * @returns number representing learning order
+ */
+export function calculateLearningOrder(chord: { chordData: { barres: any[]; position: number }; name: string; section: string }): number {
+  const difficulty = getChordDifficulty(chord);
+  
+  // Base order by difficulty: beginner = 0-999, intermediate = 1000-1999, advanced = 2000+
+  let baseOrder = 0;
+  if (difficulty === 'intermediate') baseOrder = 1000;
+  if (difficulty === 'advanced') baseOrder = 2000;
+  
+  // Within each difficulty, order by section
+  let sectionOrder = 0;
+  if (chord.section === 'Open Chords') sectionOrder = 0;
+  else if (chord.section === 'E-Shape Barre Chords') sectionOrder = 100;
+  else if (chord.section === 'A-Shape Barre Chords') sectionOrder = 200;
+  
+  // Within section, order by position (lower position = learn first)
+  const positionOrder = chord.chordData.position * 10;
+  
+  // Within position, order by number of barres (fewer barres = learn first)
+  const barreOrder = chord.chordData.barres.length;
+  
+  return baseOrder + sectionOrder + positionOrder + barreOrder;
+}
+

@@ -57,6 +57,10 @@ interface SongViewerProps {
   isAuthenticated?: boolean;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
+  showOnlyDifficultChords?: boolean;
+  onToggleShowOnlyDifficultChords?: () => void;
+  knownChordIds?: Set<string>;
+  chordNameToIdMap?: Map<string, string>;
 }
 
 export default function SongViewer({
@@ -98,11 +102,15 @@ export default function SongViewer({
   canPrevSong,
   canNextSong,
   nextSongInfo,
-  isAuthenticated = false,
-  manualBpm,
-  onSetManualBpm,
-  easyChordMode,
-  onToggleEasyChordMode
+    isAuthenticated = false,
+    manualBpm,
+    onSetManualBpm,
+    easyChordMode,
+    onToggleEasyChordMode,
+    showOnlyDifficultChords = false,
+    onToggleShowOnlyDifficultChords,
+    knownChordIds = new Set(),
+    chordNameToIdMap = new Map()
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -153,6 +161,8 @@ export default function SongViewer({
         onSetManualBpm={onSetManualBpm}
         easyChordMode={easyChordMode}
         onToggleEasyChordMode={onToggleEasyChordMode}
+        showOnlyDifficultChords={showOnlyDifficultChords}
+        onToggleShowOnlyDifficultChords={onToggleShowOnlyDifficultChords}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">
@@ -172,6 +182,9 @@ export default function SongViewer({
             onChordClick={onChordClick}
             isAuthenticated={isAuthenticated}
             bpm={manualBpm || song.bpm || undefined}
+            showOnlyDifficultChords={showOnlyDifficultChords}
+            knownChordIds={knownChordIds}
+            chordNameToIdMap={chordNameToIdMap}
           />
         </div>
 

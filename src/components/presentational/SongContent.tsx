@@ -21,6 +21,9 @@ interface SongContentProps {
   onChordClick: (chord: string) => void;
   isAuthenticated?: boolean;
   bpm?: number | null;
+  showOnlyDifficultChords?: boolean;
+  knownChordIds?: Set<string>;
+  chordNameToIdMap?: Map<string, string>;
 }
 
 export default function SongContent({
@@ -36,7 +39,10 @@ export default function SongContent({
   onCancelEdit,
   onChordClick,
   isAuthenticated = false,
-  bpm
+  bpm,
+  showOnlyDifficultChords = false,
+  knownChordIds = new Set(),
+  chordNameToIdMap = new Map()
 }: SongContentProps) {
   if (isEditing) {
     return (
@@ -84,7 +90,14 @@ export default function SongContent({
             <MusicalNoteIcon className="w-5 h-5 mr-2" />
             Accords utilisés
           </h3>
-          <ChordDiagramsGrid song={transposedSong} onChordClick={onChordClick} fontSize={fontSize} />
+          <ChordDiagramsGrid 
+            song={transposedSong} 
+            onChordClick={onChordClick} 
+            fontSize={fontSize}
+            showOnlyDifficultChords={showOnlyDifficultChords}
+            knownChordIds={knownChordIds}
+            chordNameToIdMap={chordNameToIdMap}
+          />
           {bpm && (
             <p className="text-sm text-blue-600 font-medium mt-4">
               {bpm} BPM
@@ -602,40 +615,110 @@ interface ChordDiagramsGridProps {
   song: any;
   onChordClick: (chord: string) => void;
   fontSize: number;
+  showOnlyDifficultChords?: boolean;
+  knownChordIds?: Set<string>;
+  chordNameToIdMap?: Map<string, string>;
 }
 
-function ChordDiagramsGrid({ song, onChordClick, fontSize }: ChordDiagramsGridProps) {
+// Normalize chord name for comparison
+function normalizeChordName(chord: string): string {
+  if (!chord) return '';
+  let normalized = chord.trim().toUpperCase();
+  const enharmonicMap: { [key: string]: string } = {
+    'C#': 'DB', 'D#': 'EB', 'F#': 'GB', 'G#': 'AB', 'A#': 'BB'
+  };
+  for (const [sharp, flat] of Object.entries(enharmonicMap)) {
+    if (normalized.startsWith(sharp)) {
+      normalized = normalized.replace(sharp, flat);
+      break;
+    }
+  }
+  return normalized;
+}
+
+function ChordDiagramsGrid({ 
+  song, 
+  onChordClick, 
+  fontSize,
+  showOnlyDifficultChords = false,
+  knownChordIds = new Set(),
+  chordNameToIdMap = new Map()
+}: ChordDiagramsGridProps) {
   // Import extractAllChords function
   const { extractAllChords } = require('@/utils/structuredSong');
   const allChords = extractAllChords(song);
   
-  if (allChords.length === 0) {
+  // Filter chords if showOnlyDifficultChords is enabled
+  // Use chordNameToIdMap to find the chord ID, then check if it's in knownChordIds
+  const displayedChords = showOnlyDifficultChords
+    ? allChords.filter((chord: string) => {
+        const normalized = normalizeChordName(chord);
+        const chordId = chordNameToIdMap.get(normalized);
+        // If chord ID is found and it's in knownChordIds, it's known (not difficult)
+        // If chord ID is not found or not in knownChordIds, it's difficult
+        return !chordId || !knownChordIds.has(chordId);
+      })
+    : allChords;
+  
+  if (displayedChords.length === 0) {
     return (
       <div className="text-gray-500 text-sm italic">
-        Aucun accord détecté dans cette chanson
+        {showOnlyDifficultChords 
+          ? 'Aucun accord difficile dans cette chanson' 
+          : 'Aucun accord détecté dans cette chanson'}
       </div>
     );
   }
   
+  const difficultCount = showOnlyDifficultChords ? displayedChords.length : null;
+  const totalCount = allChords.length;
+  
   return (
-    <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-4">
-      {allChords.map((chord: string) => (
-        <button
-          key={chord}
-          onClick={() => onChordClick(chord)}
-          className="group p-1.5 sm:p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-        >
-          <div className="text-center w-full">
-            <div 
-              className="font-bold text-gray-900 group-hover:text-blue-600 w-full text-center" 
-              style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
-              title={chord}
+    <div>
+      {showOnlyDifficultChords && difficultCount !== null && (
+        <div className="mb-3 text-sm text-orange-600 font-medium">
+          {difficultCount} accord{difficultCount > 1 ? 's' : ''} difficile{difficultCount > 1 ? 's' : ''} sur {totalCount} total
+        </div>
+      )}
+      <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-4">
+        {displayedChords.map((chord: string) => {
+          const normalized = normalizeChordName(chord);
+          const chordId = chordNameToIdMap.get(normalized);
+          const isKnown = chordId ? knownChordIds.has(chordId) : false;
+          return (
+            <button
+              key={chord}
+              onClick={() => onChordClick(chord)}
+              className={`group p-1.5 sm:p-4 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full ${
+                isKnown 
+                  ? 'bg-green-50 border-2 border-green-300' 
+                  : showOnlyDifficultChords
+                  ? 'bg-orange-50 border-2 border-orange-300'
+                  : 'bg-white border-2 border-gray-200 hover:border-blue-400'
+              }`}
             >
-              {chord}
-            </div>
-          </div>
-        </button>
-      ))}
+              <div className="text-center w-full">
+                <div 
+                  className={`font-bold w-full text-center ${
+                    isKnown 
+                      ? 'text-green-800 group-hover:text-green-900' 
+                      : showOnlyDifficultChords
+                      ? 'text-orange-800 group-hover:text-orange-900'
+                      : 'text-gray-900 group-hover:text-blue-600'
+                  }`}
+                  style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
+                  title={chord}
+                >
+                  {chord}
+                </div>
+                {isKnown && (
+                  <div className="text-xs text-green-600 mt-1">✓ Connu</div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

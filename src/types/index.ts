@@ -204,3 +204,21 @@ export interface Playlist {
   updatedAt: Date;
   songIds: string[];
 }
+
+export interface ChordData {
+  chord: [number, number | 'x' | 0][];
+  position: number;
+  barres: { fromString: number; toString: number; fret: number }[];
+}
+
+export interface Chord {
+  id: string;
+  name: string;
+  chordData: ChordData;
+  section: string;
+  tuning: string[];
+  difficulty?: 'beginner' | 'intermediate' | 'advanced' | null;
+  learningOrder?: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

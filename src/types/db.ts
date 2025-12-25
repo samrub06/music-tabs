@@ -197,6 +197,61 @@ export interface Database {
           updated_at?: string
         }
       }
+      chords: {
+        Row: {
+          id: string
+          name: string
+          chord_data: Json
+          section: string
+          tuning: string[]
+          difficulty: 'beginner' | 'intermediate' | 'advanced' | null
+          learning_order: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          chord_data: Json
+          section: string
+          tuning?: string[]
+          difficulty?: 'beginner' | 'intermediate' | 'advanced' | null
+          learning_order?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          chord_data?: Json
+          section?: string
+          tuning?: string[]
+          difficulty?: 'beginner' | 'intermediate' | 'advanced' | null
+          learning_order?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_known_chords: {
+        Row: {
+          id: string
+          user_id: string
+          chord_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          chord_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          chord_id?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

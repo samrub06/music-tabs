@@ -14,6 +14,8 @@ import { songService } from '@/lib/services/songService';
 import { supabase } from '@/lib/supabase';
 import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
+import { knownChordService } from '@/lib/services/knownChordService';
+import { chordService } from '@/lib/services/chordService';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -46,6 +48,9 @@ export default function SongViewerContainerSSR({
   const [nextSongInfo, setNextSongInfo] = useState<{ title: string; author?: string } | null>(null);
   const [isFromPlaylist, setIsFromPlaylist] = useState(false);
   const [playlistTargetKey, setPlaylistTargetKey] = useState<string | null>(null);
+  const [showOnlyDifficultChords, setShowOnlyDifficultChords] = useState(false);
+  const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set());
+  const [chordNameToIdMap, setChordNameToIdMap] = useState<Map<string, string>>(new Map());
   
   // Load hasUsedNext from sessionStorage on mount and sync current song index
   // Also check for playlist context and apply automatic transposition
@@ -158,6 +163,57 @@ export default function SongViewerContainerSSR({
 
     incrementViewCount();
   }, [song.id]);
+
+  // Normalize chord name for comparison
+  function normalizeChordName(chord: string): string {
+    if (!chord) return '';
+    let normalized = chord.trim().toUpperCase();
+    const enharmonicMap: { [key: string]: string } = {
+      'C#': 'DB', 'D#': 'EB', 'F#': 'GB', 'G#': 'AB', 'A#': 'BB'
+    };
+    for (const [sharp, flat] of Object.entries(enharmonicMap)) {
+      if (normalized.startsWith(sharp)) {
+        normalized = normalized.replace(sharp, flat);
+        break;
+      }
+    }
+    return normalized;
+  }
+
+  // Load all chords and create name -> ID mapping, then load user's known chords
+  useEffect(() => {
+    const loadChords = async () => {
+      if (!isAuthenticated) {
+        setKnownChordIds(new Set());
+        setChordNameToIdMap(new Map());
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Load all chords to create name -> ID mapping
+          const allChords = await chordService.getAllChords(supabase);
+          const nameToIdMap = new Map<string, string>();
+          allChords.forEach(chord => {
+            const normalized = normalizeChordName(chord.name);
+            nameToIdMap.set(normalized, chord.id);
+          });
+          setChordNameToIdMap(nameToIdMap);
+
+          // Load user's known chord IDs
+          const knownChordIdsArray = await knownChordService.getKnownChordIds(user.id, supabase);
+          setKnownChordIds(new Set(knownChordIdsArray));
+        }
+      } catch (error) {
+        console.error('Error loading chords:', error);
+        setKnownChordIds(new Set());
+        setChordNameToIdMap(new Map());
+      }
+    };
+
+    loadChords();
+  }, [isAuthenticated, song.id]);
 
   // Auto-scroll functionality
   useAutoScroll({ 
@@ -336,7 +392,11 @@ export default function SongViewerContainerSSR({
     canPrevSong: canPrevSong,
     canNextSong: canNextSong,
     nextSongInfo: nextSongInfo,
-    isAuthenticated
+    isAuthenticated,
+    showOnlyDifficultChords,
+    onToggleShowOnlyDifficultChords: () => setShowOnlyDifficultChords(prev => !prev),
+    knownChordIds,
+    chordNameToIdMap
   };
 
   return <SongViewer {...songViewerProps} />;
