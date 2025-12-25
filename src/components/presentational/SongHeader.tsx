@@ -55,8 +55,6 @@ interface SongHeaderProps {
   onSetManualBpm?: (bpm: number) => void;
   easyChordMode: boolean;
   onToggleEasyChordMode: () => void;
-  showOnlyDifficultChords?: boolean;
-  onToggleShowOnlyDifficultChords?: () => void;
 }
 
 export default function SongHeader({
@@ -88,9 +86,7 @@ export default function SongHeader({
     manualBpm,
     onSetManualBpm,
     easyChordMode,
-    onToggleEasyChordMode,
-    showOnlyDifficultChords = false,
-    onToggleShowOnlyDifficultChords
+    onToggleEasyChordMode
 }: SongHeaderProps) {
   const [showControls, setShowControls] = useState(false);
   const [showBpmPopover, setShowBpmPopover] = useState(false);
@@ -419,22 +415,6 @@ export default function SongHeader({
               </div>
             )}
 
-            {/* Show Only Difficult Chords Toggle */}
-            {onToggleShowOnlyDifficultChords && (
-              <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 w-full">
-                <span className="text-xs font-medium text-orange-700">Afficher seulement accords difficiles:</span>
-                <button
-                  onClick={onToggleShowOnlyDifficultChords}
-                  className={`px-4 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
-                    showOnlyDifficultChords
-                      ? 'bg-orange-600 text-white border-2 border-orange-700'
-                      : 'bg-white text-orange-700 border-2 border-orange-300 hover:bg-orange-50'
-                  }`}
-                >
-                  {showOnlyDifficultChords ? 'Activé' : 'Désactivé'}
-                </button>
-              </div>
-            )}
 
             {/* Transpose Controls */}
             <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full">
@@ -646,20 +626,6 @@ export default function SongHeader({
             </button>
           )}
 
-          {/* Show Only Difficult Chords Toggle */}
-          {onToggleShowOnlyDifficultChords && (
-            <button
-              onClick={onToggleShowOnlyDifficultChords}
-              className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                showOnlyDifficultChords
-                  ? 'bg-orange-600 text-white border-2 border-orange-700'
-                  : 'bg-white text-orange-700 border-2 border-orange-300 hover:bg-orange-50'
-              }`}
-              title="Afficher seulement les accords difficiles"
-            >
-              {showOnlyDifficultChords ? '✓ Accords Difficiles' : 'Accords Difficiles'}
-            </button>
-          )}
 
           {/* Transpose Controls */}
           <div className="flex items-center space-x-2">

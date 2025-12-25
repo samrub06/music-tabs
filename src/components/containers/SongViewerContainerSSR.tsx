@@ -48,7 +48,6 @@ export default function SongViewerContainerSSR({
   const [nextSongInfo, setNextSongInfo] = useState<{ title: string; author?: string } | null>(null);
   const [isFromPlaylist, setIsFromPlaylist] = useState(false);
   const [playlistTargetKey, setPlaylistTargetKey] = useState<string | null>(null);
-  const [showOnlyDifficultChords, setShowOnlyDifficultChords] = useState(false);
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set());
   const [chordNameToIdMap, setChordNameToIdMap] = useState<Map<string, string>>(new Map());
   
@@ -393,8 +392,6 @@ export default function SongViewerContainerSSR({
     canNextSong: canNextSong,
     nextSongInfo: nextSongInfo,
     isAuthenticated,
-    showOnlyDifficultChords,
-    onToggleShowOnlyDifficultChords: () => setShowOnlyDifficultChords(prev => !prev),
     knownChordIds,
     chordNameToIdMap
   };

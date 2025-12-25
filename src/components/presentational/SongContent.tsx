@@ -21,7 +21,6 @@ interface SongContentProps {
   onChordClick: (chord: string) => void;
   isAuthenticated?: boolean;
   bpm?: number | null;
-  showOnlyDifficultChords?: boolean;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
 }
@@ -40,7 +39,6 @@ export default function SongContent({
   onChordClick,
   isAuthenticated = false,
   bpm,
-  showOnlyDifficultChords = false,
   knownChordIds = new Set(),
   chordNameToIdMap = new Map()
 }: SongContentProps) {
@@ -94,7 +92,6 @@ export default function SongContent({
             song={transposedSong} 
             onChordClick={onChordClick} 
             fontSize={fontSize}
-            showOnlyDifficultChords={showOnlyDifficultChords}
             knownChordIds={knownChordIds}
             chordNameToIdMap={chordNameToIdMap}
           />
@@ -615,7 +612,6 @@ interface ChordDiagramsGridProps {
   song: any;
   onChordClick: (chord: string) => void;
   fontSize: number;
-  showOnlyDifficultChords?: boolean;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
 }
@@ -640,7 +636,6 @@ function ChordDiagramsGrid({
   song, 
   onChordClick, 
   fontSize,
-  showOnlyDifficultChords = false,
   knownChordIds = new Set(),
   chordNameToIdMap = new Map()
 }: ChordDiagramsGridProps) {
@@ -648,40 +643,18 @@ function ChordDiagramsGrid({
   const { extractAllChords } = require('@/utils/structuredSong');
   const allChords = extractAllChords(song);
   
-  // Filter chords if showOnlyDifficultChords is enabled
-  // Use chordNameToIdMap to find the chord ID, then check if it's in knownChordIds
-  const displayedChords = showOnlyDifficultChords
-    ? allChords.filter((chord: string) => {
-        const normalized = normalizeChordName(chord);
-        const chordId = chordNameToIdMap.get(normalized);
-        // If chord ID is found and it's in knownChordIds, it's known (not difficult)
-        // If chord ID is not found or not in knownChordIds, it's difficult
-        return !chordId || !knownChordIds.has(chordId);
-      })
-    : allChords;
-  
-  if (displayedChords.length === 0) {
+  if (allChords.length === 0) {
     return (
       <div className="text-gray-500 text-sm italic">
-        {showOnlyDifficultChords 
-          ? 'Aucun accord difficile dans cette chanson' 
-          : 'Aucun accord détecté dans cette chanson'}
+        Aucun accord détecté dans cette chanson
       </div>
     );
   }
   
-  const difficultCount = showOnlyDifficultChords ? displayedChords.length : null;
-  const totalCount = allChords.length;
-  
   return (
     <div>
-      {showOnlyDifficultChords && difficultCount !== null && (
-        <div className="mb-3 text-sm text-orange-600 font-medium">
-          {difficultCount} accord{difficultCount > 1 ? 's' : ''} difficile{difficultCount > 1 ? 's' : ''} sur {totalCount} total
-        </div>
-      )}
       <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-4">
-        {displayedChords.map((chord: string) => {
+        {allChords.map((chord: string) => {
           const normalized = normalizeChordName(chord);
           const chordId = chordNameToIdMap.get(normalized);
           const isKnown = chordId ? knownChordIds.has(chordId) : false;
@@ -692,8 +665,6 @@ function ChordDiagramsGrid({
               className={`group p-1.5 sm:p-4 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full ${
                 isKnown 
                   ? 'bg-green-50 border-2 border-green-300' 
-                  : showOnlyDifficultChords
-                  ? 'bg-orange-50 border-2 border-orange-300'
                   : 'bg-white border-2 border-gray-200 hover:border-blue-400'
               }`}
             >
@@ -702,8 +673,6 @@ function ChordDiagramsGrid({
                   className={`font-bold w-full text-center ${
                     isKnown 
                       ? 'text-green-800 group-hover:text-green-900' 
-                      : showOnlyDifficultChords
-                      ? 'text-orange-800 group-hover:text-orange-900'
                       : 'text-gray-900 group-hover:text-blue-600'
                   }`}
                   style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
