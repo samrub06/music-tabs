@@ -32,4 +32,9 @@ INSERT INTO public.chords (name, chord_data, section, tuning, difficulty, learni
 ('Bb Minor', '{"chord": [[1, 1], [2, 1], [3, 1], [4, 3], [5, 3], [6, 1]], "position": 1, "barres": [{"fromString": 5, "toString": 1, "fret": 1}]}'::jsonb, 'A-Shape Barre Chords', ARRAY['E', 'A', 'D', 'G', 'B', 'E'], 'intermediate', 1102),
 ('B Major', '{"chord": [[1, 2], [2, 2], [3, 3], [4, 4], [5, 4], [6, 2]], "position": 2, "barres": [{"fromString": 5, "toString": 1, "fret": 2}]}'::jsonb, 'A-Shape Barre Chords', ARRAY['E', 'A', 'D', 'G', 'B', 'E'], 'intermediate', 1103),
 ('C Major (Barre)', '{"chord": [[1, 3], [2, 3], [3, 4], [4, 5], [5, 5], [6, 3]], "position": 3, "barres": [{"fromString": 5, "toString": 1, "fret": 3}]}'::jsonb, 'A-Shape Barre Chords', ARRAY['E', 'A', 'D', 'G', 'B', 'E'], 'intermediate', 1104)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name, section) DO UPDATE SET 
+  difficulty = EXCLUDED.difficulty, 
+  learning_order = EXCLUDED.learning_order,
+  chord_data = EXCLUDED.chord_data,
+  tuning = EXCLUDED.tuning,
+  updated_at = now();
