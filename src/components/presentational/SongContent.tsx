@@ -1,9 +1,12 @@
 'use client';
 
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
-import React, { RefObject, useEffect, useRef, useState } from 'react';
+import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
 import ChordDiagram from '../ChordDiagram';
+import { ChordBox } from 'vexchords';
+import type { Chord } from '@/types';
+import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
 
 import Link from 'next/link';
 
@@ -23,6 +26,7 @@ interface SongContentProps {
   bpm?: number | null;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
+  chords?: Chord[];
 }
 
 export default function SongContent({
@@ -40,7 +44,8 @@ export default function SongContent({
   isAuthenticated = false,
   bpm,
   knownChordIds = new Set(),
-  chordNameToIdMap = new Map()
+  chordNameToIdMap = new Map(),
+  chords = []
 }: SongContentProps) {
   if (isEditing) {
     return (
@@ -94,6 +99,7 @@ export default function SongContent({
             fontSize={fontSize}
             knownChordIds={knownChordIds}
             chordNameToIdMap={chordNameToIdMap}
+            chords={chords}
           />
           {bpm && (
             <p className="text-sm text-blue-600 font-medium mt-4">
@@ -614,6 +620,7 @@ interface ChordDiagramsGridProps {
   fontSize: number;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
+  chords?: Chord[]; // Full chord objects from database
 }
 
 // Normalize chord name for comparison
@@ -632,16 +639,55 @@ function normalizeChordName(chord: string): string {
   return normalized;
 }
 
+// Find chord in database by matching song chord name
+function findChordInDatabase(songChordName: string, chords: Chord[]): Chord | null {
+  if (!chords || chords.length === 0) return null;
+  
+  // First try: map nickname to database name and find exact match
+  const dbName = mapChordNicknameToDbName(songChordName);
+  const normalizedDbName = normalizeChordNameForComparison(dbName);
+  
+  for (const chord of chords) {
+    const normalizedChordName = normalizeChordNameForComparison(chord.name);
+    if (normalizedChordName === normalizedDbName) {
+      return chord;
+    }
+  }
+  
+  // Second try: direct match (for chords like "C7", "Dsus4" that match directly)
+  const normalizedSongChord = normalizeChordNameForComparison(songChordName);
+  for (const chord of chords) {
+    const normalizedChordName = normalizeChordNameForComparison(chord.name);
+    if (normalizedChordName === normalizedSongChord) {
+      return chord;
+    }
+  }
+  
+  return null;
+}
+
 function ChordDiagramsGrid({ 
   song, 
   onChordClick, 
   fontSize,
   knownChordIds = new Set(),
-  chordNameToIdMap = new Map()
+  chordNameToIdMap = new Map(),
+  chords = []
 }: ChordDiagramsGridProps) {
-  // Import extractAllChords function
   const { extractAllChords } = require('@/utils/structuredSong');
   const allChords = extractAllChords(song);
+  const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const chordBoxesRef = useRef<Map<string, ChordBox>>(new Map());
+  
+  // Filter out known chords - only show chords the user doesn't know yet
+  const unknownChords = useMemo(() => {
+    return allChords.filter((songChordName: string) => {
+      const normalized = normalizeChordName(songChordName);
+      const chordId = chordNameToIdMap.get(normalized);
+      const isKnown = chordId ? knownChordIds.has(chordId) : false;
+      return !isKnown; // Only keep chords that are NOT known
+    });
+  }, [allChords, chordNameToIdMap, knownChordIds]);
   
   if (allChords.length === 0) {
     return (
@@ -651,39 +697,108 @@ function ChordDiagramsGrid({
     );
   }
   
+  if (unknownChords.length === 0) {
+    return (
+      <div className="text-green-600 text-sm font-medium">
+        ✓ Tous les accords de cette chanson sont déjà connus
+      </div>
+    );
+  }
+  
+  // Render chord diagrams using ChordBox (similar to ChordsClient)
+  // Only render unknown chords
+  useEffect(() => {
+    if (chords.length === 0 || unknownChords.length === 0) return;
+    
+    // Use a small timeout to ensure DOM is ready
+    const timer = setTimeout(() => {
+      unknownChords.forEach((songChordName: string) => {
+        const dbChord = findChordInDatabase(songChordName, chords);
+        if (!dbChord) return; // Skip if chord not found in database
+        
+        const container = chordRefs.current.get(songChordName);
+        if (!container) return;
+        
+        // Clear container
+        container.innerHTML = '';
+        
+        // Remove old ChordBox instance if it exists
+        if (chordBoxesRef.current.has(songChordName)) {
+          chordBoxesRef.current.delete(songChordName);
+        }
+        
+        // Create new ChordBox instance with smaller dimensions for grid display
+        const chordBox = new ChordBox(container, {
+          width: 100,
+          height: 120,
+          defaultColor: '#444',
+          showTuning: true
+        });
+        
+        // Store the ChordBox instance
+        chordBoxesRef.current.set(songChordName, chordBox);
+        
+        // Draw the chord
+        chordBox.draw({
+          chord: dbChord.chordData.chord,
+          position: dbChord.chordData.position,
+          barres: dbChord.chordData.barres,
+          tuning: dbChord.tuning
+        });
+      });
+    }, 0);
+    
+    // Cleanup function
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [unknownChords, chords]);
+  
   return (
     <div>
       <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-4">
-        {allChords.map((chord: string) => {
-          const normalized = normalizeChordName(chord);
-          const chordId = chordNameToIdMap.get(normalized);
-          const isKnown = chordId ? knownChordIds.has(chordId) : false;
+        {unknownChords.map((songChordName: string) => {
+          const dbChord = findChordInDatabase(songChordName, chords);
+          const hasDiagram = dbChord !== null;
+          
           return (
             <button
-              key={chord}
-              onClick={() => onChordClick(chord)}
-              className={`group p-1.5 sm:p-4 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full ${
-                isKnown 
-                  ? 'bg-green-50 border-2 border-green-300' 
-                  : 'bg-white border-2 border-gray-200 hover:border-blue-400'
-              }`}
+              key={songChordName}
+              onClick={() => onChordClick(songChordName)}
+              className="group relative flex flex-col items-center p-1.5 sm:p-3 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full bg-white border-2 border-gray-200 hover:border-blue-400"
             >
-              <div className="text-center w-full">
-                <div 
-                  className={`font-bold w-full text-center ${
-                    isKnown 
-                      ? 'text-green-800 group-hover:text-green-900' 
-                      : 'text-gray-900 group-hover:text-blue-600'
-                  }`}
-                  style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
-                  title={chord}
-                >
-                  {chord}
+              {hasDiagram ? (
+                <>
+                  {/* Chord diagram container */}
+                  <div
+                    ref={(el) => {
+                      if (el) {
+                        chordRefs.current.set(songChordName, el);
+                      }
+                    }}
+                    className="mb-2"
+                  />
+                  {/* Chord name */}
+                  <div 
+                    className="text-xs font-semibold text-center w-full text-gray-900 group-hover:text-blue-600"
+                    style={{ fontSize: `${Math.min(fontSize - 2, 12)}px` }}
+                    title={songChordName}
+                  >
+                    {songChordName}
+                  </div>
+                </>
+              ) : (
+                /* Fallback: text-only if chord not in database */
+                <div className="text-center w-full">
+                  <div 
+                    className="font-bold w-full text-center text-gray-900 group-hover:text-blue-600"
+                    style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
+                    title={songChordName}
+                  >
+                    {songChordName}
+                  </div>
                 </div>
-                {isKnown && (
-                  <div className="text-xs text-green-600 mt-1">✓ Connu</div>
-                )}
-              </div>
+              )}
             </button>
           );
         })}

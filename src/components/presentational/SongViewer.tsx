@@ -1,6 +1,6 @@
 'use client';
 
-import { Song } from '@/types';
+import { Song, Chord } from '@/types';
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
 import React, { RefObject } from 'react';
 import SongHeader from './SongHeader';
@@ -59,6 +59,7 @@ interface SongViewerProps {
   onSetManualBpm?: (bpm: number) => void;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
+  chords?: Chord[];
 }
 
 export default function SongViewer({
@@ -106,7 +107,8 @@ export default function SongViewer({
     easyChordMode,
     onToggleEasyChordMode,
     knownChordIds = new Set(),
-    chordNameToIdMap = new Map()
+    chordNameToIdMap = new Map(),
+    chords = []
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -178,6 +180,7 @@ export default function SongViewer({
             bpm={manualBpm || song.bpm || undefined}
             knownChordIds={knownChordIds}
             chordNameToIdMap={chordNameToIdMap}
+            chords={chords}
           />
         </div>
 
@@ -188,6 +191,7 @@ export default function SongViewer({
             selectedInstrument={selectedInstrument}
             fontSize={fontSize}
             onClose={onCloseChordDiagram}
+            chords={chords}
           />
         )}
       </div>

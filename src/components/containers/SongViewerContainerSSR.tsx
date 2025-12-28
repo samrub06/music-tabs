@@ -1,6 +1,6 @@
 'use client';
 
-import { Song } from '@/types';
+import { Song, Chord } from '@/types';
 import { transposeStructuredSong, renderStructuredSong } from '@/utils/structuredSong';
 import { useRouter } from 'next/navigation';
 import React, { useRef, useEffect, useState } from 'react';
@@ -50,6 +50,7 @@ export default function SongViewerContainerSSR({
   const [playlistTargetKey, setPlaylistTargetKey] = useState<string | null>(null);
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set());
   const [chordNameToIdMap, setChordNameToIdMap] = useState<Map<string, string>>(new Map());
+  const [chords, setChords] = useState<Chord[]>([]);
   
   // Load hasUsedNext from sessionStorage on mount and sync current song index
   // Also check for playlist context and apply automatic transposition
@@ -182,32 +183,38 @@ export default function SongViewerContainerSSR({
   // Load all chords and create name -> ID mapping, then load user's known chords
   useEffect(() => {
     const loadChords = async () => {
-      if (!isAuthenticated) {
-        setKnownChordIds(new Set());
-        setChordNameToIdMap(new Map());
-        return;
-      }
-
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Load all chords to create name -> ID mapping
-          const allChords = await chordService.getAllChords(supabase);
-          const nameToIdMap = new Map<string, string>();
-          allChords.forEach(chord => {
-            const normalized = normalizeChordName(chord.name);
-            nameToIdMap.set(normalized, chord.id);
-          });
-          setChordNameToIdMap(nameToIdMap);
+        // Load all chords (works for both authenticated and non-authenticated users - chords are publicly readable)
+        const allChords = await chordService.getAllChords(supabase);
+        setChords(allChords);
+        
+        if (isAuthenticated) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Create name -> ID mapping
+            const nameToIdMap = new Map<string, string>();
+            allChords.forEach(chord => {
+              const normalized = normalizeChordName(chord.name);
+              nameToIdMap.set(normalized, chord.id);
+            });
+            setChordNameToIdMap(nameToIdMap);
 
-          // Load user's known chord IDs
-          const knownChordIdsArray = await knownChordService.getKnownChordIds(user.id, supabase);
-          setKnownChordIds(new Set(knownChordIdsArray));
+            // Load user's known chord IDs
+            const knownChordIdsArray = await knownChordService.getKnownChordIds(user.id, supabase);
+            setKnownChordIds(new Set(knownChordIdsArray));
+          } else {
+            setKnownChordIds(new Set());
+            setChordNameToIdMap(new Map());
+          }
+        } else {
+          setKnownChordIds(new Set());
+          setChordNameToIdMap(new Map());
         }
       } catch (error) {
         console.error('Error loading chords:', error);
         setKnownChordIds(new Set());
         setChordNameToIdMap(new Map());
+        setChords([]);
       }
     };
 
@@ -393,7 +400,8 @@ export default function SongViewerContainerSSR({
     nextSongInfo: nextSongInfo,
     isAuthenticated,
     knownChordIds,
-    chordNameToIdMap
+    chordNameToIdMap,
+    chords
   };
 
   return <SongViewer {...songViewerProps} />;

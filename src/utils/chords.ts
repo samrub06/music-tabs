@@ -77,6 +77,56 @@ export function parseChord(chord: string): { root: string; quality: string } | n
   };
 }
 
+/**
+ * Map song chord nickname to database chord name
+ * Examples:
+ * - "G" -> "G Major"
+ * - "Am" -> "A Minor"
+ * - "C7" -> "C7"
+ * - "Dsus4" -> "Dsus4"
+ * - "Am7" -> "Am7"
+ */
+export function mapChordNicknameToDbName(chord: string): string {
+  if (!chord) return chord;
+  
+  const parsed = parseChord(chord.trim());
+  if (!parsed) return chord;
+  
+  const { root, quality } = parsed;
+  
+  // If no quality, it's a major chord
+  if (!quality || quality === '') {
+    return `${root} Major`;
+  }
+  
+  // If quality is just "m", it's a minor chord
+  if (quality === 'm' || quality === 'min') {
+    return `${root} Minor`;
+  }
+  
+  // For other qualities (7, sus4, m7, etc.), return as-is
+  // The database stores these directly (e.g., "C7", "Am7", "Dsus4")
+  return chord;
+}
+
+/**
+ * Normalize chord name for comparison (converts to uppercase, handles enharmonics)
+ */
+export function normalizeChordNameForComparison(chord: string): string {
+  if (!chord) return '';
+  let normalized = chord.trim().toUpperCase();
+  const enharmonicMap: { [key: string]: string } = {
+    'C#': 'DB', 'D#': 'EB', 'F#': 'GB', 'G#': 'AB', 'A#': 'BB'
+  };
+  for (const [sharp, flat] of Object.entries(enharmonicMap)) {
+    if (normalized.startsWith(sharp)) {
+      normalized = normalized.replace(sharp, flat);
+      break;
+    }
+  }
+  return normalized;
+}
+
 // Normalize note to use standard notation (no double sharps/flats)
 export function normalizeNote(note: string): string {
   // Convert enharmonic equivalents to standard sharp notation
