@@ -4,8 +4,9 @@ import AddSongForm from '@/components/AddSongForm'
 import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
+import FolderSelectionModal from '@/components/FolderSelectionModal'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -34,6 +35,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [showAddSong, setShowAddSong] = useState(false)
+  const [showFolderModal, setShowFolderModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
@@ -321,22 +323,19 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </div>
         </div>
 
-        {/* Folder Filter */}
+        {/* Folder Filter Button */}
         <div className="mb-4">
-          <div className="inline-flex rounded-md shadow-sm border min-w-[140px] sm:min-w-0">
-            <select
-              value={selectedFolder || ''}
-              onChange={(e) => handleFolderChange(e.target.value || undefined)}
-              className="block w-full py-2.5 sm:py-2 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-            >
-              <option value="">All Folders</option>
-              {folders.map((folder) => (
-                <option key={folder.id} value={folder.id}>
-                  {folder.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <button
+            onClick={() => setShowFolderModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          >
+            <span>
+              {selectedFolder
+                ? folders.find((f) => f.id === selectedFolder)?.name || 'All Folders'
+                : 'All Folders'}
+            </span>
+            <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+          </button>
         </div>
 
         {/* Filtering Tabs - Mobile optimized */}
@@ -507,6 +506,15 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         onClose={() => setError(null)}
         type="error"
         duration={5000}
+      />
+
+      {/* Folder Selection Modal */}
+      <FolderSelectionModal
+        isOpen={showFolderModal}
+        onClose={() => setShowFolderModal(false)}
+        folders={folders}
+        selectedFolderId={selectedFolder}
+        onSelectFolder={handleFolderChange}
       />
     </DndContext>
   )
