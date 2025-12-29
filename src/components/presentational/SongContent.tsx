@@ -689,24 +689,9 @@ function ChordDiagramsGrid({
     });
   }, [allChords, chordNameToIdMap, knownChordIds]);
   
-  if (allChords.length === 0) {
-    return (
-      <div className="text-gray-500 text-sm italic">
-        Aucun accord détecté dans cette chanson
-      </div>
-    );
-  }
-  
-  if (unknownChords.length === 0) {
-    return (
-      <div className="text-green-600 text-sm font-medium">
-        ✓ Tous les accords de cette chanson sont déjà connus
-      </div>
-    );
-  }
-  
   // Render chord diagrams using ChordBox (similar to ChordsClient)
   // Only render unknown chords
+  // NOTE: This hook must be called before any early returns
   useEffect(() => {
     if (chords.length === 0 || unknownChords.length === 0) return;
     

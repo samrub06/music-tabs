@@ -74,7 +74,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       setCurrentFolder(folderFromUrl || null)
     }
     if (sortOrderFromUrl === 'desc' || sortOrderFromUrl === 'asc') {
-      setSortOrder(sortOrderFromUrl)
+      setSortDirection(sortOrderFromUrl)
     }
   }, [searchParams])
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
@@ -235,7 +235,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
 
   const handleSortOrderChange = (order: 'asc' | 'desc') => {
-    setSortOrder(order)
+    setSortDirection(order)
     applyQuery({ sortOrder: order, page: 1 })
   }
 
