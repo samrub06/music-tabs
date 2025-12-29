@@ -7,7 +7,7 @@ import Pagination from '@/components/Pagination'
 import FolderSelectionModal from '@/components/FolderSelectionModal'
 import SortSelectionModal, { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -43,6 +43,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [isSelectMode, setIsSelectMode] = useState(false)
 
   // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
@@ -238,6 +239,11 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     applyQuery({ sortOrder: order, page: 1 })
   }
 
+  // Toggle select mode
+  const toggleSelectMode = () => {
+    setIsSelectMode(prev => !prev)
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -350,6 +356,28 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 <ChevronDownIcon className="h-4 w-4 text-gray-600" />
               )}
             </button>
+
+            {/* Select Mode Button */}
+            <button
+              onClick={toggleSelectMode}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium rounded-md border transition-colors ${
+                isSelectMode
+                  ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+              title={isSelectMode ? 'Exit Select Mode' : 'Enter Select Mode'}
+            >
+              {isSelectMode ? (
+                <div className="h-4 w-4 border-2 border-white rounded flex items-center justify-center">
+                  <CheckIcon className="h-3 w-3 text-white" />
+                </div>
+              ) : (
+                <div className="h-4 w-4 border-2 border-gray-400 rounded" />
+              )}
+              <span className="hidden sm:inline">
+                {isSelectMode ? 'Select Mode' : 'Select'}
+              </span>
+            </button>
           </div>
         </div>
 
@@ -412,6 +440,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   setSortField(field)
                   setSortDirection(direction)
                 }}
+                isSelectMode={isSelectMode}
+                onToggleSelectMode={toggleSelectMode}
               />
               <div className="hidden sm:block">
                 <Pagination page={page} limit={limit} total={total} />

@@ -41,6 +41,9 @@ interface SongTableProps {
   sortField?: SortField;
   sortDirection?: SortDirection;
   onSortChange?: (field: SortField, direction: SortDirection) => void;
+  // Select mode props
+  isSelectMode?: boolean;
+  onToggleSelectMode?: () => void;
 }
 
 export default function SongTable({
@@ -58,7 +61,9 @@ export default function SongTable({
   onUpdateSong,
   sortField: externalSortField,
   sortDirection: externalSortDirection,
-  onSortChange
+  onSortChange,
+  isSelectMode: externalIsSelectMode,
+  onToggleSelectMode: externalOnToggleSelectMode
 }: SongTableProps) {
   const { t } = useLanguage();
   
@@ -76,6 +81,9 @@ export default function SongTable({
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'viewCount', 'folder']);
+  
+  // Use external select mode if provided, otherwise default to false
+  const isSelectMode = externalIsSelectMode ?? false;
   
   // Ensure 'title' is always in visibleColumns (required column)
   useEffect(() => {
@@ -313,6 +321,13 @@ export default function SongTable({
     setDeleteType(null);
   };
 
+  // Clear selected songs when select mode is turned off
+  useEffect(() => {
+    if (!isSelectMode) {
+      setSelectedSongs(new Set());
+    }
+  }, [isSelectMode]);
+
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
@@ -345,54 +360,33 @@ export default function SongTable({
 
   return (
     <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-      {/* Filter Bar */}
-      <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex flex-col gap-2 sm:gap-0 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-            <SongTableHeader
-              sortedSongsCount={sortedSongs.length}
-              selectedCount={selectedSongs.size}
-              currentFolder={currentFolder}
-              searchQuery={searchQuery}
-              getFolderName={getFolderName}
-              showDeleteAll={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
-              onCancelSelection={() => setSelectedSongs(new Set())}
-              onDeleteSelected={() => handleBulkDelete('selected')}
-              onDeleteAll={() => handleBulkDelete('all')}
-              onMoveToFolder={selectedSongs.size > 0 ? () => setShowMoveModal(true) : undefined}
-              t={t}
-            />
-          </div>
-          
-          {/* Mobile Controls - Clean Style */}
-          <div className="flex flex-wrap gap-1 sm:hidden">
-            {/* Column Config - Hidden on mobile */}
-            <div className="hidden sm:block">
-              <ColumnConfig 
-                visibleColumns={visibleColumns}
-                onToggleColumn={handleToggleColumn}
-              />
-            </div>
-          </div>
-
-          {/* Desktop Controls */}
-          <div className="hidden sm:flex items-center gap-3">
-            
-            {/* Column Configuration */}
-            <ColumnConfig 
-              visibleColumns={visibleColumns}
-              onToggleColumn={handleToggleColumn}
-            />
-          </div>
+      {/* Show bulk actions when songs are selected */}
+      {selectedSongs.size > 0 && (
+        <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 bg-gray-50">
+          <SongTableHeader
+            sortedSongsCount={sortedSongs.length}
+            selectedCount={selectedSongs.size}
+            currentFolder={currentFolder}
+            searchQuery={searchQuery}
+            getFolderName={getFolderName}
+            showDeleteAll={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
+            onCancelSelection={() => setSelectedSongs(new Set())}
+            onDeleteSelected={() => handleBulkDelete('selected')}
+            onDeleteAll={() => handleBulkDelete('all')}
+            onMoveToFolder={selectedSongs.size > 0 ? () => setShowMoveModal(true) : undefined}
+            isSelectMode={isSelectMode}
+            onToggleSelectMode={externalOnToggleSelectMode || (() => {})}
+            t={t}
+          />
         </div>
-      </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {/* Checkbox column - Only show if user is logged in */}
-              {hasUser && (
+              {/* Checkbox column - Only show if user is logged in and select mode is active */}
+              {hasUser && isSelectMode && (
                 <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 sm:w-12">
                   <input
                     type="checkbox"
@@ -476,6 +470,7 @@ export default function SongTable({
                   onSelect={(checked) => handleSelectSong(song.id, checked)}
                   onFolderChange={handleFolderChange}
                   hasUser={hasUser}
+                  isSelectMode={isSelectMode}
                   t={t}
                 />
               ))

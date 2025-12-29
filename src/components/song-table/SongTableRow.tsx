@@ -16,6 +16,7 @@ interface SongTableRowProps {
   onSelect: (checked: boolean) => void
   onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>
   hasUser: boolean
+  isSelectMode: boolean
   t: (key: string) => string
 }
 
@@ -28,6 +29,7 @@ export default function SongTableRow({
   onSelect,
   onFolderChange,
   hasUser,
+  isSelectMode,
   t
 }: SongTableRowProps) {
   const router = useRouter()
@@ -82,8 +84,8 @@ export default function SongTableRow({
       onClick={handleSongClick}
       className={`hover:bg-gray-50 cursor-pointer transition-colors ${isDragging ? 'z-50 opacity-50' : ''}`}
     >
-      {/* Checkbox column */}
-      {hasUser && (
+      {/* Checkbox column - Only show if user is logged in and select mode is active */}
+      {hasUser && isSelectMode && (
         <td 
           className="px-2 sm:px-4 py-2"
           onClick={(e) => e.stopPropagation()}

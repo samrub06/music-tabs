@@ -1,5 +1,7 @@
 'use client'
 
+import { CheckIcon } from '@heroicons/react/24/outline'
+
 interface SongTableHeaderProps {
   sortedSongsCount: number
   selectedCount: number
@@ -11,6 +13,8 @@ interface SongTableHeaderProps {
   onDeleteSelected: () => void
   onDeleteAll: () => void
   onMoveToFolder?: () => void
+  isSelectMode: boolean
+  onToggleSelectMode: () => void
   t: (key: string) => string
 }
 
@@ -25,6 +29,8 @@ export default function SongTableHeader({
   onDeleteSelected,
   onDeleteAll,
   onMoveToFolder,
+  isSelectMode,
+  onToggleSelectMode,
   t
 }: SongTableHeaderProps) {
   return (
@@ -45,6 +51,8 @@ export default function SongTableHeader({
           currentFolder={currentFolder}
           searchQuery={searchQuery}
           getFolderName={getFolderName}
+          isSelectMode={isSelectMode}
+          onToggleSelectMode={onToggleSelectMode}
           t={t}
         />
       )}
@@ -96,9 +104,9 @@ function BulkActions({ selectedCount, showDeleteAll, onCancelSelection, onDelete
   )
 }
 
-function SongCountDisplay({ count, currentFolder, searchQuery, getFolderName, t }: any) {
+function SongCountDisplay({ count, currentFolder, searchQuery, getFolderName, isSelectMode, onToggleSelectMode, t }: any) {
   return (
-    <div className="flex items-center space-x-2 flex-wrap">
+    <div className="flex items-center space-x-2 flex-wrap gap-2">
       <span className="text-sm font-medium text-gray-700">
         {count} {count !== 1 ? t('songs.songCountPlural') : t('songs.songCount')}
       </span>
@@ -112,6 +120,26 @@ function SongCountDisplay({ count, currentFolder, searchQuery, getFolderName, t 
           &ldquo;{searchQuery}&rdquo;
         </span>
       )}
+      <button
+        onClick={onToggleSelectMode}
+        className={`inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
+          isSelectMode
+            ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+        }`}
+        title={isSelectMode ? 'Exit Select Mode' : 'Enter Select Mode'}
+      >
+        {isSelectMode ? (
+          <div className="h-5 w-5 border-2 border-blue-600 rounded bg-blue-600 flex items-center justify-center">
+            <CheckIcon className="h-3 w-3 text-white" />
+          </div>
+        ) : (
+          <div className="h-5 w-5 border-2 border-gray-400 rounded" />
+        )}
+        <span className="ml-2 hidden sm:inline">
+          {isSelectMode ? 'Select Mode' : 'Select'}
+        </span>
+      </button>
     </div>
   )
 }
