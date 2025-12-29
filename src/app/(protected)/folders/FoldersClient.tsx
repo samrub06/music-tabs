@@ -141,7 +141,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
-  const [view, setView] = useState<'grid' | 'table'>('grid')
+  const [view, setView] = useState<'grid' | 'table'>('table')
   const [searchQuery, setSearchQuery] = useState('')
 
   const sensors = useSensors(
@@ -269,14 +269,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Dossiers
-            </h1>
-            <p className="text-sm text-gray-600">
-              Organisez vos dossiers par glisser-déposer
-            </p>
-          </div>
           {/* Add Folder Button and View Toggle */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* View Toggle */}
