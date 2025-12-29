@@ -261,108 +261,81 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragEnd={handleDragEnd}
     >
       <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-        {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Songs
-            </h1>
-          </div>
+        {/* Top Row: Add Song Button + View Toggle */}
+        <div className="mb-4 flex items-center justify-between gap-2">
           {/* Add Song Button */}
-          <div className="flex-shrink-0">
+          <button
+            onClick={() => setShowAddSong(true)}
+            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
+            <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
+            <span className="hidden sm:inline">{t('songs.addNew')}</span>
+          </button>
+
+          {/* View toggle */}
+          <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
             <button
-              onClick={() => setShowAddSong(true)}
-              className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className={`px-3 sm:px-3 py-2 sm:py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+              title="Gallery View"
             >
-              <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
-              <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
-              <span className="hidden sm:inline">{t('songs.addNew')}</span>
+              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+            <button
+              className={`px-3 sm:px-3 py-2 sm:py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+              onClick={() => applyQuery({ view: 'table', page: 1 })}
+              title="Table View"
+            >
+              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-            {/* Search Bar - Full width on mobile, flexible on desktop */}
-            <div className="w-full sm:flex-1 sm:min-w-0 sm:max-w-2xl">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  placeholder={t('songs.search')}
-                  value={localSearchValue}
-                  onChange={(e) => setLocalSearchValue(e.target.value)}
-                  className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                />
-                {localSearchValue && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setLocalSearchValue('')
-                      setSearchQuery('')
-                    }}
-                    className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    type="button"
-                  >
-                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-                )}
-              </div>
+        {/* Search Bar - Full width */}
+        <div className="mb-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
+            <input
+              type="text"
+              placeholder={t('songs.search')}
+              value={localSearchValue}
+              onChange={(e) => setLocalSearchValue(e.target.value)}
+              className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+            {localSearchValue && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setLocalSearchValue('')
+                  setSearchQuery('')
+                }}
+                className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                type="button"
+              >
+                <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            )}
+          </div>
+        </div>
 
-            {/* Controls Row - Wrap to second line on mobile */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              {/* Folder Filter */}
-              <div className="inline-flex rounded-md shadow-sm border min-w-[140px] sm:min-w-0">
-                <select
-                  value={selectedFolder || ''}
-                  onChange={(e) => handleFolderChange(e.target.value || undefined)}
-                  className="block w-full py-2.5 sm:py-2 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">All Folders</option>
-                  {folders.map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Limit selector */}
-              <div className="inline-flex rounded-md shadow-sm border">
-                <select
-                  value={limit}
-                  onChange={(e) => applyQuery({ limit: Number(e.target.value), page: 1 })}
-                  className="block w-full py-2.5 sm:py-2 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={10000}>All</option>
-                </select>
-              </div>
-
-              {/* View toggle */}
-              <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
-                <button
-                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                  onClick={() => applyQuery({ view: 'gallery', page: 1 })}
-                  title="Gallery View"
-                >
-                  <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-                <button
-                  className={`px-3 sm:px-3 py-2.5 sm:py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                  onClick={() => applyQuery({ view: 'table', page: 1 })}
-                  title="Table View"
-                >
-                  <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-              </div>
-            </div>
+        {/* Folder Filter */}
+        <div className="mb-4">
+          <div className="inline-flex rounded-md shadow-sm border min-w-[140px] sm:min-w-0">
+            <select
+              value={selectedFolder || ''}
+              onChange={(e) => handleFolderChange(e.target.value || undefined)}
+              className="block w-full py-2.5 sm:py-2 pl-3 sm:pl-3 pr-8 sm:pr-8 text-sm border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="">All Folders</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

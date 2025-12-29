@@ -19,8 +19,8 @@ export default async function SongsPage({ searchParams }: { searchParams: Promis
 
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
-  const limit = Math.max(1, parseInt(params?.limit || '50', 10))
-  const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
+  const limit = Math.max(1, parseInt(params?.limit || '10000', 10)) // Default to show all
+  const view = (params?.view === 'table' ? 'table' : 'table') as 'gallery' | 'table' // Default to table
   const q = params?.searchQuery || ''
   const songId = params?.songId || undefined
   const folder = params?.folder || undefined

@@ -51,7 +51,7 @@ export default function LibraryLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header onMenuClick={() => {}} />
+      <Header onMenuClick={() => {}} pageTitle="Library" />
       
       <div className="flex-1 flex overflow-hidden">
         {/* Only show sidebar if user is authenticated - Desktop only */}

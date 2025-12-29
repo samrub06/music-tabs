@@ -10,9 +10,10 @@ import PlaylistImporter from './PlaylistImporter';
 
 interface HeaderProps {
   onMenuClick?: () => void;
+  pageTitle?: string;
 }
 
-export default function Header({ onMenuClick }: HeaderProps) {
+export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
@@ -61,7 +62,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
+    <header className="bg-transparent lg:bg-white lg:shadow-sm border-0 lg:border-b border-gray-200 flex-shrink-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 ">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Left side: Mobile menu button + Navigation */}
@@ -125,10 +126,17 @@ export default function Header({ onMenuClick }: HeaderProps) {
             )}
           </div>
           
-          {/* Logo - Centered */}
+          {/* Page Title - Mobile only, left-aligned */}
+          {pageTitle && (
+            <div className="lg:hidden flex-1">
+              <h1 className="text-lg font-semibold text-gray-900 text-left">{pageTitle}</h1>
+            </div>
+          )}
+          
+          {/* Logo - Desktop only */}
           <button 
             onClick={handleLogoClick}
-            className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
+            className="hidden lg:flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
             aria-label={t('common.backToHome')}
           >
             <span className="text-xl md:text-2xl">🌶️</span>

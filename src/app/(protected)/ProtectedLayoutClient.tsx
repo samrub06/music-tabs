@@ -7,7 +7,7 @@ import { AuthProvider, useAuthContext } from '@/context/AuthContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { SidebarProvider } from '@/context/SidebarContext'
 import { Inter } from 'next/font/google'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { folderRepo } from '@/lib/services/folderRepo'
@@ -71,7 +71,7 @@ function SidebarWrapper() {
             setCurrentFolder(folderId)
             router.refresh()
           }}
-          onClose={() => setSidebarOpen(false)}
+          onClose={() => {}}
           onMoveSong={updateSongFolderAction}
         />
       </div>
@@ -81,10 +81,36 @@ function SidebarWrapper() {
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user } = useAuthContext()
+  const pathname = usePathname()
+
+  // Map pathname to page title
+  const getPageTitle = (path: string): string | undefined => {
+    if (path.startsWith('/song/')) {
+      return undefined // No title for song pages
+    }
+    if (path === '/songs' || path.startsWith('/songs/')) {
+      return 'Songs'
+    }
+    if (path === '/folders' || path.startsWith('/folders/')) {
+      return 'Folders'
+    }
+    if (path === '/chords' || path.startsWith('/chords/')) {
+      return 'Chords'
+    }
+    if (path === '/dashboard' || path.startsWith('/dashboard/')) {
+      return 'Dashboard'
+    }
+    if (path === '/playlist' || path.startsWith('/playlist/')) {
+      return 'Playlist'
+    }
+    return undefined
+  }
+
+  const pageTitle = getPageTitle(pathname)
 
   return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-          <Header onMenuClick={() => {}} />
+          <Header onMenuClick={() => {}} pageTitle={pageTitle} />
 
       <div className="flex-1 flex overflow-hidden">
         {user && <SidebarWrapper />}
