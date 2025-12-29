@@ -80,7 +80,7 @@ function SidebarWrapper() {
 }
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthContext()
+  const { user, loading: authLoading } = useAuthContext()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -89,10 +89,17 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   
   // Redirect non-authenticated users from protected routes (except /library)
   useEffect(() => {
-    if (!user && !isLibraryRoute) {
+    // Don't redirect while auth is loading
+    if (authLoading) return
+    
+    // Don't redirect if already on home page or library route
+    if (pathname === '/' || isLibraryRoute) return
+    
+    // Redirect non-authenticated users from protected routes
+    if (!user) {
       router.push('/')
     }
-  }, [user, isLibraryRoute, router])
+  }, [user, authLoading, pathname, isLibraryRoute]) // Removed router from dependencies as it's stable
 
   // Map pathname to page title
   const getPageTitle = (path: string): string | undefined => {
