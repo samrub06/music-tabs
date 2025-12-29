@@ -37,6 +37,10 @@ interface SongTableProps {
   onDeleteAllSongs: () => Promise<void>;
   onCurrentFolderChange?: (folderId: string | null) => void;
   onUpdateSong?: (id: string, updates: any) => Promise<any>;
+  // External sort state (optional - for backward compatibility)
+  sortField?: SortField;
+  sortDirection?: SortDirection;
+  onSortChange?: (field: SortField, direction: SortDirection) => void;
 }
 
 export default function SongTable({
@@ -51,12 +55,19 @@ export default function SongTable({
   onDeleteSongs,
   onDeleteAllSongs,
   onCurrentFolderChange,
-  onUpdateSong
+  onUpdateSong,
+  sortField: externalSortField,
+  sortDirection: externalSortDirection,
+  onSortChange
 }: SongTableProps) {
   const { t } = useLanguage();
   
-  const [sortField, setSortField] = useState<SortField>('title');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  // Use external sort state if provided, otherwise use internal state
+  const [internalSortField, setInternalSortField] = useState<SortField>('title');
+  const [internalSortDirection, setInternalSortDirection] = useState<SortDirection>('asc');
+  
+  const sortField = externalSortField ?? internalSortField;
+  const sortDirection = externalSortDirection ?? internalSortDirection;
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
@@ -75,23 +86,7 @@ export default function SongTable({
       return prev;
     });
   }, []);
-  const [showMobileSort, setShowMobileSort] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const sortDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
-        setShowMobileSort(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   // Filter songs based on search query and folder/playlist
   const filteredSongs = useMemo(() => {
@@ -189,11 +184,21 @@ export default function SongTable({
   }, [filteredSongs, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    if (onSortChange) {
+      // Use external sort handler
+      if (sortField === field) {
+        onSortChange(field, sortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        onSortChange(field, 'asc');
+      }
     } else {
-      setSortField(field);
-      setSortDirection('asc');
+      // Use internal sort state
+      if (sortField === field) {
+        setInternalSortDirection(internalSortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        setInternalSortField(field);
+        setInternalSortDirection('asc');
+      }
     }
   };
 
@@ -361,34 +366,6 @@ export default function SongTable({
           
           {/* Mobile Controls - Clean Style */}
           <div className="flex flex-wrap gap-1 sm:hidden">
-            {/* Sort Button */}
-            <button
-              onClick={() => setShowMobileSort(!showMobileSort)}
-              className="px-3 py-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all"
-            >
-              Trier
-            </button>
-
-            {/* Sort Direction Button */}
-            {(() => {
-              const currentSortOption = sortOptions.find(opt => opt.field === sortField);
-              return (
-                <button
-                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                  className="px-3 py-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center gap-1.5"
-                  title={`Trier ${sortDirection === 'asc' ? 'croissant' : 'décroissant'}`}
-                >
-                  <span>{currentSortOption?.icon || '📝'}</span>
-                  <span className="truncate max-w-[60px]">{currentSortOption?.label || 'Titre'}</span>
-                  {sortDirection === 'asc' ? (
-                    <ChevronUpIcon className="h-4 w-4 flex-shrink-0" />
-                  ) : (
-                    <ChevronDownIcon className="h-4 w-4 flex-shrink-0" />
-                  )}
-                </button>
-              );
-            })()}
-
             {/* Column Config - Hidden on mobile */}
             <div className="hidden sm:block">
               <ColumnConfig 
@@ -397,37 +374,6 @@ export default function SongTable({
               />
             </div>
           </div>
-
-          {/* Mobile Dropdowns */}
-          {showMobileSort && (
-            <div className="sm:hidden mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-lg z-50 relative">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Trier par</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.field}
-                    onClick={() => {
-                      handleSort(option.field);
-                      setShowMobileSort(false);
-                    }}
-                    className={`px-3 py-2 text-sm font-medium rounded-md border transition-all flex items-center space-x-2 ${
-                      sortField === option.field
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span>{option.icon}</span>
-                    <span className="truncate">{option.label}</span>
-                    {sortField === option.field && (
-                      sortDirection === 'asc' ? 
-                        <ChevronUpIcon className="h-4 w-4 ml-auto" /> : 
-                        <ChevronDownIcon className="h-4 w-4 ml-auto" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Desktop Controls */}
           <div className="hidden sm:flex items-center gap-3">

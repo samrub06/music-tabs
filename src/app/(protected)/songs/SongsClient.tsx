@@ -5,6 +5,7 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import FolderSelectionModal from '@/components/FolderSelectionModal'
+import SortSelectionModal, { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
@@ -36,10 +37,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const pathname = usePathname()
   const [showAddSong, setShowAddSong] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
+  const [showSortModal, setShowSortModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(initialSortOrder)
+  const [sortField, setSortField] = useState<SortField>('title')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
@@ -171,33 +174,11 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         return viewCountB - viewCountA
       })
     } else {
-      // All tab: Sort by folder displayOrder, then by folder name
+      // All tab: Default sort by title (SongTable will handle its own sorting for table view)
       sorted.sort((a, b) => {
-        const folderA = folders.find(f => f.id === a.folderId)
-        const folderB = folders.find(f => f.id === b.folderId)
-        
-        // Get displayOrder (use Infinity if no folder or no displayOrder)
-        const orderA = folderA?.displayOrder ?? Infinity
-        const orderB = folderB?.displayOrder ?? Infinity
-        
-        // If both have displayOrder, sort by it
-        if (orderA !== Infinity && orderB !== Infinity) {
-          if (sortOrder === 'asc') {
-            return orderA - orderB
-          } else {
-            return orderB - orderA
-          }
-        }
-        
-        // Fallback to folder name comparison
-        const nameA = folderA?.name || ''
-        const nameB = folderB?.name || ''
-        
-        if (sortOrder === 'asc') {
-          return nameA.localeCompare(nameB)
-        } else {
-          return nameB.localeCompare(nameA)
-        }
+        const titleA = (a.title || '').toLowerCase()
+        const titleB = (b.title || '').toLowerCase()
+        return titleA.localeCompare(titleB)
       })
     }
 
@@ -219,7 +200,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
 
     return sorted
-  }, [filteredSongs, folders, sortOrder, searchQuery, activeTab])
+  }, [filteredSongs, folders, searchQuery, activeTab])
 
   const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -323,8 +304,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </div>
         </div>
 
-        {/* Folder Filter Button */}
-        <div className="mb-4">
+        {/* Folder Filter Button and Sort Button */}
+        <div className="mb-4 flex items-center gap-2">
           <button
             onClick={() => setShowFolderModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -333,6 +314,25 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               {selectedFolder
                 ? folders.find((f) => f.id === selectedFolder)?.name || 'All Folders'
                 : 'All Folders'}
+            </span>
+            <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+          </button>
+
+          <button
+            onClick={() => setShowSortModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          >
+            <span>
+              {sortField === 'title' && 'Titre'}
+              {sortField === 'author' && 'Artiste'}
+              {sortField === 'key' && 'Tonalité'}
+              {sortField === 'rating' && 'Note'}
+              {sortField === 'reviews' && 'Avis'}
+              {sortField === 'difficulty' && 'Difficulté'}
+              {sortField === 'version' && 'Version'}
+              {sortField === 'viewCount' && 'Vues'}
+              {sortField === 'updatedAt' && 'Modifié'}
+              {sortField === 'createdAt' && 'Date'}
             </span>
             <ChevronDownIcon className="h-4 w-4 text-gray-400" />
           </button>
@@ -391,6 +391,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   handleFolderChange(folderId || undefined)
                 }}
                 onUpdateSong={updateSongAction}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortChange={(field, direction) => {
+                  setSortField(field)
+                  setSortDirection(direction)
+                }}
               />
               <div className="hidden sm:block">
                 <Pagination page={page} limit={limit} total={total} />
@@ -515,6 +521,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         folders={folders}
         selectedFolderId={selectedFolder}
         onSelectFolder={handleFolderChange}
+      />
+
+      {/* Sort Selection Modal */}
+      <SortSelectionModal
+        isOpen={showSortModal}
+        onClose={() => setShowSortModal(false)}
+        selectedSortField={sortField}
+        selectedSortDirection={sortDirection}
+        onSelectSort={(field, direction) => {
+          setSortField(field)
+          setSortDirection(direction)
+        }}
       />
     </DndContext>
   )
