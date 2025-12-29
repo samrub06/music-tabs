@@ -102,9 +102,9 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex-shrink-0">Bibliothèque</h1>
           
           {/* Search and View Controls */}
-          <div className="flex flex-row items-center gap-2 sm:gap-2">
+          <div className="flex flex-row items-center gap-2 sm:gap-2 w-full sm:w-auto">
             {/* Search Bar */}
-            <div className="relative flex-1 sm:flex-initial sm:max-w-xs min-w-[180px]">
+            <div className="relative flex-1 sm:flex-initial sm:max-w-xs min-w-0 w-full sm:min-w-[180px]">
               <input
                 type="text"
                 value={localSearchValue}
