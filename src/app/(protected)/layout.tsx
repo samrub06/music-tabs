@@ -1,18 +1,10 @@
-import { redirect } from 'next/navigation'
 import { ReactNode } from 'react'
-import { createSafeServerClient } from '@/lib/supabase/server'
 import ProtectedLayoutClient from './ProtectedLayoutClient'
 
 export default async function ProtectedLayout({ children }: { children: ReactNode }) {
-  const supabase = await createSafeServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  // Redirect to login or home if not authenticated
-  if (!user) {
-    redirect('/')
-  }
-  
-  // Render the client layout with the UI
+  // No server-side redirect - let ProtectedLayoutClient handle authentication
+  // This allows /library to be accessible without auth while other routes are protected
+  // The client component will handle redirects for non-authenticated users on protected routes
   return <ProtectedLayoutClient>{children}</ProtectedLayoutClient>
 }
 

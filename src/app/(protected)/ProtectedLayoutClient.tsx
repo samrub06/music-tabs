@@ -82,11 +82,25 @@ function SidebarWrapper() {
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user } = useAuthContext()
   const pathname = usePathname()
+  const router = useRouter()
+
+  // Check if this is a library route (allowed without auth)
+  const isLibraryRoute = pathname === '/library' || pathname.startsWith('/library/')
+  
+  // Redirect non-authenticated users from protected routes (except /library)
+  useEffect(() => {
+    if (!user && !isLibraryRoute) {
+      router.push('/')
+    }
+  }, [user, isLibraryRoute, router])
 
   // Map pathname to page title
   const getPageTitle = (path: string): string | undefined => {
     if (path.startsWith('/song/')) {
       return undefined // No title for song pages
+    }
+    if (path === '/library' || path.startsWith('/library/')) {
+      return 'Library'
     }
     if (path === '/songs' || path.startsWith('/songs/')) {
       return 'Songs'
