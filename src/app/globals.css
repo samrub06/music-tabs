@@ -36,4 +36,8 @@
     max-width: 100%;
     overflow: hidden;
   }
+  
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

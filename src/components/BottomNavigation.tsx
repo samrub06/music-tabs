@@ -1,0 +1,87 @@
+'use client';
+
+import { useAuthContext } from '@/context/AuthContext';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { 
+  GlobeAltIcon, 
+  RectangleStackIcon, 
+  FolderIcon, 
+  MusicalNoteIcon 
+} from '@heroicons/react/24/outline';
+import { 
+  GlobeAltIcon as GlobeAltIconSolid, 
+  RectangleStackIcon as RectangleStackIconSolid, 
+  FolderIcon as FolderIconSolid, 
+  MusicalNoteIcon as MusicalNoteIconSolid 
+} from '@heroicons/react/24/solid';
+
+export default function BottomNavigation() {
+  const pathname = usePathname();
+  const { user } = useAuthContext();
+
+  // Only show for authenticated users
+  if (!user) {
+    return null;
+  }
+
+  const navItems = [
+    {
+      href: '/library',
+      label: 'Library',
+      icon: GlobeAltIcon,
+      iconSolid: GlobeAltIconSolid,
+      isActive: pathname === '/library' || pathname.startsWith('/library/'),
+    },
+    {
+      href: '/songs',
+      label: 'Songs',
+      icon: RectangleStackIcon,
+      iconSolid: RectangleStackIconSolid,
+      isActive: pathname === '/songs' || pathname.startsWith('/songs/'),
+    },
+    {
+      href: '/folders',
+      label: 'Folders',
+      icon: FolderIcon,
+      iconSolid: FolderIconSolid,
+      isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
+    },
+    {
+      href: '/chords',
+      label: 'Chords',
+      icon: MusicalNoteIcon,
+      iconSolid: MusicalNoteIconSolid,
+      isActive: pathname === '/chords' || pathname.startsWith('/chords/'),
+    },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 lg:hidden safe-area-inset-bottom">
+      <div className="flex items-center justify-around h-16 px-2">
+        {navItems.map((item) => {
+          const IconComponent = item.isActive ? item.iconSolid : item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center flex-1 min-w-0 px-2 py-1 rounded-lg transition-colors ${
+                item.isActive
+                  ? 'text-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <IconComponent className="h-6 w-6 flex-shrink-0" />
+              <span className={`text-xs mt-0.5 truncate w-full text-center ${
+                item.isActive ? 'font-semibold' : 'font-medium'
+              }`}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+

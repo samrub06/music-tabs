@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header'
 import DashboardSidebar from '@/components/DashboardSidebar'
+import BottomNavigation from '@/components/BottomNavigation'
 import { AuthProvider, useAuthContext } from '@/context/AuthContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
@@ -114,10 +115,13 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         {user && <SidebarWrapper />}
         
         {/* Main content */}
-          <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden pb-16 lg:pb-0">
             {children}
         </div>
           </div>
+          
+          {/* Bottom Navigation - Mobile only */}
+          <BottomNavigation />
         </div>
   )
 }

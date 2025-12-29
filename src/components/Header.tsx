@@ -77,41 +77,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </button>
             )}
 
-            {/* Mobile icon navigation - Always visible on mobile */}
-            <nav className="flex md:hidden items-center">
-              <Link
-                href="/library"
-                className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-              >
-                <GlobeAltIcon className="h-6 w-6" />
-                <span className="sr-only">Library</span>
-              </Link>
-              {user && (
-                <>
-                  <Link
-                    href="/songs"
-                    className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                  >
-                    <RectangleStackIcon className="h-6 w-6" />
-                    <span className="sr-only">Songs</span>
-                  </Link>
-                  <Link
-                    href="/folders"
-                    className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                  >
-                    <FolderIcon className="h-6 w-6" />
-                    <span className="sr-only">Folders</span>
-                  </Link>
-                  <Link
-                    href="/chords"
-                    className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-                  >
-                    <MusicalNoteIcon className="h-6 w-6" />
-                    <span className="sr-only">Chords</span>
-                  </Link>
-                </>
-              )}
-            </nav>
+            {/* Mobile icon navigation - Hidden for authenticated users (replaced by bottom nav) */}
+            {!user && (
+              <nav className="flex md:hidden items-center">
+                <Link
+                  href="/library"
+                  className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <GlobeAltIcon className="h-6 w-6" />
+                  <span className="sr-only">Library</span>
+                </Link>
+              </nav>
+            )}
             
             {/* Authenticated navigation - Desktop */}
             {user && (
