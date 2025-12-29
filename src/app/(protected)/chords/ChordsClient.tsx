@@ -224,16 +224,11 @@ export default function ChordsClient({
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <div className="mb-4">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Guitar Chord Reference</h1>
-            <p className="text-gray-600">Comprehensive guide to guitar chords</p>
-          </div>
-          
+        <div className="mb-6">
           {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            {/* Search Input - Full width on mobile */}
+            <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
               </div>
@@ -246,28 +241,31 @@ export default function ChordsClient({
               />
             </div>
 
-            {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Tous les accords</option>
-              <option value="to-learn">À apprendre</option>
-              <option value="known">Déjà connus</option>
-            </select>
+            {/* Status and Difficulty Filters - Side by side on mobile, in row on desktop */}
+            <div className="flex gap-3 sm:gap-4">
+              {/* Status Filter */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+                className="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Tous les accords</option>
+                <option value="to-learn">À apprendre</option>
+                <option value="known">Déjà connus</option>
+              </select>
 
-            {/* Difficulty Filter */}
-            <select
-              value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value as DifficultyFilter)}
-              className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">Toutes difficultés</option>
-              <option value="beginner">Débutant</option>
-              <option value="intermediate">Intermédiaire</option>
-              <option value="advanced">Avancé</option>
-            </select>
+              {/* Difficulty Filter */}
+              <select
+                value={difficultyFilter}
+                onChange={(e) => setDifficultyFilter(e.target.value as DifficultyFilter)}
+                className="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Toutes difficultés</option>
+                <option value="beginner">Débutant</option>
+                <option value="intermediate">Intermédiaire</option>
+                <option value="advanced">Avancé</option>
+              </select>
+            </div>
           </div>
         </div>
 

@@ -91,9 +91,9 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               </nav>
             )}
             
-            {/* Authenticated navigation - Desktop */}
+            {/* Authenticated navigation - Desktop only (tablets use bottom nav) */}
             {user && (
-              <nav className="hidden md:flex items-center space-x-2">
+              <nav className="hidden lg:flex items-center space-x-2">
                  <Link
                   href="/library"
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
