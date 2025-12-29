@@ -5,7 +5,7 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -72,6 +72,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
   }, [searchParams])
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>('all')
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
   
   // Drag and Drop state
@@ -147,11 +148,58 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return filtered
   }, [songs, currentFolder])
 
-  // Sort filtered songs by folder and filter by search query and easy chords
+  // Sort filtered songs by folder and filter by search query and tab filter
   const sortedSongs = useMemo(() => {
     let sorted = [...filteredSongs]
 
-    // Filter by search query
+    // Apply tab-based filtering
+    if (activeTab === 'recent') {
+      // Sort by createdAt descending (most recent first)
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateB - dateA
+      })
+    } else if (activeTab === 'popular') {
+      // Filter songs with viewCount > 0 and sort by viewCount descending
+      sorted = sorted.filter(song => song.viewCount && song.viewCount > 0)
+      sorted.sort((a, b) => {
+        const viewCountA = a.viewCount || 0
+        const viewCountB = b.viewCount || 0
+        return viewCountB - viewCountA
+      })
+    } else {
+      // All tab: Sort by folder displayOrder, then by folder name
+      sorted.sort((a, b) => {
+        const folderA = folders.find(f => f.id === a.folderId)
+        const folderB = folders.find(f => f.id === b.folderId)
+        
+        // Get displayOrder (use Infinity if no folder or no displayOrder)
+        const orderA = folderA?.displayOrder ?? Infinity
+        const orderB = folderB?.displayOrder ?? Infinity
+        
+        // If both have displayOrder, sort by it
+        if (orderA !== Infinity && orderB !== Infinity) {
+          if (sortOrder === 'asc') {
+            return orderA - orderB
+          } else {
+            return orderB - orderA
+          }
+        }
+        
+        // Fallback to folder name comparison
+        const nameA = folderA?.name || ''
+        const nameB = folderB?.name || ''
+        
+        if (sortOrder === 'asc') {
+          return nameA.localeCompare(nameB)
+        } else {
+          return nameB.localeCompare(nameA)
+        }
+      })
+    }
+
+    // Filter by search query (applies to all tabs)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
       sorted = sorted.filter(song => 
@@ -168,37 +216,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       )
     }
 
-    // Sort by folder displayOrder, then by folder name
-    sorted.sort((a, b) => {
-      const folderA = folders.find(f => f.id === a.folderId)
-      const folderB = folders.find(f => f.id === b.folderId)
-      
-      // Get displayOrder (use Infinity if no folder or no displayOrder)
-      const orderA = folderA?.displayOrder ?? Infinity
-      const orderB = folderB?.displayOrder ?? Infinity
-      
-      // If both have displayOrder, sort by it
-      if (orderA !== Infinity && orderB !== Infinity) {
-        if (sortOrder === 'asc') {
-          return orderA - orderB
-        } else {
-          return orderB - orderA
-        }
-      }
-      
-      // Fallback to folder name comparison
-      const nameA = folderA?.name || ''
-      const nameB = folderB?.name || ''
-      
-      if (sortOrder === 'asc') {
-        return nameA.localeCompare(nameB)
-      } else {
-        return nameB.localeCompare(nameA)
-      }
-    })
-
     return sorted
-  }, [filteredSongs, folders, sortOrder, searchQuery])
+  }, [filteredSongs, folders, sortOrder, searchQuery, activeTab])
 
   const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -344,6 +363,39 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Filtering Tabs - Mobile optimized */}
+        <div className="mb-4 lg:hidden">
+          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <MusicalNoteIcon className="h-4 w-4 mr-2" />
+              <span>All</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('recent')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'recent' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <ClockIcon className="h-4 w-4 mr-2" />
+              <span>Recent</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('popular')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'popular' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FireIcon className="h-4 w-4 mr-2" />
+              <span>Popular</span>
+            </button>
           </div>
         </div>
 

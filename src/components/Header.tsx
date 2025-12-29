@@ -66,11 +66,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Left side: Mobile menu button + Navigation */}
           <div className="flex items-center space-x-1 md:space-x-4">
-            {/* Mobile menu button */}
+            {/* Mobile menu button - Desktop only (sidebar hidden on mobile) */}
             {showMenuButton && (
               <button
                 onClick={onMenuClick}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 aria-label={t('common.openMenu')}
               >
                 <Bars3Icon className="h-6 w-6" />
