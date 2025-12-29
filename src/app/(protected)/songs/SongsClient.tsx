@@ -7,7 +7,7 @@ import Pagination from '@/components/Pagination'
 import FolderSelectionModal from '@/components/FolderSelectionModal'
 import SortSelectionModal, { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -232,6 +232,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     applyQuery({ folder: folderId, page: 1 })
   }
 
+
   const handleSortOrderChange = (order: 'asc' | 'desc') => {
     setSortOrder(order)
     applyQuery({ sortOrder: order, page: 1 })
@@ -305,37 +306,51 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         </div>
 
         {/* Folder Filter Button and Sort Button */}
-        <div className="mb-4 flex items-center gap-2">
-          <button
-            onClick={() => setShowFolderModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <span>
-              {selectedFolder
-                ? folders.find((f) => f.id === selectedFolder)?.name || 'All Folders'
-                : 'All Folders'}
-            </span>
-            <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-          </button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFolderModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <span>
+                {selectedFolder
+                  ? folders.find((f) => f.id === selectedFolder)?.name || 'All Folders'
+                  : 'All Folders'}
+              </span>
+              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+            </button>
 
-          <button
-            onClick={() => setShowSortModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-          >
-            <span>
-              {sortField === 'title' && 'Titre'}
-              {sortField === 'author' && 'Artiste'}
-              {sortField === 'key' && 'Tonalité'}
-              {sortField === 'rating' && 'Note'}
-              {sortField === 'reviews' && 'Avis'}
-              {sortField === 'difficulty' && 'Difficulté'}
-              {sortField === 'version' && 'Version'}
-              {sortField === 'viewCount' && 'Vues'}
-              {sortField === 'updatedAt' && 'Modifié'}
-              {sortField === 'createdAt' && 'Date'}
-            </span>
-            <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-          </button>
+            <button
+              onClick={() => setShowSortModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            >
+              <span>
+                {sortField === 'title' && 'Titre'}
+                {sortField === 'author' && 'Artiste'}
+                {sortField === 'key' && 'Tonalité'}
+                {sortField === 'rating' && 'Note'}
+                {sortField === 'reviews' && 'Avis'}
+                {sortField === 'difficulty' && 'Difficulté'}
+                {sortField === 'version' && 'Version'}
+                {sortField === 'viewCount' && 'Vues'}
+                {sortField === 'updatedAt' && 'Modifié'}
+                {sortField === 'createdAt' && 'Date'}
+              </span>
+              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+            </button>
+
+            <button
+              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            >
+              {sortDirection === 'asc' ? (
+                <ChevronUpIcon className="h-4 w-4 text-gray-600" />
+              ) : (
+                <ChevronDownIcon className="h-4 w-4 text-gray-600" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Filtering Tabs - Mobile optimized */}

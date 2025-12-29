@@ -74,6 +74,7 @@ export default function SongTableRow({
   return (
     <tr
       ref={setNodeRef}
+      data-song-id={song.id}
       style={{
         ...style,
         touchAction: hasUser ? 'none' : 'auto',
