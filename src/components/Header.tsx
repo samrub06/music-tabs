@@ -64,7 +64,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   return (
     <header className="bg-transparent lg:bg-white lg:shadow-sm border-0 lg:border-b border-gray-200 flex-shrink-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 ">
-        <div className="flex items-center justify-between h-14 md:h-16">
+        <div className="relative flex items-center justify-between h-14 md:h-16">
           {/* Left side: Mobile menu button + Navigation */}
           <div className="flex items-center space-x-1 md:space-x-4">
             {/* Mobile menu button - Desktop only (sidebar hidden on mobile) */}
@@ -133,10 +133,10 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             </div>
           )}
           
-          {/* Logo - Desktop only */}
+          {/* Logo - Centered on all screen sizes */}
           <button 
             onClick={handleLogoClick}
-            className="hidden lg:flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
+            className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
             aria-label={t('common.backToHome')}
           >
             <span className="text-xl md:text-2xl">🌶️</span>
