@@ -7,13 +7,15 @@ import {
   GlobeAltIcon, 
   RectangleStackIcon, 
   FolderIcon, 
-  MusicalNoteIcon 
+  MusicalNoteIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { 
   GlobeAltIcon as GlobeAltIconSolid, 
   RectangleStackIcon as RectangleStackIconSolid, 
   FolderIcon as FolderIconSolid, 
-  MusicalNoteIcon as MusicalNoteIconSolid 
+  MusicalNoteIcon as MusicalNoteIconSolid,
+  SparklesIcon as SparklesIconSolid
 } from '@heroicons/react/24/solid';
 
 export default function BottomNavigation() {
@@ -46,6 +48,13 @@ export default function BottomNavigation() {
       icon: FolderIcon,
       iconSolid: FolderIconSolid,
       isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
+    },
+    {
+      href: '/playlists',
+      label: 'Playlists',
+      icon: SparklesIcon,
+      iconSolid: SparklesIconSolid,
+      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/'),
     },
     {
       href: '/chords',

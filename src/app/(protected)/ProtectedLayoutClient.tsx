@@ -121,8 +121,11 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (path === '/dashboard' || path.startsWith('/dashboard/')) {
       return 'Dashboard'
     }
+    if (path === '/playlists' || path.startsWith('/playlists/')) {
+      return 'Playlists'
+    }
     if (path === '/playlist' || path.startsWith('/playlist/')) {
-      return 'Playlist'
+      return 'Créer une playlist'
     }
     return undefined
   }
