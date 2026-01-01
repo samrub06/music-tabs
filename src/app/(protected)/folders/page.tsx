@@ -1,12 +1,11 @@
 import { redirect } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import { createSafeServerClient } from '@/lib/supabase/server'
-import { folderRepo } from '@/lib/services/folderRepo'
-import { songRepo } from '@/lib/services/songRepo'
-import FoldersClient from './FoldersClient'
-
-export const dynamic = 'force-dynamic'
+import { Suspense } from 'react'
+import FoldersData from './FoldersData'
 
 export default async function FoldersPage() {
+  noStore()
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -15,23 +14,9 @@ export default async function FoldersPage() {
     redirect('/')
   }
 
-  // Fetch folders and songs to count songs per folder
-  const [folders, songs] = await Promise.all([
-    folderRepo(supabase).getAllFolders(),
-    songRepo(supabase).getAllSongs()
-  ])
-
-  // Count songs per folder
-  const folderSongCounts = new Map<string, number>()
-  songs.forEach(song => {
-    const folderId = song.folderId || 'null'
-    folderSongCounts.set(folderId, (folderSongCounts.get(folderId) || 0) + 1)
-  })
-
   return (
-    <FoldersClient 
-      folders={folders}
-      folderSongCounts={folderSongCounts}
-    />
+    <Suspense fallback={<div className="p-3 sm:p-6"><div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse"></div></div>}>
+      <FoldersData />
+    </Suspense>
   )
 }

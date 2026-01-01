@@ -179,10 +179,14 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
   // Hook to detect mobile/tablet for performance optimization
   const [isMobile, setIsMobile] = useState(false);
   const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  const [windowWidth, setWindowWidth] = useState<number>(1024); // Default to desktop width
   
   useEffect(() => {
     const checkScreenSize = () => {
+      if (typeof window === 'undefined') return;
+      
       const width = window.innerWidth;
+      setWindowWidth(width);
       if (width < 640) {
         setIsMobile(true);
         setScreenSize('mobile');
@@ -196,13 +200,16 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     };
     
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkScreenSize);
+      return () => window.removeEventListener('resize', checkScreenSize);
+    }
   }, []);
 
   // Get optimal font size based on screen size
   const getOptimalFontSize = (baseFontSize: number): number => {
-    return getResponsiveFontSize(baseFontSize, window.innerWidth);
+    // Use windowWidth state to avoid accessing window during SSR
+    return getResponsiveFontSize(baseFontSize, windowWidth);
   };
 
   const renderSongLine = (line: any, lineIndex: number) => {

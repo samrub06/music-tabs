@@ -5,6 +5,18 @@ import { createServerClient } from '@supabase/ssr'
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   
+  // Skip auth check for static assets and API routes that don't need auth
+  const pathname = req.nextUrl.pathname
+  
+  // Skip for static files, API routes (except auth callback), and public routes
+  if (
+    pathname.startsWith('/_next') ||
+    (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) ||
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$/)
+  ) {
+    return res
+  }
+  
   // Create a Supabase client for middleware with proper cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,8 +45,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * - Static assets (images, fonts, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
   ],
 }

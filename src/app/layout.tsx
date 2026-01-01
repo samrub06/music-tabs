@@ -1,7 +1,4 @@
-'use client'
-
-import { AuthProvider } from '@/context/AuthContext'
-import { LanguageProvider } from '@/context/LanguageContext'
+import { Providers } from '@/components/Providers'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -19,11 +16,9 @@ export default function RootLayout({
         <meta name="description" content="A modern music tabs application built with Next.js and Tailwind CSS" />
       </head>
       <body className={inter.className}>
-        <LanguageProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </LanguageProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

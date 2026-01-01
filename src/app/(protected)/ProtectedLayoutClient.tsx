@@ -3,12 +3,10 @@
 import Header from '@/components/Header'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import BottomNavigation from '@/components/BottomNavigation'
-import { AuthProvider, useAuthContext } from '@/context/AuthContext'
-import { LanguageProvider } from '@/context/LanguageContext'
+import { useAuthContext } from '@/context/AuthContext'
 import { SidebarProvider } from '@/context/SidebarContext'
-import { Inter } from 'next/font/google'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { folderRepo } from '@/lib/services/folderRepo'
 import { songRepo } from '@/lib/services/songRepo'
@@ -16,7 +14,16 @@ import { playlistRepo } from '@/lib/services/playlistRepo'
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions'
 import type { Folder, Song, Playlist } from '@/types'
 
-const inter = Inter({ subsets: ['latin'] })
+// Cache global pour les données de la sidebar (persiste entre navigations)
+let sidebarDataCache: {
+  folders: Folder[]
+  songs: Song[]
+  playlists: Playlist[]
+  timestamp: number
+  userId: string | null
+} | null = null
+
+const CACHE_DURATION = 30000 // 30 secondes
 
 function SidebarWrapper() {
   const { user, loading: authLoading } = useAuthContext()
@@ -28,19 +35,48 @@ function SidebarWrapper() {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const router = useRouter()
 
+  // Vérifier si le cache est valide
+  const isCacheValid = useMemo(() => {
+    if (!sidebarDataCache) return false
+    if (sidebarDataCache.userId !== user?.id) return false
+    const now = Date.now()
+    return (now - sidebarDataCache.timestamp) < CACHE_DURATION
+  }, [user?.id])
+
   useEffect(() => {
     if (!user || authLoading) {
       setLoading(false)
       return
     }
 
+    // Utiliser le cache si valide
+    if (isCacheValid && sidebarDataCache) {
+      setFolders(sidebarDataCache.folders)
+      setSongs(sidebarDataCache.songs)
+      setPlaylists(sidebarDataCache.playlists)
+      setLoading(false)
+      return
+    }
+
+    // Sinon, charger les données
     const fetchData = async () => {
       try {
+        setLoading(true)
         const [foldersData, songsData, playlistsData] = await Promise.all([
           folderRepo(supabase).getAllFolders(),
           songRepo(supabase).getAllSongs(),
           playlistRepo(supabase).getAllPlaylists()
         ])
+        
+        // Mettre à jour le cache
+        sidebarDataCache = {
+          folders: foldersData,
+          songs: songsData,
+          playlists: playlistsData,
+          timestamp: Date.now(),
+          userId: user.id
+        }
+        
         setFolders(foldersData)
         setSongs(songsData)
         setPlaylists(playlistsData)
@@ -52,9 +88,9 @@ function SidebarWrapper() {
     }
 
     fetchData()
-  }, [user, authLoading, supabase])
+  }, [user, authLoading, supabase, isCacheValid])
 
-  if (!user || loading) {
+  if (!user || (loading && !isCacheValid)) {
     return null
   }
 
@@ -153,13 +189,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function ProtectedLayoutClient({ children }: { children: React.ReactNode }) {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <SidebarProvider>
-          <ProtectedLayoutContent>{children}</ProtectedLayoutContent>
-        </SidebarProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <SidebarProvider>
+      <ProtectedLayoutContent>{children}</ProtectedLayoutContent>
+    </SidebarProvider>
   )
 }
 

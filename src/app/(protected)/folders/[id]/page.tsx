@@ -1,10 +1,9 @@
 import { redirect, notFound } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { folderRepo } from '@/lib/services/folderRepo'
 import FolderSongsClient from './FolderSongsClient'
 import type { Song } from '@/types'
-
-export const dynamic = 'force-dynamic'
 
 export default async function FolderSongsPage({ 
   params,
@@ -13,6 +12,7 @@ export default async function FolderSongsPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }>
 }) {
+  noStore()
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 

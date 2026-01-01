@@ -113,6 +113,29 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     if (error) throw error
 
     return mapDbFolderToDomain(data)
+  },
+
+  // Optimized method to get song counts per folder without loading song content
+  async getSongCountsByFolder(): Promise<Map<string, number>> {
+    const { data: { user } } = await client.auth.getUser()
+    if (!user) return new Map()
+
+    // Only select folder_id (not the full song data) to minimize data transfer
+    const { data, error } = await client
+      .from('songs')
+      .select('folder_id')
+      .eq('user_id', user.id)
+
+    if (error) throw error
+
+    // Count songs per folder (including null folder_id)
+    const counts = new Map<string, number>()
+    ;((data as Array<{ folder_id: string | null }>) || []).forEach(song => {
+      const folderId = song.folder_id || 'null'
+      counts.set(folderId, (counts.get(folderId) || 0) + 1)
+    })
+
+    return counts
   }
 })
 
