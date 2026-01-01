@@ -9,9 +9,20 @@ import { songRepo } from '@/lib/services/songRepo'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { ReactNode, useState, useEffect } from 'react'
+import { ReactNode, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Folder, Song, Playlist } from '@/types'
+
+// Cache global pour les données de la sidebar (persiste entre navigations)
+let playlistSidebarDataCache: {
+  folders: Folder[]
+  songs: Song[]
+  playlists: Playlist[]
+  timestamp: number
+  userId: string | null
+} | null = null
+
+const CACHE_DURATION = 30000 // 30 secondes
 
 export default function PlaylistLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -24,19 +35,48 @@ export default function PlaylistLayout({ children }: { children: ReactNode }) {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null)
   const router = useRouter()
 
+  // Vérifier si le cache est valide
+  const isCacheValid = useMemo(() => {
+    if (!playlistSidebarDataCache) return false
+    if (playlistSidebarDataCache.userId !== user?.id) return false
+    const now = Date.now()
+    return (now - playlistSidebarDataCache.timestamp) < CACHE_DURATION
+  }, [user?.id])
+
   useEffect(() => {
     if (!user || authLoading) {
       setLoading(false)
       return
     }
 
+    // Utiliser le cache si valide
+    if (isCacheValid && playlistSidebarDataCache) {
+      setFolders(playlistSidebarDataCache.folders)
+      setSongs(playlistSidebarDataCache.songs)
+      setPlaylists(playlistSidebarDataCache.playlists)
+      setLoading(false)
+      return
+    }
+
+    // Sinon, charger les données
     const fetchData = async () => {
       try {
+        setLoading(true)
         const [foldersData, songsData, playlistsData] = await Promise.all([
           folderRepo(supabase).getAllFolders(),
           songRepo(supabase).getAllSongs(),
           playlistRepo(supabase).getAllPlaylists()
         ])
+        
+        // Mettre à jour le cache
+        playlistSidebarDataCache = {
+          folders: foldersData,
+          songs: songsData,
+          playlists: playlistsData,
+          timestamp: Date.now(),
+          userId: user.id
+        }
+        
         setFolders(foldersData)
         setSongs(songsData)
         setPlaylists(playlistsData)
@@ -48,7 +88,7 @@ export default function PlaylistLayout({ children }: { children: ReactNode }) {
     }
 
     fetchData()
-  }, [user, authLoading, supabase])
+  }, [user, authLoading, supabase, isCacheValid])
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">

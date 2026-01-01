@@ -187,7 +187,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
         </div>
       </div>
 
-      {/* Playlists Table */}
+      {/* Empty State */}
       {playlists.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="text-center py-12">
@@ -207,41 +207,97 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             </button>
           </div>
         </div>
+      ) : showEmptyState ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="text-center py-12">
+            <MusicalNoteIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">
+              {searchQuery ? 'Aucune playlist ne correspond à votre recherche' : 'Aucune playlist sauvegardée'}
+            </p>
+          </div>
+        </div>
       ) : (
-        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <SortButton field="name">Nom</SortButton>
-                  </th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <SortButton field="songCount">Chansons</SortButton>
-                  </th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <SortButton field="createdAt">Créé le</SortButton>
-                  </th>
-                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {showEmptyState ? (
+        <>
+          {/* Mobile View - Cards */}
+          <div className="block md:hidden space-y-3">
+            {sortedPlaylists.map((playlist) => {
+              const playlistSongs = playlist.songIds
+                .map(id => songs.find(s => s.id === id))
+                .filter((song): song is Song => song !== undefined);
+              
+              return (
+                <div
+                  key={playlist.id}
+                  onClick={() => handleStartSavedPlaylist(playlist)}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-semibold text-gray-900 truncate">
+                        {playlist.name}
+                      </h3>
+                      {playlist.description && (
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          {playlist.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MusicalNoteIcon className="h-4 w-4 mr-1" />
+                      <span>{playlistSongs.length} {playlistSongs.length === 1 ? 'chanson' : 'chansons'}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartSavedPlaylist(playlist);
+                    }}
+                    className="mt-3 w-full inline-flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium"
+                  >
+                    <PlayIcon className="h-4 w-4 mr-2" />
+                    Lire la playlist
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop View - Table */}
+          <div className="hidden md:block bg-white shadow-sm rounded-lg border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center">
-                      <MusicalNoteIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-sm text-gray-500">
-                        {searchQuery ? 'Aucune playlist ne correspond à votre recherche' : 'Aucune playlist sauvegardée'}
-                      </p>
-                    </td>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <SortButton field="name">Nom</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <SortButton field="songCount">Chansons</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <SortButton field="createdAt">Créé le</SortButton>
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ) : (
-                  sortedPlaylists.map((playlist) => {
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sortedPlaylists.map((playlist) => {
                     const playlistSongs = playlist.songIds
                       .map(id => songs.find(s => s.id === id))
                       .filter((song): song is Song => song !== undefined);
@@ -252,23 +308,23 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                         onClick={() => handleStartSavedPlaylist(playlist)}
                         className="hover:bg-gray-50 cursor-pointer transition-colors"
                       >
-                        <td className="px-2 sm:px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {playlist.name}
                           </div>
                         </td>
-                        <td className="hidden md:table-cell px-4 py-4">
+                        <td className="px-4 py-4">
                           <div className="text-sm text-gray-600 truncate max-w-xs">
                             {playlist.description || '-'}
                           </div>
                         </td>
-                        <td className="px-2 sm:px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex items-center text-sm text-gray-600">
                             <MusicalNoteIcon className="h-4 w-4 mr-1" />
                             <span>{playlistSongs.length}</span>
                           </div>
                         </td>
-                        <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-600">
                             {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -277,7 +333,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                             })}
                           </div>
                         </td>
-                        <td className="px-2 sm:px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -286,17 +342,17 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                             className="inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
                           >
                             <PlayIcon className="h-4 w-4 mr-1" />
-                            <span className="hidden sm:inline">Lire</span>
+                            Lire
                           </button>
                         </td>
                       </tr>
                     );
-                  })
-                )}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

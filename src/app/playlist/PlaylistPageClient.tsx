@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { SparklesIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import PlaylistGenerator from '@/components/PlaylistGenerator';
 import PlaylistView from '@/components/PlaylistView';
 import { PlaylistResult } from '@/lib/services/playlistGeneratorService';
@@ -35,6 +35,13 @@ export default function PlaylistPageClient({ songs, folders }: PlaylistPageClien
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
+          <button
+            onClick={() => router.push('/playlists')}
+            className="mb-4 inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-1" />
+            Retour aux playlists
+          </button>
           <div className="flex items-center mb-4">
             <SparklesIcon className="h-8 w-8 text-purple-600 mr-3" />
             <h1 className="text-3xl font-bold text-gray-900">Créer une playlist</h1>
