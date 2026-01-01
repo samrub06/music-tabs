@@ -95,7 +95,7 @@ export default function FolderTable({
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
-      className="flex items-center space-x-1 text-left font-medium text-gray-900 hover:text-gray-700 focus:outline-none"
+      className="flex items-center space-x-1 text-left font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
     >
       <span>{children}</span>
       {sortField === field && (
@@ -159,9 +159,9 @@ export default function FolderTable({
   const showEmptyState = sortedFolders.length === 0
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
       {/* Filter Bar */}
-      <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 bg-gray-50">
+      <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col gap-2 sm:gap-0 sm:flex-row sm:items-center sm:justify-between">
           <FolderTableHeader
             sortedFoldersCount={sortedFolders.length}
@@ -176,11 +176,11 @@ export default function FolderTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
               {/* Checkbox column */}
-              <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 sm:w-12">
+              <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 sm:w-12">
                 <input
                   type="checkbox"
                   checked={selectedFolders.size === sortedFolders.length && sortedFolders.length > 0}
@@ -188,21 +188,21 @@ export default function FolderTable({
                   className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                 />
               </th>
-              <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 <SortButton field="name">Nom</SortButton>
               </th>
-              <th className="hidden sm:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 <SortButton field="songCount">Chansons</SortButton>
               </th>
-              <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 <SortButton field="createdAt">Créé le</SortButton>
               </th>
-              <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 <SortButton field="updatedAt">Modifié le</SortButton>
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {showEmptyState ? (
               <FolderTableEmptyState
                 searchQuery={searchQuery}
@@ -233,16 +233,16 @@ export default function FolderTable({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 max-w-[90vw] shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-96 max-w-[90vw] shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div className="mt-3 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <TrashIcon className="h-6 w-6 text-red-600" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
+                <TrashIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-4">
                 {deleteType === 'all' ? 'Supprimer tous les dossiers ?' : 'Supprimer les dossiers sélectionnés ?'}
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {deleteType === 'all' 
                     ? 'Cette action supprimera tous les dossiers. Les chansons ne seront pas supprimées, elles seront simplement retirées de leurs dossiers.'
                     : `Cette action supprimera ${selectedFolders.size} ${selectedFolders.size === 1 ? 'dossier' : 'dossiers'}. Les chansons ne seront pas supprimées, elles seront simplement retirées de leurs dossiers.`

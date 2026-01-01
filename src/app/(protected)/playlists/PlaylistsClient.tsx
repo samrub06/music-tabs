@@ -138,10 +138,10 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
       {/* Header with Create Button */}
       <div className="mb-4 sm:mb-6 flex items-start justify-between gap-4">
         <div className="hidden lg:block">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Playlists
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Gérez et écoutez vos playlists sauvegardées
           </p>
         </div>
@@ -169,7 +169,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             placeholder="Rechercher une playlist..."
             value={localSearchValue}
             onChange={(e) => setLocalSearchValue(e.target.value)}
-            className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 dark:text-gray-100"
           />
           {localSearchValue && (
             <button
@@ -189,13 +189,13 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
 
       {/* Empty State */}
       {playlists.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="text-center py-12">
             <MusicalNoteIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               Aucune playlist sauvegardée
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               Créez votre première playlist en cliquant sur le bouton ci-dessus
             </p>
             <button
@@ -208,12 +208,12 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
           </div>
         </div>
       ) : showEmptyState ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="text-center py-12">
             <MusicalNoteIcon className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">
-              {searchQuery ? 'Aucune playlist ne correspond à votre recherche' : 'Aucune playlist sauvegardée'}
-            </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {searchQuery ? 'Aucune playlist ne correspond à votre recherche' : 'Aucune playlist sauvegardée'}
+                      </p>
           </div>
         </div>
       ) : (
@@ -229,15 +229,15 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                 <div
                   key={playlist.id}
                   onClick={() => handleStartSavedPlaylist(playlist)}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-gray-900 truncate">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
                         {playlist.name}
                       </h3>
                       {playlist.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                           {playlist.description}
                         </p>
                       )}
@@ -245,11 +245,11 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <MusicalNoteIcon className="h-4 w-4 mr-1" />
                       <span>{playlistSongs.length} {playlistSongs.length === 1 ? 'chanson' : 'chansons'}</span>
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-gray-500">
                       {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'short',
@@ -274,10 +274,10 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
           </div>
 
           {/* Desktop View - Table */}
-          <div className="hidden md:block bg-white shadow-sm rounded-lg border border-gray-200">
+          <div className="hidden md:block bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       <SortButton field="name">Nom</SortButton>
@@ -296,7 +296,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {sortedPlaylists.map((playlist) => {
                     const playlistSongs = playlist.songIds
                       .map(id => songs.find(s => s.id === id))
@@ -306,26 +306,26 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                       <tr
                         key={playlist.id}
                         onClick={() => handleStartSavedPlaylist(playlist)}
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {playlist.name}
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm text-gray-600 truncate max-w-xs">
+                          <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs">
                             {playlist.description || '-'}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center text-sm text-gray-600">
+                          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                             <MusicalNoteIcon className="h-4 w-4 mr-1" />
                             <span>{playlistSongs.length}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
                             {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'short',

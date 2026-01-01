@@ -10,10 +10,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <head>
         <title>TABasco App</title>
         <meta name="description" content="A modern music tabs application built with Next.js and Tailwind CSS" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className={inter.className}>
         <Providers>

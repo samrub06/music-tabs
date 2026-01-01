@@ -30,15 +30,15 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getScoreColor = (score: number) => {
-    if (score >= 0.8) return 'text-green-600 bg-green-100';
-    if (score >= 0.6) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
+    if (score >= 0.8) return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+    if (score >= 0.6) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+    return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
   };
 
   const getTransitionColor = (score: number) => {
-    if (score >= 0.8) return 'text-green-600';
-    if (score >= 0.6) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 0.8) return 'text-green-600 dark:text-green-400';
+    if (score >= 0.6) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   const formatKeyAdjustment = (adjustment: number): string => {
@@ -130,20 +130,20 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Votre Playlist
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {playlist.songs.length} chansons • {Math.round(playlist.estimatedDuration)} min
           </p>
         </div>
         
         <div className="flex items-center space-x-2">
-          <div className="text-sm text-gray-600">
-            Score: <span className="font-medium text-purple-600">{Math.round(playlist.totalScore * 100)}%</span>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Score: <span className="font-medium text-purple-600 dark:text-purple-400">{Math.round(playlist.totalScore * 100)}%</span>
           </div>
           {onCreatePlaylist && (
             <button
@@ -166,7 +166,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
             <PlayIcon className="h-6 w-6 mr-3" />
             Démarrer la playlist
           </button>
-          <p className="mt-2 text-xs text-center text-gray-500">
+          <p className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
             Cliquez pour&quot; commencer à jouer la première chanson. Utilisez le bouton &quot;Suivante&quot; pour naviguer entre les chansons.
           </p>
         </div>
@@ -174,16 +174,16 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
 
       {/* Playlist Info */}
       {playlist.keyProgression.length > 0 && (
-        <div className="mb-6 p-4 bg-purple-50 rounded-lg">
+        <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center">
-              <KeyIcon className="h-4 w-4 mr-1 text-purple-600" />
-              <span className="font-medium text-purple-900">Tonalité de la playlist:</span>
-              <span className="ml-2 px-2 py-1 bg-white rounded border border-purple-200 text-purple-700 font-semibold">
+              <KeyIcon className="h-4 w-4 mr-1 text-purple-600 dark:text-purple-400" />
+              <span className="font-medium text-purple-900 dark:text-purple-200">Tonalité de la playlist:</span>
+              <span className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-semibold">
                 {playlist.keyProgression[0]}
               </span>
             </div>
-            <div className="text-purple-700">
+            <div className="text-purple-700 dark:text-purple-300">
               Toutes les chansons sont transposées à cette tonalité
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
           <div
             key={song.id}
             onClick={() => onSongSelect?.(song)}
-            className="flex items-center p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer transition-colors"
+            className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
           >
             <div className="flex-shrink-0 mr-3">
               {song.songImageUrl ? (
@@ -206,21 +206,21 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                   className="w-10 h-10 rounded-lg object-cover"
                 />
               ) : (
-                <MusicalNoteIcon className="w-10 h-10 text-gray-400" />
+                <MusicalNoteIcon className="w-10 h-10 text-gray-400 dark:text-gray-500" />
               )}
             </div>
             
             <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium text-gray-900 truncate">
+              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {song.title}
               </h4>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {song.author}
               </p>
               <div className="flex items-center space-x-2 mt-1 flex-wrap">
                 {/* Original Key */}
                 {song.originalKey && song.originalKey !== 'Unknown' && (
-                  <span className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
+                  <span className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
                     <KeyIcon className="h-3 w-3 mr-1" />
                     Original: {song.originalKey}
                   </span>
@@ -228,7 +228,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 
                 {/* Key Adjustment */}
                 {song.keyAdjustment !== 0 && (
-                  <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
+                  <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
                     <ArrowRightIcon className="h-3 w-3 mr-1" />
                     {formatKeyAdjustment(song.keyAdjustment)} semitones
                   </span>
@@ -236,20 +236,20 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 
                 {/* Target Key */}
                 {song.targetKey && song.targetKey !== 'Unknown' && (
-                  <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full">
+                  <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
                     <KeyIcon className="h-3 w-3 mr-1" />
                     → {song.targetKey}
                   </span>
                 )}
                 
                 {/* Compatibility Score */}
-                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getScoreColor(song.compatibilityScore)}`}>
+                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getScoreColor(song.compatibilityScore)} dark:bg-opacity-20`}>
                   Compatibilité: {Math.round(song.compatibilityScore * 100)}%
                 </span>
                 
                 {/* Transition Score */}
                 {index > 0 && (
-                  <span className={`text-xs px-2 py-1 rounded-full ${getTransitionColor(song.transitionScore)} bg-opacity-20`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${getTransitionColor(song.transitionScore)} bg-opacity-20 dark:bg-opacity-20`}>
                     Transition: {Math.round(song.transitionScore * 100)}%
                   </span>
                 )}
@@ -257,7 +257,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
             </div>
             
             <div className="flex items-center space-x-2 ml-2">
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                 #{index + 1}
               </span>
             </div>
@@ -267,22 +267,22 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
 
       {playlist.songs.length === 0 && (
         <div className="text-center py-12">
-          <MusicalNoteIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Aucune chanson dans la playlist</p>
+          <MusicalNoteIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400">Aucune chanson dans la playlist</p>
         </div>
       )}
 
       {/* Playlist Name Modal */}
       {showNameModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 max-w-[90vw] shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-96 max-w-[90vw] shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                 Nom de la playlist
               </h3>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={isSaving}
                 aria-label="Fermer"
               >
@@ -291,7 +291,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
             </div>
 
             <div className="mb-4">
-              <label htmlFor="playlist-name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="playlist-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Nom de la playlist
               </label>
               <input
@@ -302,7 +302,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 onChange={(e) => setPlaylistName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isSaving}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 placeholder="Nom de la playlist"
               />
             </div>

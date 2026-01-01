@@ -82,7 +82,7 @@ export default function SongTableRow({
         touchAction: hasUser ? 'none' : 'auto',
       }}
       onClick={handleSongClick}
-      className={`hover:bg-gray-50 cursor-pointer transition-colors ${isDragging ? 'z-50 opacity-50' : ''}`}
+      className={`hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${isDragging ? 'z-50 opacity-50' : ''}`}
     >
       {/* Checkbox column - Only show if user is logged in and select mode is active */}
       {hasUser && isSelectMode && (
@@ -132,23 +132,23 @@ export default function SongTableRow({
               <MusicalNoteIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
             )}
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-900 truncate max-w-[150px] sm:max-w-none">
+              <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px] sm:max-w-none">
                 {song.title}
               </div>
               {/* Mobile metadata */}
-              <div className="sm:hidden text-xs text-gray-500 mt-1">
+              <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
                 <div className="flex items-center space-x-2 flex-wrap">
                   <span className="truncate max-w-[120px]">{song.author}</span>
                   {song.key && (
                     <>
-                      <span className="text-gray-300">•</span>
-                      <span className="text-purple-600 font-medium">🎵 {song.key}</span>
+                      <span className="text-gray-300 dark:text-gray-600">•</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-medium">🎵 {song.key}</span>
                     </>
                   )}
                   {song.rating && (
                     <>
-                      <span className="text-gray-300">•</span>
-                      <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
+                      <span className="text-gray-300 dark:text-gray-600">•</span>
+                      <span className="text-yellow-600 dark:text-yellow-400 font-medium">⭐ {song.rating.toFixed(1)}</span>
                     </>
                   )}
                 </div>
@@ -171,7 +171,7 @@ export default function SongTableRow({
                 className="w-4 h-4 rounded-full object-cover flex-shrink-0"
               />
             )}
-            <span className="text-sm text-gray-900 truncate">{song.author}</span>
+            <span className="text-sm text-gray-900 dark:text-gray-100 truncate">{song.author}</span>
           </div>
         </td>
       )}
@@ -179,11 +179,11 @@ export default function SongTableRow({
       {/* Key */}
       {visibleColumns.includes('key') && (
         <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
             {song.key ? (
-              <span className="text-purple-600 font-medium">{song.key}</span>
+              <span className="text-purple-600 dark:text-purple-400 font-medium">{song.key}</span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
             )}
           </div>
         </td>
@@ -192,11 +192,11 @@ export default function SongTableRow({
       {/* Rating */}
       {visibleColumns.includes('rating') && (
         <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
             {song.rating ? (
-              <span className="text-yellow-600 font-medium">⭐ {song.rating.toFixed(1)}</span>
+              <span className="text-yellow-600 dark:text-yellow-400 font-medium">⭐ {song.rating.toFixed(1)}</span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
             )}
           </div>
         </td>
@@ -205,11 +205,11 @@ export default function SongTableRow({
       {/* Reviews */}
       {visibleColumns.includes('reviews') && (
         <td className="hidden xl:table-cell px-4 py-2 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
             {song.reviews && song.reviews > 0 ? (
-              <span className="text-gray-600 font-medium">👥 {song.reviews}</span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium">👥 {song.reviews}</span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
             )}
           </div>
         </td>
@@ -218,11 +218,11 @@ export default function SongTableRow({
       {/* Difficulty */}
       {visibleColumns.includes('difficulty') && (
         <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
             {song.difficulty ? (
-              <span className="text-blue-600 font-medium">🎸 {song.difficulty}</span>
+              <span className="text-blue-600 dark:text-blue-400 font-medium">🎸 {song.difficulty}</span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
             )}
           </div>
         </td>
@@ -231,11 +231,11 @@ export default function SongTableRow({
       {/* Version */}
       {visibleColumns.includes('version') && (
         <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
             {song.version ? (
-              <span className="text-green-600 font-medium">🔢 v{song.version}</span>
+              <span className="text-green-600 dark:text-green-400 font-medium">🔢 v{song.version}</span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
             )}
           </div>
         </td>
@@ -244,11 +244,11 @@ export default function SongTableRow({
       {/* View Count */}
       {visibleColumns.includes('viewCount') && (
         <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap">
-          <div className="text-sm text-gray-900">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
             {song.viewCount && song.viewCount > 0 ? (
-              <span className="text-blue-600 font-medium">👁️ {song.viewCount}</span>
+              <span className="text-blue-600 dark:text-blue-400 font-medium">👁️ {song.viewCount}</span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 dark:text-gray-500">-</span>
             )}
           </div>
         </td>
@@ -270,7 +270,7 @@ export default function SongTableRow({
 
       {/* Updated At */}
       {visibleColumns.includes('updatedAt') && (
-        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+        <td className="hidden lg:table-cell px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
           {new Date(song.updatedAt).toLocaleDateString('fr-FR')}
         </td>
       )}

@@ -31,22 +31,22 @@ export default function PlaylistPageClient({ songs, folders }: PlaylistPageClien
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push('/playlists')}
-            className="mb-4 inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="mb-4 inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             <ArrowLeftIcon className="h-4 w-4 mr-1" />
             Retour aux playlists
           </button>
           <div className="flex items-center mb-4">
             <SparklesIcon className="h-8 w-8 text-purple-600 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-900">Créer une playlist</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Créer une playlist</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Générez une playlist parfaite en sélectionnant des dossiers ou des genres, et en choisissant une tonalité préférée. Toutes les chansons seront automatiquement transposées à cette tonalité.
           </p>
         </div>
@@ -70,13 +70,13 @@ export default function PlaylistPageClient({ songs, folders }: PlaylistPageClien
                 onCreatePlaylist={handleCreatePlaylist}
               />
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div className="text-center py-12">
                   <SparklesIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                     Aucune playlist générée
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     Configurez vos préférences et générez votre première playlist
                   </p>
                 </div>

@@ -76,10 +76,10 @@ function DraggableSongCard({
     <div 
       ref={setNodeRef}
       style={style}
-      className={`group bg-white rounded-lg overflow-hidden transition-all hover:shadow-lg border-2 relative flex flex-col ${
+      className={`group bg-white dark:bg-gray-800 rounded-lg overflow-hidden transition-all hover:shadow-lg border-2 relative flex flex-col ${
         isDragging 
-          ? 'z-50 shadow-xl border-blue-500 opacity-75' 
-          : 'border-gray-200 hover:border-gray-300'
+          ? 'z-50 shadow-xl border-blue-500 dark:border-blue-400 opacity-75' 
+          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
       }`}
     >
       {/* Drag handle - positioned in bottom-right corner */}
@@ -88,15 +88,15 @@ function DraggableSongCard({
           {...listeners}
           {...attributes}
           onClick={(e) => e.stopPropagation()}
-          className="absolute bottom-2 right-2 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-md shadow-md cursor-grab active:cursor-grabbing hover:bg-white transition-colors touch-none"
+          className="absolute bottom-2 right-2 z-10 p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-md shadow-md cursor-grab active:cursor-grabbing hover:bg-white dark:hover:bg-gray-800 transition-colors touch-none"
           style={{ touchAction: 'none' }}
           aria-label="Drag to move song"
         >
-          <ArrowsUpDownIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+          <ArrowsUpDownIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-400" />
         </div>
       )}
       <div onClick={handleSongClick} className="flex-1 cursor-pointer">
-            <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
+            <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
               {song.songImageUrl ? (
                 <img 
                   src={song.songImageUrl} 
@@ -105,20 +105,20 @@ function DraggableSongCard({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <MusicalNoteIcon className="h-10 w-10 text-gray-400" />
+                  <MusicalNoteIcon className="h-10 w-10 text-gray-400 dark:text-gray-500" />
                 </div>
               )}
             </div>
             <div className="p-1.5 sm:p-2">
-              <h3 className="font-medium text-gray-900 text-xs sm:text-sm truncate mb-1 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-xs sm:text-sm truncate mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {song.title}
               </h3>
-              <p className="text-xs text-gray-600 truncate mb-2">
+              <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-2">
                 {song.author}
               </p>
               <div className="flex flex-wrap gap-1">
                 {song.rating && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 border border-yellow-200">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
                     ⭐ {song.rating.toFixed(1)}
                   </span>
                 )}

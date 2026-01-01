@@ -97,9 +97,7 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
   return (
     <div className="p-3 sm:p-6 overflow-y-auto">
       <div className="mb-4 sm:mb-6">
-        <div className="flex flex-row flex-wrap items-center justify-between gap-3 sm:gap-4">
-          {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex-shrink-0">Bibliothèque</h1>
+        <div className="flex flex-row flex-wrap items-center justify-between gap-3 sm:gap-4">       
           
           {/* Search and View Controls */}
           <div className="flex flex-row items-center gap-2 sm:gap-2 w-full sm:w-auto">

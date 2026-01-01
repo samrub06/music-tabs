@@ -169,7 +169,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const pageTitle = getPageTitle(pathname)
 
   return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
           <Header onMenuClick={() => {}} pageTitle={pageTitle} />
 
       <div className="flex-1 flex overflow-hidden">

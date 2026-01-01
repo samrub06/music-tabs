@@ -2,7 +2,8 @@
 
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { useTheme } from '@/context/ThemeContext';
+import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -17,6 +18,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const { user, profile, session, loading, signInWithGoogle, signOut } = useAuthContext();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -62,7 +64,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   };
 
   return (
-    <header className="bg-transparent lg:bg-white lg:shadow-sm border-0 lg:border-b border-gray-200 flex-shrink-0">
+    <header className="bg-transparent lg:bg-white dark:lg:bg-gray-900 lg:shadow-sm border-0 lg:border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 ">
         <div className="relative flex items-center justify-between h-14 md:h-16">
           {/* Left side: Mobile menu button + Navigation */}
@@ -71,7 +73,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             {showMenuButton && (
               <button
                 onClick={onMenuClick}
-                className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 aria-label={t('common.openMenu')}
               >
                 <Bars3Icon className="h-6 w-6" />
@@ -83,7 +85,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               <nav className="flex md:hidden items-center">
                 <Link
                   href="/library"
-                  className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <GlobeAltIcon className="h-6 w-6" />
                   <span className="sr-only">Library</span>
@@ -96,28 +98,28 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               <nav className="hidden lg:flex items-center space-x-2">
                  <Link
                   href="/library"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <GlobeAltIcon className="h-5 w-5" />
                   <span>Library</span>
                 </Link>
                 <Link
                   href="/songs"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <RectangleStackIcon className="h-5 w-5" />
                   <span>Songs</span>
                 </Link>
                 <Link
                   href="/folders"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <FolderIcon className="h-5 w-5" />
                   <span>Folders</span>
                 </Link>
                 <Link
                   href="/chords"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <MusicalNoteIcon className="h-5 w-5" />
                   <span>Chords</span>
@@ -129,7 +131,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
           {/* Page Title - Mobile only, left-aligned */}
           {pageTitle && (
             <div className="lg:hidden flex-1">
-              <h1 className="text-lg font-semibold text-gray-900 text-left">{pageTitle}</h1>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 text-left">{pageTitle}</h1>
             </div>
           )}
           
@@ -140,7 +142,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             aria-label={t('common.backToHome')}
           >
             <span className="text-xl md:text-2xl">🌶️</span>
-            <span className="hidden sm:inline text-lg font-semibold text-gray-900">
+            <span className="hidden sm:inline text-lg font-semibold text-gray-900 dark:text-gray-100">
               {t('common.appName')}
             </span>
           </button>
@@ -155,16 +157,16 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   <>
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 p-0.5 sm:p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      className="flex items-center space-x-2 p-0.5 sm:p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       {profile?.avatar_url ? (
                         <img 
                           src={profile.avatar_url} 
                           alt={profile.full_name || 'User'} 
-                          className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-gray-200"
+                          className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                         />
                       ) : (
-                        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm border-2 border-gray-200">
+                        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm border-2 border-gray-200 dark:border-gray-700">
                           {getInitials(profile?.full_name, profile?.email)}
                         </div>
                       )}
@@ -178,12 +180,12 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                           onClick={() => setShowUserMenu(false)}
                         />
                         {/* Menu */}
-                        <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-[55] border border-gray-200">
-                        <div className="px-4 py-3 border-b border-gray-200">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                        <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
+                        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                             {profile?.full_name || 'User'}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {profile?.email}
                           </p>
                         </div>
@@ -193,7 +195,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                             setShowPlaylistImporter(true);
                             setShowUserMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                         >
                           <CloudArrowDownIcon className="h-5 w-5" />
                           <span>Importer Ultimate Guitar</span>
@@ -204,7 +206,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                             signOut();
                             setShowUserMenu(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                         >
                           <ArrowRightOnRectangleIcon className="h-5 w-5" />
                           <span>{t('auth.signOut')}</span>
@@ -216,7 +218,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 ) : (
                   <button
                     onClick={signInWithGoogle}
-                    className="flex items-center space-x-2 px-2 sm:px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                    className="flex items-center space-x-2 px-2 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
                     title={t('auth.signInWithGoogle')}
                   >
                     <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
@@ -243,11 +245,27 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               </div>
             )}
             
+            {/* Theme toggle */}
+            <div className="relative">
+              <button
+                onClick={toggleTheme}
+                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              >
+                {theme === 'dark' ? (
+                  <SunIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                ) : (
+                  <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                )}
+              </button>
+            </div>
+
             {/* Language selector */}
             <div className="relative">
               <button
                 onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors min-w-[36px] sm:min-w-0"
+                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
                 aria-label={t('common.selectLanguage')}
               >
                 <span className="text-base sm:text-lg font-medium">{currentLanguage.flag}</span>
@@ -261,13 +279,13 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                     onClick={() => setShowLanguageMenu(false)}
                   />
                   {/* Menu */}
-                  <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-[55] border border-gray-200">
+                  <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
                   {languages.map((language) => (
                     <button
                       key={language.code}
                       onClick={() => handleLanguageChange(language.code)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center space-x-2 ${
-                        language.code === currentLanguage.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 ${
+                        language.code === currentLanguage.code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <span>{language.flag}</span>
@@ -284,12 +302,12 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         {/* Playlist Importer Modal */}
         {showPlaylistImporter && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900">Importer Ultimate Guitar</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Importer Ultimate Guitar</h2>
                 <button
                   onClick={() => setShowPlaylistImporter(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold"
                 >
                   ×
                 </button>

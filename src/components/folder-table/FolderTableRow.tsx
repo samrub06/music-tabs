@@ -82,7 +82,7 @@ export default function FolderTableRow({
   return (
     <tr
       onClick={handleFolderClick}
-      className="group hover:bg-gray-50 cursor-pointer transition-colors"
+      className="group hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
     >
       {/* Checkbox column */}
       {hasUser && (
@@ -112,11 +112,11 @@ export default function FolderTableRow({
               onBlur={handleRename}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-2 py-1 text-sm border border-blue-500 dark:border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           ) : (
             <>
-              <span className="font-medium text-gray-900 truncate flex-1">{folder.name}</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100 truncate flex-1">{folder.name}</span>
               {hasUser && (
                 <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -124,7 +124,7 @@ export default function FolderTableRow({
                       e.stopPropagation()
                       onStartEdit(folder.id)
                     }}
-                    className="p-1 text-gray-400 hover:text-blue-600 rounded"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 rounded"
                     title="Renommer"
                   >
                     <PencilIcon className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function FolderTableRow({
                         onDelete(folder.id)
                       }
                     }}
-                    className="p-1 text-gray-400 hover:text-red-600 rounded"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded"
                     title="Supprimer"
                   >
                     <TrashIcon className="h-4 w-4" />
@@ -149,17 +149,17 @@ export default function FolderTableRow({
       </td>
 
       {/* Song count column */}
-      <td className="hidden sm:table-cell px-4 py-2 text-sm text-gray-600">
+      <td className="hidden sm:table-cell px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
         {songCount} {songCount === 1 ? 'chanson' : 'chansons'}
       </td>
 
       {/* Created date column */}
-      <td className="hidden md:table-cell px-4 py-2 text-sm text-gray-600">
+      <td className="hidden md:table-cell px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
         {formatDate(folder.createdAt)}
       </td>
 
       {/* Updated date column */}
-      <td className="hidden lg:table-cell px-4 py-2 text-sm text-gray-600">
+      <td className="hidden lg:table-cell px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
         {formatDate(folder.updatedAt)}
       </td>
     </tr>

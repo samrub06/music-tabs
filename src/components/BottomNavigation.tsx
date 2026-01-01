@@ -66,7 +66,7 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 lg:hidden safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 lg:hidden safe-area-inset-bottom">
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const IconComponent = item.isActive ? item.iconSolid : item.icon;
@@ -76,8 +76,8 @@ export default function BottomNavigation() {
               href={item.href}
               className={`flex flex-col items-center justify-center flex-1 min-w-0 px-2 py-1 rounded-lg transition-colors ${
                 item.isActive
-                  ? 'text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
               <IconComponent className="h-6 w-6 flex-shrink-0" />

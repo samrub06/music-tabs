@@ -331,7 +331,7 @@ export default function SongTable({
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
-      className="flex items-center space-x-1 text-left font-medium text-gray-900 hover:text-gray-700 focus:outline-none"
+      className="flex items-center space-x-1 text-left font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
     >
       <span>{children}</span>
       {sortField === field && (
@@ -359,10 +359,10 @@ export default function SongTable({
   const showEmptyState = songs.length === 0;
 
   return (
-    <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
       {/* Show bulk actions when songs are selected */}
       {selectedSongs.size > 0 && (
-        <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 bg-gray-50">
+        <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <SongTableHeader
             sortedSongsCount={sortedSongs.length}
             selectedCount={selectedSongs.size}
@@ -382,12 +382,12 @@ export default function SongTable({
       )}
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
               {/* Checkbox column - Only show if user is logged in and select mode is active */}
               {hasUser && isSelectMode && (
-                <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 sm:w-12">
+                <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 sm:w-12">
                   <input
                     type="checkbox"
                     checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
@@ -397,58 +397,58 @@ export default function SongTable({
                 </th>
               )}
               {visibleColumns.includes('title') && (
-                <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="title">{t('songs.title')}</SortButton>
                 </th>
               )}
               {visibleColumns.includes('author') && (
-                <th className="hidden sm:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden sm:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="author">{t('songs.artist')}</SortButton>
                 </th>
               )}
               {visibleColumns.includes('key') && (
-                <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="key">🎵 Key</SortButton>
                 </th>
               )}
               {visibleColumns.includes('rating') && (
-                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="rating">⭐ Rating</SortButton>
                 </th>
               )}
               {visibleColumns.includes('reviews') && (
-                <th className="hidden xl:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden xl:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="reviews">👥 Reviews</SortButton>
                 </th>
               )}
               {visibleColumns.includes('difficulty') && (
-                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="difficulty">🎸 Difficulty</SortButton>
                 </th>
               )}
                {visibleColumns.includes('version') && (
-                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                    <SortButton field="version">🔢 Version</SortButton>
                  </th>
                )}
                {visibleColumns.includes('viewCount') && (
-                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                    <SortButton field="viewCount">👁️ Vues</SortButton>
                  </th>
                )}
               {visibleColumns.includes('folder') && (
-                <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {t('songs.folder')}
                 </th>
               )}
               {visibleColumns.includes('updatedAt') && (
-                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   <SortButton field="updatedAt">{t('songs.modified')}</SortButton>
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {sortedSongs.length === 0 ? (
               <SongTableEmptyState
                 currentFolder={currentFolder}
@@ -491,16 +491,16 @@ export default function SongTable({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 max-w-[90vw] shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-96 max-w-[90vw] shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div className="mt-3 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <TrashIcon className="h-6 w-6 text-red-600" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
+                <TrashIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-4">
                 {deleteType === 'all' ? t('songs.confirmDeleteAll') : t('songs.confirmDeleteSelected')}
               </h3>
               <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {deleteType === 'all' 
                     ? t('songs.confirmDeleteAllMessage')
                     : t('songs.confirmDeleteSelectedMessage').replace('{count}', selectedSongs.size.toString())

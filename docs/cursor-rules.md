@@ -1,0 +1,510 @@
+# Règles d'Architecture et Conventions pour Cursor
+
+Document de référence pour développer des applications Next.js 15 avec Supabase, TypeScript et Tailwind CSS.
+
+> **Note**: Ce document est extrait de l'application music-tabs et peut être utilisé comme référence pour de futurs projets.
+
+## Architecture Générale
+
+### Stack Technologique
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Database**: Supabase (PostgreSQL avec RLS)
+- **Auth**: Supabase Auth
+- **Styling**: Tailwind CSS (dark mode: class)
+- **Validation**: Zod
+- **State Management**: React Context + useReducer
+- **Icons**: Heroicons
+
+### Principes Fondamentaux
+
+1. **Server-First**: Privilégier les Server Components pour le rendu initial
+2. **Client-Injected Repos**: Les repos/services reçoivent le client Supabase en paramètre
+3. **RLS comme Sécurité Primaire**: Laisser Row Level Security filtrer les données
+4. **Mapping Centralisé**: DB (snake_case) → Domain (camelCase) dans les repos uniquement
+5. **Validation Systématique**: Zod dans toutes les Server Actions
+
+## Structure de Fichiers
+
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── (protected)/              # Route groups (ne changent pas l'URL)
+│   │   └── [feature]/
+│   │       ├── page.tsx          # Server Component (RSC) - fetch initial
+│   │       ├── actions.ts       # Server Actions (use server)
+│   │       └── [Feature]Client.tsx  # Client Component (use client)
+│   ├── [dynamic]/[id]/
+│   │   ├── page.tsx             # Server Component
+│   │   └── actions.ts           # Server Actions
+│   └── api/                     # API Routes (webhooks, SSE, intégrations externes)
+│       └── [route]/
+│           └── route.ts         # API Route handler
+│
+├── components/                   # Composants React réutilisables
+│   ├── containers/              # Client Components avec logique (hooks, state)
+│   ├── presentational/           # Composants "dumb" (props uniquement)
+│   └── [ComponentName].tsx       # Client Components simples
+│
+├── lib/
+│   ├── supabase/
+│   │   └── server.ts            # createSafeServerClient() / createActionServerClient()
+│   ├── supabase.ts              # Client navigateur (createBrowserClient)
+│   ├── services/                # Data Access Layer
+│   │   ├── [entity]Repo.ts      # ✅ Repo explicite (client-injected)
+│   │   └── [name]Service.ts     # Service legacy/compatibilité
+│   ├── validation/
+│   │   └── schemas.ts           # Schémas Zod
+│   └── hooks/                   # Custom React hooks
+│
+├── types/
+│   ├── index.ts                 # Types Domain (camelCase)
+│   └── db.ts                    # Types générés depuis Supabase (snake_case)
+│
+├── context/                      # React Context providers
+│   └── [Name]Context.tsx
+│
+└── utils/                        # Helpers purs (pas de dépendances Supabase)
+    └── [utility].ts
+
+db/                              # Migrations et schémas SQL
+└── *.sql
+```
+
+## Conventions de Nommage
+
+### Server Components (RSC)
+- **Fichier**: `app/**/page.tsx`
+- **Fonction**: `<PageName>Page` (PascalCase)
+- **Pattern**: Par défaut Server Component (pas de `'use client'`)
+
+```tsx
+// app/(protected)/dashboard/page.tsx
+export default async function DashboardPage() {
+  const supabase = await createSafeServerClient()
+  const data = await repo.getAll(supabase)
+  return <DashboardClient data={data} />
+}
+```
+
+### Server Actions
+- **Fichier**: `app/**/actions.ts`
+- **Fonction**: `<verb><Entity>Action` (camelCase)
+- **Verbes**: `add`, `update`, `delete`, `create`, `rename`, `clone`
+- **Toujours**: `'use server'` en haut du fichier
+
+```tsx
+// app/(protected)/dashboard/actions.ts
+'use server'
+
+export async function addSongAction(payload: NewSongData) {
+  const validatedPayload = createSongSchema.parse(payload)
+  const supabase = await createActionServerClient()
+  const repo = songRepo(supabase)
+  const created = await repo.createSong(validatedPayload)
+  revalidatePath('/dashboard')
+  return created
+}
+```
+
+### Client Components
+- **Fichier**: `<ComponentName>.tsx` ou `<PageName>Client.tsx`
+- **Fonction**: `<ComponentName>` (PascalCase)
+- **Toujours**: `'use client'` en haut du fichier
+
+```tsx
+// components/AddSongForm.tsx
+'use client'
+
+export function AddSongForm() {
+  const [pending, startTransition] = useTransition()
+  // ...
+}
+```
+
+### Repos (Data Access avec client injecté)
+- **Fichier**: `lib/services/<entity>Repo.ts`
+- **Fonction**: `<entity>Repo` (camelCase)
+- **Méthodes**: Verbes clairs (`createSong`, `updateSong`, `deleteSong`, `getAllSongs`, `getSongById`)
+
+```tsx
+// lib/services/songRepo.ts
+export const songRepo = (client: SupabaseClient<Database>) => ({
+  async createSong(data: NewSongData): Promise<Song> {
+    // Mapping DB → Domain ici
+    return mapDbSongToDomain(dbResult)
+  }
+})
+
+// Usage
+const supabase = await createActionServerClient()
+const repo = songRepo(supabase)
+await repo.createSong(payload)
+```
+
+### Services (Data Access legacy/compatibilité)
+- **Fichier**: `lib/services/<name>Service.ts`
+- **Export**: `<name>Service` (camelCase)
+- **Paramètre**: `clientSupabase` (obligatoire, pas de fallback)
+
+### Types
+- **Domain Types**: `types/index.ts` (camelCase)
+- **DB Types**: `types/db.ts` (générés depuis Supabase, snake_case)
+- **Interfaces**: PascalCase (`Song`, `Folder`, `NewSongData`)
+
+### Mapping DB → Domain
+- **DB**: `snake_case` (`folder_id`, `created_at`, `user_id`)
+- **Domain**: `camelCase` (`folderId`, `createdAt`, `userId`)
+- **Où**: Dans les repos/services uniquement, jamais dans les composants
+
+```tsx
+function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
+  return {
+    ...dbSong,
+    folderId: dbSong.folder_id || undefined,
+    createdAt: new Date(dbSong.created_at),
+    updatedAt: new Date(dbSong.updated_at),
+  } as Song
+}
+```
+
+## Patterns de Code
+
+### Flux de Données - Lecture (Initial Render)
+
+```
+1. Server Component (RSC) se charge
+   ↓
+2. Crée le client Supabase SSR via createSafeServerClient()
+   ↓
+3. Appelle les repos/services
+   ↓
+4. Les repos exécutent les requêtes Supabase
+   ↓
+5. RLS filtre automatiquement les données
+   ↓
+6. Les données sont mappées (snake_case → camelCase)
+   ↓
+7. Les données sont passées comme props aux Client Components
+   ↓
+8. L'UI s'affiche
+```
+
+### Flux de Données - Mutation (User Action)
+
+```
+1. User clique dans un Client Component
+   ↓
+2. Client Component appelle une Server Action
+   ↓
+3. Server Action crée le client Supabase SSR (createActionServerClient)
+   ↓
+4. Valide la payload avec Zod
+   ↓
+5. Appelle le repo/service pour la mutation
+   ↓
+6. RLS vérifie les permissions
+   ↓
+7. La mutation s'exécute
+   ↓
+8. revalidatePath() rafraîchit la page
+   ↓
+9. Le Server Component re-fetch les données
+   ↓
+10. L'UI se met à jour
+```
+
+### Clients Supabase
+
+#### Server Component (Read-Only)
+```tsx
+// lib/supabase/server.ts
+export async function createSafeServerClient() {
+  const cookieStore = await cookies()
+  return createServerClient<Database>(url, key, {
+    cookies: {
+      getAll() { return cookieStore.getAll() },
+      setAll() { /* Intentionally empty - Server Components cannot write cookies */ }
+    }
+  })
+}
+```
+
+#### Server Actions / Route Handlers (Read-Write)
+```tsx
+export async function createActionServerClient() {
+  const cookieStore = await cookies()
+  return createServerClient<Database>(url, key, {
+    cookies: {
+      getAll() { return cookieStore.getAll() },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, options)
+        })
+      }
+    }
+  })
+}
+```
+
+#### Client Component (Browser)
+```tsx
+// lib/supabase.ts
+export const supabase = createBrowserClient(url, key)
+```
+
+### Validation avec Zod
+
+```tsx
+// lib/validation/schemas.ts
+export const createSongSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  author: z.string().min(1, 'Author is required'),
+  folderId: z.string().uuid().optional().nullable(),
+})
+
+// Dans Server Action
+export async function addSongAction(payload: unknown) {
+  const validatedPayload = createSongSchema.parse(payload)
+  // ...
+}
+```
+
+### Caching et Revalidation
+
+#### Pages User-Scoped (désactiver cache statique)
+```tsx
+import { unstable_noStore as noStore } from 'next/cache'
+
+export default async function DashboardPage() {
+  noStore() // Désactive le cache statique
+  const supabase = await createSafeServerClient()
+  // ...
+}
+```
+
+#### Revalidation après Mutations
+```tsx
+// Dans Server Action
+revalidatePath('/dashboard')
+revalidatePath(`/song/${id}`)
+revalidatePath('/folders', 'layout') // Revalider le layout aussi
+```
+
+#### Revalidation Ciblée (Tags)
+```tsx
+import { revalidateTag } from 'next/cache'
+revalidateTag(`songs:user:${userId}`)
+```
+
+### Middleware (Session Refresh)
+
+```tsx
+// middleware.ts
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() { return req.cookies.getAll() },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value, options }) => 
+          res.cookies.set(name, value, options)
+        )
+      }
+    }
+  })
+  await supabase.auth.getSession() // Rafraîchit la session
+  return res
+}
+```
+
+### React Context Pattern
+
+```tsx
+// context/AuthContext.tsx
+'use client'
+
+interface AuthContextType {
+  user: User | null
+  loading: boolean
+  signIn: () => Promise<void>
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const auth = useAuth() // Custom hook
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+}
+
+export function useAuthContext() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuthContext must be used within an AuthProvider')
+  }
+  return context
+}
+```
+
+### Client Component avec Server Actions
+
+```tsx
+'use client'
+
+import { useTransition } from 'react'
+import { addSongAction } from '@/app/(protected)/dashboard/actions'
+
+export function AddSongForm() {
+  const [pending, startTransition] = useTransition()
+  
+  const handleSubmit = (data: NewSongData) => {
+    startTransition(async () => {
+      await addSongAction(data)
+    })
+  }
+  
+  return <button onClick={handleSubmit} disabled={pending}>Save</button>
+}
+```
+
+## Règles d'Or
+
+### ✅ À FAIRE
+
+1. **Initial fetch côté serveur**: Utiliser des Server Components pour charger les données initiales
+2. **Mutations via Server Actions**: Toutes les mutations passent par des Server Actions
+3. **Client injecté explicitement**: Les repos/services reçoivent le client Supabase en paramètre
+4. **Un seul client serveur**: Utiliser `createSafeServerClient()` ou `createActionServerClient()` partout côté serveur
+5. **RLS comme sécurité primaire**: Laisser RLS filtrer, ne pas faire confiance au client
+6. **Mapping centralisé**: Mapper DB → Domain dans les repos/services uniquement
+7. **Validation systématique**: Zod dans toutes les Server Actions
+8. **Revalidation après mutations**: Toujours appeler `revalidatePath()` après les mutations
+9. **Types générés**: Générer les types DB depuis Supabase CLI
+10. **noStore() pour pages user-scoped**: Désactiver le cache statique pour les pages dépendantes de l'utilisateur
+
+### ❌ À ÉVITER
+
+1. **Ne pas importer le client navigateur dans du code serveur**
+   ```tsx
+   // ❌ MAUVAIS
+   import { supabase } from '@/lib/supabase' // Client navigateur
+   
+   // ✅ BON
+   import { createSafeServerClient } from '@/lib/supabase/server'
+   ```
+
+2. **Ne pas faire de requêtes DB directement dans les Client Components** (sauf cas spéciaux: temps réel, SSE)
+3. **Ne pas passer `userId` depuis le client**: Toujours lire via `client.auth.getUser()`
+4. **Ne pas dupliquer la création du client serveur**: Utiliser les helpers partagés
+5. **Ne pas mapper dans les composants**: Le mapping se fait dans les repos/services
+6. **Ne pas utiliser `select('*')` en production**: Sélectionner uniquement les colonnes utiles
+7. **Ne pas utiliser le service role en runtime web**: Seulement dans scripts/outils
+8. **Ne pas oublier la validation**: Toujours valider les entrées dans les Server Actions
+
+## Configuration TypeScript
+
+```json
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "es6"],
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "moduleResolution": "bundler",
+    "jsx": "preserve"
+  }
+}
+```
+
+## Configuration Tailwind
+
+```ts
+// tailwind.config.ts
+const config: Config = {
+  darkMode: 'class',
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+}
+```
+
+## Checklist pour Nouveau Code
+
+Quand vous ajoutez une nouvelle fonctionnalité :
+
+- [ ] Le fetch initial est dans un Server Component ?
+- [ ] Les mutations passent par des Server Actions ?
+- [ ] Le client Supabase est injecté explicitement dans les repos/services ?
+- [ ] Le mapping DB → Domain est fait dans le repo/service ?
+- [ ] `revalidatePath()` est appelé après les mutations ?
+- [ ] Les types TypeScript sont définis dans `types/index.ts` ?
+- [ ] Le nommage suit les conventions (`<verb><Entity>Action`, `<entity>Repo`, etc.) ?
+- [ ] Les Server Actions valident leurs entrées avec Zod ?
+- [ ] Les pages dépendantes de l'utilisateur évitent le cache statique (`noStore()` ou lecture de `cookies()`) ?
+- [ ] Aucun import du client navigateur (`lib/supabase`) dans du code serveur ?
+- [ ] Les requêtes évitent `select('*')` en production ?
+- [ ] Pagination efficace (keyset) pour les grandes listes ?
+
+## Cas d'Usage Spéciaux
+
+### Temps Réel / SSE
+Pour les cas nécessitant du temps réel, utiliser le client navigateur directement :
+
+```tsx
+'use client'
+import { supabase } from '@/lib/supabase'
+
+useEffect(() => {
+  const channel = supabase.channel('realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'songs' }, 
+      (payload) => { /* ... */ })
+    .subscribe()
+  
+  return () => { supabase.removeChannel(channel) }
+}, [])
+```
+
+### API Routes
+Utiliser les API Routes pour :
+- Intégrations externes (webhooks, OAuth callbacks)
+- Streaming Server-Sent Events (SSE)
+- Clients non-React
+
+```tsx
+// app/api/webhook/route.ts
+import { createActionServerClient } from '@/lib/supabase/server'
+
+export async function POST(req: Request) {
+  const supabase = await createActionServerClient()
+  // ...
+}
+```
+
+## Performance
+
+1. **Paralléliser les fetchs**: Utiliser `Promise.all`
+2. **Éviter N+1**: Utiliser des jointures/relations lorsque possible
+3. **Sélectionner uniquement les colonnes utiles**: Éviter `select('*')`
+4. **Pagination keyset**: Pour des listes volumineuses
+5. **Index DB**: Ajouter les index nécessaires côté DB
+
+## Sécurité
+
+1. **RLS Policies**: Définir des policies idempotentes dans les migrations
+2. **Rate Limiting**: Sur les routes d'API exposées publiquement
+3. **Validation**: Toujours valider les entrées (Zod)
+4. **Messages d'erreur**: Unifier/masquer les messages d'erreurs côté client
+5. **Service Role**: Jamais en runtime web (seulement scripts/outils)
+
+## Tests
+
+1. **Tests d'intégration**: Couvrir les policies RLS (utilisateurs factices, accès autorisé/refusé)
+2. **Tests unitaires**: Pour les utils et helpers purs
+3. **Tests E2E**: Pour les flux critiques utilisateur
+
