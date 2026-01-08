@@ -19,7 +19,7 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.58.0",
     "cheerio": "^1.1.2",
-    "next": "^15.5.7",
+    "next": "15.5.9",
     "react": "^18",
     "react-dom": "^18",
     "react-piano": "^3.1.3",
