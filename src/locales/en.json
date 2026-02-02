@@ -41,7 +41,22 @@
     "search": "Search",
     "folders": "Folders",
     "playlists": "Playlists",
-    "chords": "Chords"
+    "chords": "Chords",
+    "profile": "Profile"
+  },
+  "profile": {
+    "title": "Profile",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "avatarUrl": "Avatar URL",
+    "avatarUrlPlaceholder": "Enter avatar image URL",
+    "badges": "Badges",
+    "activity": "Activity",
+    "songsCreated": "Songs Created",
+    "songsViewed": "Songs Viewed",
+    "foldersCreated": "Folders Created",
+    "playlistsCreated": "Playlists Created",
+    "updateError": "Error updating profile"
   },
   "songs": {
     "sectionTitle": "Songs",
@@ -193,6 +208,8 @@
     "generatePlaylistWithAIDescription": "Describe a musical style and AI will generate a playlist",
     "createFolder": "Create a folder",
     "createFolderDescription": "Organize your songs in a new folder",
+    "importUltimateGuitar": "Import Ultimate Guitar",
+    "importUltimateGuitarDescription": "Import your MyTabs playlist from Ultimate Guitar",
     "back": "Back",
     "playlistName": "Playlist name",
     "folderName": "Folder name",

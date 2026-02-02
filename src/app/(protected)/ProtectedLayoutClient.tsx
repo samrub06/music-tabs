@@ -153,7 +153,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     updateStreakAction().catch(error => {
       console.error('Error updating streak:', error)
     })
-  }, [user?.id]) // Only run when user changes, not on every pathname change
+  }, [user?.id, authLoading]) // Run when user changes or auth loading completes
 
   // Map pathname to page title
   const getPageTitle = (path: string): string | undefined => {
@@ -184,6 +184,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         return undefined
       }
       return t('createMenu.createPlaylist')
+    }
+    if (path === '/profile' || path.startsWith('/profile/')) {
+      return t('navigation.profile')
     }
     return undefined
   }

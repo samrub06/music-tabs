@@ -12,11 +12,13 @@ import {
   MusicalNoteIcon, 
   SparklesIcon, 
   FolderIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  CloudArrowDownIcon
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { addFolderAction, createPlaylistAction } from '@/app/(protected)/dashboard/actions'
 import ManualEntryForm from './ManualEntryForm'
+import PlaylistImporter from './PlaylistImporter'
 import { Folder } from '@/types'
 
 interface CreateMenuProps {
@@ -25,7 +27,7 @@ interface CreateMenuProps {
   folders?: Folder[]
 }
 
-type CreateOption = 'menu' | 'search' | 'manual' | 'playlist' | 'folder'
+type CreateOption = 'menu' | 'search' | 'manual' | 'playlist' | 'folder' | 'import'
 
 export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenuProps) {
   const { t } = useLanguage()
@@ -86,6 +88,11 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
   }
 
   const handleManualEntrySuccess = () => {
+    handleClose()
+    router.refresh()
+  }
+
+  const handleImportComplete = () => {
     handleClose()
     router.refresh()
   }
@@ -185,6 +192,23 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {t('createMenu.createFolderDescription')}
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('import')}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                    <CloudArrowDownIcon className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                      {t('createMenu.importUltimateGuitar')}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('createMenu.importUltimateGuitarDescription')}
                     </div>
                   </div>
                 </button>
@@ -299,6 +323,23 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                 >
                   {isPending ? t('createMenu.creating') : t('createMenu.createFolderButton')}
                 </button>
+              </div>
+            )}
+
+            {currentView === 'import' && (
+              <div className="space-y-4">
+                <button
+                  onClick={() => setCurrentView('menu')}
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                >
+                  <span>←</span> {t('createMenu.back')}
+                </button>
+
+                <div className="max-h-[70vh] overflow-y-auto">
+                  <PlaylistImporter
+                    onImportComplete={handleImportComplete}
+                  />
+                </div>
               </div>
             )}
           </div>

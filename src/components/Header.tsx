@@ -3,11 +3,10 @@
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
-import PlaylistImporter from './PlaylistImporter';
 import CompactStatsDisplay from './gamification/CompactStatsDisplay';
 
 interface HeaderProps {
@@ -23,7 +22,6 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const { user, profile, session, loading, signInWithGoogle, signOut } = useAuthContext();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showPlaylistImporter, setShowPlaylistImporter] = useState(false);
   
   const isSongPage = pathname.includes('/song/');
   const showMenuButton = !isSongPage;
@@ -168,8 +166,44 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             </span>
           </button>
           
-          {/* Right side: Leaderboard (mobile) + Playlist Generator + Auth + Language */}
+          {/* Right side: Language + Leaderboard + Theme + Avatar */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Language selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
+                aria-label={t('common.selectLanguage')}
+              >
+                <span className="text-base sm:text-lg font-medium">{currentLanguage.flag}</span>
+              </button>
+              
+              {showLanguageMenu && (
+                <>
+                  {/* Overlay pour fermer le menu */}
+                  <div 
+                    className="fixed inset-0 z-[50]" 
+                    onClick={() => setShowLanguageMenu(false)}
+                  />
+                  {/* Menu */}
+                  <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
+                  {languages.map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => handleLanguageChange(language.code)}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 ${
+                        language.code === currentLanguage.code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <span>{language.flag}</span>
+                      <span>{language.name}</span>
+                    </button>
+                  ))}
+                </div>
+                </>
+              )}
+            </div>
+
             {/* Leaderboard button - Mobile only (for authenticated users) */}
             {user && (
               <Link
@@ -180,8 +214,24 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 <TrophyIcon className="h-6 w-6" />
               </Link>
             )}
+            
+            {/* Theme toggle */}
+            <div className="relative">
+              <button
+                onClick={toggleTheme}
+                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
+                aria-label={theme === 'dark' ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
+                title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
+              >
+                {theme === 'dark' ? (
+                  <SunIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                ) : (
+                  <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+                )}
+              </button>
+            </div>
      
-            {/* User menu */}
+            {/* User menu - Avatar (tout à droite) */}
             {!loading && (
               <div className="relative">
                 {user ? (
@@ -223,17 +273,17 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                             <CompactStatsDisplay />
                           </div>
                         </div>
-                        
-                        <button
-                          onClick={() => {
-                            setShowPlaylistImporter(true);
-                            setShowUserMenu(false);
-                          }}
+                       
+                        <Link
+                          href="/profile"
+                          onClick={() => setShowUserMenu(false)}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                         >
-                          <CloudArrowDownIcon className="h-5 w-5" />
-                          <span>{t('common.importUltimateGuitar')}</span>
-                        </button>
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span>{t('navigation.profile')}</span>
+                        </Link>
                        
                         <button
                           onClick={() => {
@@ -278,85 +328,8 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 )}
               </div>
             )}
-            
-            {/* Theme toggle */}
-            <div className="relative">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
-                aria-label={theme === 'dark' ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
-                title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
-              >
-                {theme === 'dark' ? (
-                  <SunIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                ) : (
-                  <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                )}
-              </button>
-            </div>
-
-            {/* Language selector */}
-            <div className="relative">
-              <button
-                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
-                aria-label={t('common.selectLanguage')}
-              >
-                <span className="text-base sm:text-lg font-medium">{currentLanguage.flag}</span>
-              </button>
-              
-              {showLanguageMenu && (
-                <>
-                  {/* Overlay pour fermer le menu */}
-                  <div 
-                    className="fixed inset-0 z-[50]" 
-                    onClick={() => setShowLanguageMenu(false)}
-                  />
-                  {/* Menu */}
-                  <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
-                  {languages.map((language) => (
-                    <button
-                      key={language.code}
-                      onClick={() => handleLanguageChange(language.code)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 ${
-                        language.code === currentLanguage.code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <span>{language.flag}</span>
-                      <span>{language.name}</span>
-                    </button>
-                  ))}
-                </div>
-                </>
-              )}
-            </div>
           </div>
         </div>
-
-        {/* Playlist Importer Modal */}
-        {showPlaylistImporter && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Importer Ultimate Guitar</h2>
-                <button
-                  onClick={() => setShowPlaylistImporter(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="p-6">
-                <PlaylistImporter
-                  onImportComplete={(result) => {
-                    console.log('Import completed:', result);
-                    // Optionally refresh the song list or show success message
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );

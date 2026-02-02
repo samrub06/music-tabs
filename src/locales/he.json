@@ -41,7 +41,22 @@
     "search": "חיפוש",
     "folders": "תיקיות",
     "playlists": "פלייליסטים",
-    "chords": "אקורדים"
+    "chords": "אקורדים",
+    "profile": "פרופיל"
+  },
+  "profile": {
+    "title": "פרופיל",
+    "fullName": "שם מלא",
+    "fullNamePlaceholder": "הכנס את שמך המלא",
+    "avatarUrl": "כתובת תמונת פרופיל",
+    "avatarUrlPlaceholder": "הכנס כתובת תמונת פרופיל",
+    "badges": "תגים",
+    "activity": "פעילות",
+    "songsCreated": "שירים שנוצרו",
+    "songsViewed": "שירים שנצפו",
+    "foldersCreated": "תיקיות שנוצרו",
+    "playlistsCreated": "פלייליסטים שנוצרו",
+    "updateError": "שגיאה בעדכון הפרופיל"
   },
   "songs": {
     "sectionTitle": "שירים",
@@ -193,6 +208,8 @@
     "generatePlaylistWithAIDescription": "תאר סגנון מוזיקלי וה-AI ייצור פלייליסט",
     "createFolder": "צור תיקייה",
     "createFolderDescription": "ארגן את השירים שלך בתיקייה חדשה",
+    "importUltimateGuitar": "ייבא מ-Ultimate Guitar",
+    "importUltimateGuitarDescription": "ייבא את פלייליסט MyTabs שלך מ-Ultimate Guitar",
     "back": "חזור",
     "playlistName": "שם הפלייליסט",
     "folderName": "שם התיקייה",

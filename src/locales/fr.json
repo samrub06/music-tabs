@@ -39,7 +39,22 @@
     "search": "Recherche",
     "folders": "Dossiers",
     "playlists": "Playlists",
-    "chords": "Accords"
+    "chords": "Accords",
+    "profile": "Profil"
+  },
+  "profile": {
+    "title": "Profil",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Entrez votre nom complet",
+    "avatarUrl": "URL de l'avatar",
+    "avatarUrlPlaceholder": "Entrez l'URL de l'image de l'avatar",
+    "badges": "Badges",
+    "activity": "Activité",
+    "songsCreated": "Chansons créées",
+    "songsViewed": "Chansons consultées",
+    "foldersCreated": "Dossiers créés",
+    "playlistsCreated": "Playlists créées",
+    "updateError": "Erreur lors de la mise à jour du profil"
   },
   "songs": {
     "sectionTitle": "Chansons",
@@ -191,6 +206,8 @@
     "generatePlaylistWithAIDescription": "Décrivez un style musical et l'AI générera une playlist",
     "createFolder": "Créer un dossier",
     "createFolderDescription": "Organiser vos chansons dans un nouveau dossier",
+    "importUltimateGuitar": "Importer Ultimate Guitar",
+    "importUltimateGuitarDescription": "Importer votre playlist MyTabs depuis Ultimate Guitar",
     "back": "Retour",
     "playlistName": "Nom de la playlist",
     "folderName": "Nom du dossier",
