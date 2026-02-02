@@ -153,6 +153,26 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                 </button>
 
                 <button
+                  onClick={() => {
+                    handleClose()
+                    router.push('/ai-playlist')
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+                    <SparklesIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                      {t('createMenu.generatePlaylistWithAI')}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('createMenu.generatePlaylistWithAIDescription')}
+                    </div>
+                  </div>
+                </button>
+
+                <button
                   onClick={() => setCurrentView('folder')}
                   className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
                 >

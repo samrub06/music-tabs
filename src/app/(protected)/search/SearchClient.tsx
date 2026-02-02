@@ -463,9 +463,6 @@ export default function SearchClient({
                         {result.author}
                       </p>
                       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {result.source && (
-                          <span className="capitalize">{result.source}</span>
-                        )}
                         {result.rating && (
                           <span>⭐ {result.rating.toFixed(1)}</span>
                         )}

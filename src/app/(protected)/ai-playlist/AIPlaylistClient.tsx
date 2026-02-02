@@ -1,0 +1,621 @@
+'use client'
+
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { SparklesIcon, MagnifyingGlassIcon, CheckIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { useLanguage } from '@/context/LanguageContext'
+import { generatePlaylistWithAIAction, createPlaylistWithSongsAction } from './actions'
+import { addSongAction } from '@/app/(protected)/dashboard/actions'
+import { Folder, NewSongData } from '@/types'
+import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
+
+interface AIPlaylistClientProps {
+  folders: Folder[]
+}
+
+interface AIGeneratedSong {
+  title: string
+  artist: string
+}
+
+interface SongSearchResult {
+  title: string
+  author: string
+  url: string
+  source: string
+  reviews?: number
+  rating?: number
+  difficulty?: string
+  version?: number
+  versionDescription?: string
+  artistUrl?: string
+  artistImageUrl?: string
+  songImageUrl?: string
+  sourceUrl?: string
+  sourceSite?: string
+  tabId?: string
+}
+
+interface ProcessedSong {
+  aiSong: AIGeneratedSong
+  searchResults: SongSearchResult[]
+  selectedResult: SongSearchResult | null
+  isSearching: boolean
+  isFound: boolean
+  isSelected: boolean
+  isAdding: boolean
+  addedSongId?: string
+}
+
+export default function AIPlaylistClient({ folders }: AIPlaylistClientProps) {
+  const { t } = useLanguage()
+  const router = useRouter()
+  const [description, setDescription] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [processedSongs, setProcessedSongs] = useState<ProcessedSong[]>([])
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('')
+  const [isAddingSongs, setIsAddingSongs] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
+  const [playlistName, setPlaylistName] = useState('')
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false)
+
+  // Fonction pour détecter si le texte contient des caractères hébreux
+  const isHebrew = (text: string) => {
+    const hebrewRegex = /[\u0590-\u05FF]/
+    return hebrewRegex.test(text)
+  }
+
+  // Générer la playlist avec AI
+  const handleGenerate = async () => {
+    if (!description.trim()) {
+      setMessage({ type: 'error', text: t('aiPlaylist.enterDescription') })
+      return
+    }
+
+    setIsGenerating(true)
+    setProcessedSongs([])
+    setMessage(null)
+
+    try {
+      const result = await generatePlaylistWithAIAction(description.trim())
+
+      if (!result.success || result.songs.length === 0) {
+        setMessage({
+          type: 'error',
+          text: result.error || t('aiPlaylist.generationFailed')
+        })
+        setIsGenerating(false)
+        return
+      }
+
+      // Initialiser les chansons à traiter
+      const initialProcessed: ProcessedSong[] = result.songs.map(aiSong => ({
+        aiSong,
+        searchResults: [],
+        selectedResult: null,
+        isSearching: false,
+        isFound: false,
+        isSelected: false,
+        isAdding: false
+      }))
+
+      setProcessedSongs(initialProcessed)
+
+      // Rechercher chaque chanson en parallèle (avec limite de concurrence)
+      await searchAllSongs(initialProcessed)
+    } catch (error) {
+      console.error('Error generating playlist:', error)
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : t('aiPlaylist.generationError')
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  // Rechercher toutes les chansons avec limite de concurrence
+  const searchAllSongs = async (songs: ProcessedSong[]) => {
+    const CONCURRENT_LIMIT = 3 // Limiter à 3 recherches simultanées
+
+    for (let i = 0; i < songs.length; i += CONCURRENT_LIMIT) {
+      const batch = songs.slice(i, i + CONCURRENT_LIMIT)
+      await Promise.all(batch.map(song => searchSong(song)))
+    }
+  }
+
+  // Rechercher une chanson spécifique
+  const searchSong = async (song: ProcessedSong) => {
+    const query = `${song.aiSong.title} ${song.aiSong.artist}`
+    const isHebrewText = isHebrew(query)
+    const source = isHebrewText ? 'tab4u' : 'ultimate-guitar'
+
+    setProcessedSongs(prev => prev.map(s =>
+      s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+        ? { ...s, isSearching: true }
+        : s
+    ))
+
+    try {
+      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(query)}&source=${source}`)
+      const data = await response.json()
+
+      if (response.ok && data.results && data.results.length > 0) {
+        // Trouver le meilleur résultat (premier par défaut, ou celui avec le meilleur rating)
+        const bestResult = data.results[0]
+        setProcessedSongs(prev => prev.map(s =>
+          s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+            ? {
+                ...s,
+                searchResults: data.results,
+                selectedResult: bestResult,
+                isFound: true,
+                isSelected: true, // Sélectionné par défaut
+                isSearching: false
+              }
+            : s
+        ))
+      } else {
+        setProcessedSongs(prev => prev.map(s =>
+          s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+            ? { ...s, isFound: false, isSearching: false }
+            : s
+        ))
+      }
+    } catch (error) {
+      console.error('Error searching song:', error)
+      setProcessedSongs(prev => prev.map(s =>
+        s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+          ? { ...s, isFound: false, isSearching: false }
+          : s
+      ))
+    }
+  }
+
+  // Sélectionner un résultat de recherche pour une chanson
+  const handleSelectResult = (song: ProcessedSong, result: SongSearchResult) => {
+    setProcessedSongs(prev => prev.map(s =>
+      s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+        ? { ...s, selectedResult: result, isSelected: true }
+        : s
+    ))
+  }
+
+  // Toggle sélection d'une chanson
+  const handleToggleSelection = (song: ProcessedSong) => {
+    if (!song.isFound) return
+    setProcessedSongs(prev => prev.map(s =>
+      s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+        ? { ...s, isSelected: !s.isSelected }
+        : s
+    ))
+  }
+
+  // Construire le payload pour ajouter une chanson
+  const buildNewSongDataFromScrape = (
+    scraped: Partial<NewSongData> & { url?: string; source?: string; songImageUrl?: string },
+    result?: SongSearchResult,
+    folderId?: string
+  ): NewSongData => {
+    return {
+      title: (scraped.title || result?.title || t('songs.unknownTitle')).trim(),
+      author: (scraped.author || result?.author || t('songs.unknownArtist')).trim(),
+      content: (scraped as any).content || '',
+      folderId: folderId || undefined,
+      reviews: (result?.reviews ?? scraped.reviews) || 0,
+      capo: scraped.capo,
+      key: scraped.key,
+      rating: scraped.rating,
+      difficulty: scraped.difficulty,
+      version: scraped.version,
+      versionDescription: scraped.versionDescription,
+      artistUrl: scraped.artistUrl,
+      artistImageUrl: scraped.artistImageUrl,
+      songImageUrl: scraped.songImageUrl,
+      sourceUrl: scraped.url,
+      sourceSite: scraped.source,
+      tabId: scraped.tabId,
+      genre: (scraped as any).songGenre || (scraped as any).genre,
+      bpm: scraped.bpm
+    } as NewSongData
+  }
+
+  // Ajouter toutes les chansons sélectionnées
+  const handleAddSongs = async () => {
+    const selectedSongs = processedSongs.filter(s => s.isSelected && s.isFound && !s.addedSongId)
+    
+    if (selectedSongs.length === 0) {
+      setMessage({ type: 'error', text: t('aiPlaylist.noSongsSelected') })
+      return
+    }
+
+    setIsAddingSongs(true)
+    setMessage(null)
+
+    const addedSongIds: string[] = []
+
+    try {
+      for (const song of selectedSongs) {
+        if (!song.selectedResult) continue
+
+        setProcessedSongs(prev => prev.map(s =>
+          s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+            ? { ...s, isAdding: true }
+            : s
+        ))
+
+        try {
+          // Scraper la chanson depuis l'URL
+          const searchResultParam = encodeURIComponent(JSON.stringify(song.selectedResult))
+          const response = await fetch(`/api/songs/search?url=${encodeURIComponent(song.selectedResult.url)}&searchResult=${searchResultParam}`)
+          const data = await response.json()
+
+          if (response.ok && data.song) {
+            const payload = buildNewSongDataFromScrape(data.song, song.selectedResult, selectedFolderId || undefined)
+            
+            if (payload.title.trim() && payload.content.trim()) {
+              const normalizedPayload: NewSongData = {
+                ...payload,
+                title: payload.title.trim(),
+                author: (payload.author || '').trim(),
+                content: payload.content.trim(),
+              }
+
+              const newSong = await addSongAction(normalizedPayload)
+              addedSongIds.push(newSong.id)
+
+              setProcessedSongs(prev => prev.map(s =>
+                s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+                  ? { ...s, isAdding: false, addedSongId: newSong.id }
+                  : s
+              ))
+            }
+          }
+        } catch (error) {
+          console.error(`Error adding song ${song.aiSong.title}:`, error)
+          setProcessedSongs(prev => prev.map(s =>
+            s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist
+              ? { ...s, isAdding: false }
+              : s
+          ))
+        }
+      }
+
+      if (addedSongIds.length > 0) {
+        setMessage({
+          type: 'success',
+          text: t('aiPlaylist.songsAdded').replace('{count}', String(addedSongIds.length))
+        })
+        // Proposer de créer une playlist
+        setShowPlaylistModal(true)
+      }
+    } catch (error) {
+      console.error('Error adding songs:', error)
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : t('aiPlaylist.addError')
+      })
+    } finally {
+      setIsAddingSongs(false)
+    }
+  }
+
+  // Sauvegarder comme playlist
+  const handleSaveAsPlaylist = async () => {
+    if (!playlistName.trim()) {
+      setMessage({ type: 'error', text: t('aiPlaylist.playlistNameRequired') })
+      return
+    }
+
+    const addedSongs = processedSongs.filter(s => s.addedSongId)
+    if (addedSongs.length === 0) {
+      setMessage({ type: 'error', text: t('aiPlaylist.noSongsAdded') })
+      return
+    }
+
+    try {
+      // Créer la playlist via Server Action
+      const playlist = await createPlaylistWithSongsAction(
+        playlistName.trim(),
+        `Playlist générée par AI: ${description}`,
+        addedSongs.map(s => s.addedSongId!).filter(Boolean)
+      )
+
+      setMessage({ type: 'success', text: t('aiPlaylist.playlistCreated') })
+      setShowPlaylistModal(false)
+      router.push(`/playlists`)
+      router.refresh()
+    } catch (error) {
+      console.error('Error creating playlist:', error)
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : t('aiPlaylist.playlistError')
+      })
+    }
+  }
+
+  const foundCount = processedSongs.filter(s => s.isFound).length
+  const selectedCount = processedSongs.filter(s => s.isSelected && s.isFound).length
+  const addedCount = processedSongs.filter(s => s.addedSongId).length
+
+  return (
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <SparklesIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t('aiPlaylist.title')}
+          </h1>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t('aiPlaylist.description')}
+        </p>
+      </div>
+
+      {/* Message */}
+      {message && (
+        <div className={`mb-4 p-3 rounded-md ${
+          message.type === 'error' 
+            ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' 
+            : message.type === 'success'
+            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+            : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <span>{message.text}</span>
+            <button
+              onClick={() => setMessage(null)}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-2"
+            >
+              <XMarkIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Formulaire de génération */}
+      <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('aiPlaylist.styleDescription')}
+          </label>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !isGenerating && handleGenerate()}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            placeholder={t('aiPlaylist.stylePlaceholder')}
+            disabled={isGenerating}
+          />
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {t('aiPlaylist.styleHint')}
+          </p>
+        </div>
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating || !description.trim()}
+          className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+        >
+          {isGenerating ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              {t('aiPlaylist.generating')}
+            </>
+          ) : (
+            <>
+              <SparklesIcon className="h-5 w-5 mr-2" />
+              {t('aiPlaylist.generate')}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Résultats */}
+      {processedSongs.length > 0 && (
+        <div className="space-y-4">
+          {/* Statistiques */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{processedSongs.length}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">{t('aiPlaylist.totalSongs')}</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{foundCount}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">{t('aiPlaylist.foundSongs')}</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedCount}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">{t('aiPlaylist.selectedSongs')}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sélecteur de dossier */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('aiPlaylist.selectFolder')}
+            </label>
+            <select
+              value={selectedFolderId}
+              onChange={(e) => setSelectedFolderId(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">{t('aiPlaylist.noFolder')}</option>
+              {folders.map(folder => (
+                <option key={folder.id} value={folder.id}>{folder.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Liste des chansons */}
+          <div className="space-y-3">
+            {processedSongs.map((song, index) => (
+              <div
+                key={`${song.aiSong.title}-${song.aiSong.artist}-${index}`}
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border ${
+                  song.isSelected && song.isFound
+                    ? 'border-purple-500 dark:border-purple-400'
+                    : 'border-gray-200 dark:border-gray-700'
+                } p-4`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Checkbox */}
+                  <input
+                    type="checkbox"
+                    checked={song.isSelected && song.isFound}
+                    onChange={() => handleToggleSelection(song)}
+                    disabled={!song.isFound || song.isSearching || song.isAdding}
+                    className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                  />
+                  
+                  {/* Info chanson */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
+                          {song.aiSong.title}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {song.aiSong.artist}
+                        </div>
+                      </div>
+                      
+                      {/* Status */}
+                      <div className="ml-4">
+                        {song.isSearching && (
+                          <div className="flex items-center text-blue-600 dark:text-blue-400">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                            <span className="text-xs">{t('aiPlaylist.searching')}</span>
+                          </div>
+                        )}
+                        {!song.isSearching && song.isFound && (
+                          <div className="flex items-center text-green-600 dark:text-green-400">
+                            <CheckIcon className="h-5 w-5 mr-1" />
+                            <span className="text-xs">{t('aiPlaylist.found')}</span>
+                          </div>
+                        )}
+                        {!song.isSearching && !song.isFound && (
+                          <div className="flex items-center text-red-600 dark:text-red-400">
+                            <XMarkIcon className="h-5 w-5 mr-1" />
+                            <span className="text-xs">{t('aiPlaylist.notFound')}</span>
+                          </div>
+                        )}
+                        {song.addedSongId && (
+                          <div className="flex items-center text-purple-600 dark:text-purple-400 mt-1">
+                            <CheckIcon className="h-5 w-5 mr-1" />
+                            <span className="text-xs">{t('aiPlaylist.added')}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Résultats de recherche */}
+                    {song.searchResults.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {song.searchResults.map((result, resultIndex) => (
+                          <div
+                            key={resultIndex}
+                            onClick={() => handleSelectResult(song, result)}
+                            className={`p-2 rounded border cursor-pointer transition-colors ${
+                              song.selectedResult?.url === result.url
+                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                                : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  {result.title}
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  {result.author}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {result.rating && (
+                                  <span className="text-xs text-yellow-600 dark:text-yellow-400">
+                                    ⭐ {result.rating.toFixed(1)}
+                                  </span>
+                                )}
+                                {song.selectedResult?.url === result.url && (
+                                  <CheckIcon className="h-4 w-4 text-purple-600" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Boutons d'action */}
+          {selectedCount > 0 && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddSongs}
+                disabled={isAddingSongs || selectedCount === 0}
+                className="flex-1 flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              >
+                {isAddingSongs ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    {t('aiPlaylist.adding')}
+                  </>
+                ) : (
+                  <>
+                    <PlusIcon className="h-5 w-5 mr-2" />
+                    {t('aiPlaylist.addSelected').replace('{count}', String(selectedCount))}
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal pour créer la playlist */}
+      {showPlaylistModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {t('aiPlaylist.saveAsPlaylist')}
+            </h3>
+            <input
+              type="text"
+              value={playlistName}
+              onChange={(e) => setPlaylistName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && playlistName.trim() && handleSaveAsPlaylist()}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
+              placeholder={t('aiPlaylist.playlistNamePlaceholder')}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveAsPlaylist}
+                disabled={!playlistName.trim()}
+                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              >
+                {t('common.save')}
+              </button>
+              <button
+                onClick={() => {
+                  setShowPlaylistModal(false)
+                  setPlaylistName('')
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

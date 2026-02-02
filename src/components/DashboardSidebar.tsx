@@ -166,6 +166,20 @@ export default function DashboardSidebar({
           </div>
         )}
 
+        {/* Generate Playlist with AI Button */}
+        <div className="mb-4">
+          <button
+            onClick={() => {
+              router.push('/ai-playlist');
+              onClose?.();
+            }}
+            className="w-full flex items-center justify-center px-4 py-3 bg-emerald-200 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-sm font-medium rounded-lg hover:bg-emerald-300 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
+          >
+            <SparklesIcon className="h-5 w-5 mr-2" />
+            {t('sidebar.generatePlaylistWithAI')}
+          </button>
+        </div>
+
         {/* Create Playlist Button */}
         <div className="mb-4">
           <button
