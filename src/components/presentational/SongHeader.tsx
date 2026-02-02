@@ -2,6 +2,7 @@
 
 import { Song } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
+import Image from 'next/image';
 import {
   ArrowLeftIcon,
   EyeIcon,
@@ -166,9 +167,11 @@ export default function SongHeader({
           {/* Song Image */}
           <div className="flex-shrink-0">
             {song.songImageUrl ? (
-              <img 
+              <Image 
                 src={song.songImageUrl} 
                 alt={song.title}
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-lg object-cover"
               />
             ) : (

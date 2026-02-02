@@ -4,6 +4,7 @@ import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
 import { MusicalNoteIcon, Bars3Icon } from '@heroicons/react/24/outline'
 import { useRouter, usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -121,7 +122,7 @@ export default function SongTableRow({
         <td className="px-2 sm:px-4 py-2">
           <div className="flex items-center">
             {song?.songImageUrl ? (
-              <img 
+              <Image 
                 src={song.songImageUrl} 
                 alt={song.title}
                 width={40}
@@ -163,7 +164,7 @@ export default function SongTableRow({
         <td className="hidden sm:table-cell px-4 py-2 whitespace-nowrap">
           <div className="flex items-center space-x-2">
             {song.artistImageUrl && (
-              <img 
+              <Image 
                 src={song.artistImageUrl} 
                 alt={song.author}
                 width={16}

@@ -12,6 +12,7 @@ import Link from 'next/link'
 
 import type { Song } from '@/types'
 import type { ReactNode } from 'react'
+import Image from 'next/image'
 
 interface SearchClientProps {
   userId?: string
@@ -446,11 +447,12 @@ export default function SearchClient({
                     className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
                   >
                     {/* Image */}
-                    <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
-                      <img
+                    <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden relative">
+                      <Image
                         src={imageUrl}
                         alt={result.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     </div>
 
