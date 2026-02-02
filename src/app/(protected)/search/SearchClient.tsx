@@ -232,13 +232,15 @@ export default function SearchClient({
     performSearch(query)
   }
 
-  // Handle clear search
+  // Handle clear search - Reset all search state
   const handleClearSearch = () => {
     setSearchQuery('')
     setSearchResults([])
     setExistingSongs(new Map())
     setMessage(null)
     setHasSearched(false)
+    setIsInputFocused(false)
+    setAddingSongId(null)
     if (searchInputRef.current) {
       searchInputRef.current.focus()
     }

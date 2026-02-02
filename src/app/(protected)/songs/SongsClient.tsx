@@ -1,19 +1,22 @@
 'use client'
 
 import SongTable from '@/components/SongTable'
-import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
-import FolderSelectionModal from '@/components/FolderSelectionModal'
-import SortSelectionModal, { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, ChevronDownIcon, ChevronUpIcon, CheckIcon } from '@heroicons/react/24/outline'
-import { useMemo, useState, useEffect } from 'react'
+import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { SortField, SortDirection } from '@/components/SortSelectionModal'
 
 interface SongsClientProps {
   songs: Song[]
@@ -29,19 +32,44 @@ interface SongsClientProps {
   initialSortOrder?: 'asc' | 'desc'
 }
 
+const sortFieldLabels: Record<SortField, string> = {
+  title: 'Titre',
+  author: 'Artiste',
+  key: 'Tonalité',
+  rating: 'Note',
+  reviews: 'Avis',
+  difficulty: 'Difficulté',
+  version: 'Version',
+  viewCount: 'Vues',
+  updatedAt: 'Modifié',
+  createdAt: 'Date'
+}
+
 export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc' }: SongsClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  const [showFolderModal, setShowFolderModal] = useState(false)
-  const [showSortModal, setShowSortModal] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  
+  // Search state
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+  
+  // Filter state
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
   const [sortField, setSortField] = useState<SortField>('title')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
+  
+  // Other state
   const [isSelectMode, setIsSelectMode] = useState(false)
+  const [currentFolder, setCurrentFolder] = useState<string | null>(selectedFolder || null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [draggedSong, setDraggedSong] = useState<Song | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
@@ -56,12 +84,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   useEffect(() => {
     const songIdFromUrl = searchParams?.get('songId')
     if (songIdFromUrl) {
-      // Navigate to song page and remove songId from URL
       router.push(`/song/${songIdFromUrl}`)
     }
   }, [searchParams?.get('songId'), router])
-
-  const [currentFolder, setCurrentFolder] = useState<string | null>(selectedFolder || null)
 
   // Sync folder and sortOrder from URL
   useEffect(() => {
@@ -75,35 +100,25 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       setSortDirection(sortOrderFromUrl)
     }
   }, [searchParams])
-  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>('all')
-  const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
-  
-  // Drag and Drop state
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [draggedSong, setDraggedSong] = useState<Song | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  
-  // Configure sensors for drag and drop (including touch for mobile)
+
+  // Configure sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Require 8px of movement before drag starts (prevents accidental drags)
+        distance: 8,
       },
     })
   )
-  
+
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
     setActiveId(active.id as string)
-    // Find the song being dragged
     const song = songs.find(s => s.id === active.id)
     setDraggedSong(song || null)
   }
-  
-  // Handle drag end (drop)
+
+  // Handle drag end
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     
@@ -116,14 +131,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     const songId = active.id as string
     const dropTarget = over.id as string
     
-    // Check if dropped on a folder (folder IDs start with 'folder-')
     if (typeof dropTarget === 'string' && dropTarget.startsWith('folder-')) {
       const folderId = dropTarget.replace('folder-', '') || undefined
       
       try {
         await updateSongFolderAction(songId, folderId)
         
-        // Find folder name for success message
         const folderName = folderId 
           ? folders.find(f => f.id === folderId)?.name || 'le dossier'
           : 'Sans dossier'
@@ -137,57 +150,29 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
   }
 
-  // Filter songs by folder first
+  // Filter songs by folder
   const filteredSongs = useMemo(() => {
     let filtered = [...songs]
 
-    // Filter by folder (same logic as SongTable)
     if (currentFolder === 'unorganized') {
       filtered = filtered.filter(song => !song.folderId)
     } else if (currentFolder) {
       filtered = filtered.filter(song => song.folderId === currentFolder)
     }
-    // If currentFolder is null, show all songs
 
     return filtered
   }, [songs, currentFolder])
 
-  // Sort filtered songs by folder and filter by search query and tab filter
+  // Sort and filter by search query
   const sortedSongs = useMemo(() => {
     let sorted = [...filteredSongs]
 
-    // Apply tab-based filtering
-    if (activeTab === 'recent') {
-      // Sort by createdAt descending (most recent first)
-      sorted.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime()
-        const dateB = new Date(b.createdAt).getTime()
-        return dateB - dateA
-      })
-    } else if (activeTab === 'popular') {
-      // Filter songs with viewCount > 0 and sort by viewCount descending
-      sorted = sorted.filter(song => song.viewCount && song.viewCount > 0)
-      sorted.sort((a, b) => {
-        const viewCountA = a.viewCount || 0
-        const viewCountB = b.viewCount || 0
-        return viewCountB - viewCountA
-      })
-    } else {
-      // All tab: Default sort by title (SongTable will handle its own sorting for table view)
-      sorted.sort((a, b) => {
-        const titleA = (a.title || '').toLowerCase()
-        const titleB = (b.title || '').toLowerCase()
-        return titleA.localeCompare(titleB)
-      })
-    }
-
-    // Filter by search query (applies to all tabs)
+    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
       sorted = sorted.filter(song => 
         song.title.toLowerCase().includes(query) ||
         song.author.toLowerCase().includes(query) ||
-        // Search in all sections and lines for structured songs
         song.sections?.some(section => 
           section.name.toLowerCase().includes(query) ||
           section.lines.some(line => 
@@ -199,14 +184,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
 
     return sorted
-  }, [filteredSongs, folders, searchQuery, activeTab])
+  }, [filteredSongs, searchQuery])
 
-  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
+  const applyQuery = (next: { page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
-    // Remove old 'q' and 'searchQuery' params if they exist (cleanup old URLs)
     params.delete('q')
     params.delete('searchQuery')
-    if (next.view) params.set('view', next.view)
+    params.set('view', 'table') // Always table view
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
     else if (!params.has('limit')) params.set('limit', String(limit))
@@ -231,15 +215,45 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     applyQuery({ folder: folderId, page: 1 })
   }
 
-
-  const handleSortOrderChange = (order: 'asc' | 'desc') => {
-    setSortDirection(order)
-    applyQuery({ sortOrder: order, page: 1 })
+  const handleSortChange = (field: SortField, direction: SortDirection) => {
+    setSortField(field)
+    setSortDirection(direction)
+    applyQuery({ sortOrder: direction, page: 1 })
   }
 
-  // Toggle select mode
   const toggleSelectMode = () => {
     setIsSelectMode(prev => !prev)
+  }
+
+  // Handle search expansion (mobile)
+  const handleSearchIconClick = () => {
+    setIsSearchExpanded(true)
+    setTimeout(() => {
+      searchInputRef.current?.focus()
+    }, 100)
+  }
+
+  // Handle search clear
+  const handleClearSearch = () => {
+    setLocalSearchValue('')
+    setSearchQuery('')
+    setIsSearchExpanded(false)
+  }
+
+  // Handle filter apply
+  const handleApplyFilters = () => {
+    handleFolderChange(selectedFolder)
+    handleSortChange(sortField, sortDirection)
+    setIsFilterSheetOpen(false)
+  }
+
+  // Handle filter clear
+  const handleClearFilters = () => {
+    setSelectedFolder(undefined)
+    setSortField('title')
+    setSortDirection('asc')
+    handleFolderChange(undefined)
+    handleSortChange('title', 'asc')
   }
 
   return (
@@ -249,261 +263,130 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragEnd={handleDragEnd}
     >
       <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-        {/* Top Row: View Toggle */}
-        <div className="mb-4 flex items-center justify-end gap-2">
-          {/* View toggle */}
-          <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
-            <button
-              className={`px-3 sm:px-3 py-2 sm:py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => applyQuery({ view: 'gallery', page: 1 })}
-              title="Gallery View"
-            >
-              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-            <button
-              className={`px-3 sm:px-3 py-2 sm:py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-              onClick={() => applyQuery({ view: 'table', page: 1 })}
-              title="Table View"
-            >
-              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Search Bar - Full width */}
-        <div className="mb-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder={t('songs.search')}
-              value={localSearchValue}
-              onChange={(e) => setLocalSearchValue(e.target.value)}
-              className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            {localSearchValue && (
+        {/* Header with Search and Filter Icons */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          {/* Mobile: Search Icon / Desktop: Search Bar */}
+          <div className="flex-1 flex items-center gap-2">
+            {/* Mobile: Search Icon Button */}
+            {!isSearchExpanded && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setLocalSearchValue('')
-                  setSearchQuery('')
-                }}
-                className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                type="button"
+                onClick={handleSearchIconClick}
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Search"
               >
-                <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <MagnifyingGlassIcon className="h-5 w-5" />
               </button>
             )}
-          </div>
-        </div>
 
-        {/* Folder Filter Button and Sort Button */}
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowFolderModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            >
-              <span>
-                {selectedFolder
-                  ? folders.find((f) => f.id === selectedFolder)?.name || 'All Folders'
-                  : 'All Folders'}
-              </span>
-              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-            </button>
-
-            <button
-              onClick={() => setShowSortModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            >
-              <span>
-                {sortField === 'title' && 'Titre'}
-                {sortField === 'author' && 'Artiste'}
-                {sortField === 'key' && 'Tonalité'}
-                {sortField === 'rating' && 'Note'}
-                {sortField === 'reviews' && 'Avis'}
-                {sortField === 'difficulty' && 'Difficulté'}
-                {sortField === 'version' && 'Version'}
-                {sortField === 'viewCount' && 'Vues'}
-                {sortField === 'updatedAt' && 'Modifié'}
-                {sortField === 'createdAt' && 'Date'}
-              </span>
-              <ChevronDownIcon className="h-4 w-4 text-gray-400" />
-            </button>
-
-            <button
-              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
-            >
-              {sortDirection === 'asc' ? (
-                <ChevronUpIcon className="h-4 w-4 text-gray-600" />
-              ) : (
-                <ChevronDownIcon className="h-4 w-4 text-gray-600" />
-              )}
-            </button>
-
-            {/* Select Mode Button */}
-            <button
-              onClick={toggleSelectMode}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 sm:py-2 text-sm font-medium rounded-md border transition-colors ${
-                isSelectMode
-                  ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              title={isSelectMode ? 'Exit Select Mode' : 'Enter Select Mode'}
-            >
-              {isSelectMode ? (
-                <div className="h-4 w-4 border-2 border-white rounded flex items-center justify-center">
-                  <CheckIcon className="h-3 w-3 text-white" />
+            {/* Mobile: Expanded Search / Desktop: Always Visible Search */}
+            <div className={`${isSearchExpanded ? 'flex-1' : 'hidden lg:flex flex-1'} relative`}>
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 </div>
-              ) : (
-                <div className="h-4 w-4 border-2 border-gray-400 rounded" />
-              )}
-              <span className="hidden sm:inline">
-                {isSelectMode ? 'Select Mode' : 'Select'}
-              </span>
-            </button>
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder={t('songs.search')}
+                  value={localSearchValue}
+                  onChange={(e) => setLocalSearchValue(e.target.value)}
+                  onBlur={() => {
+                    // On mobile, collapse search if empty
+                    if (!localSearchValue.trim() && window.innerWidth < 1024) {
+                      setIsSearchExpanded(false)
+                    }
+                  }}
+                  className="pl-9 pr-9"
+                />
+                {localSearchValue && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    type="button"
+                  >
+                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Filter Icon Button */}
+          <button
+            onClick={() => setIsFilterSheetOpen(true)}
+            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Filters"
+          >
+            <AdjustmentsHorizontalIcon className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Filtering Tabs - Mobile optimized */}
-        <div className="mb-4 lg:hidden">
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <MusicalNoteIcon className="h-4 w-4 mr-2" />
-              <span>All</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('recent')}
-              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'recent' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <ClockIcon className="h-4 w-4 mr-2" />
-              <span>Recent</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('popular')}
-              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'popular' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <FireIcon className="h-4 w-4 mr-2" />
-              <span>Popular</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
+        {/* Content - Table Only */}
         {sortedSongs && sortedSongs.length > 0 ? (
-          view === 'table' ? (
-            <>
-              <SongTable
-                songs={sortedSongs}
-                folders={folders}
-                playlists={playlists}
-                currentFolder={currentFolder}
-                currentPlaylistId={currentPlaylistId}
-                searchQuery={searchQuery}
-                hasUser={true}
-                onFolderChange={updateSongFolderAction}
-                onDeleteSongs={deleteSongsAction}
-                onDeleteAllSongs={deleteAllSongsAction}
-                onCurrentFolderChange={(folderId) => {
-                  setCurrentFolder(folderId)
-                  handleFolderChange(folderId || undefined)
-                }}
-                onUpdateSong={updateSongAction}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSortChange={(field, direction) => {
-                  setSortField(field)
-                  setSortDirection(direction)
-                }}
-                isSelectMode={isSelectMode}
-                onToggleSelectMode={toggleSelectMode}
-              />
-              <div className="hidden sm:block">
-                <Pagination page={page} limit={limit} total={total} />
-              </div>
-              {/* Compact Pagination for Mobile - En bas */}
-              {(() => {
-                const totalPages = Math.max(1, Math.ceil(total / limit))
-                const canPrev = page > 1
-                const canNext = page < totalPages
-                
-                if (totalPages <= 1) return null
-                
-                return (
-                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page - 1 })}
-                      disabled={!canPrev}
-                    >
-                      ‹
-                    </button>
-                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
-                      {page} / {totalPages}
-                    </span>
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page + 1 })}
-                      disabled={!canNext}
-                    >
-                      ›
-                    </button>
-                  </div>
-                )
-              })()}
-            </>
-          ) : (
-            <>
-              <SongGallery songs={sortedSongs} hasUser={true} />
-              <div className="hidden sm:block">
-                <Pagination page={page} limit={limit} total={total} />
-              </div>
-              {/* Compact Pagination for Mobile - En bas */}
-              {(() => {
-                const totalPages = Math.max(1, Math.ceil(total / limit))
-                const canPrev = page > 1
-                const canNext = page < totalPages
-                
-                if (totalPages <= 1) return null
-                
-                return (
-                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page - 1 })}
-                      disabled={!canPrev}
-                    >
-                      ‹
-                    </button>
-                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
-                      {page} / {totalPages}
-                    </span>
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page + 1 })}
-                      disabled={!canNext}
-                    >
-                      ›
-                    </button>
-                  </div>
-                )
-              })()}
-            </>
-          )
-        ) : null}
+          <>
+            <SongTable
+              songs={sortedSongs}
+              folders={folders}
+              playlists={playlists}
+              currentFolder={currentFolder}
+              currentPlaylistId={null}
+              searchQuery={searchQuery}
+              hasUser={true}
+              onFolderChange={updateSongFolderAction}
+              onDeleteSongs={deleteSongsAction}
+              onDeleteAllSongs={deleteAllSongsAction}
+              onCurrentFolderChange={(folderId) => {
+                setCurrentFolder(folderId)
+                handleFolderChange(folderId || undefined)
+              }}
+              onUpdateSong={updateSongAction}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSortChange={handleSortChange}
+              isSelectMode={isSelectMode}
+              onToggleSelectMode={toggleSelectMode}
+            />
+            <div className="hidden sm:block mt-4">
+              <Pagination page={page} limit={limit} total={total} />
+            </div>
+            {/* Compact Pagination for Mobile */}
+            {(() => {
+              const totalPages = Math.max(1, Math.ceil(total / limit))
+              const canPrev = page > 1
+              const canNext = page < totalPages
+              
+              if (totalPages <= 1) return null
+              
+              return (
+                <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
+                  <button
+                    className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                    onClick={() => applyQuery({ page: page - 1 })}
+                    disabled={!canPrev}
+                  >
+                    ‹
+                  </button>
+                  <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                    onClick={() => applyQuery({ page: page + 1 })}
+                    disabled={!canNext}
+                  >
+                    ›
+                  </button>
+                </div>
+              )
+            })()}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-600 dark:text-gray-400">
+              {searchQuery.trim() ? 'Aucun résultat trouvé' : 'Aucune chanson'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Drag overlay */}
@@ -516,7 +399,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         ) : null}
       </DragOverlay>
       
-      {/* Drag Drop Overlay - visible on mobile during drag */}
+      {/* Drag Drop Overlay */}
       <DragDropOverlay 
         folders={folders}
         isDragging={activeId !== null}
@@ -540,27 +423,84 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         duration={5000}
       />
 
-      {/* Folder Selection Modal */}
-      <FolderSelectionModal
-        isOpen={showFolderModal}
-        onClose={() => setShowFolderModal(false)}
-        folders={folders}
-        selectedFolderId={selectedFolder}
-        onSelectFolder={handleFolderChange}
-      />
+      {/* Advanced Filter Sheet */}
+      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+        <SheetContent side="bottom" className="h-[80vh] max-h-[600px]">
+          <SheetHeader>
+            <SheetTitle>Filtres avancés</SheetTitle>
+          </SheetHeader>
+          
+          <div className="mt-6 space-y-6 overflow-y-auto pb-20">
+            {/* Folder Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="folder">Dossier</Label>
+              <Select
+                value={selectedFolder || 'all'}
+                onValueChange={(value) => setSelectedFolder(value === 'all' ? undefined : value)}
+              >
+                <SelectTrigger id="folder">
+                  <SelectValue placeholder="Tous les dossiers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les dossiers</SelectItem>
+                  <SelectItem value="unorganized">Sans dossier</SelectItem>
+                  {folders.map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-      {/* Sort Selection Modal */}
-      <SortSelectionModal
-        isOpen={showSortModal}
-        onClose={() => setShowSortModal(false)}
-        selectedSortField={sortField}
-        selectedSortDirection={sortDirection}
-        onSelectSort={(field, direction) => {
-          setSortField(field)
-          setSortDirection(direction)
-        }}
-      />
+            {/* Sort Field */}
+            <div className="space-y-2">
+              <Label htmlFor="sortField">Trier par</Label>
+              <Select
+                value={sortField}
+                onValueChange={(value) => setSortField(value as SortField)}
+              >
+                <SelectTrigger id="sortField">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(sortFieldLabels).map(([field, label]) => (
+                    <SelectItem key={field} value={field}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Direction */}
+            <div className="space-y-2">
+              <Label htmlFor="sortDirection">Ordre</Label>
+              <Select
+                value={sortDirection}
+                onValueChange={(value) => setSortDirection(value as SortDirection)}
+              >
+                <SelectTrigger id="sortDirection">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asc">Croissant</SelectItem>
+                  <SelectItem value="desc">Décroissant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <SheetFooter className="mt-6">
+            <Button variant="outline" onClick={handleClearFilters}>
+              Effacer
+            </Button>
+            <Button onClick={handleApplyFilters}>
+              Appliquer
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </DndContext>
   )
 }
-
