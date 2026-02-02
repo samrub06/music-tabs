@@ -58,8 +58,8 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
       avatar_url: updates.avatarUrl
     }
 
-    const { data, error } = await client
-      .from('profiles')
+    const { data, error } = await (client
+      .from('profiles') as any)
       .update(updateData)
       .eq('id', userId)
       .select()

@@ -252,6 +252,125 @@ export interface Database {
           created_at?: string
         }
       }
+      user_stats: {
+        Row: {
+          user_id: string
+          total_xp: number
+          current_level: number
+          current_streak: number
+          longest_streak: number
+          last_activity_date: string | null
+          total_songs_created: number
+          total_songs_viewed: number
+          total_folders_created: number
+          total_playlists_created: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          total_xp?: number
+          current_level?: number
+          current_streak?: number
+          longest_streak?: number
+          last_activity_date?: string | null
+          total_songs_created?: number
+          total_songs_viewed?: number
+          total_folders_created?: number
+          total_playlists_created?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          total_xp?: number
+          current_level?: number
+          current_streak?: number
+          longest_streak?: number
+          last_activity_date?: string | null
+          total_songs_created?: number
+          total_songs_viewed?: number
+          total_folders_created?: number
+          total_playlists_created?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      xp_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          xp_amount: number
+          action_type: string
+          entity_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          xp_amount: number
+          action_type: string
+          entity_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          xp_amount?: number
+          action_type?: string
+          entity_id?: string | null
+          created_at?: string
+        }
+      }
+      user_badges: {
+        Row: {
+          id: string
+          user_id: string
+          badge_type: string
+          badge_key: string
+          badge_name: string
+          badge_description: string | null
+          earned_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          badge_type: string
+          badge_key: string
+          badge_name: string
+          badge_description?: string | null
+          earned_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          badge_type?: string
+          badge_key?: string
+          badge_name?: string
+          badge_description?: string | null
+          earned_at?: string
+        }
+      }
+      daily_song_views: {
+        Row: {
+          id: string
+          user_id: string
+          song_id: string
+          viewed_date: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          song_id: string
+          viewed_date: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          song_id?: string
+          viewed_date?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -260,6 +379,39 @@ export interface Database {
       increment_view_count: {
         Args: {
           song_id: string
+        }
+        Returns: void
+      }
+      award_xp: {
+        Args: {
+          p_user_id: string
+          p_xp_amount: number
+          p_action_type: string
+          p_entity_id: string | null
+        }
+        Returns: {
+          total_xp: number
+          current_level: number
+          level_up: boolean
+          old_level: number
+          new_level: number
+        }
+      }
+      update_streak: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          current_streak: number
+          longest_streak: number
+          streak_incremented: boolean
+          daily_bonus_awarded: boolean
+        }
+      }
+      increment_user_stat_counter: {
+        Args: {
+          p_user_id: string
+          p_counter_name: string
         }
         Returns: void
       }

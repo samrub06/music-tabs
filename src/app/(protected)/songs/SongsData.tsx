@@ -4,6 +4,7 @@ import { songService } from '@/lib/services/songService'
 import { folderRepo } from '@/lib/services/folderRepo'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import SongsClient from './SongsClient'
+import type { Folder, Playlist } from '@/types'
 
 async function SongsDataLoader({
   page,
@@ -25,18 +26,34 @@ async function SongsDataLoader({
   return { songs, total }
 }
 
-async function FoldersDataLoader() {
+async function FoldersDataLoader(): Promise<Folder[]> {
   const supabase = await createSafeServerClient()
   // Use lightweight version - only load id, name, displayOrder
-  const folders = await folderRepo(supabase).getAllFoldersLightweight()
-  return folders
+  const foldersLightweight = await folderRepo(supabase).getAllFoldersLightweight()
+  // Map to full Folder type for compatibility
+  return foldersLightweight.map(f => ({
+    id: f.id,
+    name: f.name,
+    parentId: undefined,
+    displayOrder: f.displayOrder,
+    createdAt: new Date(), // Not critical for list view
+    updatedAt: new Date()
+  }))
 }
 
-async function PlaylistsDataLoader() {
+async function PlaylistsDataLoader(): Promise<Playlist[]> {
   const supabase = await createSafeServerClient()
   // Use lightweight version - only load id, name, songCount, createdAt
-  const playlists = await playlistRepo(supabase).getAllPlaylistsLightweight()
-  return playlists
+  const playlistsLightweight = await playlistRepo(supabase).getAllPlaylistsLightweight()
+  // Map to full Playlist type for compatibility
+  return playlistsLightweight.map(p => ({
+    id: p.id,
+    name: p.name,
+    description: undefined,
+    createdAt: p.createdAt,
+    updatedAt: p.createdAt, // Use createdAt as fallback
+    songIds: [] // Will be loaded when playlist is clicked
+  }))
 }
 
 function SongsSkeleton() {

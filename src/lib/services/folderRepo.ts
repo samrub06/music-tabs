@@ -178,7 +178,7 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
 
-    return (data || []).map(f => ({
+    return ((data as Array<{ id: string; name: string; display_order: number | null }>) || []).map(f => ({
       id: f.id,
       name: f.name,
       displayOrder: f.display_order ?? undefined

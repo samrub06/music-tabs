@@ -111,7 +111,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
 
-    return (data || []).map(p => ({
+    return ((data || []) as Array<{ id: string; name: string; song_ids: string[] | null; created_at: string }>).map(p => ({
       id: p.id,
       name: p.name,
       songCount: (p.song_ids as string[] || []).length,

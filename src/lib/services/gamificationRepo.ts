@@ -75,7 +75,7 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     actionType: XpTransaction['actionType'],
     entityId?: string | null
   ): Promise<XpAwardResult> {
-    const { data, error } = await client.rpc('award_xp', {
+    const { data, error } = await (client.rpc as any)('award_xp', {
       p_user_id: userId,
       p_xp_amount: xpAmount,
       p_action_type: actionType,
@@ -99,7 +99,7 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
    * Update streak for daily login
    */
   async updateStreak(userId: string): Promise<StreakUpdateResult> {
-    const { data, error } = await client.rpc('update_streak', {
+    const { data, error } = await (client.rpc as any)('update_streak', {
       p_user_id: userId
     })
 
@@ -119,7 +119,7 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
    * Increment a counter in user_stats
    */
   async incrementCounter(userId: string, counterName: 'total_songs_created' | 'total_songs_viewed' | 'total_folders_created' | 'total_playlists_created'): Promise<void> {
-    const { error } = await client.rpc('increment_user_stat_counter', {
+    const { error } = await (client.rpc as any)('increment_user_stat_counter', {
       p_user_id: userId,
       p_counter_name: counterName
     })
@@ -160,8 +160,8 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
   async recordSongView(userId: string, songId: string): Promise<void> {
     const today = new Date().toISOString().split('T')[0]
     
-    const { error } = await client
-      .from('daily_song_views')
+    const { error } = await (client
+      .from('daily_song_views') as any)
       .insert({
         user_id: userId,
         song_id: songId,
@@ -221,8 +221,8 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
       // Check if condition is met
       if (badgeDef.checkCondition(stats)) {
         // Award badge
-        const { data, error } = await client
-          .from('user_badges')
+        const { data, error } = await (client
+          .from('user_badges') as any)
           .insert({
             user_id: userId,
             badge_type: badgeDef.type,
@@ -267,7 +267,7 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     }
 
     // Get user profiles for these users
-    const userIds = statsData.map(s => s.user_id)
+    const userIds = (statsData as Array<{ user_id: string; total_xp: number; current_level: number; current_streak: number }>).map(s => s.user_id)
     const { data: profilesData, error: profilesError } = await client
       .from('profiles')
       .select('id, email, full_name, avatar_url')
@@ -310,12 +310,12 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
 
     // Create a map of user_id -> profile
     const profileMap = new Map(
-      (profilesData || []).map(p => [p.id, p])
+      ((profilesData || []) as Array<{ id: string; email: string; full_name: string | null; avatar_url: string | null }>).map(p => [p.id, p])
     )
 
     // Create a map of user_id -> badges
     const badgesMap = new Map<string, UserBadge[]>()
-    for (const badge of badgesData || []) {
+    for (const badge of (badgesData || []) as Array<Database['public']['Tables']['user_badges']['Row']>) {
       const userId = badge.user_id
       if (!badgesMap.has(userId)) {
         badgesMap.set(userId, [])
@@ -325,7 +325,7 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
 
     // Create a map of user_id -> song count
     const songCountMap = new Map<string, number>()
-    for (const song of songsData || []) {
+    for (const song of (songsData || []) as Array<{ user_id: string | null }>) {
       if (song.user_id) {
         songCountMap.set(song.user_id, (songCountMap.get(song.user_id) || 0) + 1)
       }
@@ -333,14 +333,14 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
 
     // Create a map of user_id -> playlist count
     const playlistCountMap = new Map<string, number>()
-    for (const playlist of playlistsData || []) {
+    for (const playlist of (playlistsData || []) as Array<{ user_id: string }>) {
       if (playlist.user_id) {
         playlistCountMap.set(playlist.user_id, (playlistCountMap.get(playlist.user_id) || 0) + 1)
       }
     }
 
     // Build leaderboard entries
-    const entries: LeaderboardEntry[] = statsData.map((stat, index) => {
+    const entries: LeaderboardEntry[] = (statsData as Array<{ user_id: string; total_xp: number; current_level: number; current_streak: number }>).map((stat, index) => {
       const profile = profileMap.get(stat.user_id)
       const badges = badgesMap.get(stat.user_id) || []
       const songCount = songCountMap.get(stat.user_id) || 0
