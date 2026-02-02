@@ -303,7 +303,8 @@
     "capo": "קאפו",
     "noCapo": "ללא קאפו",
     "key": "טון:",
-    "delete": "מחק"
+    "delete": "מחק",
+    "by": "על ידי"
   },
   "songContent": {
     "saving": "שומר...",

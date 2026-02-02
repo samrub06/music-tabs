@@ -142,7 +142,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (!user) {
       router.push('/')
     }
-  }, [user, authLoading, pathname, isLibraryRoute]) // Removed router from dependencies as it's stable
+  }, [user, authLoading, pathname, isLibraryRoute, router])
 
   // Map pathname to page title
   const getPageTitle = (path: string): string | undefined => {

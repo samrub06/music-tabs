@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { useAuthContext } from '@/context/AuthContext'
 import { folderRepo } from '@/lib/services/folderRepo'
@@ -43,7 +43,7 @@ export function FoldersProvider({ children }: FoldersProviderProps) {
     return (now - foldersCache.timestamp) < CACHE_DURATION
   }, [user?.id])
 
-  const fetchFolders = async () => {
+  const fetchFolders = useCallback(async () => {
     if (!user || !supabase) {
       setLoading(false)
       return
@@ -77,11 +77,11 @@ export function FoldersProvider({ children }: FoldersProviderProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, supabase, isCacheValid])
 
   useEffect(() => {
     fetchFolders()
-  }, [user, supabase, isCacheValid])
+  }, [fetchFolders])
 
   const refreshFolders = async () => {
     // Invalider le cache

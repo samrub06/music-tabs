@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   MusicalNoteIcon, 
   PlayIcon,
@@ -202,9 +203,11 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
           >
             <div className="flex-shrink-0 mr-3">
               {song.songImageUrl ? (
-                <img 
+                <Image 
                   src={song.songImageUrl} 
                   alt={song.title}
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-lg object-cover"
                 />
               ) : (

@@ -303,7 +303,8 @@
     "capo": "Capo",
     "noCapo": "Sans capo",
     "key": "Tonalité :",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "by": "Par"
   },
   "songContent": {
     "saving": "Sauvegarde...",

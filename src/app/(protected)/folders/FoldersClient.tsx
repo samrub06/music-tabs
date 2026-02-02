@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { FolderIcon, FolderOpenIcon, PlusIcon, MusicalNoteIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, FunnelIcon } from '@heroicons/react/24/outline'
@@ -287,9 +287,9 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
     }
   }
 
-  const getSongCount = (folderId: string) => {
+  const getSongCount = useCallback((folderId: string) => {
     return folderSongCounts.get(folderId) || 0
-  }
+  }, [folderSongCounts])
 
   // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
@@ -340,7 +340,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
     })
     
     return filtered
-  }, [folders, searchQuery, sortBy, sortDirection, folderSongCounts])
+  }, [folders, searchQuery, sortBy, sortDirection, getSongCount])
   
   const handleClearSearch = () => {
     setLocalSearchValue('')

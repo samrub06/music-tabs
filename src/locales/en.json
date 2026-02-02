@@ -303,7 +303,8 @@
     "capo": "Capo",
     "noCapo": "No capo",
     "key": "Key:",
-    "delete": "Delete"
+    "delete": "Delete",
+    "by": "By"
   },
   "songContent": {
     "saving": "Saving...",

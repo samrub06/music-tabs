@@ -90,7 +90,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     if (songIdFromUrl) {
       router.push(`/song/${songIdFromUrl}`)
     }
-  }, [searchParams?.get('songId'), router])
+  }, [searchParams, router])
 
   // Sync folder and sortOrder from URL
   useEffect(() => {

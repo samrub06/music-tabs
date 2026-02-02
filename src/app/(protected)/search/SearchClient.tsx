@@ -193,7 +193,7 @@ export default function SearchClient({
         // Check if results exist in user's songs
         await checkExistingSongs(data.results)
       } else {
-        const errorMsg = data.error || t('search.noResultsFor').replace('{query}', searchQuery)
+        const errorMsg = data.error || t('search.noResultsFor').replace('{query}', query)
         setMessage({ type: 'error', text: errorMsg })
         setSearchResults([])
         setExistingSongs(new Map())
@@ -207,7 +207,7 @@ export default function SearchClient({
     } finally {
       setIsSearching(false)
     }
-  }, [checkExistingSongs])
+  }, [checkExistingSongs, t])
 
   // Handle search input change
   const handleSearchChange = (value: string) => {
