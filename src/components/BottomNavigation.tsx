@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +9,8 @@ import {
   RectangleStackIcon, 
   FolderIcon, 
   MusicalNoteIcon,
-  SparklesIcon
+  SparklesIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import { 
   GlobeAltIcon as GlobeAltIconSolid, 
@@ -17,10 +19,32 @@ import {
   MusicalNoteIcon as MusicalNoteIconSolid,
   SparklesIcon as SparklesIconSolid
 } from '@heroicons/react/24/solid';
+import CreateMenu from './CreateMenu';
+import { Folder } from '@/types';
+import { useSupabase } from '@/lib/hooks/useSupabase';
+import { folderRepo } from '@/lib/services/folderRepo';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
   const { user } = useAuthContext();
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const supabase = useSupabase();
+
+  // Fetch folders for CreateMenu
+  useEffect(() => {
+    if (user && supabase) {
+      const fetchFolders = async () => {
+        try {
+          const foldersData = await folderRepo(supabase).getAllFolders();
+          setFolders(foldersData);
+        } catch (error) {
+          console.error('Error fetching folders:', error);
+        }
+      };
+      fetchFolders();
+    }
+  }, [user, supabase]);
 
   // Only show for authenticated users
   if (!user) {
@@ -66,31 +90,45 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 lg:hidden safe-area-inset-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
-        {navItems.map((item) => {
-          const IconComponent = item.isActive ? item.iconSolid : item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center justify-center flex-1 min-w-0 px-2 py-1 rounded-lg transition-colors ${
-                item.isActive
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
-            >
-              <IconComponent className="h-6 w-6 flex-shrink-0" />
-              <span className={`text-xs mt-0.5 truncate w-full text-center ${
-                item.isActive ? 'font-semibold' : 'font-medium'
-              }`}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <>
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 lg:hidden safe-area-inset-bottom">
+        <div className="flex items-center justify-between h-16 px-2 gap-1">
+          {navItems.map((item) => {
+            const IconComponent = item.isActive ? item.iconSolid : item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 rounded-lg transition-colors ${
+                  item.isActive
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                <IconComponent className="h-6 w-6 flex-shrink-0" />
+                <span className={`text-xs mt-0.5 truncate w-full text-center ${
+                  item.isActive ? 'font-semibold' : 'font-medium'
+                }`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+          <button
+            onClick={() => setIsCreateMenuOpen(true)}
+            className="flex items-center justify-center w-12 h-12 rounded-full transition-colors bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 active:scale-95 shadow-lg"
+            aria-label="Create"
+          >
+            <PlusIcon className="h-6 w-6" />
+          </button>
+        </div>
+      </nav>
+      <CreateMenu
+        isOpen={isCreateMenuOpen}
+        onClose={() => setIsCreateMenuOpen(false)}
+        folders={folders}
+      />
+    </>
   );
 }
 

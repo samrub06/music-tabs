@@ -135,6 +135,15 @@ export async function deleteFolderAction(id: string) {
   revalidatePath('/folders', 'layout')
 }
 
+export async function createPlaylistAction(name: string) {
+  const { name: validatedName } = createPlaylistSchema.parse({ name })
+  const supabase = await createActionServerClient()
+  const created = await playlistService.createPlaylist(validatedName, undefined, [], supabase)
+  revalidatePath('/dashboard')
+  revalidatePath('/playlists')
+  return created
+}
+
 export async function createPlaylistFromGeneratedPlaylistAction(name: string, playlist: PlaylistResult) {
   const { name: validatedName } = createPlaylistSchema.parse({ name })
   const supabase = await createActionServerClient()

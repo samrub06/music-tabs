@@ -5,7 +5,7 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, PlusIcon, XMarkIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from './actions'
@@ -106,9 +106,16 @@ export default function DashboardClient({ songs, total, page, limit, initialView
     }
   }
 
-  // Filter songs by search query and easy chords filter (for gallery view - table view filters internally)
+  // Filter songs by search query and folder (for gallery view - table view filters internally)
   const filteredSongs = useMemo(() => {
     let filtered = songs
+
+    // Filter by folder first
+    if (selectedFolder === 'unorganized') {
+      filtered = songs.filter(song => !song.folderId)
+    } else if (selectedFolder) {
+      filtered = songs.filter(song => song.folderId === selectedFolder)
+    }
 
     // Filter by search query
     if (searchQuery.trim()) {
@@ -128,7 +135,22 @@ export default function DashboardClient({ songs, total, page, limit, initialView
     }
 
     return filtered
-  }, [songs, searchQuery])
+  }, [songs, searchQuery, selectedFolder])
+
+  // Helper function to get folder name
+  const getFolderName = (folderId: string | null | undefined): string => {
+    if (!folderId || folderId === 'unorganized') return ''
+    const folder = folders.find(f => f.id === folderId)
+    return folder?.name || ''
+  }
+
+  // Reset filters function
+  const handleResetFilters = () => {
+    setSelectedFolder(undefined)
+    setCurrentFolder(null)
+    setLocalSearchValue('')
+    setSearchQuery('')
+  }
 
   const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -151,9 +173,6 @@ export default function DashboardClient({ songs, total, page, limit, initialView
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Dashboard
-            </h1>
             <p className="text-sm text-gray-600">
               Bienvenue, {userEmail || 'Utilisateur'}
             </p>
@@ -316,40 +335,78 @@ export default function DashboardClient({ songs, total, page, limit, initialView
             </>
           ) : (
             <>
-              <SongGallery songs={filteredSongs} hasUser={true} />
-              <div className="hidden sm:block">
-                <Pagination page={page} limit={limit} total={total} />
-              </div>
-              {/* Compact Pagination for Mobile - En bas */}
-              {(() => {
-                const totalPages = Math.max(1, Math.ceil(total / limit))
-                const canPrev = page > 1
-                const canNext = page < totalPages
-                
-                if (totalPages <= 1) return null
-                
-                return (
-                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page - 1 })}
-                      disabled={!canPrev}
-                    >
-                      ‹
-                    </button>
-                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
-                      {page} / {totalPages}
-                    </span>
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page + 1 })}
-                      disabled={!canNext}
-                    >
-                      ›
-                    </button>
+              {filteredSongs.length === 0 ? (
+                <div className="py-12 text-center">
+                  <div className="flex flex-col items-center">
+                    <MusicalNoteIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {selectedFolder === 'unorganized' 
+                        ? 'Aucune chanson sans dossier'
+                        : selectedFolder 
+                        ? `Aucune chanson dans "${getFolderName(selectedFolder)}"`
+                        : searchQuery 
+                        ? 'Aucune chanson trouvée'
+                        : 'Aucune chanson'
+                      }
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {selectedFolder === 'unorganized' 
+                        ? 'Toutes vos chansons sont organisées dans des dossiers'
+                        : selectedFolder 
+                        ? 'Essayez de sélectionner un autre dossier ou ajoutez des chansons à ce dossier'
+                        : searchQuery 
+                        ? 'Essayez avec d\'autres mots-clés'
+                        : 'Commencez par ajouter votre première chanson'
+                      }
+                    </p>
+                    {(selectedFolder || searchQuery) && (
+                      <button
+                        onClick={handleResetFilters}
+                        className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                      >
+                        Voir toutes les chansons
+                      </button>
+                    )}
                   </div>
-                )
-              })()}
+                </div>
+              ) : (
+                <>
+                  <SongGallery songs={filteredSongs} hasUser={true} />
+                  <div className="hidden sm:block">
+                    <Pagination page={page} limit={limit} total={total} />
+                  </div>
+                  {/* Compact Pagination for Mobile - En bas */}
+                  {(() => {
+                    const totalPages = Math.max(1, Math.ceil(total / limit))
+                    const canPrev = page > 1
+                    const canNext = page < totalPages
+                    
+                    if (totalPages <= 1) return null
+                    
+                    return (
+                      <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
+                        <button
+                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                          onClick={() => applyQuery({ page: page - 1 })}
+                          disabled={!canPrev}
+                        >
+                          ‹
+                        </button>
+                        <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
+                          {page} / {totalPages}
+                        </span>
+                        <button
+                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                          onClick={() => applyQuery({ page: page + 1 })}
+                          disabled={!canNext}
+                        >
+                          ›
+                        </button>
+                      </div>
+                    )
+                  })()}
+                </>
+              )}
             </>
           )
         ) : null}
