@@ -1,40 +1,34 @@
 'use server'
 
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
-import { songService } from '@/lib/services/songService'
-import { revalidatePath } from 'next/cache'
-import type { SongEditData } from '@/types'
+import { createActionServerClient } from '@/lib/supabase/server'
+import { gamificationRepo } from '@/lib/services/gamificationRepo'
 
-async function supabaseServer() {
-  const cookieStore = await cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-        },
-      },
+export async function viewSongAction(songId: string) {
+  const supabase = await createActionServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    // Not authenticated, skip XP
+    return
+  }
+  
+  const gamification = gamificationRepo(supabase)
+  
+  try {
+    // Check if user has already viewed this song today
+    const hasViewed = await gamification.hasViewedSongToday(user.id, songId)
+    
+    if (!hasViewed) {
+      // Record the view
+      await gamification.recordSongView(user.id, songId)
+      
+      // Award XP
+      await gamification.awardXp(user.id, 5, 'view_song', songId)
+      await gamification.incrementCounter(user.id, 'total_songs_viewed')
+      await gamification.checkAndAwardBadges(user.id)
     }
-  )
+  } catch (error) {
+    // Log but don't fail if gamification fails
+    console.error('Error awarding XP for song view:', error)
+  }
 }
-
-export async function updateSongAction(id: string, updates: SongEditData) {
-  const supabase = await supabaseServer()
-  const updated = await songService.updateSong(id, updates, supabase)
-  revalidatePath('/songs')
-  revalidatePath('/library')
-  revalidatePath(`/song/${id}`)
-  return updated
-}
-
-export async function deleteSongAction(id: string) {
-  const supabase = await supabaseServer()
-  await songService.deleteSong(id, supabase)
-  revalidatePath('/songs')
-  revalidatePath('/library')
-}
-

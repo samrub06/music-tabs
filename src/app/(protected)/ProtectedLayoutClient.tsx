@@ -15,6 +15,7 @@ import { folderRepo } from '@/lib/services/folderRepo'
 import { songRepo } from '@/lib/services/songRepo'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions'
+import { updateStreakAction } from '@/app/(protected)/gamification/actions'
 import type { Folder, Song, Playlist } from '@/types'
 
 // Cache global pour les données de la sidebar (persiste entre navigations)
@@ -143,6 +144,16 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
       router.push('/')
     }
   }, [user, authLoading, pathname, isLibraryRoute, router])
+
+  // Update streak on page load (once per session)
+  useEffect(() => {
+    if (!user || authLoading) return
+    
+    // Update streak (only once per page load, not on every navigation)
+    updateStreakAction().catch(error => {
+      console.error('Error updating streak:', error)
+    })
+  }, [user?.id]) // Only run when user changes, not on every pathname change
 
   // Map pathname to page title
   const getPageTitle = (path: string): string | undefined => {

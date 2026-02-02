@@ -7,6 +7,7 @@ import { folderService } from '@/lib/services/folderService'
 import { songRepo } from '@/lib/services/songRepo'
 import { folderRepo } from '@/lib/services/folderRepo'
 import { playlistService } from '@/lib/services/playlistService'
+import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
 import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
@@ -58,6 +59,21 @@ export async function addSongAction(payload: NewSongData) {
     folderId: finalFolderId
   }
   const created = await repo.createSong(normalizedPayload)
+  
+  // Award XP for creating song
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const gamification = gamificationRepo(supabase)
+    try {
+      await gamification.awardXp(user.id, 50, 'create_song', created.id)
+      await gamification.incrementCounter(user.id, 'total_songs_created')
+      await gamification.checkAndAwardBadges(user.id)
+    } catch (error) {
+      // Log but don't fail the action if gamification fails
+      console.error('Error awarding XP for song creation:', error)
+    }
+  }
+  
   revalidatePath('/songs')
   revalidatePath('/library')
   return created
@@ -72,6 +88,18 @@ export async function updateSongAction(id: string, updates: SongEditData) {
     folderId: validatedUpdates.folderId ?? undefined
   }
   const updated = await repo.updateSong(id, normalizedUpdates)
+  
+  // Award XP for editing song
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const gamification = gamificationRepo(supabase)
+    try {
+      await gamification.awardXp(user.id, 10, 'edit_song', id)
+    } catch (error) {
+      console.error('Error awarding XP for song edit:', error)
+    }
+  }
+  
   revalidatePath('/songs')
   revalidatePath('/library')
   revalidatePath(`/song/${id}`)
@@ -117,7 +145,21 @@ export async function addFolderAction(name: string) {
   const { name: validatedName } = createFolderSchema.parse({ name })
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
-  await repo.createFolder({ name: validatedName })
+  const created = await repo.createFolder({ name: validatedName })
+  
+  // Award XP for creating folder
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const gamification = gamificationRepo(supabase)
+    try {
+      await gamification.awardXp(user.id, 20, 'create_folder', created.id)
+      await gamification.incrementCounter(user.id, 'total_folders_created')
+      await gamification.checkAndAwardBadges(user.id)
+    } catch (error) {
+      console.error('Error awarding XP for folder creation:', error)
+    }
+  }
+  
   revalidatePath('/folders')
 }
 
@@ -142,6 +184,20 @@ export async function createPlaylistAction(name: string) {
   const { name: validatedName } = createPlaylistSchema.parse({ name })
   const supabase = await createActionServerClient()
   const created = await playlistService.createPlaylist(validatedName, undefined, [], supabase)
+  
+  // Award XP for creating playlist
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const gamification = gamificationRepo(supabase)
+    try {
+      await gamification.awardXp(user.id, 30, 'create_playlist', created.id)
+      await gamification.incrementCounter(user.id, 'total_playlists_created')
+      await gamification.checkAndAwardBadges(user.id)
+    } catch (error) {
+      console.error('Error awarding XP for playlist creation:', error)
+    }
+  }
+  
   revalidatePath('/playlists')
   return created
 }
@@ -193,6 +249,18 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
   }
   
   const created = await repo.createSong(newSongData)
+  
+  // Award XP for cloning song
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const gamification = gamificationRepo(supabase)
+    try {
+      await gamification.awardXp(user.id, 15, 'clone_song', created.id)
+    } catch (error) {
+      console.error('Error awarding XP for song clone:', error)
+    }
+  }
+  
   revalidatePath('/songs')
   revalidatePath('/library')
   return created

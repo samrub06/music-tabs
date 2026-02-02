@@ -3,11 +3,12 @@
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 import PlaylistImporter from './PlaylistImporter';
+import CompactStatsDisplay from './gamification/CompactStatsDisplay';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -136,6 +137,14 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   <MusicalNoteIcon className="h-5 w-5" />
                   <span>Chords</span>
                 </Link>
+                <Link
+                  href="/leaderboard"
+                  prefetch={true}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <TrophyIcon className="h-5 w-5" />
+                  <span>Leaderboard</span>
+                </Link>
               </nav>
             )}
           </div>
@@ -159,8 +168,18 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             </span>
           </button>
           
-          {/* Right side: Playlist Generator + Auth + Language */}
+          {/* Right side: Leaderboard (mobile) + Playlist Generator + Auth + Language */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Leaderboard button - Mobile only (for authenticated users) */}
+            {user && (
+              <Link
+                href="/leaderboard"
+                className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Leaderboard"
+              >
+                <TrophyIcon className="h-6 w-6" />
+              </Link>
+            )}
      
             {/* User menu */}
             {!loading && (
@@ -200,6 +219,9 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {profile?.email}
                           </p>
+                          <div className="mt-2">
+                            <CompactStatsDisplay />
+                          </div>
                         </div>
                         
                         <button

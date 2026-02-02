@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon, MusicalNoteIcon, PlayIcon, MagnifyingGlassIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
@@ -17,8 +17,10 @@ interface PlaylistsClientProps {
 export default function PlaylistsClient({ songs, playlists }: PlaylistsClientProps) {
   const router = useRouter();
   const { t } = useLanguage();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [localSearchValue, setLocalSearchValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -82,6 +84,14 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
     }
   };
 
+  // Handle search expansion (mobile)
+  const handleSearchIconClick = () => {
+    setIsSearchExpanded(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
+  };
+
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
@@ -137,18 +147,67 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
 
   return (
     <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-      {/* Header with Create Button */}
-      <div className="mb-4 sm:mb-6 flex items-start justify-between gap-4">
-        <div className="hidden lg:block">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Playlists
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Gérez et écoutez vos playlists sauvegardées
-          </p>
+      {/* Header - Desktop Only */}
+      <div className="hidden lg:block mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Playlists
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Gérez et écoutez vos playlists sauvegardées
+        </p>
+      </div>
+
+      {/* Search Bar and Create Button in Same Row */}
+      <div className="mb-4 flex items-center gap-2">
+        {/* Mobile: Search Icon Button */}
+        {!isSearchExpanded && (
+          <button
+            onClick={handleSearchIconClick}
+            className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Search"
+          >
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </button>
+        )}
+
+        {/* Mobile: Expanded Search / Desktop: Always Visible Search */}
+        <div className={`${isSearchExpanded ? 'flex-1' : 'hidden lg:flex flex-1'} relative`}>
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            </div>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Rechercher une playlist..."
+              value={localSearchValue}
+              onChange={(e) => setLocalSearchValue(e.target.value)}
+              onBlur={() => {
+                // On mobile, collapse search if empty
+                if (!localSearchValue.trim() && window.innerWidth < 1024) {
+                  setIsSearchExpanded(false);
+                }
+              }}
+              className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 dark:text-gray-100"
+            />
+            {localSearchValue && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLocalSearchValue('');
+                  setSearchQuery('');
+                }}
+                className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                type="button"
+              >
+                <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            )}
+          </div>
         </div>
+
         {/* Create Playlist Button */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 ml-auto">
           <button
             onClick={() => router.push('/playlist')}
             className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -157,35 +216,6 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             <span className="hidden sm:inline">Créer une playlist</span>
             <span className="sm:hidden">Créer</span>
           </button>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="mb-4">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Rechercher une playlist..."
-            value={localSearchValue}
-            onChange={(e) => setLocalSearchValue(e.target.value)}
-            className="block w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 dark:text-gray-100"
-          />
-          {localSearchValue && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setLocalSearchValue('');
-                setSearchQuery('');
-              }}
-              className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
-              type="button"
-            >
-              <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-          )}
         </div>
       </div>
 

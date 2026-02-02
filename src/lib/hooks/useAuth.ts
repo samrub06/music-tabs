@@ -70,7 +70,8 @@ export function useAuth() {
       // Determine the base URL dynamically
       // When running on localhost, window.location.origin will be http://localhost:3000
       // When in production, it will be your production URL
-      const redirectUrl = `${window.location.origin}/api/auth/callback?next=/dashboard`;
+      // Defaults to /library if no next param is provided (see callback route)
+      const redirectUrl = `${window.location.origin}/api/auth/callback`;
       
       console.log('Initiating Google Sign-In with redirect URL:', redirectUrl);
 

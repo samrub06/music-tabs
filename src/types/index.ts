@@ -222,3 +222,77 @@ export interface Chord {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// =============================================
+// GAMIFICATION TYPES
+// =============================================
+
+export interface UserStats {
+  userId: string;
+  totalXp: number;
+  currentLevel: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: Date | null;
+  totalSongsCreated: number;
+  totalSongsViewed: number;
+  totalFoldersCreated: number;
+  totalPlaylistsCreated: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface XpTransaction {
+  id: string;
+  userId: string;
+  xpAmount: number;
+  actionType: 'create_song' | 'view_song' | 'create_folder' | 'create_playlist' | 'edit_song' | 'clone_song' | 'daily_login';
+  entityId: string | null;
+  createdAt: Date;
+}
+
+export interface UserBadge {
+  id: string;
+  userId: string;
+  badgeType: 'milestone' | 'achievement';
+  badgeKey: string;
+  badgeName: string;
+  badgeDescription: string | null;
+  earnedAt: Date;
+}
+
+export interface BadgeDefinition {
+  key: string;
+  type: 'milestone' | 'achievement';
+  name: string;
+  description: string;
+  icon?: string;
+  checkCondition: (stats: UserStats) => boolean;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  totalXp: number;
+  currentLevel: number;
+  currentStreak: number;
+  badges: UserBadge[];
+}
+
+export interface XpAwardResult {
+  totalXp: number;
+  currentLevel: number;
+  levelUp: boolean;
+  oldLevel: number;
+  newLevel: number;
+}
+
+export interface StreakUpdateResult {
+  currentStreak: number;
+  longestStreak: number;
+  streakIncremented: boolean;
+  dailyBonusAwarded: boolean;
+}

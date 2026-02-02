@@ -16,6 +16,7 @@ import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
+import { viewSongAction } from '@/app/song/[id]/actions';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -150,18 +151,22 @@ export default function SongViewerContainerSSR({
     }));
   }, [song.bpm]);
 
-  // Increment view count when component mounts
+  // Increment view count and award XP when component mounts
   useEffect(() => {
-    const incrementViewCount = async () => {
+    const handleView = async () => {
       try {
+        // Increment view count (existing functionality)
         await songService.incrementViewCount(song.id, supabase);
         console.log('View count incremented for song:', song.id);
+        
+        // Award XP for viewing (gamification)
+        await viewSongAction(song.id);
       } catch (error) {
-        console.error('Failed to increment view count:', error);
+        console.error('Failed to increment view count or award XP:', error);
       }
     };
 
-    incrementViewCount();
+    handleView();
   }, [song.id]);
 
   // Normalize chord name for comparison
