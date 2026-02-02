@@ -75,7 +75,7 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
                   <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>
                 )}
               </p>
-              <div className="flex items-center gap-4 mt-1">
+              <div className="flex items-center gap-4 mt-1 flex-wrap">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   Level {entry.currentLevel}
                 </span>
@@ -88,6 +88,20 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
                   </span>
                 )}
               </div>
+              {(entry.latestSongName || entry.latestPlaylistName) && (
+                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {entry.latestSongName && (
+                    <span className="truncate">
+                      🎵 {entry.latestSongName}
+                    </span>
+                  )}
+                  {entry.latestPlaylistName && (
+                    <span className="truncate">
+                      📋 {entry.latestPlaylistName}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {entry.badges.length > 0 && (

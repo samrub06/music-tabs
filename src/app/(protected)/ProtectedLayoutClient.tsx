@@ -188,6 +188,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (path === '/profile' || path.startsWith('/profile/')) {
       return t('navigation.profile')
     }
+    if (path === '/leaderboard' || path.startsWith('/leaderboard/')) {
+      return t('navigation.leaderboard')
+    }
     return undefined
   }
 

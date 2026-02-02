@@ -287,6 +287,52 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
       throw badgesError
     }
 
+    // Get latest song for each user (using a more efficient approach)
+    const latestSongsMap = new Map<string, string | null>()
+    // Initialize all users with null
+    userIds.forEach(userId => latestSongsMap.set(userId, null))
+    
+    // Get all songs for these users, ordered by created_at
+    const { data: allSongs, error: songsError } = await client
+      .from('songs')
+      .select('user_id, title, created_at')
+      .in('user_id', userIds)
+      .order('created_at', { ascending: false })
+
+    if (!songsError && allSongs) {
+      // Keep only the latest song per user
+      const seenUsers = new Set<string>()
+      for (const song of allSongs) {
+        if (!seenUsers.has(song.user_id)) {
+          latestSongsMap.set(song.user_id, song.title)
+          seenUsers.add(song.user_id)
+        }
+      }
+    }
+
+    // Get latest playlist for each user (using a more efficient approach)
+    const latestPlaylistsMap = new Map<string, string | null>()
+    // Initialize all users with null
+    userIds.forEach(userId => latestPlaylistsMap.set(userId, null))
+    
+    // Get all playlists for these users, ordered by created_at
+    const { data: allPlaylists, error: playlistsError } = await client
+      .from('playlists')
+      .select('user_id, name, created_at')
+      .in('user_id', userIds)
+      .order('created_at', { ascending: false })
+
+    if (!playlistsError && allPlaylists) {
+      // Keep only the latest playlist per user
+      const seenUsers = new Set<string>()
+      for (const playlist of allPlaylists) {
+        if (!seenUsers.has(playlist.user_id)) {
+          latestPlaylistsMap.set(playlist.user_id, playlist.name)
+          seenUsers.add(playlist.user_id)
+        }
+      }
+    }
+
     // Create a map of user_id -> profile
     const profileMap = new Map(
       (profilesData || []).map(p => [p.id, p])
@@ -316,7 +362,9 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
         totalXp: stat.total_xp,
         currentLevel: stat.current_level,
         currentStreak: stat.current_streak,
-        badges
+        badges,
+        latestSongName: latestSongsMap.get(stat.user_id) || null,
+        latestPlaylistName: latestPlaylistsMap.get(stat.user_id) || null
       }
     })
 
