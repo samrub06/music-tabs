@@ -9,17 +9,12 @@ import { songRepo } from '@/lib/services/songRepo'
 import type { NewSongData } from '@/types'
 import Link from 'next/link'
 
-import LibraryGridSection from '@/components/library/LibraryGridSection'
-import FeaturedSongCard from '@/components/library/FeaturedSongCard'
-import HorizontalSongSlider from '@/components/library/HorizontalSongSlider'
 import type { Song } from '@/types'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import type { ReactNode } from 'react'
 
 interface SearchClientProps {
-  featuredSong: Song | null
-  recentSongs: Song[]
-  popularSongs: Song[]
   userId?: string
+  children?: ReactNode
 }
 
 interface SearchResult {
@@ -44,10 +39,8 @@ const RECENT_SEARCHES_KEY = 'recentSearches'
 const MAX_RECENT_SEARCHES = 10
 
 export default function SearchClient({
-  featuredSong,
-  recentSongs,
-  popularSongs,
-  userId
+  userId,
+  children
 }: SearchClientProps) {
   const router = useRouter()
   const { supabase } = useSupabase()
@@ -62,7 +55,6 @@ export default function SearchClient({
   const [addingSongId, setAddingSongId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [isInputFocused, setIsInputFocused] = useState(false)
-  const [cloningId, setCloningId] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false) // Track if search was performed
 
   // Load recent searches from localStorage on mount
@@ -265,23 +257,6 @@ export default function SearchClient({
     }, 200)
   }
 
-  // Handle add to library (for Library sections)
-  const handleAddToLibrary = useCallback(async (song: Song) => {
-    if (!userId) {
-      router.push('/login?next=/search')
-      return
-    }
-
-    try {
-      setCloningId(song.id)
-      await cloneSongAction(song.id)
-      router.refresh()
-    } catch (error) {
-      console.error('Error cloning song:', error)
-    } finally {
-      setCloningId(null)
-    }
-  }, [userId, router])
 
   // Build NewSongData from scraped data
   const buildNewSongDataFromScrape = (
@@ -550,41 +525,7 @@ export default function SearchClient({
         )}
 
         {/* Library Sections - Shown when no search and input not focused */}
-        {!isSearching && !isCheckingExisting && showLibrarySections && (
-          <>
-            {/* Section 1: Grille de 8 cards */}
-            <LibraryGridSection />
-
-            {/* Section 2: Featured Song */}
-            {featuredSong && (
-              <FeaturedSongCard
-                song={featuredSong}
-                onAddClick={handleAddToLibrary}
-                addingId={cloningId}
-              />
-            )}
-
-            {/* Section 3: Dernières chansons ajoutées */}
-            {recentSongs.length > 0 && (
-              <HorizontalSongSlider
-                title="Dernières chansons ajoutées"
-                songs={recentSongs}
-                onAddClick={handleAddToLibrary}
-                addingId={cloningId}
-              />
-            )}
-
-            {/* Section 4: Chansons les plus écoutées */}
-            {popularSongs.length > 0 && (
-              <HorizontalSongSlider
-                title="Chansons les plus écoutées"
-                songs={popularSongs}
-                onAddClick={handleAddToLibrary}
-                addingId={cloningId}
-              />
-            )}
-          </>
-        )}
+        {!isSearching && !isCheckingExisting && showLibrarySections && children}
       </div>
     </div>
   )

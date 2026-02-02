@@ -98,6 +98,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               <nav className="hidden lg:flex items-center space-x-2">
                  <Link
                   href="/library"
+                  prefetch={true}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <GlobeAltIcon className="h-5 w-5" />
@@ -105,6 +106,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 </Link>
                 <Link
                   href="/search"
+                  prefetch={true}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <MagnifyingGlassIcon className="h-5 w-5" />
@@ -112,6 +114,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 </Link>
                 <Link
                   href="/songs"
+                  prefetch={true}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <RectangleStackIcon className="h-5 w-5" />
@@ -119,6 +122,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 </Link>
                 <Link
                   href="/folders"
+                  prefetch={true}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <FolderIcon className="h-5 w-5" />
@@ -126,6 +130,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 </Link>
                 <Link
                   href="/chords"
+                  prefetch={true}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <MusicalNoteIcon className="h-5 w-5" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -22,31 +22,13 @@ import {
   MagnifyingGlassIcon as MagnifyingGlassIconSolid
 } from '@heroicons/react/24/solid';
 import CreateMenu from './CreateMenu';
-import { Folder } from '@/types';
-import { useSupabase } from '@/lib/hooks/useSupabase';
-import { folderRepo } from '@/lib/services/folderRepo';
+import { useFoldersContext } from '@/context/FoldersContext';
 
 export default function BottomNavigation() {
   const pathname = usePathname();
   const { user } = useAuthContext();
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const supabase = useSupabase();
-
-  // Fetch folders for CreateMenu
-  useEffect(() => {
-    if (user && supabase) {
-      const fetchFolders = async () => {
-        try {
-          const foldersData = await folderRepo(supabase).getAllFolders();
-          setFolders(foldersData);
-        } catch (error) {
-          console.error('Error fetching folders:', error);
-        }
-      };
-      fetchFolders();
-    }
-  }, [user, supabase]);
+  const { folders } = useFoldersContext();
 
   // Only show for authenticated users
   if (!user) {
@@ -108,6 +90,7 @@ export default function BottomNavigation() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={`flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 rounded-lg transition-colors ${
                   item.isActive
                     ? 'text-blue-600 dark:text-blue-400'
