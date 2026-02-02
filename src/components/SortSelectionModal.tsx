@@ -1,5 +1,6 @@
 'use client'
 
+import { useLanguage } from '@/context/LanguageContext'
 import { XMarkIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { useEffect } from 'react'
 
@@ -39,7 +40,7 @@ export default function SortSelectionModal({
   selectedSortDirection,
   onSelectSort,
 }: SortSelectionModalProps) {
-  const { t } = useLanguage();
+  const { t } = useLanguage()
   
   const sortOptions: SortOption[] = [
     { field: 'title', label: t('songs.title'), icon: '📝' },
