@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { ChordBox } from 'vexchords';
+import { useLanguage } from '@/context/LanguageContext';
 import { MagnifyingGlassIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import type { Chord } from '@/types';
@@ -40,6 +41,7 @@ export default function ChordsClient({
   initialChords, 
   initialKnownChordIds
 }: ChordsClientProps) {
+  const { t } = useLanguage();
   const [chords, setChords] = useState<Chord[]>(initialChords);
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set(initialKnownChordIds));
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,8 +295,8 @@ export default function ChordsClient({
                         onClick={() => handleToggleKnown(chord.id)}
                         disabled={isPending}
                         className="absolute top-2 left-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 z-10"
-                        aria-label={isKnown ? 'Marquer comme inconnu' : 'Marquer comme connu'}
-                        title={isKnown ? 'Je le connais' : 'Je ne le connais pas'}
+                        aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
+                        title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
                       >
                         {isKnown ? (
                           <CheckCircleIconSolid className="h-5 w-5 text-green-600" />

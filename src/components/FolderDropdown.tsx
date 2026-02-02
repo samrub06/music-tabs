@@ -1,6 +1,7 @@
 'use client';
 
 import { Folder } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
 import { ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
 import React, { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -18,6 +19,7 @@ export default function FolderDropdown({
   onFolderChange, 
   disabled = false 
 }: FolderDropdownProps) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
@@ -49,9 +51,9 @@ export default function FolderDropdown({
   }, [isOpen]);
 
   const getCurrentFolderName = () => {
-    if (!currentFolderId) return 'Sans dossier';
+    if (!currentFolderId) return t('songs.unorganized');
     const folder = folders.find(f => f.id === currentFolderId);
-    return folder ? folder.name : 'Dossier inconnu';
+    return folder ? folder.name : t('songs.unknownFolder');
   };
 
   const handleFolderSelect = async (folderId: string | undefined) => {
@@ -123,7 +125,7 @@ export default function FolderDropdown({
           `}
         >
           <FolderIcon className="h-4 w-4" />
-          <span>Sans dossier</span>
+          <span>{t('songs.unorganized')}</span>
         </button>
         
         {folders.map((folder) => (

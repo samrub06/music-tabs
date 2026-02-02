@@ -1,6 +1,7 @@
 'use client';
 
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
 import ChordDiagram from '../ChordDiagram';
@@ -47,6 +48,7 @@ export default function SongContent({
   chordNameToIdMap = new Map(),
   chords = []
 }: SongContentProps) {
+  const { t } = useLanguage();
   if (isEditing) {
     return (
       <div className="flex-1 flex flex-col p-4">
@@ -54,21 +56,21 @@ export default function SongContent({
           value={editContent}
           onChange={(e) => onEditContentChange(e.target.value)}
           className="flex-1 w-full p-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Contenu de la chanson..."
+          placeholder={t('songForm.lyrics')}
         />
         <div className="flex justify-end space-x-3 mt-4">
           <button
             onClick={onCancelEdit}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
           >
-            Annuler
+            {t('common.cancel')}
           </button>
           <button
             onClick={onSave}
             disabled={isSaving}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+            {isSaving ? t('songContent.saving') : t('songContent.save')}
           </button>
         </div>
       </div>

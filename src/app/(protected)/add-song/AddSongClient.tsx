@@ -48,7 +48,7 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
   // Recherche automatique qui détecte la langue
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      setMessage({ type: 'error', text: 'Veuillez entrer un titre ou un artiste à rechercher.' })
+      setMessage({ type: 'error', text: t('search.enterTitleOrArtist') })
       return
     }
 
@@ -67,16 +67,12 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
         setSearchResults(data.results)
         setShowSearchResults(true)
       } else {
-        const errorMsg = isHebrewText 
-          ? data.error || 'לא נמצאו תוצאות ב-Tab4U.'
-          : data.error || 'Aucune partition trouvée.'
+        const errorMsg = data.error || t('search.noResultsFor').replace('{query}', searchQuery)
         setMessage({ type: 'error', text: errorMsg })
       }
     } catch (error) {
       console.error('Error searching:', error)
-      const errorMsg = isHebrewText 
-        ? 'שגיאה בחיפוש. נסה שוב.'
-        : 'Erreur lors de la recherche. Veuillez réessayer.'
+      const errorMsg = t('search.searchError')
       setMessage({ type: 'error', text: errorMsg })
     } finally {
       setIsSearching(false)
@@ -90,8 +86,8 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
     folderId?: string
   ): NewSongData {
     return {
-      title: (scraped.title || result?.title || 'Unknown title').trim(),
-      author: (scraped.author || result?.author || 'Unknown artist').trim(),
+      title: (scraped.title || result?.title || t('songs.unknownTitle')).trim(),
+      author: (scraped.author || result?.author || t('songs.unknownArtist')).trim(),
       content: (scraped as any).content || '',
       folderId: folderId || undefined,
       reviews: (result?.reviews ?? scraped.reviews) || 0,
@@ -128,7 +124,7 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
         const payload = buildNewSongDataFromScrape(data.song, searchResult)
         
         if (!payload.title.trim() || !payload.content.trim()) {
-          setMessage({ type: 'error', text: 'Données de chanson invalides.' })
+          setMessage({ type: 'error', text: t('search.invalidData') })
           return
         }
 
@@ -158,10 +154,10 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Rechercher une chanson
+          {t('songForm.searchSongs')}
         </h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Recherchez des partitions sur Ultimate Guitar ou Tab4U
+          {t('createMenu.searchSongDescription')}
         </p>
       </div>
 
@@ -196,7 +192,7 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg"
-            placeholder="Rechercher un titre ou un artiste..."
+            placeholder={t('search.searchPlaceholder')}
             disabled={isSearching || isSaving}
           />
           {searchQuery && (
@@ -230,7 +226,7 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
       {showSearchResults && searchResults.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Résultats ({searchResults.length})
+            {t('songForm.searchResults')} ({searchResults.length})
           </h2>
           <div className="space-y-2">
             {searchResults.map((result, index) => (
@@ -276,11 +272,11 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
 
       {!showSearchResults && !isSearching && (
         <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-          <p className="font-medium mb-2">💡 Comment utiliser</p>
+          <p className="font-medium mb-2">💡 {t('songForm.howToUse')}</p>
           <ul className="space-y-1 list-disc list-inside">
-            <li>Entrez un titre de chanson ou un nom d&apos;artiste</li>
-            <li>Cliquez sur un résultat pour l&apos;ajouter à votre bibliothèque</li>
-            <li>Les résultats sont triés par popularité</li>
+            <li>{t('search.enterTitleOrArtist')}</li>
+            <li>{t('songForm.clickToLoad')}</li>
+            <li>{t('songForm.sortedByPopularity')}</li>
           </ul>
         </div>
       )}
@@ -290,7 +286,7 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-[60]">
           <div className="bg-white dark:bg-gray-800 rounded-md shadow-lg p-6 flex items-center gap-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <div className="text-sm text-gray-700 dark:text-gray-300">Ajout de la chanson...</div>
+            <div className="text-sm text-gray-700 dark:text-gray-300">{t('search.addingSong')}</div>
           </div>
         </div>
       )}

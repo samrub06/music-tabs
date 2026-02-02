@@ -11,6 +11,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { PlaylistResult, PlaylistSong } from '@/lib/services/playlistGeneratorService';
+import { useLanguage } from '@/context/LanguageContext';
 import Snackbar from '@/components/Snackbar';
 
 interface PlaylistViewProps {
@@ -21,6 +22,7 @@ interface PlaylistViewProps {
 
 export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist }: PlaylistViewProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [showNameModal, setShowNameModal] = useState(false);
   const [playlistName, setPlaylistName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -56,7 +58,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
   }, [showNameModal]);
 
   const handleOpenModal = () => {
-    const defaultName = `Playlist ${new Date().toLocaleString('fr-FR')}`;
+    const defaultName = `${t('playlistView.yourPlaylist')} ${new Date().toLocaleString()}`;
     setPlaylistName(defaultName);
     setShowNameModal(true);
   };
@@ -75,11 +77,11 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
       await onCreatePlaylist(playlistName.trim(), playlist);
       setShowNameModal(false);
       setPlaylistName('');
-      setSnackbarMessage('Playlist enregistrée');
+      setSnackbarMessage(t('playlistView.playlistSaved'));
       setSnackbarType('success');
       setShowSnackbar(true);
     } catch (e) {
-      setSnackbarMessage('Erreur lors de la sauvegarde de la playlist');
+      setSnackbarMessage(t('playlistView.saveError'));
       setSnackbarType('error');
       setShowSnackbar(true);
     } finally {
@@ -134,23 +136,23 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Votre Playlist
+            {t('playlistView.yourPlaylist')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {playlist.songs.length} chansons • {Math.round(playlist.estimatedDuration)} min
+            {playlist.songs.length} {t('playlistView.songs')} • {Math.round(playlist.estimatedDuration)} {t('playlistView.minutes')}
           </p>
         </div>
         
         <div className="flex items-center space-x-2">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Score: <span className="font-medium text-purple-600 dark:text-purple-400">{Math.round(playlist.totalScore * 100)}%</span>
+            {t('playlistView.score')} <span className="font-medium text-purple-600 dark:text-purple-400">{Math.round(playlist.totalScore * 100)}%</span>
           </div>
           {onCreatePlaylist && (
             <button
               onClick={handleOpenModal}
               className="px-3 py-2 text-sm rounded-md bg-gray-600 text-white hover:bg-gray-700"
             >
-              Sauvegarder
+              {t('playlistView.save')}
             </button>
           )}
         </div>
@@ -164,10 +166,10 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
             className="w-full flex items-center justify-center px-6 py-4 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-md"
           >
             <PlayIcon className="h-6 w-6 mr-3" />
-            Démarrer la playlist
+            {t('playlistView.startPlaylist')}
           </button>
           <p className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
-            Cliquez pour&quot; commencer à jouer la première chanson. Utilisez le bouton &quot;Suivante&quot; pour naviguer entre les chansons.
+            {t('playlistView.startPlaylistDescription')}
           </p>
         </div>
       )}
@@ -178,13 +180,13 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center">
               <KeyIcon className="h-4 w-4 mr-1 text-purple-600 dark:text-purple-400" />
-              <span className="font-medium text-purple-900 dark:text-purple-200">Tonalité de la playlist:</span>
+              <span className="font-medium text-purple-900 dark:text-purple-200">{t('playlistView.playlistKey')}</span>
               <span className="ml-2 px-2 py-1 bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-semibold">
                 {playlist.keyProgression[0]}
               </span>
             </div>
             <div className="text-purple-700 dark:text-purple-300">
-              Toutes les chansons sont transposées à cette tonalité
+              {t('playlistView.allSongsTransposed')}
             </div>
           </div>
         </div>
@@ -222,7 +224,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 {song.originalKey && song.originalKey !== 'Unknown' && (
                   <span className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
                     <KeyIcon className="h-3 w-3 mr-1" />
-                    Original: {song.originalKey}
+                    {t('playlistView.original')} {song.originalKey}
                   </span>
                 )}
                 
@@ -230,7 +232,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 {song.keyAdjustment !== 0 && (
                   <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
                     <ArrowRightIcon className="h-3 w-3 mr-1" />
-                    {formatKeyAdjustment(song.keyAdjustment)} semitones
+                    {formatKeyAdjustment(song.keyAdjustment)} {t('playlistView.semitones')}
                   </span>
                 )}
                 
@@ -238,19 +240,19 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 {song.targetKey && song.targetKey !== 'Unknown' && (
                   <span className="inline-flex items-center px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
                     <KeyIcon className="h-3 w-3 mr-1" />
-                    → {song.targetKey}
+                    {t('playlistView.target')} {song.targetKey}
                   </span>
                 )}
                 
                 {/* Compatibility Score */}
                 <span className={`inline-block px-2 py-1 text-xs rounded-full ${getScoreColor(song.compatibilityScore)} dark:bg-opacity-20`}>
-                  Compatibilité: {Math.round(song.compatibilityScore * 100)}%
+                  {t('playlistView.compatibility')} {Math.round(song.compatibilityScore * 100)}%
                 </span>
                 
                 {/* Transition Score */}
                 {index > 0 && (
                   <span className={`text-xs px-2 py-1 rounded-full ${getTransitionColor(song.transitionScore)} bg-opacity-20 dark:bg-opacity-20`}>
-                    Transition: {Math.round(song.transitionScore * 100)}%
+                    {t('playlistView.transition')} {Math.round(song.transitionScore * 100)}%
                   </span>
                 )}
               </div>
@@ -268,7 +270,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
       {playlist.songs.length === 0 && (
         <div className="text-center py-12">
           <MusicalNoteIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Aucune chanson dans la playlist</p>
+          <p className="text-gray-500 dark:text-gray-400">{t('playlistView.noSongsInPlaylist')}</p>
         </div>
       )}
 
@@ -278,13 +280,13 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
           <div className="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-96 max-w-[90vw] shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Nom de la playlist
+                {t('playlistView.playlistName')}
               </h3>
               <button
                 onClick={handleCloseModal}
                 className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={isSaving}
-                aria-label="Fermer"
+                aria-label={t('common.close')}
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -292,7 +294,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
 
             <div className="mb-4">
               <label htmlFor="playlist-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nom de la playlist
+                {t('playlistView.playlistName')}
               </label>
               <input
                 id="playlist-name"
@@ -303,7 +305,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 onKeyDown={handleKeyDown}
                 disabled={isSaving}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                placeholder="Nom de la playlist"
+                placeholder={t('playlistView.playlistNamePlaceholder')}
               />
             </div>
 
@@ -313,14 +315,14 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 disabled={isSaving}
                 className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-lg shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-[52px] sm:min-h-0 disabled:opacity-50"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSavePlaylist}
                 disabled={isSaving || !playlistName.trim()}
                 className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-600 text-white text-base font-medium rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 min-h-[52px] sm:min-h-0 disabled:opacity-50"
               >
-                {isSaving ? 'Enregistrement...' : 'Sauvegarder'}
+                {isSaving ? t('playlistView.saving') : t('playlistView.save')}
               </button>
             </div>
           </div>

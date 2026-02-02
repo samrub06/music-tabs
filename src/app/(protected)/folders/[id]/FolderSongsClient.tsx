@@ -92,16 +92,16 @@ export default function FolderSongsClient({
         await updateSongFolderAction(songId, folderId)
         
         const folderName = folderId 
-          ? 'le dossier'
-          : 'Sans dossier'
-        const songTitle = draggedSong?.title || 'la chanson'
+          ? t('songs.theFolder')
+          : t('songs.unorganized')
+        const songTitle = draggedSong?.title || t('songs.theSong')
         
-        setSuccessMessage(`"${songTitle}" déplacée vers ${folderName}`)
+        setSuccessMessage(`"${songTitle}" ${t('songs.songMoved')} ${t('songs.inFolder')} ${folderName}`)
         // Refresh to update the list
         router.refresh()
       } catch (error) {
         console.error('Error moving song to folder:', error)
-        setError('Erreur lors du déplacement de la chanson. Veuillez réessayer.')
+        setError(t('songs.moveError'))
       }
     }
   }
@@ -137,7 +137,7 @@ export default function FolderSongsClient({
               {folder.name}
             </h1>
             <p className="text-sm text-gray-600">
-              {total} {total === 1 ? 'chanson' : 'chansons'} dans ce dossier
+              {t('folders.songsInFolder').replace('{count}', String(total))}
             </p>
           </div>
         </div>
@@ -201,14 +201,14 @@ export default function FolderSongsClient({
                 <button
                   className={`px-2.5 sm:px-3 py-2 sm:py-1.5 text-sm sm:text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'gallery', page: 1 })}
-                  title="Gallery View"
+                  title={t('songs.galleryView')}
                 >
                   <Squares2X2Icon className="h-4 w-4 sm:h-4 sm:w-4" />
                 </button>
                 <button
                   className={`px-2.5 sm:px-3 py-2 sm:py-1.5 text-sm sm:text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => applyQuery({ view: 'table', page: 1 })}
-                  title="Table View"
+                  title={t('songs.tableView')}
                 >
                   <TableCellsIcon className="h-4 w-4 sm:h-4 sm:w-4" />
                 </button>

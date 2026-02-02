@@ -402,10 +402,10 @@ export default function DashboardSidebar({
             {/* Playlists */}
             <div className="mt-6">
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                Playlists
+                {t('navigation.playlists')}
               </h3>
               {playlists.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 italic">Aucune playlist</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">{t('folders.noPlaylist')}</p>
               ) : (
                 <div className="space-y-1">
                   {playlists.map((p) => (
@@ -434,7 +434,7 @@ export default function DashboardSidebar({
         {activeTab === 'recent' && (
           <div className="space-y-1">
             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
-              Récemment ajoutées
+              {t('search.recentSongs')}
             </h3>
             {recentSongs.length > 0 ? (
               recentSongs.map((song) => (
@@ -454,7 +454,7 @@ export default function DashboardSidebar({
                 </button>
               ))
             ) : (
-              <p className="text-sm text-gray-500 italic">Aucune chanson récente</p>
+              <p className="text-sm text-gray-500 italic">{t('folders.noRecentSongs')}</p>
             )}
           </div>
         )}
@@ -463,7 +463,7 @@ export default function DashboardSidebar({
         {activeTab === 'popular' && (
           <div className="space-y-1">
             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
-              Les plus écoutées
+              {t('search.popularSongs')}
             </h3>
             {popularSongs.length > 0 ? (
               popularSongs.map((song) => (
@@ -483,7 +483,7 @@ export default function DashboardSidebar({
                 </button>
               ))
             ) : (
-              <p className="text-sm text-gray-500 italic">Aucune donnée de vues disponible</p>
+              <p className="text-sm text-gray-500 italic">{t('folders.noViewData')}</p>
             )}
           </div>
         )}

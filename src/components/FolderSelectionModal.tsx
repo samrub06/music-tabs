@@ -1,6 +1,7 @@
 'use client'
 
 import { Folder } from '@/types'
+import { useLanguage } from '@/context/LanguageContext'
 import { XMarkIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { useEffect } from 'react'
 
@@ -19,6 +20,8 @@ export default function FolderSelectionModal({
   selectedFolderId,
   onSelectFolder,
 }: FolderSelectionModalProps) {
+  const { t } = useLanguage();
+  
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -55,11 +58,11 @@ export default function FolderSelectionModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pb-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Select Folder</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('songs.folder')}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Close"
+            aria-label={t('common.close')}
           >
             <XMarkIcon className="h-5 w-5" />
           </button>
@@ -76,7 +79,7 @@ export default function FolderSelectionModal({
                 : 'text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <span className="font-medium">All Folders</span>
+            <span className="font-medium">{t('songs.allFolders')}</span>
             {selectedFolderId === undefined && (
               <CheckIcon className="h-5 w-5 text-blue-600" />
             )}
@@ -84,7 +87,7 @@ export default function FolderSelectionModal({
 
           {/* Folder List */}
           {folders.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center">No folders available</p>
+            <p className="text-sm text-gray-500 py-4 text-center">{t('folders.noFolders')}</p>
           ) : (
             folders.map((folder) => (
               <button

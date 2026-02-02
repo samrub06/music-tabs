@@ -39,6 +39,20 @@ export default function SortSelectionModal({
   selectedSortDirection,
   onSelectSort,
 }: SortSelectionModalProps) {
+  const { t } = useLanguage();
+  
+  const sortOptions: SortOption[] = [
+    { field: 'title', label: t('songs.title'), icon: '📝' },
+    { field: 'author', label: t('songs.artist'), icon: '👤' },
+    { field: 'key', label: t('songs.key'), icon: '🎵' },
+    { field: 'rating', label: t('songs.rating'), icon: '⭐' },
+    { field: 'reviews', label: t('songs.reviews'), icon: '👥' },
+    { field: 'difficulty', label: t('songs.difficulty'), icon: '🎸' },
+    { field: 'version', label: t('songs.version'), icon: '🔢' },
+    { field: 'viewCount', label: t('songs.viewCount'), icon: '👁️' },
+    { field: 'updatedAt', label: t('songs.modified'), icon: '📅' },
+  ]
+  
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -77,11 +91,11 @@ export default function SortSelectionModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 pb-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Trier par</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('songs.sortBy')}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Close"
+            aria-label={t('common.close')}
           >
             <XMarkIcon className="h-5 w-5" />
           </button>

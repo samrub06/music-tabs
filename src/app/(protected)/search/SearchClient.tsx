@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon, ClockIcon, PlusIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
+import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
@@ -43,6 +44,7 @@ export default function SearchClient({
   children
 }: SearchClientProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const { supabase } = useSupabase()
   const searchInputRef = useRef<HTMLInputElement>(null)
   
@@ -191,16 +193,14 @@ export default function SearchClient({
         // Check if results exist in user's songs
         await checkExistingSongs(data.results)
       } else {
-        const errorMsg = isHebrewText 
-          ? data.error || 'לא נמצאו תוצאות.'
-          : data.error || 'Aucun résultat trouvé.'
+        const errorMsg = data.error || t('search.noResultsFor').replace('{query}', searchQuery)
         setMessage({ type: 'error', text: errorMsg })
         setSearchResults([])
         setExistingSongs(new Map())
       }
     } catch (error) {
       console.error('Error searching songs:', error)
-      const errorMsg = 'Erreur lors de la recherche. Veuillez réessayer.'
+      const errorMsg = t('search.searchError')
       setMessage({ type: 'error', text: errorMsg })
       setSearchResults([])
       setExistingSongs(new Map())
@@ -318,7 +318,7 @@ export default function SearchClient({
         }
 
         const newSong = await addSongAction(normalizedPayload)
-        setMessage({ type: 'success', text: 'Chanson ajoutée avec succès !' })
+        setMessage({ type: 'success', text: t('search.addSuccess') })
         
         // Update existing songs map
         setExistingSongs(prev => {
@@ -332,11 +332,11 @@ export default function SearchClient({
           router.refresh()
         }, 1000)
       } else {
-        setMessage({ type: 'error', text: data.error || 'Impossible de récupérer la chanson.' })
+        setMessage({ type: 'error', text: data.error || t('search.addError') })
       }
     } catch (error) {
       console.error('Error adding song:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'ajout de la chanson.'
+      const errorMessage = error instanceof Error ? error.message : t('search.addError')
       setMessage({ type: 'error', text: errorMessage })
     } finally {
       setAddingSongId(null)
@@ -363,7 +363,7 @@ export default function SearchClient({
               onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder="Rechercher des chansons..."
+              placeholder={t('search.searchPlaceholder')}
               className="block w-full pl-12 pr-12 py-4 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
             />
             {searchQuery && (
@@ -402,7 +402,7 @@ export default function SearchClient({
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">
-              {isSearching ? 'Recherche en cours...' : 'Vérification des chansons existantes...'}
+              {isSearching ? t('search.searching') : t('search.checkingExisting')}
             </p>
           </div>
         )}
@@ -486,7 +486,7 @@ export default function SearchClient({
                           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
                           <ArrowRightIcon className="h-4 w-4" />
-                          Voir la chanson
+                          {t('search.viewSong')}
                         </Link>
                       ) : (
                         <button
@@ -497,12 +497,12 @@ export default function SearchClient({
                           {isAdding ? (
                             <>
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              Ajout...
+                              {t('search.addingSong')}
                             </>
                           ) : (
                             <>
                               <PlusIcon className="h-4 w-4" />
-                              Ajouter
+                              {t('common.create')}
                             </>
                           )}
                         </button>
@@ -519,7 +519,7 @@ export default function SearchClient({
         {!isSearching && !isCheckingExisting && hasSearched && searchQuery.trim() && searchResults.length === 0 && !message && (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Aucun résultat trouvé pour &quot;{searchQuery}&quot;
+              {t('search.noResultsFor').replace('{query}', searchQuery)}
             </p>
           </div>
         )}

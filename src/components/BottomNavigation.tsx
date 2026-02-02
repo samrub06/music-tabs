@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuthContext } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -27,6 +28,7 @@ import { useFoldersContext } from '@/context/FoldersContext';
 export default function BottomNavigation() {
   const pathname = usePathname();
   const { user } = useAuthContext();
+  const { t } = useLanguage();
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const { folders } = useFoldersContext();
 
@@ -38,42 +40,42 @@ export default function BottomNavigation() {
   const navItems = [
     {
       href: '/library',
-      label: 'Library',
+      label: t('navigation.library'),
       icon: GlobeAltIcon,
       iconSolid: GlobeAltIconSolid,
       isActive: pathname === '/library' || pathname.startsWith('/library/'),
     },
     {
       href: '/search',
-      label: 'Search',
+      label: t('navigation.search'),
       icon: MagnifyingGlassIcon,
       iconSolid: MagnifyingGlassIconSolid,
       isActive: pathname === '/search' || pathname.startsWith('/search/'),
     },
     {
       href: '/songs',
-      label: 'Songs',
+      label: t('navigation.songs'),
       icon: RectangleStackIcon,
       iconSolid: RectangleStackIconSolid,
       isActive: pathname === '/songs' || pathname.startsWith('/songs/'),
     },
     {
       href: '/folders',
-      label: 'Folders',
+      label: t('navigation.folders'),
       icon: FolderIcon,
       iconSolid: FolderIconSolid,
       isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
     },
     {
       href: '/playlists',
-      label: 'Playlists',
+      label: t('navigation.playlists'),
       icon: SparklesIcon,
       iconSolid: SparklesIconSolid,
       isActive: pathname === '/playlists' || pathname.startsWith('/playlists/'),
     },
     {
       href: '/chords',
-      label: 'Chords',
+      label: t('navigation.chords'),
       icon: MusicalNoteIcon,
       iconSolid: MusicalNoteIconSolid,
       isActive: pathname === '/chords' || pathname.startsWith('/chords/'),
@@ -109,7 +111,7 @@ export default function BottomNavigation() {
           <button
             onClick={() => setIsCreateMenuOpen(true)}
             className="flex items-center justify-center w-12 h-12 rounded-full transition-colors bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 active:scale-95 shadow-lg"
-            aria-label="Create"
+            aria-label={t('common.create')}
           >
             <PlusIcon className="h-6 w-6" />
           </button>

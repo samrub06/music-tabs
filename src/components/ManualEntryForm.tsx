@@ -40,7 +40,7 @@ export default function ManualEntryForm({ folders = [], onClose, onSuccess }: Ma
     setError(null)
 
     if (!formData.title.trim() || !formData.content.trim()) {
-      setError('Le titre et le contenu sont requis')
+      setError(t('songForm.titleRequired'))
       return
     }
 
@@ -91,7 +91,7 @@ export default function ManualEntryForm({ folders = [], onClose, onSuccess }: Ma
     <div className="space-y-4">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Entrée manuelle
+          {t('manualEntry.title')}
         </h3>
       </div>
 
@@ -111,7 +111,7 @@ export default function ManualEntryForm({ folders = [], onClose, onSuccess }: Ma
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            placeholder="ex: Ma chanson préférée"
+            placeholder={t('manualEntry.titlePlaceholder')}
             required
             disabled={isSaving}
           />
@@ -126,7 +126,7 @@ export default function ManualEntryForm({ folders = [], onClose, onSuccess }: Ma
             value={formData.author}
             onChange={(e) => setFormData({ ...formData, author: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            placeholder="ex: Mon Artiste"
+            placeholder={t('manualEntry.artistPlaceholder')}
             disabled={isSaving}
           />
         </div>

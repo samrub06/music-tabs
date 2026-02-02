@@ -7,9 +7,11 @@ import CreateMenu from '@/components/CreateMenu'
 import { useAuthContext } from '@/context/AuthContext'
 import { useFoldersContext } from '@/context/FoldersContext'
 import { SidebarProvider } from '@/context/SidebarContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { useSupabase } from '@/lib/hooks/useSupabase'
+import { folderRepo } from '@/lib/services/folderRepo'
 import { songRepo } from '@/lib/services/songRepo'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions'
@@ -119,6 +121,7 @@ function SidebarWrapper({ onCreateClick }: { onCreateClick?: () => void }) {
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuthContext()
+  const { t } = useLanguage()
   const pathname = usePathname()
   const router = useRouter()
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false)
@@ -147,25 +150,25 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
       return undefined // No title for song pages
     }
     if (path === '/library' || path.startsWith('/library/')) {
-      return 'Library'
+      return t('navigation.library')
     }
     if (path === '/search' || path.startsWith('/search/')) {
-      return 'Search'
+      return t('navigation.search')
     }
     if (path === '/songs' || path.startsWith('/songs/')) {
-      return 'Songs'
+      return t('navigation.songs')
     }
     if (path === '/folders' || path.startsWith('/folders/')) {
-      return 'Folders'
+      return t('navigation.folders')
     }
     if (path === '/chords' || path.startsWith('/chords/')) {
-      return 'Chords'
+      return t('navigation.chords')
     }
     if (path === '/playlists' || path.startsWith('/playlists/')) {
-      return 'Playlists'
+      return t('navigation.playlists')
     }
     if (path === '/playlist' || path.startsWith('/playlist/')) {
-      return 'Créer une playlist'
+      return t('createMenu.createPlaylist')
     }
     return undefined
   }

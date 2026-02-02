@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLanguage } from '@/context/LanguageContext'
 import { FolderIcon, FolderOpenIcon, PlusIcon, MusicalNoteIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, FunnelIcon } from '@heroicons/react/24/outline'
 import { Folder } from '@/types'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
@@ -164,6 +165,7 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
 
 export default function FoldersClient({ folders: initialFolders, folderSongCounts }: FoldersClientProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const searchInputRef = useRef<HTMLInputElement>(null)
   
   const [folders, setFolders] = useState(initialFolders)
@@ -260,7 +262,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       router.refresh()
     } catch (error) {
       console.error('Error updating folder order:', error)
-      setError('Erreur lors de la réorganisation. Veuillez réessayer.')
+      setError(t('folders.reorganizeError'))
       // Revert on error
       setFolders(folders)
     }
@@ -280,7 +282,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         router.refresh()
       } catch (error) {
         console.error('Error adding folder:', error)
-        setError('Erreur lors de la création du dossier. Veuillez réessayer.')
+        setError(t('folders.createError'))
       }
     }
   }
@@ -387,7 +389,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 <Input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Rechercher un dossier..."
+                  placeholder={t('folders.searchPlaceholder')}
                   value={localSearchValue}
                   onChange={(e) => setLocalSearchValue(e.target.value)}
                   className="w-full pl-10 pr-10 py-2.5"
@@ -418,7 +420,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
           <div className="hidden lg:flex flex-1 relative">
             <Input
               type="text"
-              placeholder="Rechercher un dossier..."
+              placeholder={t('folders.searchPlaceholder')}
               value={localSearchValue}
               onChange={(e) => setLocalSearchValue(e.target.value)}
               className="w-full pl-10 pr-10 py-2.5"
@@ -484,13 +486,13 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               className="h-10"
             >
               <PlusIcon className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Nouveau dossier</span>
+              <span className="hidden sm:inline">{t('folders.newFolder')}</span>
             </Button>
           ) : (
             <div className="flex items-center gap-2">
               <Input
                 type="text"
-                placeholder="Nom du dossier"
+                placeholder={t('folders.folderNamePlaceholder')}
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 onKeyPress={(e) => {
@@ -507,7 +509,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 onClick={handleAddFolder}
                 disabled={!newFolderName.trim()}
               >
-                Créer
+                {t('common.create')}
               </Button>
               <Button
                 variant="outline"
@@ -516,7 +518,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   setNewFolderName('')
                 }}
               >
-                Annuler
+                {t('common.cancel')}
               </Button>
             </div>
           )}
@@ -560,9 +562,9 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"></th>
-                        <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                        <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chansons</th>
-                        <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Date de création</th>
+                        <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('sidebar.folderName')}</th>
+                        <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('folders.songs')}</th>
+                        <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">{t('songs.createdAt')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -584,9 +586,9 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                      <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chansons</th>
-                      <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Date de création</th>
+                      <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('sidebar.folderName')}</th>
+                      <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('folders.songs')}</th>
+                      <th className="px-2 sm:px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">{t('songs.createdAt')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -607,17 +609,17 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         ) : folders.length > 0 ? (
           <div className="text-center py-12">
             <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun dossier trouvé</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('folders.noFoldersFound')}</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Aucun dossier ne correspond à votre recherche.
+              {t('folders.noFoldersMatch')}
             </p>
           </div>
         ) : (
           <div className="text-center py-12">
             <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun dossier</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('folders.noFolders')}</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Commencez par créer un nouveau dossier.
+              {t('folders.startCreating')}
             </p>
           </div>
         )}
@@ -663,40 +665,40 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent side="bottom" className="h-auto max-h-[90vh] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Filtres avancés</SheetTitle>
+            <SheetTitle>{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
           <div className="grid gap-4 py-4">
             {/* Sort By */}
             <div className="grid gap-2">
-              <Label htmlFor="sort-by">Trier par</Label>
+              <Label htmlFor="sort-by">{t('folders.sortBy')}</Label>
               <Select
                 value={sortBy}
                 onValueChange={(value: 'name' | 'createdAt' | 'songCount') => setSortBy(value)}
               >
                 <SelectTrigger id="sort-by">
-                  <SelectValue placeholder="Champ de tri" />
+                  <SelectValue placeholder={t('folders.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name">Nom</SelectItem>
-                  <SelectItem value="createdAt">Date de création</SelectItem>
-                  <SelectItem value="songCount">Nombre de chansons</SelectItem>
+                  <SelectItem value="name">{t('sidebar.folderName')}</SelectItem>
+                  <SelectItem value="createdAt">{t('songs.createdAt')}</SelectItem>
+                  <SelectItem value="songCount">{t('folders.songCount')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Sort Direction */}
             <div className="grid gap-2">
-              <Label htmlFor="sort-direction">Ordre</Label>
+              <Label htmlFor="sort-direction">{t('songs.sortOrder')}</Label>
               <Select
                 value={sortDirection}
                 onValueChange={(value: 'asc' | 'desc') => setSortDirection(value)}
               >
                 <SelectTrigger id="sort-direction">
-                  <SelectValue placeholder="Ordre de tri" />
+                  <SelectValue placeholder={t('songs.sortOrder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="asc">Ascendant</SelectItem>
-                  <SelectItem value="desc">Descendant</SelectItem>
+                  <SelectItem value="asc">{t('songs.ascending')}</SelectItem>
+                  <SelectItem value="desc">{t('songs.descending')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

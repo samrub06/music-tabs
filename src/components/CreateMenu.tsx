@@ -51,7 +51,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
 
   const handleCreatePlaylist = async () => {
     if (!playlistName.trim()) {
-      setError('Le nom de la playlist est requis')
+      setError(t('createMenu.playlistNameRequired'))
       return
     }
 
@@ -62,14 +62,14 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
         handleClose()
         router.refresh()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur lors de la création de la playlist')
+        setError(err instanceof Error ? err.message : t('createMenu.createPlaylistError'))
       }
     })
   }
 
   const handleCreateFolder = async () => {
     if (!folderName.trim()) {
-      setError('Le nom du dossier est requis')
+      setError(t('createMenu.folderNameRequired'))
       return
     }
 
@@ -80,7 +80,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
         handleClose()
         router.refresh()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur lors de la création du dossier')
+        setError(err instanceof Error ? err.message : t('createMenu.createFolderError'))
       }
     })
   }
@@ -95,7 +95,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
       <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
         <SheetContent side="bottom" className="max-h-[auto] z-50 pb-6">
           <SheetHeader className="pb-2">
-            <SheetTitle className="text-left text-lg">Créer</SheetTitle>
+            <SheetTitle className="text-left text-lg">{t('createMenu.title')}</SheetTitle>
           </SheetHeader>
 
           <div className="mt-4">
@@ -110,10 +110,10 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                      Rechercher une chanson
+                      {t('createMenu.searchSong')}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Rechercher et importer depuis Ultimate Guitar ou Tab4U
+                      {t('createMenu.searchSongDescription')}
                     </div>
                   </div>
                 </button>
@@ -127,10 +127,10 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                      Entrée manuelle
+                      {t('createMenu.manualEntry')}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Créer une chanson en saisissant les accords et paroles
+                      {t('createMenu.manualEntryDescription')}
                     </div>
                   </div>
                 </button>
@@ -144,10 +144,10 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                      Créer une playlist
+                      {t('createMenu.createPlaylist')}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Créer une nouvelle playlist vide
+                      {t('createMenu.createPlaylistDescription')}
                     </div>
                   </div>
                 </button>
@@ -161,10 +161,10 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   </div>
                   <div className="flex-1">
                     <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                      Créer un dossier
+                      {t('createMenu.createFolder')}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Organiser vos chansons dans un nouveau dossier
+                      {t('createMenu.createFolderDescription')}
                     </div>
                   </div>
                 </button>
@@ -177,12 +177,12 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   onClick={() => setCurrentView('menu')}
                   className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
-                  <span>←</span> Retour
+                  <span>←</span> {t('createMenu.back')}
                 </button>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nom de la playlist
+                    {t('createMenu.playlistName')}
                   </label>
                   <input
                     type="text"
@@ -196,7 +196,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                         handleCreatePlaylist()
                       }
                     }}
-                    placeholder="Ma playlist"
+                    placeholder={t('createMenu.playlistNamePlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     autoFocus
                   />
@@ -213,7 +213,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   disabled={isPending || !playlistName.trim()}
                   className="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  {isPending ? 'Création...' : 'Créer la playlist'}
+                  {isPending ? t('createMenu.creating') : t('createMenu.createPlaylistButton')}
                 </button>
               </div>
             )}
@@ -224,7 +224,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   onClick={() => setCurrentView('menu')}
                   className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
-                  <span>←</span> Retour
+                  <span>←</span> {t('createMenu.back')}
                 </button>
 
                 <ManualEntryForm
@@ -241,12 +241,12 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   onClick={() => setCurrentView('menu')}
                   className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
-                  <span>←</span> Retour
+                  <span>←</span> {t('createMenu.back')}
                 </button>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nom du dossier
+                    {t('createMenu.folderName')}
                   </label>
                   <input
                     type="text"
@@ -260,7 +260,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                         handleCreateFolder()
                       }
                     }}
-                    placeholder="Mon dossier"
+                    placeholder={t('createMenu.folderNamePlaceholder')}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     autoFocus
                   />
@@ -277,7 +277,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
                   disabled={isPending || !folderName.trim()}
                   className="w-full px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                  {isPending ? 'Création...' : 'Créer le dossier'}
+                  {isPending ? t('createMenu.creating') : t('createMenu.createFolderButton')}
                 </button>
               </div>
             )}

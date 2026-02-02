@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuthContext } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { ImportProgress, ImportResult } from '@/lib/services/simplePlaylistImporter';
 import { folderRepo } from '@/lib/services/folderRepo';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +15,7 @@ interface PlaylistImporterProps {
 
 export default function PlaylistImporter({ onImportComplete, targetFolderId }: PlaylistImporterProps) {
   const { user, session } = useAuthContext();
+  const { t } = useLanguage();
   const [playlistText, setPlaylistText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -45,7 +47,7 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
 
   const handleParsePlaylist = () => {
     if (!playlistText.trim()) {
-      setError('Veuillez coller le contenu de votre playlist');
+      setError(t('playlistImporter.pasteContentError'));
       return;
     }
 
@@ -55,7 +57,7 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
 
   const handleImportPlaylist = async () => {
     if (!playlistText.trim()) {
-      setError('Veuillez coller le contenu de votre playlist');
+      setError(t('playlistImporter.pasteContentError'));
       return;
     }
 
@@ -70,17 +72,17 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
 
     setIsLoading(true);
     setError(null);
-    setImportProgress({
-      current: 0,
-      total: 0,
-      currentSong: 'Démarrage de l\'importation...',
-      status: 'parsing'
-    });
+      setImportProgress({
+        current: 0,
+        total: 0,
+        currentSong: t('playlistImporter.parsing'),
+        status: 'parsing'
+      });
 
     try {
       // Vérifier que l'utilisateur est connecté via le contexte
       if (!user || !session) {
-        throw new Error('Vous devez être connecté pour importer des chansons');
+        throw new Error(t('auth.pleaseSignIn'));
       }
 
       console.log('🔐 Using user from context:', {
@@ -111,7 +113,7 @@ export default function PlaylistImporter({ onImportComplete, targetFolderId }: P
       if (!response.ok) {
         const errorData = await response.json();
         console.error('❌ API Error:', errorData.error);
-        throw new Error(errorData.error || 'Erreur lors de l\'import de la playlist');
+        throw new Error(errorData.error || t('errors.importFailed'));
       }
 
       // Gérer le stream SSE
@@ -195,23 +197,23 @@ Feb 1, 2022 	Chords`;
         <div>
           {/* Instructions */}
           <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-semibold text-blue-800 mb-3">Comment importer :</h3>
+            <h3 className="font-semibold text-blue-800 mb-3">{t('playlistImporter.howToImport')}</h3>
             <div className="space-y-3 text-sm text-blue-700">
               <div className="flex items-center">
                 <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">1</span>
-                <span>Allez sur <a href="https://www.ultimate-guitar.com/user/mytabs" target="_blank" rel="noopener noreferrer" className="underline font-medium">votre page MyTabs</a></span>
+                <span>{t('playlistImporter.step1')}</span>
               </div>
               <div className="flex items-center">
                 <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">2</span>
-                <span>Sélectionnez tout (Ctrl+A) et copiez (Ctrl+C)</span>
+                <span>{t('playlistImporter.step2')}</span>
               </div>
               <div className="flex items-center">
                 <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">3</span>
-                <span>Collez dans la zone ci-dessous</span>
+                <span>{t('playlistImporter.step3')}</span>
               </div>
               <div className="flex items-center">
                 <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">4</span>
-                <span>Cliquez sur &ldquo;Importer&rdquo;</span>
+                <span>{t('playlistImporter.step4')}</span>
               </div>
             </div>
           </div>
@@ -219,13 +221,13 @@ Feb 1, 2022 	Chords`;
           {/* Playlist text input */}
           <div className="mb-4">
             <label htmlFor="playlistText" className="block text-sm font-medium text-gray-700 mb-2">
-              Contenu de votre playlist
+              {t('playlistImporter.playlistContent')}
             </label>
             <textarea
               id="playlistText"
               value={playlistText}
               onChange={(e) => setPlaylistText(e.target.value)}
-              placeholder="Collez ici le contenu de votre playlist MyTabs..."
+              placeholder={t('playlistImporter.contentPlaceholder')}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               rows={6}
             />
@@ -249,14 +251,14 @@ Feb 1, 2022 	Chords`;
                 onClick={handleExampleText}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
-                Voir un exemple de format
+                {t('playlistImporter.exampleFormat')}
               </button>
             </div>
 
             {/* Folder selection */}
             <div>
               <label htmlFor="folder" className="block text-sm font-medium text-gray-700 mb-2">
-                Dossier de destination
+                {t('playlistImporter.destinationFolder')}
               </label>
               <select
                 id="folder"
@@ -272,8 +274,8 @@ Feb 1, 2022 	Chords`;
                 }}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="ai-organization">🤖 Organisation Auto (IA / Genre)</option>
-                <option value="">Aucun dossier (racine)</option>
+                <option value="ai-organization">{t('playlistImporter.aiOrganization')}</option>
+                <option value="">{t('playlistImporter.noFolder')}</option>
                 {folders.map((folder) => (
                   <option key={folder.id} value={folder.id}>
                     {folder.name}
@@ -282,7 +284,7 @@ Feb 1, 2022 	Chords`;
               </select>
               {useAiOrganization && (
                 <p className="mt-1 text-xs text-purple-600">
-                  L&apos;IA organisera vos chansons par dossier (Artiste ou Genre).
+                  {t('playlistImporter.aiOrganizationDescription')}
                 </p>
               )}
             </div>
@@ -294,7 +296,7 @@ Feb 1, 2022 	Chords`;
                 disabled={isLoading || !playlistText.trim()}
                 className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Import...' : 'Importer la playlist'}
+                {isLoading ? t('playlistImporter.importing') : t('playlistImporter.importButton')}
               </button>
             </div>
           </div>
@@ -304,9 +306,9 @@ Feb 1, 2022 	Chords`;
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-blue-800">
-                  {importProgress.status === 'parsing' && 'Analyse de la playlist...'}
-                  {importProgress.status === 'searching' && 'Recherche des meilleures versions...'}
-                  {importProgress.status === 'importing' && 'Import en cours...'}
+                  {importProgress.status === 'parsing' && t('playlistImporter.parsing')}
+                  {importProgress.status === 'searching' && t('playlistImporter.searching')}
+                  {importProgress.status === 'importing' && t('playlistImporter.importingStatus')}
                 </span>
                 <span className="text-sm text-blue-600">
                   {importProgress.current} / {importProgress.total}
@@ -337,15 +339,15 @@ Feb 1, 2022 	Chords`;
                 <div className="flex items-center">
                   <span className="text-green-600 mr-2">✅</span>
                   <span className="text-sm font-medium text-green-800">
-                    Import terminé ! {importResult?.success} chansons importées
+                    {t('playlistImporter.completed')} {t('playlistImporter.songsImported').replace('{count}', String(importResult?.success || 0))}
                   </span>
                 </div>
                 <div className="text-xs text-gray-600">
                   {importResult?.failed && importResult.failed > 0 && (
-                    <span className="text-orange-600 mr-2">{importResult.failed} échecs</span>
+                    <span className="text-orange-600 mr-2">{t('playlistImporter.failures').replace('{count}', String(importResult.failed))}</span>
                   )}
                   {importResult?.duplicates && importResult.duplicates > 0 && (
-                    <span className="text-blue-600">{importResult.duplicates} doublons</span>
+                    <span className="text-blue-600">{t('playlistImporter.duplicates').replace('{count}', String(importResult.duplicates))}</span>
                   )}
                 </div>
               </div>
@@ -359,8 +361,8 @@ Feb 1, 2022 	Chords`;
                 <span className="text-blue-600 mr-2">📁</span>
                 <span className="text-sm font-medium text-blue-800">
                   {importResult?.aiFolders && importResult.aiFolders.length > 0 
-                    ? `Dossiers créés par l'IA (${importResult.aiFolders.length})`
-                    : 'Aucun dossier créé'
+                    ? t('playlistImporter.aiFoldersCreated').replace('{count}', String(importResult.aiFolders.length))
+                    : t('playlistImporter.noFoldersCreated')
                   }
                 </span>
               </div>
@@ -370,17 +372,17 @@ Feb 1, 2022 	Chords`;
                     {importResult.aiFolders.map((folder, index) => (
                       <div key={folder.id} className="flex items-center justify-between text-xs text-blue-700">
                         <span>• {folder.name}</span>
-                        <span className="text-gray-500">({folder.songsCount} chansons)</span>
+                        <span className="text-gray-500">({folder.songsCount} {t('songs.songCountPlural')})</span>
                       </div>
                     ))}
                   </div>
                   <div className="mt-2 text-xs text-blue-600">
-                    💡 Vous pouvez modifier ces dossiers dans la section &quot;Mes dossiers&quot;
+                    {t('playlistImporter.foldersCreatedMessage')}
                   </div>
                 </>
               ) : (
                 <div className="text-xs text-gray-600">
-                  Les chansons ont été importées dans le dossier racine ou le dossier sélectionné
+                  {t('playlistImporter.noFoldersCreated')}
                 </div>
               )}
             </div>
@@ -391,7 +393,7 @@ Feb 1, 2022 	Chords`;
           {importResult && importResult.songs.length > 0 && (
             <div className="mb-4">
               <h3 className="text-sm font-semibold mb-2 text-gray-800">
-                Détail ({importResult.songs.length} chansons)
+                {t('playlistImporter.details').replace('{count}', String(importResult.songs.length))}
               </h3>
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {importResult.songs.map((song, index) => (

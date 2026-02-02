@@ -33,21 +33,21 @@ interface SongsClientProps {
   initialSortOrder?: 'asc' | 'desc'
 }
 
-const sortFieldLabels: Record<SortField, string> = {
-  title: 'Titre',
-  author: 'Artiste',
-  key: 'Tonalité',
-  rating: 'Note',
-  reviews: 'Avis',
-  difficulty: 'Difficulté',
-  version: 'Version',
-  viewCount: 'Vues',
-  updatedAt: 'Modifié',
-  createdAt: 'Date'
-}
-
 export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc' }: SongsClientProps) {
   const { t } = useLanguage()
+  
+  const sortFieldLabels: Record<SortField, string> = {
+    title: t('songs.title'),
+    author: t('songs.artist'),
+    key: t('songs.key'),
+    rating: t('songs.rating'),
+    reviews: t('songs.reviews'),
+    difficulty: t('songs.difficulty'),
+    version: t('songs.version'),
+    viewCount: t('songs.viewCount'),
+    updatedAt: t('songs.modified'),
+    createdAt: t('songs.createdAt')
+  }
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -142,14 +142,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         await updateSongFolderAction(songId, folderId)
         
         const folderName = folderId 
-          ? folders.find(f => f.id === folderId)?.name || 'le dossier'
-          : 'Sans dossier'
-        const songTitle = draggedSong?.title || 'la chanson'
+          ? folders.find(f => f.id === folderId)?.name || t('songs.theFolder')
+          : t('songs.unorganized')
+        const songTitle = draggedSong?.title || t('songs.theSong')
         
-        setSuccessMessage(`"${songTitle}" déplacée vers ${folderName}`)
+        setSuccessMessage(`"${songTitle}" ${t('songs.songMoved')} ${folderName}`)
       } catch (error) {
         console.error('Error moving song to folder:', error)
-        setError('Erreur lors du déplacement de la chanson. Veuillez réessayer.')
+        setError(t('songs.moveError'))
       }
     }
   }
@@ -346,14 +346,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 className={`px-3 py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                 onClick={() => applyQuery({ view: 'gallery', page: 1 })}
-                title="Gallery View"
+                title={t('songs.galleryView')}
               >
                 <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 className={`px-3 py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                 onClick={() => applyQuery({ view: 'table', page: 1 })}
-                title="Table View"
+                title={t('songs.tableView')}
               >
                 <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
@@ -364,7 +364,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           <button
             onClick={() => setIsFilterSheetOpen(true)}
             className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Filters"
+            aria-label={t('songs.filters')}
           >
             <AdjustmentsHorizontalIcon className="h-5 w-5" />
           </button>
@@ -380,7 +380,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               }`}
             >
               <MusicalNoteIcon className="h-4 w-4 mr-2" />
-              <span>All</span>
+              <span>{t('songs.all')}</span>
             </button>
             <button
               onClick={() => setActiveTab('recent')}
@@ -389,7 +389,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               }`}
             >
               <ClockIcon className="h-4 w-4 mr-2" />
-              <span>Recent</span>
+              <span>{t('songs.recent')}</span>
             </button>
             <button
               onClick={() => setActiveTab('popular')}
@@ -398,7 +398,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               }`}
             >
               <FireIcon className="h-4 w-4 mr-2" />
-              <span>Popular</span>
+              <span>{t('songs.popular')}</span>
             </button>
           </div>
         </div>
@@ -504,7 +504,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400">
-              {searchQuery.trim() ? 'Aucun résultat trouvé' : 'Aucune chanson'}
+              {searchQuery.trim() ? t('songs.noResults') : t('songs.noSongs')}
             </p>
           </div>
         )}
@@ -548,23 +548,23 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent side="bottom" className="h-[80vh] max-h-[600px]">
           <SheetHeader>
-            <SheetTitle>Filtres avancés</SheetTitle>
+            <SheetTitle>{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
           
           <div className="mt-6 space-y-6 overflow-y-auto pb-20">
             {/* Folder Selection */}
             <div className="space-y-2">
-              <Label htmlFor="folder">Dossier</Label>
+              <Label htmlFor="folder">{t('songs.folder')}</Label>
               <Select
                 value={selectedFolder || 'all'}
                 onValueChange={(value) => setSelectedFolder(value === 'all' ? undefined : value)}
               >
                 <SelectTrigger id="folder">
-                  <SelectValue placeholder="Tous les dossiers" />
+                  <SelectValue placeholder={t('songs.allFolders')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les dossiers</SelectItem>
-                  <SelectItem value="unorganized">Sans dossier</SelectItem>
+                  <SelectItem value="all">{t('songs.allFolders')}</SelectItem>
+                  <SelectItem value="unorganized">{t('songs.unorganized')}</SelectItem>
                   {folders.map((folder) => (
                     <SelectItem key={folder.id} value={folder.id}>
                       {folder.name}
@@ -576,7 +576,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
             {/* Sort Field */}
             <div className="space-y-2">
-              <Label htmlFor="sortField">Trier par</Label>
+              <Label htmlFor="sortField">{t('songs.sortBy')}</Label>
               <Select
                 value={sortField}
                 onValueChange={(value) => setSortField(value as SortField)}
@@ -596,7 +596,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
             {/* Sort Direction */}
             <div className="space-y-2">
-              <Label htmlFor="sortDirection">Ordre</Label>
+              <Label htmlFor="sortDirection">{t('songs.sortOrder')}</Label>
               <Select
                 value={sortDirection}
                 onValueChange={(value) => setSortDirection(value as SortDirection)}
@@ -605,8 +605,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="asc">Croissant</SelectItem>
-                  <SelectItem value="desc">Décroissant</SelectItem>
+                  <SelectItem value="asc">{t('songs.ascending')}</SelectItem>
+                  <SelectItem value="desc">{t('songs.descending')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -614,10 +614,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
           <SheetFooter className="mt-6">
             <Button variant="outline" onClick={handleClearFilters}>
-              Effacer
+              {t('common.clear')}
             </Button>
             <Button onClick={handleApplyFilters}>
-              Appliquer
+              {t('common.apply')}
             </Button>
           </SheetFooter>
         </SheetContent>

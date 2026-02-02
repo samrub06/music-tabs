@@ -1,6 +1,7 @@
 'use client';
 
 import { Song } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   ArrowLeftIcon,
   EyeIcon,
@@ -88,6 +89,7 @@ export default function SongHeader({
     easyChordMode,
     onToggleEasyChordMode
 }: SongHeaderProps) {
+  const { t } = useLanguage();
   const [showControls, setShowControls] = useState(false);
   const [showBpmPopover, setShowBpmPopover] = useState(false);
 
@@ -156,7 +158,7 @@ export default function SongHeader({
             onClick={onNavigateBack}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none"
             style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-            aria-label="Retour"
+            aria-label={t('songHeader.back')}
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </button>
@@ -195,14 +197,14 @@ export default function SongHeader({
                 disabled={!canPrevSong}
                 className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none flex-shrink-0"
                 style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                title="Précédente"
-                aria-label="Chanson précédente"
+                title={t('common.back')}
+                aria-label={t('songHeader.back')}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </button>
               {nextSongInfo && canNextSong && (
                 <div className="flex flex-col items-center min-w-0 max-w-[80px]">
-                  <span className="text-xs text-gray-500 truncate w-full text-center">Suivante:</span>
+                  <span className="text-xs text-gray-500 truncate w-full text-center">{t('songHeader.next')}:</span>
                   <span className="text-xs font-semibold text-gray-700 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>
                     {nextSongInfo.title}
                   </span>
@@ -218,8 +220,8 @@ export default function SongHeader({
                 disabled={!canNextSong}
                 className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none flex-shrink-0"
                 style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                title="Suivante"
-                aria-label="Chanson suivante"
+                title={t('songHeader.next')}
+                aria-label={t('songHeader.nextSong')}
               >
                 <ArrowRightIcon className="h-5 w-5" />
               </button>
@@ -235,8 +237,8 @@ export default function SongHeader({
                   : 'text-gray-400 hover:text-gray-600 bg-gray-50'
               }`}
               style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              aria-label={useCapo ? `Capo ${song.capo}` : 'Sans capo'}
-              title={useCapo ? `Capo ${song.capo}` : 'Sans capo'}
+              aria-label={useCapo ? `${t('songHeader.capo')} ${song.capo}` : t('songHeader.noCapo')}
+              title={useCapo ? `${t('songHeader.capo')} ${song.capo}` : t('songHeader.noCapo')}
             >
               <span className="text-[10px] leading-none font-semibold">🎸{useCapo ? song.capo : ''}</span>
             </button>
@@ -445,7 +447,7 @@ export default function SongHeader({
             {/* Key Selector */}
             {(song.firstChord || song.key) && (
               <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
-                <span className="text-xs font-medium text-purple-700">Tonalité:</span>
+                <span className="text-xs font-medium text-purple-700">{t('songHeader.key')}</span>
                 <div className="flex items-center space-x-2">
                   <span className="text-xs text-purple-600">
                     {getBaseChord()} → {currentKey || getBaseChord()}
@@ -516,7 +518,7 @@ export default function SongHeader({
             <div className="flex items-center space-x-2 mt-1">
               {song.author && (
                 <p className="text-sm text-gray-600" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>
-                  Par {song.author}
+                  {t('songHeader.by')} {song.author}
                 </p>
               )}
               {song.capo !== undefined && song.capo !== null && (
@@ -533,7 +535,7 @@ export default function SongHeader({
                             : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
                         }`}
                       >
-                        Capo {song.capo}
+                        {t('songHeader.capo')} {song.capo}
                       </button>
                       <button
                         onClick={() => onToggleCapo(false)}
@@ -543,7 +545,7 @@ export default function SongHeader({
                             : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
                         }`}
                       >
-                        Pas de capo
+                        {t('songHeader.noCapo')}
                       </button>
                     </div>
                   </div>
@@ -560,13 +562,13 @@ export default function SongHeader({
                 onClick={onPrevSong}
                 disabled={!canPrevSong}
                 className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
-                title="Chanson précédente"
+                title={t('common.back')}
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </button>
               {nextSongInfo && canNextSong && (
                 <div className="flex flex-col items-center min-w-0 max-w-[100px]">
-                  <span className="text-xs text-gray-500 truncate w-full text-center">Suivante:</span>
+                  <span className="text-xs text-gray-500 truncate w-full text-center">{t('songHeader.next')}:</span>
                   <span className="text-sm font-semibold text-gray-700 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>
                     {nextSongInfo.title}
                   </span>
@@ -581,7 +583,7 @@ export default function SongHeader({
                 onClick={onNextSong}
                 disabled={!canNextSong}
                 className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
-                title="Chanson suivante"
+                title={t('songHeader.next')}
               >
                 <ArrowRightIcon className="h-5 w-5" />
               </button>

@@ -174,7 +174,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                       {profile?.avatar_url ? (
                         <img 
                           src={profile.avatar_url} 
-                          alt={profile.full_name || 'User'} 
+                          alt={profile.full_name || t('common.user')} 
                           className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                         />
                       ) : (
@@ -195,7 +195,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                         <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
                         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {profile?.full_name || 'User'}
+                            {profile?.full_name || t('common.user')}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {profile?.email}
@@ -210,7 +210,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                         >
                           <CloudArrowDownIcon className="h-5 w-5" />
-                          <span>Importer Ultimate Guitar</span>
+                          <span>{t('common.importUltimateGuitar')}</span>
                         </button>
                        
                         <button
@@ -262,8 +262,8 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               <button
                 onClick={toggleTheme}
                 className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+                aria-label={theme === 'dark' ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
+                title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
               >
                 {theme === 'dark' ? (
                   <SunIcon className="h-5 w-5 sm:h-6 sm:w-6" />

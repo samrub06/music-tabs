@@ -225,10 +225,10 @@ export default function SongTable({
   };
 
   const getFolderName = (folderId: string | null | undefined) => {
-    if (!folderId) return 'Sans dossier';
+    if (!folderId) return t('songs.unorganized');
    
     const folder = folders.find(f => f.id === folderId);
-    return folder ? folder.name : 'Dossier inconnu';
+    return folder ? folder.name : t('songs.unknownFolder');
   };
 
 
@@ -256,17 +256,20 @@ export default function SongTable({
       
       // Find folder name for success message
       const folderName = folderId 
-        ? folders.find(f => f.id === folderId)?.name || 'le dossier'
-        : 'Sans dossier'
+        ? folders.find(f => f.id === folderId)?.name || t('songs.theFolder')
+        : t('songs.unorganized')
       
-      setSuccessMessage(`${count} ${count === 1 ? 'chanson déplacée' : 'chansons déplacées'} vers ${folderName}`)
+      const message = count === 1 
+        ? `1 ${t('songs.songMoved')} ${t('songs.inFolder')} ${folderName}`
+        : t('songs.songsMoved').replace('{count}', String(count)) + ` ${t('songs.inFolder')} ${folderName}`
+      setSuccessMessage(message)
       
       // Clear selection after successful move
       setSelectedSongs(new Set());
     } catch (error) {
       console.error('Error moving songs:', error);
       // Show error to user
-      alert('Erreur lors du déplacement des chansons. Veuillez réessayer.');
+      alert(t('songs.moveError'));
       throw error;
     }
   };
@@ -344,15 +347,15 @@ export default function SongTable({
 
   // Options de tri pour mobile
   const sortOptions = [
-    { field: 'title' as SortField, label: 'Titre', icon: '📝' },
-    { field: 'author' as SortField, label: 'Artiste', icon: '👤' },
-    { field: 'key' as SortField, label: 'Tonalité', icon: '🎵' },
-    { field: 'rating' as SortField, label: 'Note', icon: '⭐' },
-    { field: 'reviews' as SortField, label: 'Avis', icon: '👥' },
-    { field: 'difficulty' as SortField, label: 'Difficulté', icon: '🎸' },
-    { field: 'version' as SortField, label: 'Version', icon: '🔢' },
-    { field: 'viewCount' as SortField, label: 'Vues', icon: '👁️' },
-    { field: 'updatedAt' as SortField, label: 'Modifié', icon: '📅' },
+    { field: 'title' as SortField, label: t('songs.title'), icon: '📝' },
+    { field: 'author' as SortField, label: t('songs.artist'), icon: '👤' },
+    { field: 'key' as SortField, label: t('songs.key'), icon: '🎵' },
+    { field: 'rating' as SortField, label: t('songs.rating'), icon: '⭐' },
+    { field: 'reviews' as SortField, label: t('songs.reviews'), icon: '👥' },
+    { field: 'difficulty' as SortField, label: t('songs.difficulty'), icon: '🎸' },
+    { field: 'version' as SortField, label: t('songs.version'), icon: '🔢' },
+    { field: 'viewCount' as SortField, label: t('songs.viewCount'), icon: '👁️' },
+    { field: 'updatedAt' as SortField, label: t('songs.modified'), icon: '📅' },
   ];
 
   // Don't show empty state if we have songs but they're just filtered out
@@ -423,17 +426,17 @@ export default function SongTable({
               )}
               {visibleColumns.includes('difficulty') && (
                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="difficulty">🎸 Difficulty</SortButton>
+                  <SortButton field="difficulty">🎸 {t('songs.difficulty')}</SortButton>
                 </th>
               )}
                {visibleColumns.includes('version') && (
                  <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                   <SortButton field="version">🔢 Version</SortButton>
+                   <SortButton field="version">🔢 {t('songs.version')}</SortButton>
                  </th>
                )}
                {visibleColumns.includes('viewCount') && (
                  <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                   <SortButton field="viewCount">👁️ Vues</SortButton>
+                   <SortButton field="viewCount">👁️ {t('songs.viewCount')}</SortButton>
                  </th>
                )}
               {visibleColumns.includes('folder') && (
