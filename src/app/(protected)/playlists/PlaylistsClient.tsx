@@ -58,8 +58,8 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
           bValue = b.name.toLowerCase();
           break;
         case 'songCount':
-          aValue = a.songIds.length;
-          bValue = b.songIds.length;
+          aValue = (a as any).songCount ?? a.songIds?.length ?? 0;
+          bValue = (b as any).songCount ?? b.songIds?.length ?? 0;
           break;
         case 'createdAt':
           aValue = new Date(a.createdAt).getTime();
@@ -106,13 +106,23 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
     </button>
   );
 
-  const handleStartSavedPlaylist = (playlist: Playlist) => {
+  const handleStartSavedPlaylist = async (playlist: Playlist) => {
+    // If playlist doesn't have songIds loaded, navigate to detail page to load them
+    if (!playlist.songIds || playlist.songIds.length === 0) {
+      router.push(`/playlist/${playlist.id}`);
+      return;
+    }
+
     // Get songs from songIds
     const playlistSongs = playlist.songIds
       .map(id => songs.find(s => s.id === id))
       .filter((song): song is Song => song !== undefined);
 
-    if (playlistSongs.length === 0) return;
+    if (playlistSongs.length === 0) {
+      // If songs not found in local array, navigate to detail page
+      router.push(`/playlist/${playlist.id}`);
+      return;
+    }
 
     // Save playlist context to sessionStorage
     if (typeof window !== 'undefined') {
@@ -253,9 +263,8 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
           {/* Mobile View - Cards */}
           <div className="block md:hidden space-y-3">
             {sortedPlaylists.map((playlist) => {
-              const playlistSongs = playlist.songIds
-                .map(id => songs.find(s => s.id === id))
-                .filter((song): song is Song => song !== undefined);
+              // Use songCount from lightweight data, or calculate from songIds if available
+              const songCount = (playlist as any).songCount ?? playlist.songIds?.length ?? 0;
               
               return (
                 <div
@@ -279,7 +288,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                       <MusicalNoteIcon className="h-4 w-4 mr-1" />
-                      <span>{playlistSongs.length} {playlistSongs.length === 1 ? 'chanson' : 'chansons'}</span>
+                      <span>{songCount} {songCount === 1 ? 'chanson' : 'chansons'}</span>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-500">
                       {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
@@ -330,9 +339,8 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {sortedPlaylists.map((playlist) => {
-                    const playlistSongs = playlist.songIds
-                      .map(id => songs.find(s => s.id === id))
-                      .filter((song): song is Song => song !== undefined);
+                    // Use songCount from lightweight data, or calculate from songIds if available
+                    const songCount = (playlist as any).songCount ?? playlist.songIds?.length ?? 0;
                     
                     return (
                       <tr
@@ -353,7 +361,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                             <MusicalNoteIcon className="h-4 w-4 mr-1" />
-                            <span>{playlistSongs.length}</span>
+                            <span>{songCount}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">

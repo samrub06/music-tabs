@@ -161,6 +161,28 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     })
 
     return counts
+  },
+
+  // Lightweight version: only load id, name, and display_order for list views
+  async getAllFoldersLightweight(): Promise<Array<{ id: string; name: string; displayOrder?: number }>> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) return []
+
+    const { data, error } = await client
+      .from('folders')
+      .select('id, name, display_order')
+      .eq('user_id', user.id)
+      .order('display_order', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map(f => ({
+      id: f.id,
+      name: f.name,
+      displayOrder: f.display_order ?? undefined
+    }))
   }
 })
 

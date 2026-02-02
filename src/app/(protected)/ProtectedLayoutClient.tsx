@@ -66,24 +66,45 @@ function SidebarWrapper({ onCreateClick }: { onCreateClick?: () => void }) {
     const fetchData = async () => {
       try {
         setLoading(true)
+        // Use lightweight versions for folders and playlists
         const [foldersData, songsData, playlistsData] = await Promise.all([
-          folderRepo(supabase).getAllFolders(),
+          folderRepo(supabase).getAllFoldersLightweight(),
           songRepo(supabase).getAllSongs(),
-          playlistRepo(supabase).getAllPlaylists()
+          playlistRepo(supabase).getAllPlaylistsLightweight()
         ])
+        
+        // Convert lightweight folders to full Folder objects
+        const foldersFull: Folder[] = foldersData.map(f => ({
+          id: f.id,
+          name: f.name,
+          parentId: undefined,
+          displayOrder: f.displayOrder,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }))
+        
+        // Convert lightweight playlists to full Playlist objects
+        const playlistsFull: Playlist[] = playlistsData.map(p => ({
+          id: p.id,
+          name: p.name,
+          description: undefined,
+          createdAt: p.createdAt,
+          updatedAt: p.createdAt,
+          songIds: [] // Will be loaded when playlist is clicked
+        }))
         
         // Mettre à jour le cache
         sidebarDataCache = {
-          folders: foldersData,
+          folders: foldersFull,
           songs: songsData,
-          playlists: playlistsData,
+          playlists: playlistsFull,
           timestamp: Date.now(),
           userId: user.id
         }
         
-        setFolders(foldersData)
+        setFolders(foldersFull)
         setSongs(songsData)
-        setPlaylists(playlistsData)
+        setPlaylists(playlistsFull)
       } catch (error) {
         console.error('Error fetching sidebar data:', error)
       } finally {

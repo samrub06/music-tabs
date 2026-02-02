@@ -12,11 +12,22 @@ export default async function PlaylistsPage() {
     redirect('/');
   }
 
-  const [songs, playlists] = await Promise.all([
-    songRepo(supabase).getAllSongs(),
-    playlistRepo(supabase).getAllPlaylists()
-  ]);
+  // Use lightweight version for playlists - only load id, name, songCount
+  // Songs will be loaded when user clicks on a playlist
+  const playlistsLightweight = await playlistRepo(supabase).getAllPlaylistsLightweight();
+  
+  // Convert to Playlist format with songCount for compatibility
+  const playlistsFormatted = playlistsLightweight.map(p => ({
+    id: p.id,
+    name: p.name,
+    description: undefined,
+    createdAt: p.createdAt,
+    updatedAt: p.createdAt,
+    songIds: [], // Will be loaded when playlist is clicked
+    songCount: p.songCount // Add songCount for display
+  }));
 
-  return <PlaylistsClient songs={songs} playlists={playlists} />;
+  // Don't load all songs initially - they'll be loaded when needed
+  return <PlaylistsClient songs={[]} playlists={playlistsFormatted as any} />;
 }
 

@@ -27,13 +27,15 @@ async function SongsDataLoader({
 
 async function FoldersDataLoader() {
   const supabase = await createSafeServerClient()
-  const folders = await folderRepo(supabase).getAllFolders()
+  // Use lightweight version - only load id, name, displayOrder
+  const folders = await folderRepo(supabase).getAllFoldersLightweight()
   return folders
 }
 
 async function PlaylistsDataLoader() {
   const supabase = await createSafeServerClient()
-  const playlists = await playlistRepo(supabase).getAllPlaylists()
+  // Use lightweight version - only load id, name, songCount, createdAt
+  const playlists = await playlistRepo(supabase).getAllPlaylistsLightweight()
   return playlists
 }
 

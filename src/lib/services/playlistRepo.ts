@@ -95,6 +95,28 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
 
     const { error } = await client.from('playlists').delete().eq('id', id)
     if (error) throw error
+  },
+
+  // Lightweight version: only load id, name, songCount, and createdAt for list views
+  async getAllPlaylistsLightweight(): Promise<Array<{ id: string; name: string; songCount: number; createdAt: Date }>> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) return []
+
+    const { data, error } = await client
+      .from('playlists')
+      .select('id, name, song_ids, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      songCount: (p.song_ids as string[] || []).length,
+      createdAt: new Date(p.created_at)
+    }))
   }
 })
 
