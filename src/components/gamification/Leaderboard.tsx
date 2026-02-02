@@ -2,6 +2,7 @@
 
 import type { LeaderboardEntry } from '@/types'
 import { TrophyIcon } from '@heroicons/react/24/solid'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface LeaderboardProps {
   entries: LeaderboardEntry[]
@@ -10,6 +11,7 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ entries, currentUserId, className = '' }: LeaderboardProps) {
+  const { t } = useLanguage()
   if (entries.length === 0) {
     return (
       <div className={`text-center py-8 text-gray-500 dark:text-gray-400 ${className}`}>
@@ -87,21 +89,13 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
                     🔥 {entry.currentStreak}
                   </span>
                 )}
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  🎵 {entry.songCount} {entry.songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  📋 {entry.playlistCount} {entry.playlistCount === 1 ? t('leaderboard.playlist') : t('leaderboard.playlists')}
+                </span>
               </div>
-              {(entry.latestSongName || entry.latestPlaylistName) && (
-                <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {entry.latestSongName && (
-                    <span className="truncate">
-                      🎵 {entry.latestSongName}
-                    </span>
-                  )}
-                  {entry.latestPlaylistName && (
-                    <span className="truncate">
-                      📋 {entry.latestPlaylistName}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
 
             {entry.badges.length > 0 && (

@@ -68,7 +68,9 @@
     "title": "לוח תוצאות",
     "description": "השחקנים הטובים ביותר מדורגים לפי XP כולל",
     "searchPlaceholder": "חפש לפי שם או אימייל...",
-    "resultsCount": "{count} תוצאה(ות) נמצאו"
+    "resultsCount": "{count} תוצאה(ות) נמצאו",
+    "playlist": "פלייליסט",
+    "playlists": "פלייליסטים"
   },
   "songs": {
     "sectionTitle": "שירים",

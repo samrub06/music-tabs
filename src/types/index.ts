@@ -280,8 +280,8 @@ export interface LeaderboardEntry {
   currentLevel: number;
   currentStreak: number;
   badges: UserBadge[];
-  latestSongName: string | null;
-  latestPlaylistName: string | null;
+  songCount: number;
+  playlistCount: number;
 }
 
 export interface XpAwardResult {

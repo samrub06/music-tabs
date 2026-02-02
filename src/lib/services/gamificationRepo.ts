@@ -287,50 +287,25 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
       throw badgesError
     }
 
-    // Get latest song for each user (using a more efficient approach)
-    const latestSongsMap = new Map<string, string | null>()
-    // Initialize all users with null
-    userIds.forEach(userId => latestSongsMap.set(userId, null))
-    
-    // Get all songs for these users, ordered by created_at
-    const { data: allSongs, error: songsError } = await client
+    // Count songs per user
+    const { data: songsData, error: songsError } = await client
       .from('songs')
-      .select('user_id, title, created_at')
+      .select('user_id')
       .in('user_id', userIds)
-      .order('created_at', { ascending: false })
+      .not('user_id', 'is', null)
 
-    if (!songsError && allSongs) {
-      // Keep only the latest song per user
-      const seenUsers = new Set<string>()
-      for (const song of allSongs) {
-        if (!seenUsers.has(song.user_id)) {
-          latestSongsMap.set(song.user_id, song.title)
-          seenUsers.add(song.user_id)
-        }
-      }
+    if (songsError) {
+      throw songsError
     }
 
-    // Get latest playlist for each user (using a more efficient approach)
-    const latestPlaylistsMap = new Map<string, string | null>()
-    // Initialize all users with null
-    userIds.forEach(userId => latestPlaylistsMap.set(userId, null))
-    
-    // Get all playlists for these users, ordered by created_at
-    const { data: allPlaylists, error: playlistsError } = await client
+    // Count playlists per user
+    const { data: playlistsData, error: playlistsError } = await client
       .from('playlists')
-      .select('user_id, name, created_at')
+      .select('user_id')
       .in('user_id', userIds)
-      .order('created_at', { ascending: false })
 
-    if (!playlistsError && allPlaylists) {
-      // Keep only the latest playlist per user
-      const seenUsers = new Set<string>()
-      for (const playlist of allPlaylists) {
-        if (!seenUsers.has(playlist.user_id)) {
-          latestPlaylistsMap.set(playlist.user_id, playlist.name)
-          seenUsers.add(playlist.user_id)
-        }
-      }
+    if (playlistsError) {
+      throw playlistsError
     }
 
     // Create a map of user_id -> profile
@@ -348,10 +323,28 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
       badgesMap.get(userId)!.push(mapDbBadgeToDomain(badge))
     }
 
+    // Create a map of user_id -> song count
+    const songCountMap = new Map<string, number>()
+    for (const song of songsData || []) {
+      if (song.user_id) {
+        songCountMap.set(song.user_id, (songCountMap.get(song.user_id) || 0) + 1)
+      }
+    }
+
+    // Create a map of user_id -> playlist count
+    const playlistCountMap = new Map<string, number>()
+    for (const playlist of playlistsData || []) {
+      if (playlist.user_id) {
+        playlistCountMap.set(playlist.user_id, (playlistCountMap.get(playlist.user_id) || 0) + 1)
+      }
+    }
+
     // Build leaderboard entries
     const entries: LeaderboardEntry[] = statsData.map((stat, index) => {
       const profile = profileMap.get(stat.user_id)
       const badges = badgesMap.get(stat.user_id) || []
+      const songCount = songCountMap.get(stat.user_id) || 0
+      const playlistCount = playlistCountMap.get(stat.user_id) || 0
 
       return {
         rank: index + 1,
@@ -363,8 +356,8 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
         currentLevel: stat.current_level,
         currentStreak: stat.current_streak,
         badges,
-        latestSongName: latestSongsMap.get(stat.user_id) || null,
-        latestPlaylistName: latestPlaylistsMap.get(stat.user_id) || null
+        songCount,
+        playlistCount
       }
     })
 

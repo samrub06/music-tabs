@@ -68,7 +68,9 @@
     "title": "Leaderboard",
     "description": "Top players ranked by total XP",
     "searchPlaceholder": "Search by name or email...",
-    "resultsCount": "{count} result(s) found"
+    "resultsCount": "{count} result(s) found",
+    "playlist": "playlist",
+    "playlists": "playlists"
   },
   "songs": {
     "sectionTitle": "Songs",
