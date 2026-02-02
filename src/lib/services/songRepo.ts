@@ -410,5 +410,33 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     if (error) throw error
 
     return (data || []).map(mapDbSongToDomain)
+  },
+
+  async getRecentSongs(limit: number = 15): Promise<Song[]> {
+    let builder = (client.from('songs') as any)
+      .select('*')
+      .or('is_trending.eq.true,is_public.eq.true')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    const { data, error } = await builder
+
+    if (error) throw error
+    return (data || []).map(mapDbSongToDomain)
+  },
+
+  async getPopularSongs(limit: number = 15): Promise<Song[]> {
+    let builder = (client.from('songs') as any)
+      .select('*')
+      .or('is_trending.eq.true,is_public.eq.true')
+      .not('view_count', 'is', null)
+      .gt('view_count', 0)
+      .order('view_count', { ascending: false })
+      .limit(limit)
+
+    const { data, error } = await builder
+
+    if (error) throw error
+    return (data || []).map(mapDbSongToDomain)
   }
 })

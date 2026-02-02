@@ -1,28 +1,31 @@
 import { createSafeServerClient } from '@/lib/supabase/server'
-import LibraryClient from './LibraryClient'
 import { songRepo } from '@/lib/services/songRepo'
+import LibrarySpotifyClient from './LibrarySpotifyClient'
+import { unstable_noStore as noStore } from 'next/cache'
 
-export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }> }) {
+export default async function LibraryPage() {
+  noStore()
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const params = await searchParams
-  const page = Math.max(1, parseInt(params?.page || '1', 10))
-  const limit = Math.max(1, parseInt(params?.limit || '24', 10))
-  const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
-  const q = params?.q || ''
 
-  // Fetch public/trending songs instead of user's personal songs
-  // This replaces the old "Explore" logic
-  const { songs, total } = await songRepo(supabase).getTrendingSongsPaged(page, limit, q)
+  // Fetch data for Spotify-style layout
+  const repo = songRepo(supabase)
+  
+  // Featured song: first trending song
+  const trendingSongs = await repo.getTrendingSongs()
+  const featuredSong = trendingSongs.length > 0 ? trendingSongs[0] : null
+
+  // Recent songs: latest 15 songs
+  const recentSongs = await repo.getRecentSongs(15)
+
+  // Popular songs: top 15 by view count
+  const popularSongs = await repo.getPopularSongs(15)
 
   return (
-    <LibraryClient 
-      songs={songs} 
-      total={total} 
-      page={page} 
-      limit={limit} 
-      initialView={view} 
-      initialQuery={q} 
+    <LibrarySpotifyClient
+      featuredSong={featuredSong}
+      recentSongs={recentSongs}
+      popularSongs={popularSongs}
       userId={user?.id}
     />
   )
