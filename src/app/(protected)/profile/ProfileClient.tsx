@@ -9,9 +9,9 @@ import type { Profile } from '@/lib/services/profileRepo'
 import type { UserStats } from '@/types'
 import UserStatsCard from '@/components/gamification/UserStatsCard'
 import BadgeDisplay from '@/components/gamification/BadgeDisplay'
-import { PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { PencilIcon, CheckIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import { getUserStatsAction, getUserBadgesAction } from '@/app/(protected)/gamification/actions'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { UserBadge } from '@/types'
 
 interface ProfileClientProps {
@@ -25,11 +25,14 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fullName, setFullName] = useState(initialProfile?.fullName || contextProfile?.full_name || '')
   const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatarUrl || contextProfile?.avatar_url || '')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats | null>(initialStats)
   const [badges, setBadges] = useState<UserBadge[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Load badges
   useEffect(() => {
@@ -62,8 +65,68 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const handleCancel = () => {
     setFullName(initialProfile?.fullName || contextProfile?.full_name || '')
     setAvatarUrl(initialProfile?.avatarUrl || contextProfile?.avatar_url || '')
+    setPreviewUrl(null)
     setIsEditing(false)
     setError(null)
+  }
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      setError(t('profile.invalidFileType'))
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    if (file.size > maxSize) {
+      setError(t('profile.fileTooLarge'))
+      return
+    }
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    // Upload file
+    setIsUploading(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/profile/upload-avatar', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || t('profile.uploadError'))
+      }
+
+      const data = await response.json()
+      setAvatarUrl(data.url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('profile.uploadError'))
+      setPreviewUrl(null)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleAvatarClick = () => {
+    if (isEditing && fileInputRef.current) {
+      fileInputRef.current.click()
+    }
   }
 
   const getInitials = (name: string | null | undefined, email: string | null | undefined) => {
@@ -89,17 +152,46 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
-            {displayAvatarUrl ? (
-              <img 
-                src={displayAvatarUrl} 
-                alt={displayName}
-                className="h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-              />
-            ) : (
-              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-2xl border-2 border-gray-200 dark:border-gray-700">
-                {getInitials(fullName || contextProfile?.full_name, user?.email || null)}
-              </div>
-            )}
+            <div className="relative">
+              {previewUrl || displayAvatarUrl ? (
+                <img 
+                  src={previewUrl || displayAvatarUrl || ''} 
+                  alt={displayName}
+                  className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 ${
+                    isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  }`}
+                  onClick={handleAvatarClick}
+                />
+              ) : (
+                <div 
+                  className={`h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-2xl border-2 border-gray-200 dark:border-gray-700 ${
+                    isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  }`}
+                  onClick={handleAvatarClick}
+                >
+                  {getInitials(fullName || contextProfile?.full_name, user?.email || null)}
+                </div>
+              )}
+              {isEditing && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <div className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors">
+                    <PhotoIcon className="h-4 w-4" />
+                  </div>
+                </>
+              )}
+              {isUploading && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+              )}
+            </div>
             
             <div>
               {isEditing ? (
@@ -119,7 +211,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t('profile.avatarUrl')}
+                      {t('profile.avatarUrl')} ({t('profile.orUpload')})
                     </label>
                     <input
                       type="url"
@@ -128,6 +220,9 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                       placeholder={t('profile.avatarUrlPlaceholder')}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {t('profile.uploadHint')}
+                    </p>
                   </div>
                   {error && (
                     <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm">

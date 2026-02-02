@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import type { LeaderboardEntry } from '@/types'
 import Leaderboard from '@/components/gamification/Leaderboard'
-import { getLeaderboardAction } from '@/app/(protected)/gamification/actions'
 import { useLanguage } from '@/context/LanguageContext'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 interface LeaderboardClientProps {
   initialLeaderboard: LeaderboardEntry[]
@@ -13,50 +13,56 @@ interface LeaderboardClientProps {
 
 export default function LeaderboardClient({ initialLeaderboard, currentUserId }: LeaderboardClientProps) {
   const { t } = useLanguage()
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(initialLeaderboard)
-  const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const refreshLeaderboard = async () => {
-    setLoading(true)
-    try {
-      const updated = await getLeaderboardAction(100)
-      setLeaderboard(updated)
-    } catch (error) {
-      console.error('Error refreshing leaderboard:', error)
-    } finally {
-      setLoading(false)
+  // Filter leaderboard entries based on search query
+  const filteredLeaderboard = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return initialLeaderboard
     }
-  }
 
-  useEffect(() => {
-    // Refresh leaderboard periodically (every 5 minutes)
-    const interval = setInterval(refreshLeaderboard, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    const query = searchQuery.toLowerCase().trim()
+    return initialLeaderboard.filter((entry) => {
+      const fullName = entry.fullName?.toLowerCase() || ''
+      const email = entry.email.toLowerCase()
+      return fullName.includes(query) || email.includes(query)
+    })
+  }, [initialLeaderboard, searchQuery])
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Leaderboard
+          {t('leaderboard.title')}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Top players ranked by total XP
+          {t('leaderboard.description')}
         </p>
       </div>
 
-      <div className="mb-4 flex justify-end">
-        <button
-          onClick={refreshLeaderboard}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
+      {/* Search bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('leaderboard.searchPlaceholder')}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            {t('leaderboard.resultsCount', { count: filteredLeaderboard.length })}
+          </p>
+        )}
       </div>
 
       <Leaderboard 
-        entries={leaderboard}
+        entries={filteredLeaderboard}
         currentUserId={currentUserId}
       />
     </div>

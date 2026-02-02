@@ -48,6 +48,11 @@
     "fullNamePlaceholder": "Entrez votre nom complet",
     "avatarUrl": "URL de l'avatar",
     "avatarUrlPlaceholder": "Entrez l'URL de l'image de l'avatar",
+    "orUpload": "ou téléchargez une image",
+    "uploadHint": "Cliquez sur l'avatar pour télécharger une nouvelle image, ou entrez une URL",
+    "invalidFileType": "Type de fichier invalide. Veuillez télécharger une image JPEG, PNG, GIF ou WebP.",
+    "fileTooLarge": "Fichier trop volumineux. La taille maximale est de 5MB.",
+    "uploadError": "Erreur lors du téléchargement de l'image",
     "badges": "Badges",
     "activity": "Activité",
     "songsCreated": "Chansons créées",
@@ -55,6 +60,12 @@
     "foldersCreated": "Dossiers créés",
     "playlistsCreated": "Playlists créées",
     "updateError": "Erreur lors de la mise à jour du profil"
+  },
+  "leaderboard": {
+    "title": "Classement",
+    "description": "Meilleurs joueurs classés par XP total",
+    "searchPlaceholder": "Rechercher par nom ou email...",
+    "resultsCount": "{count} résultat(s) trouvé(s)"
   },
   "songs": {
     "sectionTitle": "Chansons",

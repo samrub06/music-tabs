@@ -50,6 +50,11 @@
     "fullNamePlaceholder": "Enter your full name",
     "avatarUrl": "Avatar URL",
     "avatarUrlPlaceholder": "Enter avatar image URL",
+    "orUpload": "or upload an image",
+    "uploadHint": "Click on the avatar to upload a new image, or enter a URL",
+    "invalidFileType": "Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.",
+    "fileTooLarge": "File size too large. Maximum size is 5MB.",
+    "uploadError": "Error uploading image",
     "badges": "Badges",
     "activity": "Activity",
     "songsCreated": "Songs Created",
@@ -57,6 +62,12 @@
     "foldersCreated": "Folders Created",
     "playlistsCreated": "Playlists Created",
     "updateError": "Error updating profile"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "description": "Top players ranked by total XP",
+    "searchPlaceholder": "Search by name or email...",
+    "resultsCount": "{count} result(s) found"
   },
   "songs": {
     "sectionTitle": "Songs",

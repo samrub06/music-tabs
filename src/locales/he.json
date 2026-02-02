@@ -50,6 +50,11 @@
     "fullNamePlaceholder": "הכנס את שמך המלא",
     "avatarUrl": "כתובת תמונת פרופיל",
     "avatarUrlPlaceholder": "הכנס כתובת תמונת פרופיל",
+    "orUpload": "או העלה תמונה",
+    "uploadHint": "לחץ על תמונת הפרופיל כדי להעלות תמונה חדשה, או הכנס כתובת",
+    "invalidFileType": "סוג קובץ לא תקין. אנא העלה תמונת JPEG, PNG, GIF או WebP.",
+    "fileTooLarge": "הקובץ גדול מדי. הגודל המקסימלי הוא 5MB.",
+    "uploadError": "שגיאה בהעלאת התמונה",
     "badges": "תגים",
     "activity": "פעילות",
     "songsCreated": "שירים שנוצרו",
@@ -57,6 +62,12 @@
     "foldersCreated": "תיקיות שנוצרו",
     "playlistsCreated": "פלייליסטים שנוצרו",
     "updateError": "שגיאה בעדכון הפרופיל"
+  },
+  "leaderboard": {
+    "title": "לוח תוצאות",
+    "description": "השחקנים הטובים ביותר מדורגים לפי XP כולל",
+    "searchPlaceholder": "חפש לפי שם או אימייל...",
+    "resultsCount": "{count} תוצאה(ות) נמצאו"
   },
   "songs": {
     "sectionTitle": "שירים",
