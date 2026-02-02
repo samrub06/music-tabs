@@ -51,8 +51,8 @@ export default function FolderTableRow({
         (e.target as HTMLElement).closest('button')) {
       return
     }
-    // Navigate to dashboard - user can filter by folder in the sidebar
-    router.push('/dashboard')
+    // Navigate to songs page - user can filter by folder in the sidebar
+    router.push('/songs')
   }
 
   const handleRename = async () => {

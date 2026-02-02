@@ -177,9 +177,6 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (path === '/chords' || path.startsWith('/chords/')) {
       return 'Chords'
     }
-    if (path === '/dashboard' || path.startsWith('/dashboard/')) {
-      return 'Dashboard'
-    }
     if (path === '/playlists' || path.startsWith('/playlists/')) {
       return 'Playlists'
     }

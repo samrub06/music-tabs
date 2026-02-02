@@ -412,7 +412,7 @@ export default function DashboardSidebar({
                     <button
                       key={p.id}
                       onClick={() => {
-                        router.push('/dashboard');
+                        router.push('/songs');
                         onClose?.();
                       }}
                       className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"

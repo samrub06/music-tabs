@@ -239,7 +239,7 @@ export default function SongViewerContainerSSR({
   const handleDelete = () => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
       onDelete(song.id);
-      router.push('/dashboard');
+      router.push('/songs');
     }
   };
 
@@ -392,7 +392,7 @@ export default function SongViewerContainerSSR({
     onToggleEasyChordMode: () => setEasyChordMode(prev => !prev),
     useCapo,
     onToggleCapo: handleToggleCapo,
-    onNavigateBack: () => router.push('/dashboard'),
+    onNavigateBack: () => router.push('/songs'),
     onPrevSong: handlePrevSong,
     onNextSong: handleNextSong,
     canPrevSong: canPrevSong,

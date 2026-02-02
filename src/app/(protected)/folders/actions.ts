@@ -9,7 +9,6 @@ export async function updateFolderOrderAction(folderId: string, newOrder: number
   const repo = folderRepo(supabase)
   await repo.updateFolderOrder(folderId, newOrder)
   revalidatePath('/folders')
-  revalidatePath('/dashboard')
   // Revalidate all folder detail pages
   revalidatePath('/folders', 'layout')
 }

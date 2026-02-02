@@ -80,10 +80,16 @@ export default function SearchClient({
     }
   }, [])
 
-  // Auto-focus search input on mount
+  // Auto-focus search input only if focus=true in query params
   useEffect(() => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus()
+    const searchParams = new URLSearchParams(window.location.search)
+    const shouldFocus = searchParams.get('focus') === 'true'
+    
+    if (shouldFocus && searchInputRef.current) {
+      // Small delay to ensure the input is fully rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 100)
     }
   }, [])
 

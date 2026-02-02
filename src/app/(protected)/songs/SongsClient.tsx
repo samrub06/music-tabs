@@ -1,9 +1,10 @@
 'use client'
 
 import SongTable from '@/components/SongTable'
+import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -66,10 +67,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   // Other state
   const [isSelectMode, setIsSelectMode] = useState(false)
   const [currentFolder, setCurrentFolder] = useState<string | null>(selectedFolder || null)
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>('all')
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draggedSong, setDraggedSong] = useState<Song | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  
+  const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
 
   // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
@@ -163,11 +167,36 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return filtered
   }, [songs, currentFolder])
 
-  // Sort and filter by search query
+  // Sort and filter by search query and tab
   const sortedSongs = useMemo(() => {
     let sorted = [...filteredSongs]
 
-    // Filter by search query
+    // Apply tab-based filtering
+    if (activeTab === 'recent') {
+      // Sort by createdAt descending (most recent first)
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateB - dateA
+      })
+    } else if (activeTab === 'popular') {
+      // Filter songs with viewCount > 0 and sort by viewCount descending
+      sorted = sorted.filter(song => song.viewCount && song.viewCount > 0)
+      sorted.sort((a, b) => {
+        const viewCountA = a.viewCount || 0
+        const viewCountB = b.viewCount || 0
+        return viewCountB - viewCountA
+      })
+    } else {
+      // All tab: Default sort by title
+      sorted.sort((a, b) => {
+        const titleA = (a.title || '').toLowerCase()
+        const titleB = (b.title || '').toLowerCase()
+        return titleA.localeCompare(titleB)
+      })
+    }
+
+    // Filter by search query (applies to all tabs)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
       sorted = sorted.filter(song => 
@@ -184,13 +213,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
 
     return sorted
-  }, [filteredSongs, searchQuery])
+  }, [filteredSongs, searchQuery, activeTab])
 
-  const applyQuery = (next: { page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
+  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.delete('q')
     params.delete('searchQuery')
-    params.set('view', 'table') // Always table view
+    if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
     else if (!params.has('limit')) params.set('limit', String(limit))
@@ -311,6 +340,26 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </div>
           </div>
 
+          {/* View Toggle */}
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
+              <button
+                className={`px-3 py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                title="Gallery View"
+              >
+                <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+              <button
+                className={`px-3 py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                onClick={() => applyQuery({ view: 'table', page: 1 })}
+                title="Table View"
+              >
+                <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            </div>
+          </div>
+
           {/* Filter Icon Button */}
           <button
             onClick={() => setIsFilterSheetOpen(true)}
@@ -321,65 +370,137 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </button>
         </div>
 
-        {/* Content - Table Only */}
+        {/* Filtering Tabs - Mobile optimized */}
+        <div className="mb-4 lg:hidden">
+          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <MusicalNoteIcon className="h-4 w-4 mr-2" />
+              <span>All</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('recent')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'recent' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <ClockIcon className="h-4 w-4 mr-2" />
+              <span>Recent</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('popular')}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'popular' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FireIcon className="h-4 w-4 mr-2" />
+              <span>Popular</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
         {sortedSongs && sortedSongs.length > 0 ? (
-          <>
-            <SongTable
-              songs={sortedSongs}
-              folders={folders}
-              playlists={playlists}
-              currentFolder={currentFolder}
-              currentPlaylistId={null}
-              searchQuery={searchQuery}
-              hasUser={true}
-              onFolderChange={updateSongFolderAction}
-              onDeleteSongs={deleteSongsAction}
-              onDeleteAllSongs={deleteAllSongsAction}
-              onCurrentFolderChange={(folderId) => {
-                setCurrentFolder(folderId)
-                handleFolderChange(folderId || undefined)
-              }}
-              onUpdateSong={updateSongAction}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSortChange={handleSortChange}
-              isSelectMode={isSelectMode}
-              onToggleSelectMode={toggleSelectMode}
-            />
-            <div className="hidden sm:block mt-4">
-              <Pagination page={page} limit={limit} total={total} />
-            </div>
-            {/* Compact Pagination for Mobile */}
-            {(() => {
-              const totalPages = Math.max(1, Math.ceil(total / limit))
-              const canPrev = page > 1
-              const canNext = page < totalPages
-              
-              if (totalPages <= 1) return null
-              
-              return (
-                <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
-                  <button
-                    className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                    onClick={() => applyQuery({ page: page - 1 })}
-                    disabled={!canPrev}
-                  >
-                    ‹
-                  </button>
-                  <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
-                    {page} / {totalPages}
-                  </span>
-                  <button
-                    className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                    onClick={() => applyQuery({ page: page + 1 })}
-                    disabled={!canNext}
-                  >
-                    ›
-                  </button>
-                </div>
-              )
-            })()}
-          </>
+          view === 'table' ? (
+            <>
+              <SongTable
+                songs={sortedSongs}
+                folders={folders}
+                playlists={playlists}
+                currentFolder={currentFolder}
+                currentPlaylistId={null}
+                searchQuery={searchQuery}
+                hasUser={true}
+                onFolderChange={updateSongFolderAction}
+                onDeleteSongs={deleteSongsAction}
+                onDeleteAllSongs={deleteAllSongsAction}
+                onCurrentFolderChange={(folderId) => {
+                  setCurrentFolder(folderId)
+                  handleFolderChange(folderId || undefined)
+                }}
+                onUpdateSong={updateSongAction}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortChange={handleSortChange}
+                isSelectMode={isSelectMode}
+                onToggleSelectMode={toggleSelectMode}
+              />
+              <div className="hidden sm:block mt-4">
+                <Pagination page={page} limit={limit} total={total} />
+              </div>
+              {/* Compact Pagination for Mobile */}
+              {(() => {
+                const totalPages = Math.max(1, Math.ceil(total / limit))
+                const canPrev = page > 1
+                const canNext = page < totalPages
+                
+                if (totalPages <= 1) return null
+                
+                return (
+                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page - 1 })}
+                      disabled={!canPrev}
+                    >
+                      ‹
+                    </button>
+                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page + 1 })}
+                      disabled={!canNext}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )
+              })()}
+            </>
+          ) : (
+            <>
+              <SongGallery songs={sortedSongs} hasUser={true} />
+              <div className="hidden sm:block mt-4">
+                <Pagination page={page} limit={limit} total={total} />
+              </div>
+              {/* Compact Pagination for Mobile */}
+              {(() => {
+                const totalPages = Math.max(1, Math.ceil(total / limit))
+                const canPrev = page > 1
+                const canNext = page < totalPages
+                
+                if (totalPages <= 1) return null
+                
+                return (
+                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page - 1 })}
+                      disabled={!canPrev}
+                    >
+                      ‹
+                    </button>
+                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
+                      onClick={() => applyQuery({ page: page + 1 })}
+                      disabled={!canNext}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )
+              })()}
+            </>
+          )
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400">

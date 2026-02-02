@@ -25,7 +25,8 @@ async function supabaseServer() {
 export async function updateSongAction(id: string, updates: SongEditData) {
   const supabase = await supabaseServer()
   const updated = await songService.updateSong(id, updates, supabase)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
   revalidatePath(`/song/${id}`)
   return updated
 }
@@ -33,6 +34,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
 export async function deleteSongAction(id: string) {
   const supabase = await supabaseServer()
   await songService.deleteSong(id, supabase)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
 }
 

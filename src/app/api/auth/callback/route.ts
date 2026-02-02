@@ -7,13 +7,13 @@ export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url)
   const code = searchParams.get('code')
   
-  // Default to dashboard if no next param provided
-  let next = searchParams.get('next') ?? '/dashboard'
+  // Default to library if no next param provided
+  let next = searchParams.get('next') ?? '/library'
 
   // Basic sanitization to prevent open redirects
   // Ensure it starts with / and is not a protocol-relative URL (//)
   if (!next.startsWith('/') || next.startsWith('//')) {
-    next = '/dashboard'
+    next = '/library'
   }
 
   if (code) {

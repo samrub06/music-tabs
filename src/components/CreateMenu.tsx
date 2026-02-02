@@ -46,7 +46,7 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
 
   const handleSearchSong = () => {
     handleClose()
-    router.push('/add-song')
+    router.push('/search?focus=true')
   }
 
   const handleCreatePlaylist = async () => {

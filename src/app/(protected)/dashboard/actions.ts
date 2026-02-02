@@ -58,7 +58,8 @@ export async function addSongAction(payload: NewSongData) {
     folderId: finalFolderId
   }
   const created = await repo.createSong(normalizedPayload)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
   return created
 }
 
@@ -71,7 +72,8 @@ export async function updateSongAction(id: string, updates: SongEditData) {
     folderId: validatedUpdates.folderId ?? undefined
   }
   const updated = await repo.updateSong(id, normalizedUpdates)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
   revalidatePath(`/song/${id}`)
   return updated
 }
@@ -81,7 +83,8 @@ export async function updateSongFolderAction(id: string, folderId?: string) {
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.updateSongFolder(id, folderId)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
 }
 
 export async function deleteSongsAction(ids: string[]) {
@@ -90,21 +93,24 @@ export async function deleteSongsAction(ids: string[]) {
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.deleteSongs(ids)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
 }
 
 export async function deleteAllSongsAction() {
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.deleteAllSongs()
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
 }
 
 export async function deleteSongAction(id: string) {
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
 }
 
 export async function addFolderAction(name: string) {
@@ -112,7 +118,6 @@ export async function addFolderAction(name: string) {
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.createFolder({ name: validatedName })
-  revalidatePath('/dashboard')
   revalidatePath('/folders')
 }
 
@@ -121,7 +126,6 @@ export async function renameFolderAction(id: string, name: string) {
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.updateFolder(id, { name: validatedName })
-  revalidatePath('/dashboard')
   revalidatePath('/folders')
   revalidatePath('/folders', 'layout')
 }
@@ -130,7 +134,6 @@ export async function deleteFolderAction(id: string) {
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.deleteFolder(id)
-  revalidatePath('/dashboard')
   revalidatePath('/folders')
   revalidatePath('/folders', 'layout')
 }
@@ -139,7 +142,6 @@ export async function createPlaylistAction(name: string) {
   const { name: validatedName } = createPlaylistSchema.parse({ name })
   const supabase = await createActionServerClient()
   const created = await playlistService.createPlaylist(validatedName, undefined, [], supabase)
-  revalidatePath('/dashboard')
   revalidatePath('/playlists')
   return created
 }
@@ -148,7 +150,7 @@ export async function createPlaylistFromGeneratedPlaylistAction(name: string, pl
   const { name: validatedName } = createPlaylistSchema.parse({ name })
   const supabase = await createActionServerClient()
   const savedPlaylist = await playlistService.createPlaylistFromGeneratedPlaylist(validatedName, playlist, undefined, supabase)
-  revalidatePath('/dashboard')
+  revalidatePath('/playlists')
   return savedPlaylist
 }
 
@@ -191,6 +193,7 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
   }
   
   const created = await repo.createSong(newSongData)
-  revalidatePath('/dashboard')
+  revalidatePath('/songs')
+  revalidatePath('/library')
   return created
 }

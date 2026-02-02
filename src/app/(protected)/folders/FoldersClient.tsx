@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { FolderIcon, FolderOpenIcon, PlusIcon, MusicalNoteIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, FolderOpenIcon, PlusIcon, MusicalNoteIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, FunnelIcon } from '@heroicons/react/24/outline'
 import { Folder } from '@/types'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -10,6 +10,11 @@ import { CSS } from '@dnd-kit/utilities'
 import { updateFolderOrderAction } from './actions'
 import { addFolderAction } from '@/app/(protected)/dashboard/actions'
 import Snackbar from '@/components/Snackbar'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface FoldersClientProps {
   folders: Folder[]
@@ -159,6 +164,8 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
 
 export default function FoldersClient({ folders: initialFolders, folderSongCounts }: FoldersClientProps) {
   const router = useRouter()
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  
   const [folders, setFolders] = useState(initialFolders)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null)
@@ -168,7 +175,12 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [newFolderName, setNewFolderName] = useState('')
   const [view, setView] = useState<'grid' | 'table'>('table')
   const [searchQuery, setSearchQuery] = useState('')
+  const [localSearchValue, setLocalSearchValue] = useState('')
   const [isDragMode, setIsDragMode] = useState(false)
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'songCount'>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -277,16 +289,74 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
     return folderSongCounts.get(folderId) || 0
   }
 
-  // Filter folders based on search query
+  // Debounced search - update searchQuery after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(localSearchValue)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [localSearchValue])
+
+  // Filter and sort folders
   const filteredFolders = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return folders
+    let filtered = [...folders]
+    
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      filtered = filtered.filter(folder => 
+        folder.name.toLowerCase().includes(query)
+      )
     }
-    const query = searchQuery.toLowerCase().trim()
-    return folders.filter(folder => 
-      folder.name.toLowerCase().includes(query)
-    )
-  }, [folders, searchQuery])
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let compareA: any, compareB: any
+      switch (sortBy) {
+        case 'name':
+          compareA = a.name.toLowerCase()
+          compareB = b.name.toLowerCase()
+          break
+        case 'createdAt':
+          compareA = new Date(a.createdAt).getTime()
+          compareB = new Date(b.createdAt).getTime()
+          break
+        case 'songCount':
+          compareA = getSongCount(a.id)
+          compareB = getSongCount(b.id)
+          break
+        default:
+          compareA = a.name.toLowerCase()
+          compareB = b.name.toLowerCase()
+      }
+      
+      if (typeof compareA === 'string' && typeof compareB === 'string') {
+        return sortDirection === 'asc' ? compareA.localeCompare(compareB) : compareB.localeCompare(compareA)
+      } else {
+        return sortDirection === 'asc' ? compareA - compareB : compareB - compareA
+      }
+    })
+    
+    return filtered
+  }, [folders, searchQuery, sortBy, sortDirection, folderSongCounts])
+  
+  const handleClearSearch = () => {
+    setLocalSearchValue('')
+    setSearchQuery('')
+    if (isSearchExpanded) {
+      setIsSearchExpanded(false)
+    }
+  }
+  
+  const handleApplyFilters = () => {
+    setIsFilterSheetOpen(false)
+  }
+  
+  const handleClearFilters = () => {
+    setSortBy('name')
+    setSortDirection('asc')
+    setIsFilterSheetOpen(false)
+  }
 
   return (
     <DndContext
@@ -295,76 +365,130 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex-1 p-2 sm:p-4 overflow-y-auto">
-        {/* Search Bar - First, full width */}
-        <div className="mb-3">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Rechercher un dossier..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-7 sm:pl-10 pr-7 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                type="button"
+      <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-screen">
+        {/* Header with Search, Filter, View Toggle, and Actions */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          {/* Mobile Search Icon / Expanded Search */}
+          <div className="flex-1 lg:hidden">
+            {!isSearchExpanded ? (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setIsSearchExpanded(true)
+                  searchInputRef.current?.focus()
+                }}
+                className="h-10 w-10"
               >
-                <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
+                <MagnifyingGlassIcon className="h-5 w-5" />
+              </Button>
+            ) : (
+              <div className="relative flex items-center w-full">
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Rechercher un dossier..."
+                  value={localSearchValue}
+                  onChange={(e) => setLocalSearchValue(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5"
+                />
+                {localSearchValue && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClearSearch}
+                    className="absolute right-0 h-full"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSearchExpanded(false)}
+                  className="absolute right-10 h-full lg:hidden"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </Button>
+              </div>
             )}
           </div>
-        </div>
 
-        {/* Add Folder Button, View Toggle, and Drag Mode Toggle - Second row */}
-        <div className="mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
+          {/* Desktop Search Bar */}
+          <div className="hidden lg:flex flex-1 relative">
+            <Input
+              type="text"
+              placeholder="Rechercher un dossier..."
+              value={localSearchValue}
+              onChange={(e) => setLocalSearchValue(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5"
+            />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            {localSearchValue && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClearSearch}
+                className="absolute right-0 h-full"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
+
+          {/* View Toggle - Desktop only */}
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
+              <button
+                className={`px-3 py-2 text-sm flex items-center justify-center ${view === 'grid' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                onClick={() => setView('grid')}
+                title="Grid View"
+              >
+                <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+              <button
+                className={`px-3 py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                onClick={() => setView('table')}
+                title="Table View"
+              >
+                <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsFilterSheetOpen(true)}
+            className="h-10 w-10 flex-shrink-0"
+          >
+            <FunnelIcon className="h-5 w-5" />
+          </Button>
+
+          {/* Drag Mode Toggle */}
+          <Button
+            variant={isDragMode ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setIsDragMode(!isDragMode)}
+            className="h-10 w-10 flex-shrink-0"
+            title={isDragMode ? 'Disable Drag & Drop' : 'Enable Drag & Drop'}
+          >
+            <ArrowsUpDownIcon className="h-5 w-5" />
+          </Button>
+
+          {/* Add Folder Button */}
           {!showAddForm ? (
-            <>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center justify-center flex-1 sm:flex-initial px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <PlusIcon className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Nouveau dossier</span>
-              </button>
-              {/* View Toggle */}
-              <div className="inline-flex rounded-md shadow-sm border overflow-hidden flex-shrink-0">
-                <button
-                  className={`px-2 sm:px-2.5 py-1.5 sm:py-1.5 text-sm flex items-center justify-center ${view === 'grid' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                  onClick={() => setView('grid')}
-                  title="Grid View"
-                >
-                  <Squares2X2Icon className="h-4 w-4" />
-                </button>
-                <button
-                  className={`px-2 sm:px-2.5 py-1.5 sm:py-1.5 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                  onClick={() => setView('table')}
-                  title="Table View"
-                >
-                  <TableCellsIcon className="h-4 w-4" />
-                </button>
-              </div>
-              {/* Drag Mode Toggle */}
-              <button
-                onClick={() => setIsDragMode(!isDragMode)}
-                className={`inline-flex items-center justify-center px-2 sm:px-2.5 py-1.5 sm:py-1.5 text-sm rounded-md border transition-colors flex-shrink-0 ${
-                  isDragMode
-                    ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-                title={isDragMode ? 'Disable Drag & Drop' : 'Enable Drag & Drop'}
-              >
-                <ArrowsUpDownIcon className="h-4 w-4" />
-              </button>
-            </>
+            <Button
+              onClick={() => setShowAddForm(true)}
+              className="h-10"
+            >
+              <PlusIcon className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Nouveau dossier</span>
+            </Button>
           ) : (
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <input
+            <div className="flex items-center gap-2">
+              <Input
                 type="text"
                 placeholder="Nom du dossier"
                 value={newFolderName}
@@ -376,25 +500,24 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                     setNewFolderName('')
                   }
                 }}
-                className="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-48"
                 autoFocus
               />
-              <button
+              <Button
                 onClick={handleAddFolder}
                 disabled={!newFolderName.trim()}
-                className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 Créer
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowAddForm(false)
                   setNewFolderName('')
                 }}
-                className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Annuler
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -535,6 +658,59 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         type="error"
         duration={5000}
       />
+
+      {/* Filter Sheet */}
+      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+        <SheetContent side="bottom" className="h-auto max-h-[90vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Filtres avancés</SheetTitle>
+          </SheetHeader>
+          <div className="grid gap-4 py-4">
+            {/* Sort By */}
+            <div className="grid gap-2">
+              <Label htmlFor="sort-by">Trier par</Label>
+              <Select
+                value={sortBy}
+                onValueChange={(value: 'name' | 'createdAt' | 'songCount') => setSortBy(value)}
+              >
+                <SelectTrigger id="sort-by">
+                  <SelectValue placeholder="Champ de tri" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Nom</SelectItem>
+                  <SelectItem value="createdAt">Date de création</SelectItem>
+                  <SelectItem value="songCount">Nombre de chansons</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Direction */}
+            <div className="grid gap-2">
+              <Label htmlFor="sort-direction">Ordre</Label>
+              <Select
+                value={sortDirection}
+                onValueChange={(value: 'asc' | 'desc') => setSortDirection(value)}
+              >
+                <SelectTrigger id="sort-direction">
+                  <SelectValue placeholder="Ordre de tri" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asc">Ascendant</SelectItem>
+                  <SelectItem value="desc">Descendant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <SheetFooter className="flex-row justify-between gap-2 mt-4">
+            <Button variant="outline" onClick={handleClearFilters} className="w-full">
+              Effacer les filtres
+            </Button>
+            <Button onClick={handleApplyFilters} className="w-full">
+              Appliquer les filtres
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </DndContext>
   )
 }
