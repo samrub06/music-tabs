@@ -39,6 +39,31 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     return (data || []).map(mapDbFolderToDomain)
   },
 
+  async getFolderById(folderId: string): Promise<Folder | null> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) {
+      return null
+    }
+
+    const { data, error } = await client
+      .from('folders')
+      .select('*')
+      .eq('id', folderId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No folder found
+        return null
+      }
+      throw error
+    }
+
+    return data ? mapDbFolderToDomain(data) : null
+  },
+
   async createFolder(folderData: CreateFolderInput): Promise<Folder> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to create folders')

@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation'
-import { unstable_noStore as noStore } from 'next/cache'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { Suspense } from 'react'
 import SongsData from './SongsData'
 
 export default async function SongsPage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string }> }) {
-  noStore()
+  // Removed noStore() - songs are revalidated via revalidatePath() after mutations
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 

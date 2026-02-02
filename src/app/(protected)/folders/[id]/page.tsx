@@ -1,5 +1,4 @@
 import { redirect, notFound } from 'next/navigation'
-import { unstable_noStore as noStore } from 'next/cache'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { folderRepo } from '@/lib/services/folderRepo'
 import FolderSongsClient from './FolderSongsClient'
@@ -12,7 +11,7 @@ export default async function FolderSongsPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }>
 }) {
-  noStore()
+  // Removed noStore() - data is revalidated via revalidatePath() after mutations
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -28,9 +27,8 @@ export default async function FolderSongsPage({
   const view = (searchParamsResolved?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const q = searchParamsResolved?.q || ''
 
-  // Fetch folder
-  const folders = await folderRepo(supabase).getAllFolders()
-  const folder = folders.find(f => f.id === id)
+  // Fetch folder directly by ID (optimized)
+  const folder = await folderRepo(supabase).getFolderById(id)
 
   if (!folder) {
     notFound()

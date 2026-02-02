@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation'
-import { unstable_noStore as noStore } from 'next/cache'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { Suspense } from 'react'
 import FoldersData from './FoldersData'
 
 export default async function FoldersPage() {
-  noStore()
+  // Removed noStore() - folders are revalidated via revalidatePath() after mutations
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
