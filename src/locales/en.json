@@ -28,7 +28,9 @@
     "switchToDarkMode": "Switch to dark mode",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
-    "importUltimateGuitar": "Import Ultimate Guitar"
+    "importUltimateGuitar": "Import Ultimate Guitar",
+    "view": "View",
+    "play": "Play"
   },
   "navigation": {
     "home": "Home",
@@ -253,6 +255,7 @@
     "compatibility": "Compatibility:",
     "transition": "Transition:",
     "noSongsInPlaylist": "No songs in playlist",
+    "addSongsToPlaylist": "Add songs to this playlist",
     "playlistName": "Playlist name",
     "playlistNamePlaceholder": "Playlist name",
     "saving": "Saving...",

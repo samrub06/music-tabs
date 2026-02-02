@@ -28,7 +28,9 @@
     "switchToDarkMode": "עבור למצב כהה",
     "lightMode": "מצב בהיר",
     "darkMode": "מצב כהה",
-    "importUltimateGuitar": "ייבא מ-Ultimate Guitar"
+    "importUltimateGuitar": "ייבא מ-Ultimate Guitar",
+    "view": "הצג",
+    "play": "נגן"
   },
   "navigation": {
     "home": "בית",
@@ -253,6 +255,7 @@
     "compatibility": "תאימות:",
     "transition": "מעבר:",
     "noSongsInPlaylist": "אין שירים בפלייליסט",
+    "addSongsToPlaylist": "הוסף שירים לפלייליסט זה",
     "playlistName": "שם הפלייליסט",
     "playlistNamePlaceholder": "שם הפלייליסט",
     "saving": "שומר...",

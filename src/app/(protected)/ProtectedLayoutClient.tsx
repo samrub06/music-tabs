@@ -168,6 +168,10 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
       return t('navigation.playlists')
     }
     if (path === '/playlist' || path.startsWith('/playlist/')) {
+      // Si c'est /playlist/[playlistId], on ne met pas de titre (sera géré par la page)
+      if (path.match(/^\/playlist\/[^/]+$/)) {
+        return undefined
+      }
       return t('createMenu.createPlaylist')
     }
     return undefined

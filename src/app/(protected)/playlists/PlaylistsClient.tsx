@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SparklesIcon, MusicalNoteIcon, PlayIcon, MagnifyingGlassIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/context/LanguageContext';
 import { Song, Playlist } from '@/types';
 
 type SortField = 'name' | 'songCount' | 'createdAt';
@@ -15,6 +16,7 @@ interface PlaylistsClientProps {
 
 export default function PlaylistsClient({ songs, playlists }: PlaylistsClientProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [localSearchValue, setLocalSearchValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
@@ -305,7 +307,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                     return (
                       <tr
                         key={playlist.id}
-                        onClick={() => handleStartSavedPlaylist(playlist)}
+                        onClick={() => router.push(`/playlist/${playlist.id}`)}
                         className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -342,7 +344,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
                             className="inline-flex items-center px-3 py-1.5 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
                           >
                             <PlayIcon className="h-4 w-4 mr-1" />
-                            Lire
+                            {t('common.play')}
                           </button>
                         </td>
                       </tr>

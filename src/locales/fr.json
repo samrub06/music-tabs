@@ -253,6 +253,7 @@
     "compatibility": "Compatibilité :",
     "transition": "Transition :",
     "noSongsInPlaylist": "Aucune chanson dans la playlist",
+    "addSongsToPlaylist": "Ajoutez des chansons à cette playlist",
     "playlistName": "Nom de la playlist",
     "playlistNamePlaceholder": "Nom de la playlist",
     "saving": "Enregistrement...",
