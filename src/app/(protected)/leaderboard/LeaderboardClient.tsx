@@ -56,7 +56,7 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
         </div>
         {searchQuery && (
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            {t('leaderboard.resultsCount', { count: filteredLeaderboard.length })}
+            {t('leaderboard.resultsCount').replace('{count}', String(filteredLeaderboard.length))}
           </p>
         )}
       </div>
