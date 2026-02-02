@@ -544,7 +544,7 @@ export default function SearchClient({
         {!isSearching && !isCheckingExisting && hasSearched && searchQuery.trim() && searchResults.length === 0 && !message && (
           <div className="text-center py-12">
             <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Aucun résultat trouvé pour "{searchQuery}"
+              Aucun résultat trouvé pour &quot;{searchQuery}&quot;
             </p>
           </div>
         )}

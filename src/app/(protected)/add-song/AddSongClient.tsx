@@ -278,8 +278,8 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
         <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
           <p className="font-medium mb-2">💡 Comment utiliser</p>
           <ul className="space-y-1 list-disc list-inside">
-            <li>Entrez un titre de chanson ou un nom d'artiste</li>
-            <li>Cliquez sur un résultat pour l'ajouter à votre bibliothèque</li>
+            <li>Entrez un titre de chanson ou un nom d&apos;artiste</li>
+            <li>Cliquez sur un résultat pour l&apos;ajouter à votre bibliothèque</li>
             <li>Les résultats sont triés par popularité</li>
           </ul>
         </div>
