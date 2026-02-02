@@ -6,7 +6,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useState } from 'react';
 import PlaylistImporter from './PlaylistImporter';
 
@@ -173,11 +172,9 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                       className="flex items-center space-x-2 p-0.5 sm:p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       {profile?.avatar_url ? (
-                        <Image 
+                        <img 
                           src={profile.avatar_url} 
                           alt={profile.full_name || t('common.user')} 
-                          width={36}
-                          height={36}
                           className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                         />
                       ) : (

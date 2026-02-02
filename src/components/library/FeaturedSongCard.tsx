@@ -3,7 +3,6 @@
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
 import { Song } from '@/types'
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface FeaturedSongCardProps {
   song: Song
@@ -21,11 +20,10 @@ export default function FeaturedSongCard({ song, onAddClick, addingId }: Feature
         Sélectionné pour vous
       </h2>
       <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group">
-        <Image
+        <img
           src={imageUrl}
           alt={song.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
         

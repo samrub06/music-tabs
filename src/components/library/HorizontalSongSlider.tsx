@@ -3,7 +3,6 @@
 import { Song } from '@/types'
 import Link from 'next/link'
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
-import Image from 'next/image'
 import { useRef } from 'react'
 
 interface HorizontalSongSliderProps {
@@ -77,11 +76,10 @@ export default function HorizontalSongSlider({ title, songs, onAddClick, addingI
             >
               <Link href={`/song/${song.id}`}>
                 <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-800 mb-2 shadow-lg group-hover:shadow-xl transition-all duration-200 group-hover:scale-105">
-                  <Image
+                  <img
                     src={imageUrl}
                     alt={song.title}
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">

@@ -3,7 +3,6 @@
 import { HeartIcon, MusicalNoteIcon, SparklesIcon } from '@heroicons/react/24/solid'
 import { RadioIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface GridItem {
   id: string
@@ -104,11 +103,10 @@ export default function LibraryGridSection() {
           <div className="group relative h-24 sm:h-28 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl">
             {item.imageUrl ? (
               <div className="absolute inset-0">
-                <Image
+                <img
                   src={item.imageUrl}
                   alt={item.title}
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
               </div>

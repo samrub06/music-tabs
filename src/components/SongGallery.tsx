@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import Image from 'next/image'
 import { MusicalNoteIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
@@ -99,10 +98,9 @@ function DraggableSongCard({
       <div onClick={handleSongClick} className="flex-1 cursor-pointer">
             <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
               {song.songImageUrl ? (
-                <Image 
+                <img 
                   src={song.songImageUrl} 
                   alt={song.title}
-                  fill
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
                 />
               ) : (
