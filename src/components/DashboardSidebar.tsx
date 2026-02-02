@@ -27,6 +27,7 @@ interface DashboardSidebarProps {
   onFolderChange: (folderId: string | null) => void;
   onClose?: () => void;
   onMoveSong?: (songId: string, folderId: string | undefined) => Promise<void>;
+  onCreateClick?: () => void;
 }
 
 // Component for droppable folder
@@ -75,7 +76,8 @@ export default function DashboardSidebar({
   currentFolder, 
   onFolderChange,
   onClose,
-  onMoveSong
+  onMoveSong,
+  onCreateClick
 }: DashboardSidebarProps) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -148,6 +150,22 @@ export default function DashboardSidebar({
   return (
     <aside className="w-72 bg-white dark:bg-gray-900 shadow-sm border-r border-gray-200 dark:border-gray-700 h-full overflow-y-auto">
       <div className="p-4">
+        {/* Add Song Button - Desktop only */}
+        {onCreateClick && (
+          <div className="mb-4 hidden lg:block">
+            <button
+              onClick={() => {
+                onCreateClick();
+                onClose?.();
+              }}
+              className="w-full flex items-center justify-center px-4 py-3 bg-blue-200 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg hover:bg-blue-300 dark:hover:bg-blue-900/50 transition-colors shadow-sm"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Ajouter une chanson
+            </button>
+          </div>
+        )}
+
         {/* Create Playlist Button */}
         <div className="mb-4">
           <button

@@ -3,7 +3,7 @@
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, CloudArrowDownIcon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -65,7 +65,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
 
   return (
     <header className="bg-transparent lg:bg-white dark:lg:bg-gray-900 lg:shadow-sm border-0 lg:border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 ">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:max-w-none lg:mx-0 lg:px-0">
         <div className="relative flex items-center justify-between h-14 md:h-16">
           {/* Left side: Mobile menu button + Navigation */}
           <div className="flex items-center space-x-1 md:space-x-4">
@@ -102,6 +102,13 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 >
                   <GlobeAltIcon className="h-5 w-5" />
                   <span>Library</span>
+                </Link>
+                <Link
+                  href="/search"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <MagnifyingGlassIcon className="h-5 w-5" />
+                  <span>Search</span>
                 </Link>
                 <Link
                   href="/songs"

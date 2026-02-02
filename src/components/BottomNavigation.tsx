@@ -10,14 +10,16 @@ import {
   FolderIcon, 
   MusicalNoteIcon,
   SparklesIcon,
-  PlusIcon
+  PlusIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { 
   GlobeAltIcon as GlobeAltIconSolid, 
   RectangleStackIcon as RectangleStackIconSolid, 
   FolderIcon as FolderIconSolid, 
   MusicalNoteIcon as MusicalNoteIconSolid,
-  SparklesIcon as SparklesIconSolid
+  SparklesIcon as SparklesIconSolid,
+  MagnifyingGlassIcon as MagnifyingGlassIconSolid
 } from '@heroicons/react/24/solid';
 import CreateMenu from './CreateMenu';
 import { Folder } from '@/types';
@@ -58,6 +60,13 @@ export default function BottomNavigation() {
       icon: GlobeAltIcon,
       iconSolid: GlobeAltIconSolid,
       isActive: pathname === '/library' || pathname.startsWith('/library/'),
+    },
+    {
+      href: '/search',
+      label: 'Search',
+      icon: MagnifyingGlassIcon,
+      iconSolid: MagnifyingGlassIconSolid,
+      isActive: pathname === '/search' || pathname.startsWith('/search/'),
     },
     {
       href: '/songs',

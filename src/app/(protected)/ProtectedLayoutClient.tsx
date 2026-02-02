@@ -3,6 +3,7 @@
 import Header from '@/components/Header'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import BottomNavigation from '@/components/BottomNavigation'
+import CreateMenu from '@/components/CreateMenu'
 import { useAuthContext } from '@/context/AuthContext'
 import { SidebarProvider } from '@/context/SidebarContext'
 import { useRouter, usePathname } from 'next/navigation'
@@ -25,7 +26,7 @@ let sidebarDataCache: {
 
 const CACHE_DURATION = 30000 // 30 secondes
 
-function SidebarWrapper() {
+function SidebarWrapper({ onCreateClick }: { onCreateClick?: () => void }) {
   const { user, loading: authLoading } = useAuthContext()
   const { supabase } = useSupabase()
   const [folders, setFolders] = useState<Folder[]>([])
@@ -109,6 +110,7 @@ function SidebarWrapper() {
           }}
           onClose={() => {}}
           onMoveSong={updateSongFolderAction}
+          onCreateClick={onCreateClick}
         />
       </div>
     </>
@@ -119,6 +121,24 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuthContext()
   const pathname = usePathname()
   const router = useRouter()
+  const { supabase } = useSupabase()
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false)
+  const [createMenuFolders, setCreateMenuFolders] = useState<Folder[]>([])
+
+  // Fetch folders for CreateMenu
+  useEffect(() => {
+    if (user && supabase) {
+      const fetchFolders = async () => {
+        try {
+          const foldersData = await folderRepo(supabase).getAllFolders()
+          setCreateMenuFolders(foldersData)
+        } catch (error) {
+          console.error('Error fetching folders for CreateMenu:', error)
+        }
+      }
+      fetchFolders()
+    }
+  }, [user, supabase])
 
   // Check if this is a library route (allowed without auth)
   const isLibraryRoute = pathname === '/library' || pathname.startsWith('/library/')
@@ -144,6 +164,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     }
     if (path === '/library' || path.startsWith('/library/')) {
       return 'Library'
+    }
+    if (path === '/search' || path.startsWith('/search/')) {
+      return 'Search'
     }
     if (path === '/songs' || path.startsWith('/songs/')) {
       return 'Songs'
@@ -173,7 +196,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           <Header onMenuClick={() => {}} pageTitle={pageTitle} />
 
       <div className="flex-1 flex overflow-hidden">
-        {user && <SidebarWrapper />}
+        {user && <SidebarWrapper onCreateClick={() => setIsCreateMenuOpen(true)} />}
         
         {/* Main content */}
           <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden pb-16 lg:pb-0">
@@ -183,6 +206,15 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           
           {/* Bottom Navigation - Mobile only */}
           <BottomNavigation />
+          
+          {/* Create Menu - Desktop only (mobile uses BottomNavigation) */}
+          {user && (
+            <CreateMenu
+              isOpen={isCreateMenuOpen}
+              onClose={() => setIsCreateMenuOpen(false)}
+              folders={createMenuFolders}
+            />
+          )}
         </div>
   )
 }

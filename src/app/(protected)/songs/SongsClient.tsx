@@ -1,6 +1,5 @@
 'use client'
 
-import AddSongForm from '@/components/AddSongForm'
 import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
@@ -35,7 +34,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
-  const [showAddSong, setShowAddSong] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
   const [showSortModal, setShowSortModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState(initialQuery)
@@ -251,18 +249,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragEnd={handleDragEnd}
     >
       <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-        {/* Top Row: Add Song Button + View Toggle */}
-        <div className="mb-4 flex items-center justify-between gap-2">
-          {/* Add Song Button */}
-          <button
-            onClick={() => setShowAddSong(true)}
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <PlusIcon className="h-4 sm:h-5 w-4 sm:w-5 sm:mr-2" />
-            <span className="sm:hidden">{t('navigation.addSongMobile')}</span>
-            <span className="hidden sm:inline">{t('songs.addNew')}</span>
-          </button>
-
+        {/* Top Row: View Toggle */}
+        <div className="mb-4 flex items-center justify-end gap-2">
           {/* View toggle */}
           <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
             <button
@@ -518,13 +506,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         ) : null}
       </div>
 
-      {/* Add song modal */}
-      <AddSongForm 
-        isOpen={showAddSong}
-        onClose={() => setShowAddSong(false)}
-        folders={folders}
-      />
-      
       {/* Drag overlay */}
       <DragOverlay>
         {draggedSong ? (
