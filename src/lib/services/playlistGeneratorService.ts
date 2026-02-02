@@ -244,16 +244,51 @@ export function generatePlaylistSequence(
     sequence[i].transitionScore = transitionScore;
   }
 
+  // Apply maxSongs limit if specified
+  let finalSequence = sequence;
+  if (options.maxSongs && options.maxSongs > 0 && sequence.length > options.maxSongs) {
+    // Calculate total score for each song (compatibility + transition)
+    // For the first song, transitionScore is already 1.0 (default)
+    const scoredSongs = sequence.map((song, index) => ({
+      song,
+      totalScore: song.compatibilityScore + song.transitionScore,
+      index
+    }));
+
+    // Sort by total score descending
+    scoredSongs.sort((a, b) => b.totalScore - a.totalScore);
+
+    // Take the top N songs, but keep their original order in the sequence
+    const topSongs = scoredSongs.slice(0, options.maxSongs);
+    const topIndices = new Set(topSongs.map(s => s.index).sort((a, b) => a - b));
+    
+    // Keep the original sequence order for the selected songs
+    finalSequence = sequence.filter((_, index) => topIndices.has(index));
+    
+    // Recalculate transition scores for the filtered sequence
+    for (let i = 1; i < finalSequence.length; i++) {
+      const prevSong = finalSequence[i - 1];
+      const currentSong = finalSequence[i];
+      
+      const transitionScore = calculateTransitionScore(
+        { ...prevSong, key: prevSong.targetKey },
+        { ...currentSong, key: currentSong.targetKey }
+      );
+      
+      finalSequence[i].transitionScore = transitionScore;
+    }
+  }
+
   // Calculate total score
-  const totalScore = sequence.length > 0
-    ? sequence.reduce((sum, s) => sum + s.compatibilityScore + s.transitionScore, 0) / (sequence.length * 2)
+  const totalScore = finalSequence.length > 0
+    ? finalSequence.reduce((sum, s) => sum + s.compatibilityScore + s.transitionScore, 0) / (finalSequence.length * 2)
     : 0;
 
   return {
-    songs: sequence,
+    songs: finalSequence,
     totalScore: Math.min(1.0, totalScore),
-    keyProgression: sequence.map(s => s.targetKey),
-    estimatedDuration: sequence.length * 3.5
+    keyProgression: finalSequence.map(s => s.targetKey),
+    estimatedDuration: finalSequence.length * 3.5
   };
 }
 
