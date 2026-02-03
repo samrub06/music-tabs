@@ -1,35 +1,40 @@
-import { Suspense } from 'react'
+import { createSafeServerClient } from '@/lib/supabase/server'
+import { songRepo } from '@/lib/services/songRepo'
 import LibraryGridSection from '@/components/library/LibraryGridSection'
-import FeaturedSongSection from './FeaturedSongSection'
-import RecentSongsSection from './RecentSongsSection'
-import PopularSongsSection from './PopularSongsSection'
-import FeaturedSongSkeleton from '../library/FeaturedSongSkeleton'
-import HorizontalSliderSkeleton from '../library/HorizontalSliderSkeleton'
+import FeaturedSongSection from '../library/FeaturedSongSection'
+import RecentSongsSection from '../library/RecentSongsSection'
+import PopularSongsSection from '../library/PopularSongsSection'
 
 interface LibrarySectionsProps {
   userId?: string
 }
 
-export default function LibrarySections({ userId }: LibrarySectionsProps) {
+export default async function LibrarySections({ userId }: LibrarySectionsProps) {
+  const supabase = await createSafeServerClient()
+  const repo = songRepo(supabase)
+
+  // Paralléliser les 3 requêtes
+  const [trendingSongs, recentSongs, popularSongs] = await Promise.all([
+    repo.getTrendingSongsLightweight(),
+    repo.getRecentSongsLightweight(15),
+    repo.getPopularSongsLightweight(15),
+  ])
+
   return (
     <>
-      {/* Section 1: Grille de 8 cards */}
       <LibraryGridSection />
-
-      {/* Section 2: Featured Song */}
-      <Suspense fallback={<FeaturedSongSkeleton />}>
-        <FeaturedSongSection userId={userId} />
-      </Suspense>
-
-      {/* Section 3: Dernières chansons ajoutées */}
-      <Suspense fallback={<HorizontalSliderSkeleton />}>
-        <RecentSongsSection userId={userId} />
-      </Suspense>
-
-      {/* Section 4: Chansons les plus écoutées */}
-      <Suspense fallback={<HorizontalSliderSkeleton />}>
-        <PopularSongsSection userId={userId} />
-      </Suspense>
+      <FeaturedSongSection 
+        featuredSong={trendingSongs.length > 0 ? trendingSongs[0] : null} 
+        userId={userId} 
+      />
+      <RecentSongsSection 
+        songs={recentSongs} 
+        userId={userId} 
+      />
+      <PopularSongsSection 
+        songs={popularSongs} 
+        userId={userId} 
+      />
     </>
   )
 }

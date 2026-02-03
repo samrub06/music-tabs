@@ -123,7 +123,7 @@ export default function SearchClient({
     setIsCheckingExisting(true)
     try {
       const repo = songRepo(supabase)
-      const userSongs = await repo.getAllSongs()
+      const userSongs = await repo.getAllSongsLightweight()
       
       const existingMap = new Map<number, string>()
       

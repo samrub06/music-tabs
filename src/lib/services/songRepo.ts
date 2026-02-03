@@ -499,5 +499,29 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
     return (data || []).map(mapDbSongToList)
+  },
+
+  // Lightweight method for checking existing songs (only needed fields)
+  async getAllSongsLightweight(): Promise<Pick<Song, 'id' | 'tabId' | 'sourceUrl' | 'title' | 'author'>[]> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) {
+      return []
+    }
+
+    const { data, error } = await (client
+      .from('songs') as any)
+      .select('id, tab_id, source_url, title, author')
+      .eq('user_id', user.id)
+
+    if (error) throw error
+
+    return (data || []).map((dbSong: any) => ({
+      id: dbSong.id,
+      tabId: dbSong.tab_id || undefined,
+      sourceUrl: dbSong.source_url || undefined,
+      title: dbSong.title,
+      author: dbSong.author || '',
+    }))
   }
 })
