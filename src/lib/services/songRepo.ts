@@ -47,6 +47,28 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
   } as Song
 }
 
+// Helper to map DB result to lightweight Song for lists (no sections/content)
+function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['Row']>): Song {
+  return {
+    id: dbSong.id!,
+    title: dbSong.title!,
+    author: dbSong.author!,
+    format: 'structured',
+    sections: [], // Empty for lists
+    content: '', // Empty for lists
+    folderId: dbSong.folder_id || undefined,
+    createdAt: new Date(dbSong.created_at!),
+    updatedAt: new Date(dbSong.updated_at!),
+    version: dbSong.version || undefined,
+    versionDescription: dbSong.version_description || undefined,
+    rating: dbSong.rating || undefined,
+    artistImageUrl: dbSong.artist_image_url || undefined,
+    songImageUrl: dbSong.song_image_url || undefined,
+    viewCount: dbSong.view_count || 0,
+    genre: dbSong.genre || undefined,
+  } as Song
+}
+
 export const songRepo = (client: SupabaseClient<Database>) => ({
   async createSong(songData: NewSongData): Promise<Song> {
     const { data: { user } } = await client.auth.getUser()
@@ -438,5 +460,44 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
     return (data || []).map(mapDbSongToDomain)
+  },
+
+  // Lightweight methods for library page - no sections/content
+  async getTrendingSongsLightweight(): Promise<Song[]> {
+    const { data, error } = await client
+      .from('songs')
+      .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
+      .eq('is_trending', true)
+      .order('created_at', { ascending: false })
+      .limit(24)
+
+    if (error) throw error
+    return (data || []).map(mapDbSongToList)
+  },
+
+  async getRecentSongsLightweight(limit: number = 15): Promise<Song[]> {
+    const { data, error } = await client
+      .from('songs')
+      .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
+      .or('is_trending.eq.true,is_public.eq.true')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return (data || []).map(mapDbSongToList)
+  },
+
+  async getPopularSongsLightweight(limit: number = 15): Promise<Song[]> {
+    const { data, error } = await client
+      .from('songs')
+      .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
+      .or('is_trending.eq.true,is_public.eq.true')
+      .not('view_count', 'is', null)
+      .gt('view_count', 0)
+      .order('view_count', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return (data || []).map(mapDbSongToList)
   }
 })

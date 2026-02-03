@@ -1,20 +1,12 @@
-import { createSafeServerClient } from '@/lib/supabase/server'
-import { songRepo } from '@/lib/services/songRepo'
-import FeaturedSongCard from '@/components/library/FeaturedSongCard'
+import type { Song } from '@/types'
 import FeaturedSongCardWrapper from './FeaturedSongCardWrapper'
 
 interface FeaturedSongSectionProps {
+  featuredSong: Song | null
   userId?: string
 }
 
-export default async function FeaturedSongSection({ userId }: FeaturedSongSectionProps) {
-  const supabase = await createSafeServerClient()
-  const repo = songRepo(supabase)
-  
-  // Fetch trending songs and get the first one as featured
-  const trendingSongs = await repo.getTrendingSongs()
-  const featuredSong = trendingSongs.length > 0 ? trendingSongs[0] : null
-
+export default function FeaturedSongSection({ featuredSong, userId }: FeaturedSongSectionProps) {
   if (!featuredSong) {
     return null
   }
