@@ -58,13 +58,13 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
               {entry.avatarUrl ? (
                 <img
                   src={entry.avatarUrl}
-                  alt={entry.fullName || entry.email}
+                  alt={entry.fullName || entry.email || 'User'}
                   className="w-10 h-10 rounded-full"
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                   <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">
-                    {(entry.fullName || entry.email)[0].toUpperCase()}
+                    {((entry.fullName || entry.email || 'U')[0] || 'U').toUpperCase()}
                   </span>
                 </div>
               )}
@@ -72,7 +72,7 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
 
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {entry.fullName || entry.email}
+                {entry.fullName || entry.email || 'Unknown User'}
                 {isCurrentUser && (
                   <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>
                 )}

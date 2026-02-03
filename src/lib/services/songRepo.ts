@@ -563,6 +563,38 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }
   },
 
+  // Lightweight method for playlist generation (no sections/content needed)
+  async getAllSongsForPlaylist(): Promise<Song[]> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) {
+      return []
+    }
+
+    const { data, error } = await (client.from('songs') as any)
+      .select('id, title, author, folder_id, genre, key, first_chord, last_chord')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map((dbSong: any) => ({
+      id: dbSong.id,
+      title: dbSong.title,
+      author: dbSong.author || '',
+      folderId: dbSong.folder_id || undefined,
+      genre: dbSong.genre || undefined,
+      key: dbSong.key || undefined,
+      firstChord: dbSong.first_chord || undefined,
+      lastChord: dbSong.last_chord || undefined,
+      format: 'structured' as const,
+      sections: [],
+      content: '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Song))
+  },
+
   // Lightweight method for getting minimal song info (for navigation, lists, etc.)
   async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author'> | null> {
     const { data, error } = await (client

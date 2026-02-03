@@ -215,22 +215,6 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               </Link>
             )}
             
-            {/* Theme toggle */}
-            <div className="relative">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
-                aria-label={theme === 'dark' ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
-                title={theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
-              >
-                {theme === 'dark' ? (
-                  <SunIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                ) : (
-                  <MoonIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-                )}
-              </button>
-            </div>
-     
             {/* User menu - Avatar (tout à droite) */}
             {!loading && (
               <div className="relative">
@@ -284,6 +268,21 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                           </svg>
                           <span>{t('navigation.profile')}</span>
                         </Link>
+                       
+                        <button
+                          onClick={() => {
+                            toggleTheme();
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                        >
+                          {theme === 'dark' ? (
+                            <SunIcon className="h-5 w-5" />
+                          ) : (
+                            <MoonIcon className="h-5 w-5" />
+                          )}
+                          <span>{theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}</span>
+                        </button>
                        
                         <button
                           onClick={() => {

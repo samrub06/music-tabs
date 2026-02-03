@@ -6,9 +6,8 @@ import PlaylistPageClient from './PlaylistPageClient'
 
 async function SongsDataLoader() {
   const supabase = await createSafeServerClient()
-  // Note: getAllSongs loads all songs with full content for playlist generation
-  // This is necessary for the playlist generator to work with all song data
-  const songs = await songRepo(supabase).getAllSongs()
+  // Use lightweight method - playlist generator only needs metadata, not full song content
+  const songs = await songRepo(supabase).getAllSongsForPlaylist()
   return songs
 }
 
