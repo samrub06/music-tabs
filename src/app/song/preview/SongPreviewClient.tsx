@@ -79,13 +79,11 @@ export default function SongPreviewClient({
             tabId: searchResultData.tabId,
             genre: scraped.genre,
             decade: scraped.decade,
-            isTrending: scraped.isTrending,
             allChords: scraped.allChords || [],
             createdAt: new Date(),
             updatedAt: new Date(),
             folderId: undefined,
-            userId: userId || undefined,
-            isPublic: false
+            userId: userId || undefined
           }
 
           setSong(songData)
@@ -126,10 +124,7 @@ export default function SongPreviewClient({
         sourceUrl: song.sourceUrl,
         sourceSite: song.sourceSite,
         tabId: song.tabId,
-        genre: song.genre,
-        decade: song.decade,
-        isTrending: song.isTrending,
-        allChords: song.allChords || []
+        genre: song.genre
       }
 
       const newSong = await addSongAction(payload)

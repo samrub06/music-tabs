@@ -18,6 +18,7 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
   return {
     ...dbSong,
     content, // Add the reconstructed content
+    userId: dbSong.user_id || undefined,
     folderId: dbSong.folder_id || undefined,
     createdAt: new Date(dbSong.created_at),
     updatedAt: new Date(dbSong.updated_at),

@@ -50,6 +50,7 @@ export interface StructuredSong {
   id: string;
   title: string;
   author: string;
+  userId?: string;
   folderId?: string;
   format: 'structured';
   sections: SongSection[];
