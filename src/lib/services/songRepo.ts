@@ -523,5 +523,28 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       title: dbSong.title,
       author: dbSong.author || '',
     }))
+  },
+
+  // Lightweight method for getting minimal song info (for navigation, lists, etc.)
+  async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author'> | null> {
+    const { data, error } = await (client
+      .from('songs') as any)
+      .select('id, title, author')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null // Not found
+      }
+      console.error('Error fetching song info:', error)
+      return null
+    }
+
+    return {
+      id: data.id,
+      title: data.title,
+      author: data.author || '',
+    }
   }
 })

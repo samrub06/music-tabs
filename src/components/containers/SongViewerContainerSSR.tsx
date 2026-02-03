@@ -11,6 +11,7 @@ import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
 import { useMetronome } from '@/lib/hooks/useMetronome';
 import { songService } from '@/lib/services/songService';
+import { songRepo } from '@/lib/services/songRepo';
 import { supabase } from '@/lib/supabase';
 import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
@@ -94,7 +95,8 @@ export default function SongViewerContainerSSR({
           // Load next song info if available
           if (currentIndex >= 0 && currentIndex < songList.length - 1) {
             const nextSongId = songList[currentIndex + 1];
-            songService.getSongById(nextSongId, supabase).then(nextSong => {
+            const repo = songRepo(supabase);
+            repo.getSongInfo(nextSongId).then(nextSong => {
               if (nextSong) {
                 setNextSongInfo({
                   title: nextSong.title,
