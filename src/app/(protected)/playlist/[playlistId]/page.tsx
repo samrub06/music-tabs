@@ -18,17 +18,9 @@ export default async function PlaylistDetailPage({
   try {
     const playlist = await playlistRepo(supabase).getPlaylist(playlistId)
     
-    // Récupérer les chansons de la playlist
-    const allSongs = await songRepo(supabase).getAllSongs()
-    const playlistSongs = playlist.songIds
-      .map(id => allSongs.find(s => s.id === id))
-      .filter(song => song !== undefined)
-      .sort((a, b) => {
-        // Maintenir l'ordre de songIds
-        const indexA = playlist.songIds.indexOf(a.id)
-        const indexB = playlist.songIds.indexOf(b.id)
-        return indexA - indexB
-      })
+    // Récupérer uniquement les chansons de la playlist (optimisé)
+    const repo = songRepo(supabase)
+    const playlistSongs = await repo.getSongsByIds(playlist.songIds)
 
     return <PlaylistDetailClient playlist={playlist} songs={playlistSongs} />
   } catch (error) {

@@ -595,6 +595,40 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     } as Song))
   },
 
+  // Lightweight method for fetching songs by IDs (for playlists, etc.)
+  async getSongsByIds(songIds: string[]): Promise<Song[]> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user || songIds.length === 0) {
+      return []
+    }
+
+    const { data, error } = await (client.from('songs') as any)
+      .select('id, title, author, folder_id, created_at, updated_at, key, song_image_url')
+      .eq('user_id', user.id)
+      .in('id', songIds)
+
+    if (error) throw error
+
+    // Create a map for quick lookup, preserving key field
+    const songMap = new Map((data || []).map((dbSong: any) => {
+      const mappedSong = mapDbSongToList(dbSong)
+      // Add key field which is needed for playlist display but not in mapDbSongToList
+      return [
+        dbSong.id,
+        {
+          ...mappedSong,
+          key: dbSong.key || undefined
+        }
+      ]
+    }))
+
+    // Return songs in the same order as songIds, filtering out any missing
+    return songIds
+      .map(id => songMap.get(id))
+      .filter((song): song is Song => song !== undefined)
+  },
+
   // Lightweight method for getting minimal song info (for navigation, lists, etc.)
   async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author'> | null> {
     const { data, error } = await (client
