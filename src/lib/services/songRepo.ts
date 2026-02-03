@@ -525,6 +525,44 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }))
   },
 
+  // Get songs by folder with pagination and search
+  async getSongsByFolder(
+    folderId: string,
+    page: number = 1,
+    limit: number = 50,
+    q?: string
+  ): Promise<{ songs: Song[]; total: number }> {
+    const { data: { user } } = await client.auth.getUser()
+    
+    if (!user) {
+      return { songs: [], total: 0 }
+    }
+
+    const from = (page - 1) * limit
+    const to = page * limit - 1
+
+    let baseQuery = (client.from('songs') as any)
+      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre, bpm', { count: 'exact' })
+      .eq('user_id', user.id)
+      .eq('folder_id', folderId)
+
+    if (q && q.trim()) {
+      const query = q.trim()
+      baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+    }
+
+    const { data, error, count } = await baseQuery
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) throw error
+
+    return {
+      songs: (data || []).map(mapDbSongToList),
+      total: count || 0
+    }
+  },
+
   // Lightweight method for getting minimal song info (for navigation, lists, etc.)
   async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author'> | null> {
     const { data, error } = await (client
