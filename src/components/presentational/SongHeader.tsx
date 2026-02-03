@@ -13,7 +13,8 @@ import {
   TrashIcon,
   ChevronDownIcon,
   MusicalNoteIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
 import { NOTES, generateAllKeys } from '@/utils/chords';
@@ -56,6 +57,8 @@ interface SongHeaderProps {
   onSetManualBpm?: (bpm: number) => void;
   easyChordMode: boolean;
   onToggleEasyChordMode: () => void;
+  isInLibrary?: boolean;
+  onAddToLibrary?: () => void;
 }
 
 export default function SongHeader({
@@ -87,7 +90,9 @@ export default function SongHeader({
     manualBpm,
     onSetManualBpm,
     easyChordMode,
-    onToggleEasyChordMode
+    onToggleEasyChordMode,
+    isInLibrary,
+    onAddToLibrary
 }: SongHeaderProps) {
   const { t } = useLanguage();
   const [showControls, setShowControls] = useState(false);
@@ -242,6 +247,23 @@ export default function SongHeader({
             >
               <span className="text-[10px] leading-none font-semibold">🎸{useCapo ? song.capo : ''}</span>
             </button>
+          )}
+          {/* Add to Library Toggle */}
+          {!isInLibrary && onAddToLibrary && (
+            <button
+              onClick={onAddToLibrary}
+              className="p-2 text-gray-400 hover:text-green-600 rounded-full hover:bg-green-50 active:bg-green-100 flex-shrink-0 cursor-pointer select-none transition-colors"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              aria-label="Add to library"
+              title="Add to library"
+            >
+              <PlusIcon className="h-4 w-4" />
+            </button>
+          )}
+          {isInLibrary && (
+            <div className="p-2 text-green-600 flex-shrink-0" title="Already in library">
+              <CheckIcon className="h-4 w-4" />
+            </div>
           )}
           <button
             onClick={onToggleEdit}

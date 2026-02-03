@@ -102,7 +102,8 @@ export default function AIPlaylistClient({ folders }: AIPlaylistClientProps) {
       setProcessedSongs(initialProcessed)
 
       // Rechercher chaque chanson en parallèle (avec limite de concurrence)
-      await searchAllSongs(initialProcessed)
+      // Pass preferredSource from AI detection
+      await searchAllSongs(initialProcessed, result.preferredSource)
     } catch (error) {
       console.error('Error generating playlist:', error)
       setMessage({
@@ -115,20 +116,21 @@ export default function AIPlaylistClient({ folders }: AIPlaylistClientProps) {
   }
 
   // Rechercher toutes les chansons avec limite de concurrence
-  const searchAllSongs = async (songs: ProcessedSong[]) => {
+  const searchAllSongs = async (songs: ProcessedSong[], preferredSource?: 'tab4u' | 'ultimate-guitar') => {
     const CONCURRENT_LIMIT = 3 // Limiter à 3 recherches simultanées
 
     for (let i = 0; i < songs.length; i += CONCURRENT_LIMIT) {
       const batch = songs.slice(i, i + CONCURRENT_LIMIT)
-      await Promise.all(batch.map(song => searchSong(song)))
+      await Promise.all(batch.map(song => searchSong(song, preferredSource)))
     }
   }
 
   // Rechercher une chanson spécifique
-  const searchSong = async (song: ProcessedSong) => {
+  const searchSong = async (song: ProcessedSong, preferredSource?: 'tab4u' | 'ultimate-guitar') => {
     const query = `${song.aiSong.title} ${song.aiSong.artist}`
+    // Use preferredSource from AI detection if available, otherwise fallback to Hebrew text detection
     const isHebrewText = isHebrew(query)
-    const source = isHebrewText ? 'tab4u' : 'ultimate-guitar'
+    const source = preferredSource || (isHebrewText ? 'tab4u' : 'ultimate-guitar')
 
     setProcessedSongs(prev => prev.map(s =>
       s.aiSong.title === song.aiSong.title && s.aiSong.artist === song.aiSong.artist

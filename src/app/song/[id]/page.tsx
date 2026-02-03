@@ -22,12 +22,16 @@ export default async function SongPage({
     redirect('/library')
   }
 
+  // Check if song is in user's library (song belongs to user)
+  const isInLibrary = user ? song.userId === user.id : false
+
   return (
     <SongViewerContainerSSR 
       song={song} 
       onUpdate={updateSongAction}
       onDelete={deleteSongAction}
       isAuthenticated={!!user}
+      isInLibrary={isInLibrary}
     />
   )
 }

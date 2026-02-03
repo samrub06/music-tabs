@@ -24,13 +24,17 @@ interface SongViewerContainerSSRProps {
   onUpdate: (id: string, updates: any) => Promise<any>;
   onDelete: (id: string) => Promise<void>;
   isAuthenticated?: boolean;
+  isInLibrary?: boolean;
+  onAddToLibrary?: () => void;
 }
 
 export default function SongViewerContainerSSR({ 
   song, 
   onUpdate,
   onDelete,
-  isAuthenticated = false
+  isAuthenticated = false,
+  isInLibrary = true,
+  onAddToLibrary
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
 
@@ -408,7 +412,9 @@ export default function SongViewerContainerSSR({
     isAuthenticated,
     knownChordIds,
     chordNameToIdMap,
-    chords
+    chords,
+    isInLibrary,
+    onAddToLibrary
   };
 
   return <SongViewer {...songViewerProps} />;

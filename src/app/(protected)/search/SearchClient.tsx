@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon, ClockIcon, PlusIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, ClockIcon, PlusIcon, ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import { useSupabase } from '@/lib/hooks/useSupabase'
@@ -55,9 +56,11 @@ export default function SearchClient({
   const [isCheckingExisting, setIsCheckingExisting] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [addingSongId, setAddingSongId] = useState<string | null>(null)
+  const [viewingSongId, setViewingSongId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [hasSearched, setHasSearched] = useState(false) // Track if search was performed
+  const [isAIMode, setIsAIMode] = useState(false) // AI mode toggle
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -181,22 +184,58 @@ export default function SearchClient({
     setHasSearched(true) // Mark that a search was performed
     
     try {
-      const isHebrewText = isHebrew(query)
-      const source = isHebrewText ? 'tab4u' : 'ultimate-guitar'
-      
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(query.trim())}&source=${source}`)
-      const data = await response.json()
+      if (isAIMode) {
+        // AI Mode: Get style-based suggestions, then search for each
+        const aiResult = await searchSongsByStyleAction(query.trim())
+        
+        if (!aiResult.success || aiResult.songs.length === 0) {
+          setMessage({ type: 'error', text: aiResult.error || 'No songs found for this style' })
+          setSearchResults([])
+          setExistingSongs(new Map())
+          setIsSearching(false)
+          return
+        }
 
-      if (response.ok && data.results) {
-        setSearchResults(data.results)
-        saveToRecentSearches(query.trim())
-        // Check if results exist in user's songs
-        await checkExistingSongs(data.results)
+        // Search for each AI suggestion on the appropriate source
+        const allResults: SearchResult[] = []
+        for (const aiSong of aiResult.songs) {
+          const searchQuery = `${aiSong.title} ${aiSong.artist}`
+          const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${aiSong.source}`)
+          const data = await response.json()
+          
+          if (response.ok && data.results && data.results.length > 0) {
+            allResults.push(...data.results)
+          }
+        }
+
+        if (allResults.length > 0) {
+          setSearchResults(allResults)
+          saveToRecentSearches(query.trim())
+          await checkExistingSongs(allResults)
+        } else {
+          setMessage({ type: 'error', text: 'No search results found for the AI suggestions' })
+          setSearchResults([])
+          setExistingSongs(new Map())
+        }
       } else {
-        const errorMsg = data.error || t('search.noResultsFor').replace('{query}', query)
-        setMessage({ type: 'error', text: errorMsg })
-        setSearchResults([])
-        setExistingSongs(new Map())
+        // Normal search (existing logic)
+        const isHebrewText = isHebrew(query)
+        const source = isHebrewText ? 'tab4u' : 'ultimate-guitar'
+        
+        const response = await fetch(`/api/songs/search?q=${encodeURIComponent(query.trim())}&source=${source}`)
+        const data = await response.json()
+
+        if (response.ok && data.results) {
+          setSearchResults(data.results)
+          saveToRecentSearches(query.trim())
+          // Check if results exist in user's songs
+          await checkExistingSongs(data.results)
+        } else {
+          const errorMsg = data.error || t('search.noResultsFor').replace('{query}', query)
+          setMessage({ type: 'error', text: errorMsg })
+          setSearchResults([])
+          setExistingSongs(new Map())
+        }
       }
     } catch (error) {
       console.error('Error searching songs:', error)
@@ -207,7 +246,7 @@ export default function SearchClient({
     } finally {
       setIsSearching(false)
     }
-  }, [checkExistingSongs, t])
+  }, [isAIMode, checkExistingSongs, t])
 
   // Handle search input change
   const handleSearchChange = (value: string) => {
@@ -283,6 +322,25 @@ export default function SearchClient({
       genre: scraped.genre || scraped.songGenre,
       bpm: scraped.bpm
     } as NewSongData
+  }
+
+  // Handle view song (without adding)
+  const handleViewSong = async (result: SearchResult) => {
+    setViewingSongId(result.url)
+    setMessage(null)
+    
+    try {
+      // Navigate to preview page with URL
+      const url = encodeURIComponent(result.url)
+      const searchResultParam = encodeURIComponent(JSON.stringify(result))
+      router.push(`/song/preview?url=${url}&searchResult=${searchResultParam}`)
+    } catch (error) {
+      console.error('Error viewing song:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error viewing song'
+      setMessage({ type: 'error', text: errorMessage })
+    } finally {
+      setViewingSongId(null)
+    }
   }
 
   // Handle add song
@@ -363,18 +421,43 @@ export default function SearchClient({
               onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
-              placeholder={t('search.searchPlaceholder')}
-              className="block w-full pl-12 pr-12 py-4 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+              placeholder={isAIMode ? 'Describe a musical style...' : t('search.searchPlaceholder')}
+              className={`block w-full pl-12 pr-24 py-4 border rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 text-base transition-colors ${
+                isAIMode 
+                  ? 'border-purple-500 focus:ring-purple-500 focus:border-purple-500' 
+                  : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500'
+              }`}
             />
-            {searchQuery && (
+            {/* AI Toggle Button and Clear Button */}
+            <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-4">
+              {/* AI Toggle Button */}
               <button
-                onClick={handleClearSearch}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setIsAIMode(!isAIMode)
+                }}
+                className={`p-1.5 rounded-md transition-colors ${
+                  isAIMode
+                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                }`}
+                aria-label={isAIMode ? 'Disable AI mode' : 'Enable AI mode'}
+                title={isAIMode ? 'Disable AI style search' : 'Enable AI style search'}
                 type="button"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <SparklesIcon className="h-5 w-5" />
               </button>
-            )}
+              {/* Clear Button */}
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  type="button"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -438,12 +521,21 @@ export default function SearchClient({
               {searchResults.map((result, index) => {
                 const existingSongId = existingSongs.get(index)
                 const imageUrl = result.songImageUrl || result.artistImageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
+                const isTab4U = result.source === 'Tab4U' || result.sourceSite === 'Tab4U'
+                const isViewing = viewingSongId === result.url
                 const isAdding = addingSongId === result.url
 
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
+                    className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => {
+                      if (existingSongId) {
+                        router.push(`/song/${existingSongId}`)
+                      } else {
+                        handleViewSong(result)
+                      }
+                    }}
                   >
                     {/* Image */}
                     <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
@@ -463,10 +555,10 @@ export default function SearchClient({
                         {result.author}
                       </p>
                       <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {result.rating && (
+                        {!isTab4U && result.rating && (
                           <span>⭐ {result.rating.toFixed(1)}</span>
                         )}
-                        {result.reviews && (
+                        {!isTab4U && result.reviews && (
                           <span>💬 {result.reviews}</span>
                         )}
                         {result.difficulty && (
@@ -475,8 +567,8 @@ export default function SearchClient({
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    <div className="flex-shrink-0">
+                    {/* Action Buttons */}
+                    <div className="flex-shrink-0 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       {existingSongId ? (
                         <Link
                           href={`/song/${existingSongId}`}
@@ -486,23 +578,42 @@ export default function SearchClient({
                           {t('search.viewSong')}
                         </Link>
                       ) : (
-                        <button
-                          onClick={() => handleAddSong(result, index)}
-                          disabled={isAdding || !userId}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {isAdding ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              {t('search.addingSong')}
-                            </>
-                          ) : (
-                            <>
-                              <PlusIcon className="h-4 w-4" />
-                              {t('common.create')}
-                            </>
-                          )}
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleViewSong(result)}
+                            disabled={isViewing}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isViewing ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Loading...
+                              </>
+                            ) : (
+                              <>
+                                <ArrowRightIcon className="h-4 w-4" />
+                                View
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleAddSong(result, index)}
+                            disabled={isAdding || !userId}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isAdding ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                {t('search.addingSong')}
+                              </>
+                            ) : (
+                              <>
+                                <PlusIcon className="h-4 w-4" />
+                                {t('common.create')}
+                              </>
+                            )}
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>

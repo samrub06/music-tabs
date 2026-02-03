@@ -60,6 +60,8 @@ interface SongViewerProps {
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
   chords?: Chord[];
+  isInLibrary?: boolean;
+  onAddToLibrary?: () => void;
 }
 
 export default function SongViewer({
@@ -100,7 +102,7 @@ export default function SongViewer({
   onNextSong,
   canPrevSong,
   canNextSong,
-  nextSongInfo,
+    nextSongInfo,
     isAuthenticated = false,
     manualBpm,
     onSetManualBpm,
@@ -108,7 +110,9 @@ export default function SongViewer({
     onToggleEasyChordMode,
     knownChordIds = new Set(),
     chordNameToIdMap = new Map(),
-    chords = []
+    chords = [],
+    isInLibrary,
+    onAddToLibrary
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -159,6 +163,8 @@ export default function SongViewer({
         onSetManualBpm={onSetManualBpm}
         easyChordMode={easyChordMode}
         onToggleEasyChordMode={onToggleEasyChordMode}
+        isInLibrary={isInLibrary}
+        onAddToLibrary={onAddToLibrary}
       />
 
       <div className="flex-1 flex overflow-hidden min-h-0">

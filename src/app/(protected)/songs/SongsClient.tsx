@@ -622,6 +622,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
     </DndContext>
   )
 }

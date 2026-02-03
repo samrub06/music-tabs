@@ -1,16 +1,20 @@
 /**
- * Service pour générer des listes de chansons avec l'IA basées sur une description de style
+ * Service pour rechercher des chansons par style musical avec l'IA
  */
 
 import { AI_CONFIG, isAIAvailable } from '@/lib/config/ai'
 
-export interface AIGeneratedSong {
+export interface AISearchResult {
   title: string
   artist: string
+  source: 'tab4u' | 'ultimate-guitar'
+  genre?: string
+  decade?: number
+  difficulty?: string
 }
 
-export interface AIPlaylistGenerationResult {
-  songs: AIGeneratedSong[]
+export interface AISearchResponse {
+  songs: AISearchResult[]
   success: boolean
   error?: string
   preferredSource?: 'tab4u' | 'ultimate-guitar'
@@ -69,9 +73,9 @@ Réponds UNIQUEMENT par "true" ou "false" (sans guillemets, sans explication).`
 }
 
 /**
- * Génère une liste de chansons populaires basée sur une description de style musical
+ * Recherche des chansons par style musical avec l'IA
  */
-export async function generatePlaylistWithAI(description: string): Promise<AIPlaylistGenerationResult> {
+export async function searchSongsByStyle(description: string): Promise<AISearchResponse> {
   try {
     // Vérifier si l'IA est disponible
     if (!isAIAvailable()) {
@@ -93,7 +97,7 @@ export async function generatePlaylistWithAI(description: string): Promise<AIPla
     // Detect if this is a Hebrew/Israeli music request
     const isHebrewRequest = await detectHebrewOrIsraeliRequest(description)
     const preferredSource = isHebrewRequest ? 'tab4u' : 'ultimate-guitar'
-    
+
     const sourceNote = isHebrewRequest 
       ? 'IMPORTANT: Ces chansons doivent être recherchées sur Tab4U (site israélien). Utilise uniquement des titres et artistes en hébreu ou des chansons israéliennes/juives populaires.'
       : 'Choisis des chansons très populaires et facilement trouvables sur Ultimate Guitar ou Tab4U'
@@ -128,7 +132,7 @@ JSON:`
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en musique spécialisé dans la génération de playlists. Tu retournes uniquement du JSON valide sans markdown.'
+            content: 'Tu es un expert en musique spécialisé dans la recherche de chansons. Tu retournes uniquement du JSON valide sans markdown.'
           },
           {
             role: 'user',
@@ -171,20 +175,24 @@ JSON:`
       throw new Error('Invalid JSON structure from OpenAI - missing songs array')
     }
 
-    // Valider et nettoyer les chansons
-    const validSongs: AIGeneratedSong[] = parsedData.songs
+    // Valider et nettoyer les chansons, ajouter la source
+    const validSongs: AISearchResult[] = parsedData.songs
       .filter((song: any) => song.title && song.artist)
       .map((song: any) => ({
         title: String(song.title).trim(),
-        artist: String(song.artist).trim()
+        artist: String(song.artist).trim(),
+        source: preferredSource,
+        genre: song.genre || undefined,
+        decade: song.decade || undefined,
+        difficulty: song.difficulty || undefined
       }))
-      .filter((song: AIGeneratedSong) => song.title.length > 0 && song.artist.length > 0)
+      .filter((song: AISearchResult) => song.title.length > 0 && song.artist.length > 0)
 
     if (validSongs.length === 0) {
       throw new Error('No valid songs found in AI response')
     }
 
-    console.log(`🤖 AI generated ${validSongs.length} songs for style: "${description}" (source: ${preferredSource})`)
+    console.log(`🤖 AI search generated ${validSongs.length} songs for style: "${description}" (source: ${preferredSource})`)
 
     return {
       songs: validSongs,
@@ -193,7 +201,7 @@ JSON:`
     }
 
   } catch (error) {
-    console.error('Error in AI playlist generation:', error)
+    console.error('Error in AI search:', error)
     return {
       songs: [],
       success: false,
