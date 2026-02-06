@@ -97,7 +97,7 @@ export default function LibraryGridSection() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 lg:gap-4 mb-6">
       {mockGridItems.map((item) => {
         const content = (
           <div className="group relative h-24 sm:h-28 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl">
