@@ -25,14 +25,17 @@ export interface WrappedChordLine {
 }
 
 /**
- * Measure text width using canvas for precise calculations
+ * Measure text width using canvas for precise calculations.
+ * Returns a fallback estimate when run on the server (SSR) where document is undefined.
  */
 export function measureTextWidth(text: string, fontSize: number, fontFamily: string): number {
+  if (typeof document === 'undefined') {
+    return text.length * fontSize * 0.58;
+  }
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   
   if (!context) {
-    // Fallback calculation for monospace fonts
     return text.length * fontSize * 0.58;
   }
   

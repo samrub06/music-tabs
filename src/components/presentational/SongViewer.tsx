@@ -131,7 +131,7 @@ export default function SongViewer({
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white min-h-0 overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-white overflow-hidden">
       {/* Header */}
       <SongHeader
         song={song}
@@ -167,9 +167,9 @@ export default function SongViewer({
         onAddToLibrary={onAddToLibrary}
       />
 
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Content Area */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <SongContent
             isEditing={isEditing}
             editContent={editContent}

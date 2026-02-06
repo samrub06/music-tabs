@@ -11,15 +11,37 @@ import {
   PlayIcon,
   PlusIcon,
   TrashIcon,
-  ChevronDownIcon,
   MusicalNoteIcon,
   ArrowRightIcon,
-  CheckIcon
+  CheckIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
-import { NOTES, generateAllKeys } from '@/utils/chords';
+import { generateAllKeys } from '@/utils/chords';
 import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import BpmSelectorPopover from './BpmSelectorPopover';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface SongHeaderProps {
   song: Song;
@@ -95,8 +117,8 @@ export default function SongHeader({
     onAddToLibrary
 }: SongHeaderProps) {
   const { t } = useLanguage();
-  const [showControls, setShowControls] = useState(false);
   const [showBpmPopover, setShowBpmPopover] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Get the base chord (firstChord or fallback to key or default)
   const getBaseChord = () => {
@@ -154,692 +176,233 @@ export default function SongHeader({
   const hasOnlyEasyChords = songHasOnlyEasyChords(song.allChords);
 
   return (
-    <div className="flex-shrink-0 border-b border-gray-200">
-      {/* Mobile Header - Compact */}
-      <div className="block md:hidden w-full max-w-full overflow-hidden">
-        {/* Main Header - Always visible */}
-        <div className="flex items-center justify-between p-2 gap-2 w-full max-w-full">
-          <button
-            onClick={onNavigateBack}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none"
-            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-            aria-label={t('songHeader.back')}
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-          </button>
-          
-          {/* Song Image */}
-          <div className="flex-shrink-0">
-            {song.songImageUrl ? (
-              <img 
-                src={song.songImageUrl} 
-                alt={song.title}
-                className="w-8 h-8 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                <MusicalNoteIcon className="h-6 w-6 text-gray-400" />
-              </div>
-            )}
-          </div>
-          
-          {/* Title and Artist */}
-          <div className="flex-1 min-w-0 px-1">
-            <h1 className="text-sm font-bold text-gray-900 truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>
-              {song.title}
-            </h1>
+    <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
+      {/* Line 1: Back, cover+title+artist, prev/next, Plus menu */}
+      <div className="flex items-center justify-between gap-2 p-2 md:p-4 w-full min-w-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNavigateBack}
+          className="flex-shrink-0 h-10 w-10"
+          aria-label={t('songHeader.back')}
+        >
+          <ArrowLeftIcon className="h-5 w-5" />
+        </Button>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {song.songImageUrl ? (
+            <img src={song.songImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-sm font-bold truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
             {song.author && (
-              <p className="text-xs text-gray-600 truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>
-                {song.author}
-              </p>
+              <p className="text-xs text-muted-foreground truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>{song.author}</p>
             )}
           </div>
-          
-          {onPrevSong && onNextSong && (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={onPrevSong}
-                disabled={!canPrevSong}
-                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none flex-shrink-0"
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                title={t('common.back')}
-                aria-label={t('songHeader.back')}
-              >
-                <ArrowLeftIcon className="h-5 w-5" />
-              </button>
-              {nextSongInfo && canNextSong && (
-                <div className="flex flex-col items-center min-w-0 max-w-[80px]">
-                  <span className="text-xs text-gray-500 truncate w-full text-center">{t('songHeader.next')}:</span>
-                  <span className="text-xs font-semibold text-gray-700 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>
-                    {nextSongInfo.title}
-                  </span>
-                  {nextSongInfo.author && (
-                    <span className="text-xs text-gray-500 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.author) ? 'rtl' : 'ltr'}>
-                      {nextSongInfo.author}
-                    </span>
-                  )}
-                </div>
-              )}
-              <button
-                onClick={onNextSong}
-                disabled={!canNextSong}
-                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 cursor-pointer select-none flex-shrink-0"
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                title={t('songHeader.next')}
-                aria-label={t('songHeader.nextSong')}
-              >
-                <ArrowRightIcon className="h-5 w-5" />
-              </button>
-            </div>
-          )}
-          {/* Capo Toggle - Compact in header */}
-          {song.capo !== undefined && song.capo !== null && (
-            <button
-              onClick={() => onToggleCapo(!useCapo)}
-              className={`p-1.5 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none transition-colors ${
-                useCapo
-                  ? 'bg-orange-100 text-orange-600'
-                  : 'text-gray-400 hover:text-gray-600 bg-gray-50'
-              }`}
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              aria-label={useCapo ? `${t('songHeader.capo')} ${song.capo}` : t('songHeader.noCapo')}
-              title={useCapo ? `${t('songHeader.capo')} ${song.capo}` : t('songHeader.noCapo')}
-            >
-              <span className="text-[10px] leading-none font-semibold">🎸{useCapo ? song.capo : ''}</span>
-            </button>
-          )}
-          {/* Add to Library Toggle */}
-          {!isInLibrary && onAddToLibrary && (
-            <button
-              onClick={onAddToLibrary}
-              className="p-2 text-gray-400 hover:text-green-600 rounded-full hover:bg-green-50 active:bg-green-100 flex-shrink-0 cursor-pointer select-none transition-colors"
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              aria-label="Add to library"
-              title="Add to library"
-            >
-              <PlusIcon className="h-4 w-4" />
-            </button>
-          )}
-          {isInLibrary && (
-            <div className="p-2 text-green-600 flex-shrink-0" title="Already in library">
-              <CheckIcon className="h-4 w-4" />
-            </div>
-          )}
-          <button
-            onClick={onToggleEdit}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 active:bg-gray-200 flex-shrink-0 cursor-pointer select-none"
-            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-            aria-label="Éditer"
-          >
-            <PencilIcon className="h-4 w-4" />
-          </button>
         </div>
-
-        {/* Sticky Auto-scroll Controls */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-3 py-2">
-          <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full">
-            <span className="text-xs font-medium text-gray-700">Auto-scroll:</span>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={onToggleAutoScroll}
-                className={`p-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                  autoScroll.isActive
-                    ? 'bg-green-100 text-green-600 border-2 border-green-300'
-                    : 'bg-white text-gray-400 hover:text-gray-600 border-2 border-gray-200'
-                }`}
-              >
-                {autoScroll.isActive ? (
-                  <PauseIcon className="h-4 w-4" />
-                ) : (
-                  <PlayIcon className="h-4 w-4" />
-                )}
-              </button>
-              
-              <button
-                onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
-                className="p-2 text-gray-400 hover:text-gray-600 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
-              >
-                <MinusIcon className="h-3 w-3" />
-              </button>
-              
-              <div className="bg-white rounded-lg px-2 py-1 min-w-[40px] text-center shadow-sm">
-                <span className="text-xs font-bold text-gray-900">
-                  {autoScroll.speed.toFixed(1)}x
-                </span>
-              </div>
-              
-              <button
-                onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
-                className="p-2 text-gray-400 hover:text-gray-600 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
-              >
-                <PlusIcon className="h-3 w-3" />
-              </button>
-              
-              <button
-                onClick={onResetScroll}
-                className="p-2 text-gray-500 hover:text-gray-700 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
-              >
-                <span className="text-sm font-bold">↑</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Controls Toggle */}
-        <div className="px-3 py-2">
-          <button
-            onClick={() => setShowControls(!showControls)}
-            className="flex items-center justify-center w-full bg-gray-100 hover:bg-gray-200 rounded-lg px-3 py-2 transition-colors duration-200"
-          >
-            <MusicalNoteIcon className="h-4 w-4 mr-2 text-gray-600" />
-            <span className="text-xs font-medium text-gray-700">Contrôles avancés</span>
-            <ChevronDownIcon className={`h-4 w-4 ml-2 text-gray-600 transition-transform duration-200 ${showControls ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
-        {/* Collapsible Additional Controls */}
-        {showControls && (
-          <div className="px-3 pb-3 space-y-3">
-            {/* Instrument Toggle */}
-            <div className="flex rounded-md shadow-sm w-full">
-              <button
-                onClick={() => onSetSelectedInstrument('piano')}
-                className={`flex-1 px-3 py-2 text-xs font-medium rounded-l-md border ${
-                  selectedInstrument === 'piano'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                🎹 Piano
-              </button>
-              <button
-                onClick={() => onSetSelectedInstrument('guitar')}
-                className={`flex-1 px-3 py-2 text-xs font-medium rounded-r-md border-t border-r border-b ${
-                  selectedInstrument === 'guitar'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                🎸 Guitare
-              </button>
-            </div>
-
-            {/* Metronome Controls */}
-            {(song.bpm || onSetManualBpm) && (
-              <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full relative">
-                <span className="text-xs font-medium text-gray-700">Métronome:</span>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => {
-                      if (song.bpm || manualBpm) {
-                        onToggleMetronome();
-                      } else {
-                        setShowBpmPopover(!showBpmPopover);
-                      }
-                    }}
-                    className={`p-2 rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[40px] min-h-[40px] flex items-center justify-center ${
-                      metronome.isActive
-                        ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
-                        : 'bg-white text-gray-400 hover:text-gray-600 border-2 border-gray-200'
-                    }`}
-                    title={(song.bpm || manualBpm) ? `Métronome ${manualBpm || song.bpm} BPM` : 'Définir BPM'}
-                  >
-                    {metronome.isActive ? (
-                      <PauseIcon className="h-4 w-4" />
-                    ) : (
-                      <PlayIcon className="h-4 w-4" />
-                    )}
-                  </button>
-                  {showBpmPopover && onSetManualBpm ? (
-                    <BpmSelectorPopover
-                      initialBpm={manualBpm || song.bpm || 100}
-                      onApply={(bpm) => {
-                        onSetManualBpm(bpm);
-                        setShowBpmPopover(false);
-                      }}
-                      onClose={() => setShowBpmPopover(false)}
-                    />
-                  ) : (song.bpm || manualBpm) ? (
-                    <div 
-                      className="bg-white rounded-lg px-2 py-1 min-w-[50px] text-center shadow-sm cursor-pointer hover:bg-gray-50"
-                      onClick={() => setShowBpmPopover(true)}
-                    >
-                      <span className="text-xs font-bold text-gray-900">
-                        {manualBpm || song.bpm} BPM
-                      </span>
-                    </div>
-                  ) : (
-                    <div 
-                      className="bg-white rounded-lg px-2 py-1 text-center shadow-sm cursor-pointer hover:bg-gray-50"
-                      onClick={() => setShowBpmPopover(true)}
-                    >
-                      <span className="text-xs text-gray-500">
-                        Définir
-                      </span>
-                    </div>
-                  )}
-                </div>
+        {onPrevSong && onNextSong && (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={onPrevSong} disabled={!canPrevSong} className="h-10 w-10" aria-label={t('common.back')}>
+              <ArrowLeftIcon className="h-5 w-5" />
+            </Button>
+            {nextSongInfo && canNextSong && (
+              <div className="hidden sm:flex flex-col items-center min-w-0 max-w-[80px]">
+                <span className="text-xs text-muted-foreground truncate w-full text-center">{t('songHeader.next')}:</span>
+                <span className="text-xs font-semibold truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>{nextSongInfo.title}</span>
               </div>
             )}
-
-            {/* Easy Chord Mode Toggle - Only show if not all chords are already easy */}
-            {!hasOnlyEasyChords && (
-              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 w-full">
-                <span className="text-xs font-medium text-green-700">Mode Accords Faciles:</span>
-                <button
-                  onClick={onToggleEasyChordMode}
-                  className={`px-4 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
-                    easyChordMode
-                      ? 'bg-green-600 text-white border-2 border-green-700'
-                      : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
-                  }`}
-                >
-                  {easyChordMode ? 'Activé' : 'Désactivé'}
-                </button>
-              </div>
-            )}
-
-
-            {/* Transpose Controls */}
-            <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 w-full">
-              <span className="text-xs font-medium text-gray-700">Ton:</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => onSetTransposeValue(Math.max(transposeValue - 1, -11))}
-                  disabled={transposeValue <= -11}
-                  className="p-3 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center"
-                >
-                  <MinusIcon className="h-5 w-5" />
-                </button>
-                <div className="bg-white rounded-lg px-3 py-1 min-w-[50px] text-center shadow-sm">
-                  <span className="text-sm font-bold text-gray-900">
-                    {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-                  </span>
-                </div>
-                <button
-                  onClick={() => onSetTransposeValue(Math.min(transposeValue + 1, 11))}
-                  disabled={transposeValue >= 11}
-                  className="p-3 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[48px] min-h-[48px] flex items-center justify-center"
-                >
-                  <PlusIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Key Selector */}
-            {(song.firstChord || song.key) && (
-              <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 w-full">
-                <span className="text-xs font-medium text-purple-700">{t('songHeader.key')}</span>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-purple-600">
-                    {getBaseChord()} → {currentKey || getBaseChord()}
-                  </span>
-                  <select
-                    value={currentKey || getBaseChord()}
-                    onChange={(e) => handleKeySelect(e.target.value)}
-                    className="bg-white border border-purple-300 text-purple-800 text-sm font-medium rounded-lg px-3 py-2 shadow-sm hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[40px]"
-                  >
-                    {getAvailableKeys().map((key) => (
-                      <option key={key} value={key}>
-                        {key}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Font Size Controls */}
-            <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 w-full">
-              <span className="text-xs font-medium text-blue-700">Taille:</span>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={onDecreaseFontSize}
-                  disabled={fontSize <= 10}
-                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
-                >
-                  <MinusIcon className="h-3 w-3" />
-                </button>
-                <div className="bg-white rounded-lg px-3 py-1 min-w-[50px] text-center shadow-sm">
-                  <span className="text-sm font-bold text-blue-800">
-                    {fontSize}px
-                  </span>
-                </div>
-                <button
-                  onClick={onIncreaseFontSize}
-                  disabled={fontSize >= 24}
-                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
-                >
-                  <PlusIcon className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={onResetFontSize}
-                  className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-full shadow-sm hover:shadow-md transition-all duration-200 min-w-[36px] min-h-[36px] flex items-center justify-center"
-                >
-                  <EyeIcon className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
+            <Button variant="ghost" size="icon" onClick={onNextSong} disabled={!canNextSong} className="h-10 w-10" aria-label={t('songHeader.nextSong')}>
+              <ArrowRightIcon className="h-5 w-5" />
+            </Button>
           </div>
         )}
+        {isInLibrary && (
+          <div className="flex-shrink-0 p-2 text-green-600 dark:text-green-400" title="Dans la bibliothèque">
+            <CheckIcon className="h-5 w-5" />
+          </div>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="flex-shrink-0 h-10 w-10" aria-label="Menu">
+              <EllipsisVerticalIcon className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {!isInLibrary && onAddToLibrary && (
+              <DropdownMenuItem onClick={onAddToLibrary}>
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Ajouter à la bibliothèque
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={onToggleEdit}>
+              <PencilIcon className="h-4 w-4 mr-2" />
+              Éditer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+              <TrashIcon className="h-4 w-4 mr-2" />
+              Supprimer
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Desktop Header */}
-      <div className="hidden md:flex items-center justify-between p-4">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onNavigateBack}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>
-              {song.title}
-            </h1>
-            <div className="flex items-center space-x-2 mt-1">
-              {song.author && (
-                <p className="text-sm text-gray-600" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>
-                  {t('songHeader.by')} {song.author}
-                </p>
+      {/* Une seule ligne : Transpose, Auto-scroll, Outils (bottom sheet) */}
+      <div className="flex items-center gap-2 px-2 pb-2 md:px-4 md:pb-4">
+        {/* Transpose */}
+        <div className="flex items-center gap-0.5 border rounded-md flex-shrink-0 overflow-hidden">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onSetTransposeValue(Math.max(transposeValue - 1, -11))} disabled={transposeValue <= -11}>
+            <MinusIcon className="h-4 w-4" />
+          </Button>
+          <span className="text-xs font-medium min-w-[2.25rem] text-center">{transposeValue > 0 ? `+${transposeValue}` : transposeValue}</span>
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => onSetTransposeValue(Math.min(transposeValue + 1, 11))} disabled={transposeValue >= 11}>
+            <PlusIcon className="h-4 w-4" />
+          </Button>
+        </div>
+        {/* Auto-scroll */}
+        <div className="flex items-center gap-0.5 border rounded-md px-1 py-0.5 flex-shrink-0">
+          <Button variant={autoScroll.isActive ? 'default' : 'ghost'} size="icon" className="h-9 w-9" onClick={onToggleAutoScroll} title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}>
+            {autoScroll.isActive ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}>
+            <MinusIcon className="h-3 w-3" />
+          </Button>
+          <span className="text-xs font-medium min-w-[2rem] text-center">{autoScroll.speed.toFixed(1)}x</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}>
+            <PlusIcon className="h-3 w-3" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onResetScroll} title="Haut">
+            <span className="text-sm font-bold">↑</span>
+          </Button>
+        </div>
+        {/* Outils : bottom sheet */}
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="flex-shrink-0 h-9 gap-1">
+              <MusicalNoteIcon className="h-4 w-4" />
+              Outils
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="rounded-t-xl max-h-[85vh] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Outils</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4 py-4">
+              {(song.firstChord || song.key) && (
+                <>
+                  <div>
+                    <p className="text-sm font-medium mb-2">{t('songHeader.key')}</p>
+                    <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableKeys().map((key) => (
+                          <SelectItem key={key} value={key}>{key}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Separator />
+                </>
               )}
               {song.capo !== undefined && song.capo !== null && (
                 <>
-                  {song.author && <span className="text-gray-300">•</span>}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-blue-600 font-medium">🎸</span>
-                    <div className="flex rounded-md shadow-sm">
-                      <button
-                        onClick={() => onToggleCapo(true)}
-                        className={`px-2 py-1 text-xs font-medium rounded-l-md border ${
-                          useCapo
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
-                        }`}
-                      >
-                        {t('songHeader.capo')} {song.capo}
-                      </button>
-                      <button
-                        onClick={() => onToggleCapo(false)}
-                        className={`px-2 py-1 text-xs font-medium rounded-r-md border-t border-r border-b ${
-                          !useCapo
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
-                        }`}
-                      >
+                  <div>
+                    <p className="text-sm font-medium mb-2">Capo</p>
+                    <div className="flex gap-2">
+                      <Button variant={useCapo ? 'default' : 'outline'} size="sm" onClick={() => onToggleCapo(true)} className="flex-1">
+                        Capo {song.capo}
+                      </Button>
+                      <Button variant={!useCapo ? 'default' : 'outline'} size="sm" onClick={() => onToggleCapo(false)} className="flex-1">
                         {t('songHeader.noCapo')}
-                      </button>
+                      </Button>
+                    </div>
+                  </div>
+                  <Separator />
+                </>
+              )}
+              <div>
+                <p className="text-sm font-medium mb-2">Instrument</p>
+                <div className="flex gap-2">
+                  <Button variant={selectedInstrument === 'piano' ? 'default' : 'outline'} size="sm" onClick={() => onSetSelectedInstrument('piano')} className="flex-1">
+                    Piano
+                  </Button>
+                  <Button variant={selectedInstrument === 'guitar' ? 'default' : 'outline'} size="sm" onClick={() => onSetSelectedInstrument('guitar')} className="flex-1">
+                    Guitare
+                  </Button>
+                </div>
+              </div>
+              {!hasOnlyEasyChords && (
+                <>
+                  <Separator />
+                  <div>
+                    <Button variant={easyChordMode ? 'default' : 'outline'} size="sm" onClick={onToggleEasyChordMode} className="w-full">
+                      {easyChordMode ? 'Accords faciles activé' : 'Accords faciles'}
+                    </Button>
+                  </div>
+                </>
+              )}
+              <Separator />
+              <div>
+                <p className="text-sm font-medium mb-2">Taille du texte</p>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10}>
+                    <MinusIcon className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium min-w-[3rem] text-center">{fontSize}px</span>
+                  <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24}>
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={onResetFontSize}>
+                    <EyeIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {(song.bpm || onSetManualBpm) && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm font-medium mb-2">Métronome</p>
+                    <div className="flex items-center gap-2">
+                      <Button variant={metronome.isActive ? 'default' : 'outline'} size="sm" onClick={onToggleMetronome}>
+                        {metronome.isActive ? 'Pause' : 'Play'} {manualBpm || song.bpm} BPM
+                      </Button>
+                      {onSetManualBpm && (
+                        <Button variant="outline" size="sm" onClick={() => { setSheetOpen(false); setShowBpmPopover(true); }}>
+                          Définir BPM
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </>
               )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {onPrevSong && onNextSong && (
-            <div className="flex items-center space-x-2 mr-2">
-              <button
-                onClick={onPrevSong}
-                disabled={!canPrevSong}
-                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
-                title={t('common.back')}
-              >
-                <ArrowLeftIcon className="h-5 w-5" />
-              </button>
-              {nextSongInfo && canNextSong && (
-                <div className="flex flex-col items-center min-w-0 max-w-[100px]">
-                  <span className="text-xs text-gray-500 truncate w-full text-center">{t('songHeader.next')}:</span>
-                  <span className="text-sm font-semibold text-gray-700 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>
-                    {nextSongInfo.title}
-                  </span>
-                  {nextSongInfo.author && (
-                    <span className="text-xs text-gray-500 truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.author) ? 'rtl' : 'ltr'}>
-                      {nextSongInfo.author}
-                    </span>
-                  )}
-                </div>
-              )}
-              <button
-                onClick={onNextSong}
-                disabled={!canNextSong}
-                className="p-3 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 disabled:opacity-50 flex-shrink-0"
-                title={t('songHeader.next')}
-              >
-                <ArrowRightIcon className="h-5 w-5" />
-              </button>
-            </div>
-          )}
-          {/* Instrument Toggle */}
-          <div className="flex rounded-md shadow-sm">
-            <button
-              onClick={() => onSetSelectedInstrument('piano')}
-              className={`px-3 py-2 text-sm font-medium rounded-l-md border ${
-                selectedInstrument === 'piano'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              🎹 Piano
-            </button>
-            <button
-              onClick={() => onSetSelectedInstrument('guitar')}
-              className={`px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b ${
-                selectedInstrument === 'guitar'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              🎸 Guitare
-            </button>
-          </div>
-
-          {/* Easy Chord Mode Toggle - Only show if not all chords are already easy */}
-          {!hasOnlyEasyChords && (
-            <button
-              onClick={onToggleEasyChordMode}
-              className={`px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                easyChordMode
-                  ? 'bg-green-600 text-white border-2 border-green-700'
-                  : 'bg-white text-green-700 border-2 border-green-300 hover:bg-green-50'
-              }`}
-              title="Mode Accords Faciles"
-            >
-              {easyChordMode ? '✓ Accords Faciles' : 'Accords Faciles'}
-            </button>
-          )}
-
-
-          {/* Transpose Controls */}
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => onSetTransposeValue(Math.max(transposeValue - 1, -11))}
-                disabled={transposeValue <= -11}
-                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-              >
-                <MinusIcon className="h-4 w-4" />
-              </button>
-              <span className="text-sm font-medium min-w-[3rem] text-center">
-                {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-              </span>
-              <button
-                onClick={() => onSetTransposeValue(Math.min(transposeValue + 1, 11))}
-                disabled={transposeValue >= 11}
-                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-              >
-                <PlusIcon className="h-4 w-4" />
-              </button>
-            </div>
-            
-            {/* Key Selector for Desktop */}
-            {(song.firstChord || song.key) && (
-              <div className="flex items-center space-x-2 bg-purple-50 border border-purple-200 rounded-lg px-3 py-1">
-                <span className="text-xs text-purple-600 font-medium">
-                  {getBaseChord()} → {currentKey || getBaseChord()}
-                </span>
-                <select
-                  value={currentKey || getBaseChord()}
-                  onChange={(e) => handleKeySelect(e.target.value)}
-                  className="bg-white border border-purple-300 text-purple-800 text-xs font-medium rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  {getAvailableKeys().map((key) => (
-                    <option key={key} value={key}>
-                      {key}
-                    </option>
-                  ))}
-                </select>
+              <Separator />
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => { onToggleEdit(); setSheetOpen(false); }} className="flex-1">
+                  <PencilIcon className="h-4 w-4 mr-1" /> Éditer
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => { onDelete(); setSheetOpen(false); }}>
+                  <TrashIcon className="h-4 w-4 mr-1" /> Supprimer
+                </Button>
               </div>
-            )}
-          </div>
-
-          {/* Auto-scroll Controls */}
-          <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2">
-            <button
-              onClick={onToggleAutoScroll}
-              className={`p-2 rounded-full ${
-                autoScroll.isActive
-                  ? 'bg-green-100 text-green-600'
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-white'
-              }`}
-              title={autoScroll.isActive ? 'Arrêter le défilement' : 'Démarrer le défilement'}
-            >
-              {autoScroll.isActive ? (
-                <PauseIcon className="h-4 w-4" />
-              ) : (
-                <PlayIcon className="h-4 w-4" />
-              )}
-            </button>
-            
-            <button
-              onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
-              title="Ralentir"
-            >
-              <MinusIcon className="h-4 w-4" />
-            </button>
-            
-            <span className="text-xs text-gray-600 min-w-[2rem] text-center">
-              {autoScroll.speed.toFixed(1)}x
-            </span>
-            
-            <button
-              onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 bg-white rounded"
-              title="Accélérer"
-            >
-              <PlusIcon className="h-4 w-4" />
-            </button>
-            
-            <button
-              onClick={onResetScroll}
-              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded bg-white"
-              title="Remonter en haut"
-            >
-              ↑ Haut
-            </button>
-          </div>
-
-          {/* Metronome Controls */}
-          {(song.bpm || onSetManualBpm) && (
-            <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2 relative">
-              <button
-                onClick={() => {
-                  if (song.bpm || manualBpm) {
-                    onToggleMetronome();
-                  } else {
-                    setShowBpmPopover(!showBpmPopover);
-                  }
-                }}
-                className={`p-2 rounded-full ${
-                  metronome.isActive
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-white'
-                }`}
-                title={(song.bpm || manualBpm) ? `Métronome ${manualBpm || song.bpm} BPM` : 'Définir BPM'}
-              >
-                {metronome.isActive ? (
-                  <PauseIcon className="h-4 w-4" />
-                ) : (
-                  <PlayIcon className="h-4 w-4" />
-                )}
-              </button>
-              {showBpmPopover && onSetManualBpm ? (
-                <BpmSelectorPopover
-                  initialBpm={manualBpm || song.bpm || 100}
-                  onApply={(bpm) => {
-                    onSetManualBpm(bpm);
-                    setShowBpmPopover(false);
-                  }}
-                  onClose={() => setShowBpmPopover(false)}
-                />
-              ) : (song.bpm || manualBpm) ? (
-                <span 
-                  className="text-xs text-gray-600 min-w-[3rem] text-center cursor-pointer hover:text-gray-900"
-                  onClick={() => setShowBpmPopover(true)}
-                >
-                  {manualBpm || song.bpm} BPM
-                </span>
-              ) : (
-                <span 
-                  className="text-xs text-gray-500 cursor-pointer hover:text-gray-700"
-                  onClick={() => setShowBpmPopover(true)}
-                >
-                  Définir
-                </span>
-              )}
             </div>
-          )}
-
-          {/* Font Size Controls */}
-          <div className="flex items-center space-x-1 bg-gray-100 rounded-md p-1">
-            <button
-              onClick={onDecreaseFontSize}
-              disabled={fontSize <= 10}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Réduire la taille"
-            >
-              <MinusIcon className="h-3 sm:h-4 w-3 sm:w-4" />
-            </button>
-            <span className="hidden sm:block text-xs font-medium min-w-[2rem] text-center text-gray-600">
-              {fontSize}px
-            </span>
-            <button
-              onClick={onIncreaseFontSize}
-              disabled={fontSize >= 24}
-              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Augmenter la taille"
-            >
-              <PlusIcon className="h-3 sm:h-4 w-3 sm:w-4" />
-            </button>
-            <button
-              onClick={onResetFontSize}
-              className="p-1 text-gray-400 hover:text-gray-600 ml-1"
-              title="Taille par défaut"
-            >
-              <EyeIcon className="h-3 sm:h-4 w-3 sm:w-4" />
-            </button>
-          </div>
-
-          {/* Action Buttons */}
-          <button
-            onClick={onToggleEdit}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-            title="Éditer"
-          >
-            <PencilIcon className="h-5 w-5" />
-          </button>
-          
-          <button
-            onClick={onDelete}
-            className="p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
-            title="Supprimer"
-          >
-            <TrashIcon className="h-5 w-5" />
-          </button>
-        </div>
+          </SheetContent>
+        </Sheet>
       </div>
+
+      {/* BPM popover (ouvert depuis Outils) */}
+      {showBpmPopover && onSetManualBpm && (
+        <div className="absolute right-2 md:right-4 top-full mt-1 z-50 p-3 rounded-lg border bg-background shadow-lg">
+          <BpmSelectorPopover
+            initialBpm={manualBpm || song.bpm || 100}
+            onApply={(bpm) => { onSetManualBpm(bpm); setShowBpmPopover(false); }}
+            onClose={() => setShowBpmPopover(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

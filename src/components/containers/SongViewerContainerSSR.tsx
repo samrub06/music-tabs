@@ -419,6 +419,10 @@ export default function SongViewerContainerSSR({
     onAddToLibrary
   };
 
-  return <SongViewer {...songViewerProps} />;
+  return (
+    <div className="h-full min-h-0 flex flex-col">
+      <SongViewer {...songViewerProps} />
+    </div>
+  );
 }
 

@@ -80,42 +80,45 @@ export default function SongContent({
   return (
     <div 
       ref={contentRef}
-      className={`song-content-scrollable flex-1 ${!isAuthenticated ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden p-3 md:p-6 bg-gray-50 min-h-0 relative`}
+      className={`song-content-scrollable flex-1 ${!isAuthenticated ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden min-h-0 relative`}
       style={{ 
         WebkitOverflowScrolling: 'touch',
-        maxHeight: 'calc(100vh - 200px)',
         width: '100%',
         maxWidth: '100%'
       }}
     >
-      <div className="max-w-4xl mx-auto w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-        {/* Chord Diagrams Section */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <MusicalNoteIcon className="w-5 h-5 mr-2" />
-            Accords utilisés
-          </h3>
-          <ChordDiagramsGrid 
-            song={transposedSong} 
-            onChordClick={onChordClick} 
-            fontSize={fontSize}
-            knownChordIds={knownChordIds}
-            chordNameToIdMap={chordNameToIdMap}
-            chords={chords}
-          />
-          {bpm && (
-            <p className="text-sm text-blue-600 font-medium mt-4">
-              {bpm} BPM
-            </p>
-          )}
-        </div>
+      <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+          {/* Chord Diagrams Section - horizontal scroll on mobile */}
+          <div className="mb-6 md:mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+              <MusicalNoteIcon className="w-5 h-5 mr-2" />
+              Accords utilisés
+            </h3>
+            <div className="pb-2 md:pb-0">
+              <ChordDiagramsGrid 
+                song={transposedSong} 
+                onChordClick={onChordClick} 
+                fontSize={fontSize}
+                knownChordIds={knownChordIds}
+                chordNameToIdMap={chordNameToIdMap}
+                chords={chords}
+              />
+            </div>
+            {bpm && (
+              <p className="text-sm text-blue-600 font-medium mt-4">
+                {bpm} BPM
+              </p>
+            )}
+          </div>
 
-        {/* Song Content */}
-        <StructuredSongContent 
-          song={transposedSong} 
-          onChordClick={onChordClick}
-          fontSize={fontSize}
-        />
+          {/* Song Content */}
+          <StructuredSongContent 
+            song={transposedSong} 
+            onChordClick={onChordClick}
+            fontSize={fontSize}
+          />
+        </div>
       </div>
 
       {!isAuthenticated && (
@@ -750,7 +753,7 @@ function ChordDiagramsGrid({
   
   return (
     <div>
-      <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-4">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4">
         {unknownChords.map((songChordName: string) => {
           const dbChord = findChordInDatabase(songChordName, chords);
           const hasDiagram = dbChord !== null;
@@ -759,7 +762,7 @@ function ChordDiagramsGrid({
             <button
               key={songChordName}
               onClick={() => onChordClick(songChordName)}
-              className="group relative flex flex-col items-center p-1.5 sm:p-3 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full bg-white border-2 border-gray-200 hover:border-blue-400"
+              className="group relative flex flex-col items-center p-1.5 sm:p-3 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-shrink-0 w-24 sm:w-auto md:w-full bg-white border-2 border-gray-200 hover:border-blue-400"
             >
               {hasDiagram ? (
                 <>
