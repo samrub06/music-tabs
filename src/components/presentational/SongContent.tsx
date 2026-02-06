@@ -28,6 +28,7 @@ interface SongContentProps {
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
   chords?: Chord[];
+  onFontSizeChange?: (value: number) => void;
 }
 
 export default function SongContent({
@@ -46,9 +47,42 @@ export default function SongContent({
   bpm,
   knownChordIds = new Set(),
   chordNameToIdMap = new Map(),
-  chords = []
+  chords = [],
+  onFontSizeChange,
 }: SongContentProps) {
   const { t } = useLanguage();
+  const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
+  const lastPinchTime = useRef(0);
+  const onFontSizeChangeRef = useRef(onFontSizeChange);
+  onFontSizeChangeRef.current = onFontSizeChange;
+  const PINCH_THROTTLE_MS = 80;
+
+  useEffect(() => {
+    const el = contentRef?.current;
+    if (!el) return;
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || !pinchRef.current || !onFontSizeChangeRef.current) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastPinchTime.current < PINCH_THROTTLE_MS) return;
+      lastPinchTime.current = now;
+      const currentDistance = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY);
+      if (currentDistance === 0) return;
+      const scale = currentDistance / pinchRef.current.initialDistance;
+      const newSize = Math.min(24, Math.max(10, Math.round((pinchRef.current.initialFontSize * scale) / 2) * 2));
+      onFontSizeChangeRef.current(newSize);
+    };
+    const handleTouchEnd = () => { pinchRef.current = null; };
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd);
+    el.addEventListener('touchcancel', handleTouchEnd);
+    return () => {
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+      el.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [contentRef]);
+
   if (isEditing) {
     return (
       <div className="flex-1 flex flex-col p-4">
@@ -77,6 +111,20 @@ export default function SongContent({
     );
   }
 
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    return Math.hypot(touches[1].clientX - touches[0].clientX, touches[1].clientY - touches[0].clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && onFontSizeChange) {
+      pinchRef.current = {
+        initialDistance: getTouchDistance(e.touches),
+        initialFontSize: fontSize,
+      };
+    }
+  };
+
   return (
     <div 
       ref={contentRef}
@@ -86,6 +134,7 @@ export default function SongContent({
         width: '100%',
         maxWidth: '100%'
       }}
+      onTouchStart={handleTouchStart}
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
@@ -380,8 +429,11 @@ function groupChordsByPosition(
     });
   });
   
-  // Calculate text width for a chord using canvas for precise measurement
+  // Calculate text width for a chord using canvas for precise measurement (client-only; SSR uses fallback)
   const getChordWidth = (chord: string): number => {
+    if (typeof document === 'undefined') {
+      return chord.length * charWidth * 1.1;
+    }
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (!context) {

@@ -6,6 +6,7 @@ import React, { RefObject } from 'react';
 import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ChordDiagramModal from './ChordDiagramModal';
+import ToolsBottomBar from './ToolsBottomBar';
 
 interface SongViewerProps {
   song: Song;
@@ -62,6 +63,10 @@ interface SongViewerProps {
   chords?: Chord[];
   isInLibrary?: boolean;
   onAddToLibrary?: () => void;
+  onFontSizeChange?: (value: number) => void;
+  bottomBarHeight?: number;
+  setBottomBarHeight?: (height: number) => void;
+  onToggleToolsBar?: () => void;
 }
 
 export default function SongViewer({
@@ -112,7 +117,11 @@ export default function SongViewer({
     chordNameToIdMap = new Map(),
     chords = [],
     isInLibrary,
-    onAddToLibrary
+    onAddToLibrary,
+    onFontSizeChange,
+    bottomBarHeight = 0,
+    setBottomBarHeight,
+    onToggleToolsBar,
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -165,39 +174,64 @@ export default function SongViewer({
         onToggleEasyChordMode={onToggleEasyChordMode}
         isInLibrary={isInLibrary}
         onAddToLibrary={onAddToLibrary}
+        onToggleToolsBar={onToggleToolsBar}
       />
 
-      <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* Content Area */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <SongContent
-            isEditing={isEditing}
-            editContent={editContent}
-            transposedSong={transposedSong}
-            transposedContent={transposedContent}
-            fontSize={fontSize}
-            contentRef={contentRef}
-            isSaving={isSaving}
-            onEditContentChange={onEditContentChange}
-            onSave={onSave}
-            onCancelEdit={onCancelEdit}
-            onChordClick={onChordClick}
-            isAuthenticated={isAuthenticated}
-            bpm={manualBpm || song.bpm || undefined}
-            knownChordIds={knownChordIds}
-            chordNameToIdMap={chordNameToIdMap}
-            chords={chords}
-          />
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <SongContent
+              isEditing={isEditing}
+              editContent={editContent}
+              transposedSong={transposedSong}
+              transposedContent={transposedContent}
+              fontSize={fontSize}
+              contentRef={contentRef}
+              isSaving={isSaving}
+              onEditContentChange={onEditContentChange}
+              onSave={onSave}
+              onCancelEdit={onCancelEdit}
+              onChordClick={onChordClick}
+              isAuthenticated={isAuthenticated}
+              bpm={manualBpm || song.bpm || undefined}
+              knownChordIds={knownChordIds}
+              chordNameToIdMap={chordNameToIdMap}
+              chords={chords}
+              onFontSizeChange={onFontSizeChange}
+            />
+          </div>
+
+          {showChordDiagram && selectedChord && (
+            <ChordDiagramModal
+              selectedChord={selectedChord}
+              selectedInstrument={selectedInstrument}
+              fontSize={fontSize}
+              onClose={onCloseChordDiagram}
+              chords={chords}
+            />
+          )}
         </div>
 
-        {/* Chord Diagram Modal/Sidebar */}
-        {showChordDiagram && selectedChord && (
-          <ChordDiagramModal
-            selectedChord={selectedChord}
+        {bottomBarHeight > 0 && setBottomBarHeight && (
+          <ToolsBottomBar
+            song={song}
             selectedInstrument={selectedInstrument}
+            transposeValue={transposeValue}
             fontSize={fontSize}
-            onClose={onCloseChordDiagram}
-            chords={chords}
+            useCapo={useCapo}
+            easyChordMode={easyChordMode}
+            height={bottomBarHeight}
+            onHeightChange={setBottomBarHeight}
+            onClose={() => setBottomBarHeight(0)}
+            onSetSelectedInstrument={onSetSelectedInstrument}
+            onSetTransposeValue={onSetTransposeValue}
+            onToggleCapo={onToggleCapo}
+            onIncreaseFontSize={onIncreaseFontSize}
+            onDecreaseFontSize={onDecreaseFontSize}
+            onResetFontSize={onResetFontSize}
+            onToggleEasyChordMode={onToggleEasyChordMode}
+            onToggleEdit={onToggleEdit}
+            onDelete={onDelete}
           />
         )}
       </div>

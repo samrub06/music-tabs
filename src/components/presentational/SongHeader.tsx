@@ -4,7 +4,6 @@ import { Song } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   ArrowLeftIcon,
-  EyeIcon,
   MinusIcon,
   PauseIcon,
   PencilIcon,
@@ -17,25 +16,8 @@ import {
   EllipsisVerticalIcon
 } from '@heroicons/react/24/outline';
 import React, { useState } from 'react';
-import { generateAllKeys } from '@/utils/chords';
-import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import BpmSelectorPopover from './BpmSelectorPopover';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +63,7 @@ interface SongHeaderProps {
   onToggleEasyChordMode: () => void;
   isInLibrary?: boolean;
   onAddToLibrary?: () => void;
+  onToggleToolsBar?: () => void;
 }
 
 export default function SongHeader({
@@ -114,66 +97,12 @@ export default function SongHeader({
     easyChordMode,
     onToggleEasyChordMode,
     isInLibrary,
-    onAddToLibrary
+    onAddToLibrary,
+    onToggleToolsBar,
 }: SongHeaderProps) {
   const { t } = useLanguage();
   const [showBpmPopover, setShowBpmPopover] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
-
-  // Get the base chord (firstChord or fallback to key or default)
-  const getBaseChord = () => {
-    // console.log('SongHeader render', { bpm: song.bpm, manualBpm, hasHandler: !!onSetManualBpm });
-    return song.firstChord || song.key || 'C';
-  };
-
-  // Generate all available keys based on the base chord quality
-  const getAvailableKeys = () => {
-    const baseChord = getBaseChord();
-    return generateAllKeys(baseChord);
-  };
-
-  // Calculate current key based on firstChord (or key) and transpose value
-  const getCurrentKey = () => {
-    const baseChord = getBaseChord();
-    const availableKeys = getAvailableKeys();
-    
-    // The base chord is always at index 0 since generateAllKeys starts from the base chord
-    const baseIndex = 0;
-    
-    // Calculate the new index after transposition
-    const currentIndex = (baseIndex + transposeValue + 12) % 12;
-    return availableKeys[currentIndex];
-  };
-
-  // Handle key selection from dropdown
-  const handleKeySelect = (targetKey: string) => {
-    const availableKeys = getAvailableKeys();
-    
-    // Find the index of the target key in the available keys
-    const targetIndex = availableKeys.findIndex(key => key === targetKey);
-    
-    if (targetIndex === -1) return;
-    
-    // The base chord is always at index 0
-    const baseIndex = 0;
-    
-    // Calculate the transpose value needed to reach the target key
-    let newTransposeValue = targetIndex - baseIndex;
-    
-    // Normalize to range -11 to +11 (prefer smaller absolute values)
-    if (newTransposeValue > 6) {
-      newTransposeValue -= 12;
-    } else if (newTransposeValue < -6) {
-      newTransposeValue += 12;
-    }
-    
-    onSetTransposeValue(newTransposeValue);
-  };
-
-  const currentKey = getCurrentKey();
-
-  // Check if all chords are already easy - if so, hide the Easy Chord Mode button
-  const hasOnlyEasyChords = songHasOnlyEasyChords(song.allChords);
+  const [metronomePopoverOpen, setMetronomePopoverOpen] = useState(false);
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
@@ -278,122 +207,34 @@ export default function SongHeader({
           </Button>
         </div>
         {/* Outils : bottom sheet */}
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-shrink-0 h-9 gap-1">
+        {(song.bpm || onSetManualBpm) && (
+          <div className="relative flex-shrink-0">
+            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setMetronomePopoverOpen((o) => !o)} aria-label="Métronome" aria-expanded={metronomePopoverOpen}>
               <MusicalNoteIcon className="h-4 w-4" />
-              Outils
             </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-xl max-h-[85vh] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Outils</SheetTitle>
-            </SheetHeader>
-            <div className="space-y-4 py-4">
-              {(song.firstChord || song.key) && (
-                <>
-                  <div>
-                    <p className="text-sm font-medium mb-2">{t('songHeader.key')}</p>
-                    <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getAvailableKeys().map((key) => (
-                          <SelectItem key={key} value={key}>{key}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Separator />
-                </>
-              )}
-              {song.capo !== undefined && song.capo !== null && (
-                <>
-                  <div>
-                    <p className="text-sm font-medium mb-2">Capo</p>
-                    <div className="flex gap-2">
-                      <Button variant={useCapo ? 'default' : 'outline'} size="sm" onClick={() => onToggleCapo(true)} className="flex-1">
-                        Capo {song.capo}
-                      </Button>
-                      <Button variant={!useCapo ? 'default' : 'outline'} size="sm" onClick={() => onToggleCapo(false)} className="flex-1">
-                        {t('songHeader.noCapo')}
-                      </Button>
-                    </div>
-                  </div>
-                  <Separator />
-                </>
-              )}
-              <div>
-                <p className="text-sm font-medium mb-2">Instrument</p>
-                <div className="flex gap-2">
-                  <Button variant={selectedInstrument === 'piano' ? 'default' : 'outline'} size="sm" onClick={() => onSetSelectedInstrument('piano')} className="flex-1">
-                    Piano
+            {metronomePopoverOpen && (
+              <div className="absolute left-0 top-full mt-1 z-50 p-3 rounded-lg border bg-background shadow-lg min-w-[180px]">
+                <div className="flex flex-col gap-2">
+                  <Button variant={metronome.isActive ? 'default' : 'outline'} size="sm" onClick={onToggleMetronome}>
+                    {metronome.isActive ? 'Pause' : 'Play'} {manualBpm || song.bpm} BPM
                   </Button>
-                  <Button variant={selectedInstrument === 'guitar' ? 'default' : 'outline'} size="sm" onClick={() => onSetSelectedInstrument('guitar')} className="flex-1">
-                    Guitare
-                  </Button>
-                </div>
-              </div>
-              {!hasOnlyEasyChords && (
-                <>
-                  <Separator />
-                  <div>
-                    <Button variant={easyChordMode ? 'default' : 'outline'} size="sm" onClick={onToggleEasyChordMode} className="w-full">
-                      {easyChordMode ? 'Accords faciles activé' : 'Accords faciles'}
+                  {onSetManualBpm && (
+                    <Button variant="outline" size="sm" onClick={() => { setMetronomePopoverOpen(false); setShowBpmPopover(true); }}>
+                      Définir BPM
                     </Button>
-                  </div>
-                </>
-              )}
-              <Separator />
-              <div>
-                <p className="text-sm font-medium mb-2">Taille du texte</p>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10}>
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium min-w-[3rem] text-center">{fontSize}px</span>
-                  <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24}>
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={onResetFontSize}>
-                    <EyeIcon className="h-4 w-4" />
-                  </Button>
+                  )}
                 </div>
               </div>
-              {(song.bpm || onSetManualBpm) && (
-                <>
-                  <Separator />
-                  <div>
-                    <p className="text-sm font-medium mb-2">Métronome</p>
-                    <div className="flex items-center gap-2">
-                      <Button variant={metronome.isActive ? 'default' : 'outline'} size="sm" onClick={onToggleMetronome}>
-                        {metronome.isActive ? 'Pause' : 'Play'} {manualBpm || song.bpm} BPM
-                      </Button>
-                      {onSetManualBpm && (
-                        <Button variant="outline" size="sm" onClick={() => { setSheetOpen(false); setShowBpmPopover(true); }}>
-                          Définir BPM
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-              <Separator />
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => { onToggleEdit(); setSheetOpen(false); }} className="flex-1">
-                  <PencilIcon className="h-4 w-4 mr-1" /> Éditer
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => { onDelete(); setSheetOpen(false); }}>
-                  <TrashIcon className="h-4 w-4 mr-1" /> Supprimer
-                </Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+            )}
+          </div>
+        )}
+        <Button variant="outline" size="sm" className="flex-shrink-0 h-9 gap-1" onClick={() => onToggleToolsBar?.()}>
+          <MusicalNoteIcon className="h-4 w-4" />
+          Outils
+        </Button>
       </div>
 
-      {/* BPM popover (ouvert depuis Outils) */}
+      {/* BPM popover (ouvert depuis Métronome) */}
       {showBpmPopover && onSetManualBpm && (
         <div className="absolute right-2 md:right-4 top-full mt-1 z-50 p-3 rounded-lg border bg-background shadow-lg">
           <BpmSelectorPopover

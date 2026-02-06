@@ -15,8 +15,15 @@ export function useFontSize(initialSize: number = 14) {
     setFontSize(initialSize);
   };
 
+  const setFontSizeValue = (value: number) => {
+    const clamped = Math.min(24, Math.max(10, value));
+    const stepped = Math.round(clamped / 2) * 2;
+    setFontSize(stepped);
+  };
+
   return {
     fontSize,
+    setFontSize: setFontSizeValue,
     increaseFontSize,
     decreaseFontSize,
     resetFontSize

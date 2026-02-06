@@ -135,7 +135,9 @@ export default function SongViewerContainerSSR({
 
   const { selectedChord, showChordDiagram, handleChordClick, handleCloseChordDiagram } = useChordDiagram();
   
-  const { fontSize, increaseFontSize, decreaseFontSize, resetFontSize } = useFontSize();
+  const { fontSize, setFontSize, increaseFontSize, decreaseFontSize, resetFontSize } = useFontSize();
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
+  const DEFAULT_TOOLS_BAR_HEIGHT = 200;
   
   // Refs
   const contentRef = useRef<HTMLDivElement>(null);
@@ -416,7 +418,11 @@ export default function SongViewerContainerSSR({
     chordNameToIdMap,
     chords,
     isInLibrary,
-    onAddToLibrary
+    onAddToLibrary,
+    onFontSizeChange: setFontSize,
+    bottomBarHeight,
+    setBottomBarHeight,
+    onToggleToolsBar: () => setBottomBarHeight((prev) => (prev > 0 ? 0 : DEFAULT_TOOLS_BAR_HEIGHT)),
   };
 
   return (
