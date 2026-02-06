@@ -26,6 +26,7 @@ interface SongViewerContainerSSRProps {
   isAuthenticated?: boolean;
   isInLibrary?: boolean;
   onAddToLibrary?: () => void;
+  initialInstrument?: 'piano' | 'guitar';
 }
 
 export default function SongViewerContainerSSR({ 
@@ -34,12 +35,13 @@ export default function SongViewerContainerSSR({
   onDelete,
   isAuthenticated = false,
   isInLibrary = true,
-  onAddToLibrary
+  onAddToLibrary,
+  initialInstrument
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
 
-  // Local state instead of AppContext
-  const [selectedInstrument, setSelectedInstrument] = useState<'piano' | 'guitar'>('piano');
+  // Local state instead of AppContext; initial value from user profile preference
+  const [selectedInstrument, setSelectedInstrument] = useState<'piano' | 'guitar'>(initialInstrument ?? 'piano');
   const [transposeValue, setTransposeValue] = useState(0);
   const [easyChordMode, setEasyChordMode] = useState(false);
   const [savedTransposeValue, setSavedTransposeValue] = useState(0);

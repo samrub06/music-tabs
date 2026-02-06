@@ -8,7 +8,8 @@ import { revalidatePath } from 'next/cache'
 
 const updateProfileSchema = z.object({
   fullName: z.string().min(1).max(100).nullable().optional(),
-  avatarUrl: z.string().url().nullable().optional()
+  avatarUrl: z.string().url().nullable().optional(),
+  preferredInstrument: z.enum(['piano', 'guitar']).optional().nullable()
 })
 
 /**

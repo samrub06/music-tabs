@@ -62,6 +62,9 @@
     "songsViewed": "Songs Viewed",
     "foldersCreated": "Folders Created",
     "playlistsCreated": "Playlists Created",
+    "preferredInstrument": "Preferred instrument",
+    "piano": "Piano",
+    "guitar": "Guitar",
     "updateError": "Error updating profile"
   },
   "leaderboard": {

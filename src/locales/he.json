@@ -62,6 +62,9 @@
     "songsViewed": "שירים שנצפו",
     "foldersCreated": "תיקיות שנוצרו",
     "playlistsCreated": "פלייליסטים שנוצרו",
+    "preferredInstrument": "כלי נגינה מועדף",
+    "piano": "פסנתר",
+    "guitar": "גיטרה",
     "updateError": "שגיאה בעדכון הפרופיל"
   },
   "leaderboard": {

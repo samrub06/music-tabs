@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { updateProfileAction } from './actions'
-import type { Profile } from '@/lib/services/profileRepo'
+import type { Profile, PreferredInstrument } from '@/lib/services/profileRepo'
 import type { UserStats } from '@/types'
 import UserStatsCard from '@/components/gamification/UserStatsCard'
 import BadgeDisplay from '@/components/gamification/BadgeDisplay'
@@ -29,6 +29,9 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const [error, setError] = useState<string | null>(null)
   const [fullName, setFullName] = useState(initialProfile?.fullName || contextProfile?.full_name || '')
   const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatarUrl || contextProfile?.avatar_url || '')
+  const [preferredInstrument, setPreferredInstrument] = useState<PreferredInstrument | null>(
+    initialProfile?.preferredInstrument ?? null
+  )
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats | null>(initialStats)
   const [badges, setBadges] = useState<UserBadge[]>([])
@@ -52,7 +55,8 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
       try {
         await updateProfileAction({
           fullName: fullName.trim() || null,
-          avatarUrl: avatarUrl.trim() || null
+          avatarUrl: avatarUrl.trim() || null,
+          preferredInstrument: preferredInstrument
         })
         setIsEditing(false)
         router.refresh()
@@ -65,6 +69,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const handleCancel = () => {
     setFullName(initialProfile?.fullName || contextProfile?.full_name || '')
     setAvatarUrl(initialProfile?.avatarUrl || contextProfile?.avatar_url || '')
+    setPreferredInstrument(initialProfile?.preferredInstrument ?? null)
     setPreviewUrl(null)
     setIsEditing(false)
     setError(null)
@@ -224,6 +229,33 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                       {t('profile.uploadHint')}
                     </p>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('profile.preferredInstrument')}
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="preferredInstrument"
+                          checked={preferredInstrument === 'piano'}
+                          onChange={() => setPreferredInstrument('piano')}
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-700 dark:text-gray-300">{t('profile.piano')}</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="preferredInstrument"
+                          checked={preferredInstrument === 'guitar'}
+                          onChange={() => setPreferredInstrument('guitar')}
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-700 dark:text-gray-300">{t('profile.guitar')}</span>
+                      </label>
+                    </div>
+                  </div>
                   {error && (
                     <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm">
                       {error}
@@ -256,6 +288,11 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                   <p className="text-gray-500 dark:text-gray-400 mt-1">
                     {user?.email}
                   </p>
+                  {preferredInstrument && (
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                      {t('profile.preferredInstrument')}: {preferredInstrument === 'piano' ? t('profile.piano') : t('profile.guitar')}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
