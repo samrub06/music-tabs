@@ -102,7 +102,9 @@ export async function searchSongsByStyle(description: string): Promise<AISearchR
       ? 'IMPORTANT: Ces chansons doivent être recherchées sur Tab4U (site israélien). Utilise uniquement des titres et artistes en hébreu ou des chansons israéliennes/juives populaires.'
       : 'Choisis des chansons très populaires et facilement trouvables sur Ultimate Guitar ou Tab4U'
 
-    const prompt = `Tu es un expert en musique. Génère une liste de 10-15 chansons populaires et bien connues qui correspondent au style musical suivant: "${description}"
+    const prompt = `Tu es un expert en musique. Génère une liste de chansons populaires et bien connues qui correspondent au style musical suivant: "${description}"
+
+Contrainte: retourne AU MAXIMUM 10 à 15 chansons (pas plus de 15).
 
 Règles importantes:
 - ${sourceNote}
@@ -175,8 +177,11 @@ JSON:`
       throw new Error('Invalid JSON structure from OpenAI - missing songs array')
     }
 
-    // Valider et nettoyer les chansons, ajouter la source
+    const MAX_AI_RESULTS = 15
+
+    // Valider et nettoyer les chansons, ajouter la source, limiter à 15 max
     const validSongs: AISearchResult[] = parsedData.songs
+      .slice(0, MAX_AI_RESULTS)
       .filter((song: any) => song.title && song.artist)
       .map((song: any) => ({
         title: String(song.title).trim(),
