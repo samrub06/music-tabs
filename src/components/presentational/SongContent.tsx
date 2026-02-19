@@ -10,6 +10,11 @@ import type { Chord } from '@/types';
 import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
 
 import Link from 'next/link';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface SongContentProps {
   isEditing: boolean;
@@ -127,6 +132,8 @@ export default function SongContent({
     }
   };
 
+  const [chordSectionOpen, setChordSectionOpen] = useState(true);
+
   return (
     <div 
       ref={contentRef}
@@ -139,29 +146,41 @@ export default function SongContent({
       onTouchStart={handleTouchStart}
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          {/* Chord Diagrams Section - horizontal scroll on mobile */}
-          <div className="mb-6 md:mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-              <MusicalNoteIcon className="w-5 h-5 mr-2" />
-              Accords utilisés
-            </h3>
-            <div className="pb-2 md:pb-0">
-              <ChordDiagramsGrid 
-                song={transposedSong} 
-                onChordClick={onChordClick} 
-                fontSize={fontSize}
-                knownChordIds={knownChordIds}
-                chordNameToIdMap={chordNameToIdMap}
-                chords={chords}
-              />
-            </div>
-            {bpm && (
-              <p className="text-sm text-blue-600 font-medium mt-4">
-                {bpm} BPM
-              </p>
-            )}
-          </div>
+        <div className="max-w-4xl mx-auto w-full space-y-1" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+          {/* Chord Diagrams Section - accordion */}
+          <Collapsible
+            open={chordSectionOpen}
+            onOpenChange={setChordSectionOpen}
+            className="w-full"
+          >
+            <CollapsibleTrigger asChild>
+              <div
+                role="button"
+                tabIndex={0}
+                className="w-full font-semibold text-gray-900 dark:text-gray-100 py-2.5 px-3 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center"
+              >
+                <MusicalNoteIcon className="w-5 h-5 mr-2 shrink-0" />
+                Accords utilisés
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="pb-2 md:pb-0 pt-1">
+                <ChordDiagramsGrid 
+                  song={transposedSong} 
+                  onChordClick={onChordClick} 
+                  fontSize={fontSize}
+                  knownChordIds={knownChordIds}
+                  chordNameToIdMap={chordNameToIdMap}
+                  chords={chords}
+                />
+              </div>
+              {bpm && (
+                <p className="text-sm text-blue-600 font-medium mt-4">
+                  {bpm} BPM
+                </p>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Song Content */}
           <StructuredSongContent 
@@ -211,7 +230,23 @@ interface StructuredSongContentProps {
 
 function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongContentProps) {
   const measurementRef = useRef<HTMLDivElement>(null);
-  
+  const [openSections, setOpenSections] = useState<Set<number>>(() => {
+    const indices = new Set<number>();
+    song.sections.forEach((s: { name: string }, i: number) => {
+      if (s.name !== 'Version Description') indices.add(i);
+    });
+    return indices;
+  });
+
+  const toggleSection = (sectionIndex: number, open: boolean) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(sectionIndex);
+      else next.delete(sectionIndex);
+      return next;
+    });
+  };
+
   // Detect if content contains Hebrew/RTL text
   const containsHebrew = (text: string) => {
     return /[\u0590-\u05FF\u200F\u200E]/.test(text);
@@ -356,7 +391,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
   const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
 
   return (
-    <div className="leading-relaxed space-y-4 w-full overflow-x-hidden" style={{ 
+    <div className="leading-relaxed space-y-1 w-full overflow-x-hidden" style={{ 
       fontSize: `${optimalFontSize}px`,
       lineHeight: optimalLineHeight,
       fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
@@ -375,29 +410,40 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
       />
       
       {song.sections.map((section: any, sectionIndex: number) => {
-        // Filtrer la section Version Description
         if (section.name === 'Version Description') return null;
-        
+        const isOpen = openSections.has(sectionIndex);
         return (
-          <div key={sectionIndex} className="mb-6 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-            {/* Section header */}
-            <div className="text-lg font-bold text-gray-800 mb-3 border-b border-gray-300 pb-1" style={{ 
-              fontSize: `${optimalFontSize + 4}px`,
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word',
-              maxWidth: '100%'
-            }}>
-              [{section.name}]
-            </div>
-            
-            {/* Section lines */}
-            <div className="space-y-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-              {section.lines.map((line: any, lineIndex: number) => 
-                renderSongLine(line, lineIndex)
-              )}
-            </div>
-          </div>
+          <Collapsible
+            key={sectionIndex}
+            open={isOpen}
+            onOpenChange={(open) => toggleSection(sectionIndex, open)}
+            className="w-full"
+            style={{ maxWidth: '100%', overflow: 'hidden' }}
+          >
+            <CollapsibleTrigger asChild>
+              <div
+                role="button"
+                tabIndex={0}
+                className="w-full font-bold text-gray-800 dark:text-gray-200 py-2.5 px-3 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation"
+                style={{
+                  fontSize: `${optimalFontSize + 4}px`,
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  maxWidth: '100%',
+                }}
+              >
+                [{section.name}]
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-1 w-full pt-0" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+                {section.lines.map((line: any, lineIndex: number) =>
+                  renderSongLine(line, lineIndex)
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         );
       })}
     </div>

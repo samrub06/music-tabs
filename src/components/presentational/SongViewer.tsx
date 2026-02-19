@@ -140,38 +140,20 @@ export default function SongViewer({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-white overflow-hidden">
+    <div className="flex flex-col h-full min-h-screen md:min-h-0 bg-white overflow-hidden">
       {/* Header */}
       <SongHeader
         song={song}
-        selectedInstrument={selectedInstrument}
-        transposeValue={transposeValue}
         autoScroll={autoScroll}
-        fontSize={fontSize}
-        useCapo={useCapo}
-        onToggleCapo={onToggleCapo}
         onNavigateBack={onNavigateBack}
-        onToggleEdit={onToggleEdit}
-        onDelete={onDelete}
-        onSetSelectedInstrument={onSetSelectedInstrument}
-        onSetTransposeValue={onSetTransposeValue}
         onToggleAutoScroll={onToggleAutoScroll}
         onSetAutoScrollSpeed={onSetAutoScrollSpeed}
-        metronome={metronome}
-        onToggleMetronome={onToggleMetronome}
         onResetScroll={onResetScroll}
-        onIncreaseFontSize={onIncreaseFontSize}
-        onDecreaseFontSize={onDecreaseFontSize}
-        onResetFontSize={onResetFontSize}
         onPrevSong={onPrevSong}
         onNextSong={onNextSong}
         canPrevSong={!!canPrevSong}
         canNextSong={!!canNextSong}
         nextSongInfo={nextSongInfo}
-        manualBpm={manualBpm}
-        onSetManualBpm={onSetManualBpm}
-        easyChordMode={easyChordMode}
-        onToggleEasyChordMode={onToggleEasyChordMode}
         isInLibrary={isInLibrary}
         onAddToLibrary={onAddToLibrary}
         onToggleToolsBar={onToggleToolsBar}

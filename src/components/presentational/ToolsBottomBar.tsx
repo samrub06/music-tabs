@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { Piano, Guitar } from 'lucide-react';
 
 const BAR_MIN_HEIGHT = 48;
 const BAR_MAX_HEIGHT_PERCENT = 60;
@@ -113,37 +113,43 @@ export default function ToolsBottomBar({
   const currentKey = getCurrentKey();
   const availableKeys = getAvailableKeys();
 
+  const cardClass = 'rounded-2xl bg-white/70 dark:bg-white/[0.06] backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] p-3.5';
+  const labelClass = 'text-[11px] font-medium text-muted-foreground mb-2.5';
+  const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
+  const segmentOptionClass = (active: boolean) =>
+    `flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 ${active ? 'bg-background dark:bg-white/10 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`;
+
   return (
     <div
-      className="flex flex-col border-t border-gray-200 dark:border-gray-700 bg-background flex-shrink-0 overflow-hidden"
+      className="flex flex-col flex-shrink-0 overflow-hidden rounded-t-[1.75rem] border border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background/95 dark:bg-background/98 backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
       style={{ height: `${height}px` }}
     >
       <div
         role="separator"
         aria-label="Redimensionner"
         onPointerDown={onPointerDown}
-        className="relative flex items-center justify-center py-1.5 cursor-ns-resize touch-none border-b border-gray-200 dark:border-gray-700 hover:bg-muted/50"
+        className="relative flex items-center justify-center py-3.5 cursor-ns-resize touch-none"
       >
-        <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        <div className="w-14 h-1 rounded-full bg-muted-foreground/25" />
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label="Fermer"
         >
-          <XMarkIcon className="h-4 w-4" />
+          <XMarkIcon className="h-7 w-7" />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-5 space-y-3.5">
         {(song.firstChord || song.key) && (
-          <>
-            <div>
-              <p className="text-sm font-medium mb-2">{t('songHeader.key')}</p>
+          <div className={cardClass}>
+            <p className={labelClass}>{t('songHeader.key')} · Transpose</p>
+            <div className="flex gap-2 items-center">
               <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="flex-1 h-10 rounded-xl border border-amber-200/80 dark:border-amber-700/50 bg-background/50 focus:ring-amber-500/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,70 +158,66 @@ export default function ToolsBottomBar({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <Separator />
-          </>
-        )}
-        {song.capo !== undefined && song.capo !== null && (
-          <>
-            <div>
-              <p className="text-sm font-medium mb-2">Capo</p>
-              <div className="flex gap-2">
-                <Button variant={useCapo ? 'default' : 'outline'} size="sm" onClick={() => onToggleCapo(true)} className="flex-1">
-                  Capo {song.capo}
+              <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 overflow-hidden shrink-0">
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))} disabled={transposeValue <= -11}>
+                  <MinusIcon className="h-4 w-4" />
                 </Button>
-                <Button variant={!useCapo ? 'default' : 'outline'} size="sm" onClick={() => onToggleCapo(false)} className="flex-1">
-                  {t('songHeader.noCapo')}
+                <span className="text-sm font-semibold tabular-nums min-w-[2.25rem] text-center text-amber-700 dark:text-amber-400">{transposeValue > 0 ? `+${transposeValue}` : transposeValue}</span>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))} disabled={transposeValue >= 11}>
+                  <PlusIcon className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-            <Separator />
-          </>
+          </div>
         )}
-        <div>
-          <p className="text-sm font-medium mb-2">Instrument</p>
-          <div className="flex gap-2">
-            <Button variant={selectedInstrument === 'piano' ? 'default' : 'outline'} size="sm" onClick={() => onSetSelectedInstrument('piano')} className="flex-1">
-              Piano
-            </Button>
-            <Button variant={selectedInstrument === 'guitar' ? 'default' : 'outline'} size="sm" onClick={() => onSetSelectedInstrument('guitar')} className="flex-1">
-              Guitare
-            </Button>
+        {song.capo !== undefined && song.capo !== null && (
+          <div className={cardClass}>
+            <p className={labelClass}>Capo</p>
+            <div className={segmentClass}>
+              <button type="button" onClick={() => onToggleCapo(true)} className={segmentOptionClass(useCapo)}>Capo {song.capo}</button>
+              <button type="button" onClick={() => onToggleCapo(false)} className={segmentOptionClass(!useCapo)}>{t('songHeader.noCapo')}</button>
+            </div>
+          </div>
+        )}
+        <div className={cardClass}>
+          <p className={labelClass}>Instrument</p>
+          <div className={segmentClass}>
+            <button type="button" onClick={() => onSetSelectedInstrument('piano')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'piano' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              <Piano className="h-4 w-4 shrink-0" /> Piano
+            </button>
+            <button type="button" onClick={() => onSetSelectedInstrument('guitar')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'guitar' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              <Guitar className="h-4 w-4 shrink-0" /> Guitare
+            </button>
           </div>
         </div>
         {!hasOnlyEasyChords && (
-          <>
-            <Separator />
-            <div>
-              <Button variant={easyChordMode ? 'default' : 'outline'} size="sm" onClick={onToggleEasyChordMode} className="w-full">
-                {easyChordMode ? 'Accords faciles activé' : 'Accords faciles'}
-              </Button>
-            </div>
-          </>
+          <div className={cardClass}>
+            <button type="button" onClick={onToggleEasyChordMode} className={`w-full rounded-xl py-2.5 text-sm font-medium transition-all ${easyChordMode ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+              {easyChordMode ? 'Accords faciles · activé' : 'Accords faciles'}
+            </button>
+          </div>
         )}
-        <Separator />
-        <div>
-          <p className="text-sm font-medium mb-2">Taille du texte</p>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10}>
+        <div className={cardClass}>
+          <p className={`${labelClass} text-center`}>Taille du texte</p>
+          <div className="flex items-center justify-center gap-3">
+            <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10} className="h-9 w-9 rounded-xl shrink-0">
               <MinusIcon className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[3rem] text-center">{fontSize}px</span>
-            <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24}>
+            <span className="text-sm font-medium tabular-nums min-w-[2.5rem] text-center">{fontSize}</span>
+            <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24} className="h-9 w-9 rounded-xl shrink-0">
               <PlusIcon className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onResetFontSize}>
+            <Button variant="ghost" size="icon" onClick={onResetFontSize} className="h-9 w-9 rounded-xl shrink-0">
               <EyeIcon className="h-4 w-4" />
             </Button>
           </div>
         </div>
-        <Separator />
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1">
-            <PencilIcon className="h-4 w-4 mr-1" /> Éditer
+        <div className="flex gap-2.5 pt-0.5">
+          <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
+            <PencilIcon className="h-4 w-4 mr-1.5" /> Éditer
           </Button>
-          <Button variant="destructive" size="sm" onClick={onDelete}>
-            <TrashIcon className="h-4 w-4 mr-1" /> Supprimer
+          <Button variant="destructive" size="sm" onClick={onDelete} className="h-10 rounded-xl font-medium px-4">
+            <TrashIcon className="h-4 w-4 mr-1.5" /> Supprimer
           </Button>
         </div>
       </div>
