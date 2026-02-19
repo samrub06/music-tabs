@@ -193,6 +193,7 @@ export default function SongViewer({
               onCancelEdit={onCancelEdit}
               onChordClick={onChordClick}
               isAuthenticated={isAuthenticated}
+              autoScrollIsActive={autoScroll.isActive}
               bpm={manualBpm || song.bpm || undefined}
               knownChordIds={knownChordIds}
               chordNameToIdMap={chordNameToIdMap}

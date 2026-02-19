@@ -240,7 +240,8 @@ export default function SongViewerContainerSSR({
   useAutoScroll({ 
     isActive: autoScroll.isActive, 
     speed: autoScroll.speed, 
-    toggleAutoScroll: () => setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive }))
+    toggleAutoScroll: () => setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive })),
+    contentRef
   });
 
   // Metronome functionality
@@ -265,6 +266,10 @@ export default function SongViewerContainerSSR({
   const resetScroll = () => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
+    }
+    const doc = typeof document !== 'undefined' ? document.scrollingElement || document.documentElement : null;
+    if (doc) {
+      doc.scrollTop = 0;
     }
   };
 

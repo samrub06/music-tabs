@@ -1,35 +1,43 @@
-import { useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 
 interface UseAutoScrollProps {
   isActive: boolean;
   speed: number;
   toggleAutoScroll: () => void;
+  contentRef: RefObject<HTMLDivElement | null>;
 }
 
-export function useAutoScroll({ isActive, speed, toggleAutoScroll }: UseAutoScrollProps) {
+export function useAutoScroll({ isActive, speed, toggleAutoScroll, contentRef }: UseAutoScrollProps) {
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isActive) {
       scrollIntervalRef.current = setInterval(() => {
-        const contentElement = document.querySelector('.song-content-scrollable') as HTMLElement;
+        const contentElement = contentRef?.current;
+        const scrollAmount = speed * 1;
+
+        // Try inner scroll container first
         if (contentElement) {
-          const scrollAmount = speed * 1;
           const maxScrollTop = contentElement.scrollHeight - contentElement.clientHeight;
-          
-          if (maxScrollTop <= 0) {
-            toggleAutoScroll();
+
+          if (maxScrollTop > 0) {
+            contentElement.scrollTop += scrollAmount;
+            const tolerance = 5;
+            const isAtBottom = contentElement.scrollTop >= maxScrollTop - tolerance;
+            if (isAtBottom) toggleAutoScroll();
             return;
           }
-          
-          contentElement.scrollTop += scrollAmount;
-          
+        }
+
+        // Fallback: scroll the document/window (when inner container has no overflow)
+        const doc = document.scrollingElement || document.documentElement;
+        const docMaxScroll = doc.scrollHeight - doc.clientHeight;
+        if (docMaxScroll > 0) {
+          doc.scrollTop += scrollAmount;
           const tolerance = 5;
-          const isAtBottom = contentElement.scrollTop >= maxScrollTop - tolerance;
-          
-          if (isAtBottom) {
-            toggleAutoScroll();
-          }
+          if (doc.scrollTop >= docMaxScroll - tolerance) toggleAutoScroll();
+        } else {
+          toggleAutoScroll();
         }
       }, 50);
     } else {
@@ -45,5 +53,5 @@ export function useAutoScroll({ isActive, speed, toggleAutoScroll }: UseAutoScro
         scrollIntervalRef.current = null;
       }
     };
-  }, [isActive, speed, toggleAutoScroll]);
+  }, [isActive, speed, toggleAutoScroll, contentRef]);
 }

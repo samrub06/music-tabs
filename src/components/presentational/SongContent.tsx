@@ -24,6 +24,7 @@ interface SongContentProps {
   onCancelEdit: () => void;
   onChordClick: (chord: string) => void;
   isAuthenticated?: boolean;
+  autoScrollIsActive?: boolean;
   bpm?: number | null;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
@@ -44,6 +45,7 @@ export default function SongContent({
   onCancelEdit,
   onChordClick,
   isAuthenticated = false,
+  autoScrollIsActive = false,
   bpm,
   knownChordIds = new Set(),
   chordNameToIdMap = new Map(),
@@ -128,7 +130,7 @@ export default function SongContent({
   return (
     <div 
       ref={contentRef}
-      className={`song-content-scrollable flex-1 ${!isAuthenticated ? 'overflow-hidden' : 'overflow-y-auto'} overflow-x-hidden min-h-0 relative`}
+      className={`song-content-scrollable flex-1 min-h-0 ${isAuthenticated || autoScrollIsActive ? 'overflow-y-auto' : 'overflow-hidden'} overflow-x-hidden relative`}
       style={{ 
         WebkitOverflowScrolling: 'touch',
         width: '100%',
