@@ -1,0 +1,51 @@
+---
+description: Style UI type ToolsBottomBar — cartes floues, segments, bordures douces, dark mode
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Style UI (référence ToolsBottomBar)
+
+Pour les barres d’outils, panneaux et cartes de réglages, réutiliser ces patterns Tailwind pour garder la même identité visuelle.
+
+## Conteneur principal (panneau / bottom sheet)
+
+- Coins supérieurs très arrondis : `rounded-t-[1.75rem]`
+- Bordure légère : `border border-b-0 border-black/[0.06] dark:border-white/[0.08]`
+- Fond semi-transparent + blur : `bg-background/95 dark:bg-background/98 backdrop-blur-xl`
+- Ombre vers le haut : `shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]`
+
+## Cartes de section (cards)
+
+- Classe réutilisable :
+  `rounded-2xl bg-white/70 dark:bg-white/[0.06] backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] p-3.5`
+- Labels au-dessus des contrôles : `text-[11px] font-medium text-muted-foreground mb-2.5`
+
+## Segmented control (boutons en pill)
+
+- Conteneur : `flex rounded-full bg-muted/80 p-0.5 gap-0.5`
+- Option active : `bg-background dark:bg-white/10 text-foreground shadow-sm`
+- Option inactive : `text-muted-foreground hover:text-foreground`
+- Toujours : `rounded-full py-2 text-sm font-medium transition-all duration-200`
+
+## Boutons et contrôles
+
+- Boutons principaux : `h-10 rounded-xl font-medium`
+- Boutons icône : `h-9 w-9 rounded-xl` (ou `rounded-full` pour fermer)
+- Variantes thématiques :
+  - Clé / transpose : `border-amber-200/80 dark:border-amber-700/50`, valeur `text-amber-700 dark:text-amber-400`
+  - Piano : `bg-blue-500/15 text-blue-700 dark:text-blue-400`
+  - Guitare : `bg-amber-500/15 text-amber-700 dark:text-amber-400`
+
+## Poignée de redimensionnement
+
+- Zone : `py-3.5 cursor-ns-resize touch-none`
+- Barre visuelle : `w-14 h-1 rounded-full bg-muted-foreground/25`
+
+## Principes généraux
+
+- Préférer `rounded-xl` ou `rounded-2xl` aux petits radius.
+- Bordures très subtiles avec opacity (`/0.06`, `/0.08`).
+- Backdrop blur sur les surfaces flottantes.
+- Transitions : `transition-all duration-200` sur les états actif/hover.
+- Dark mode : prévoir systématiquement les variantes `dark:` pour fond, bordure et texte.

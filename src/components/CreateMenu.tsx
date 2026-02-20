@@ -105,8 +105,8 @@ export default function CreateMenu({ isOpen, onClose, folders = [], container }:
         <SheetContent
           side="bottom"
           showCloseButton={false}
-          overlayClassName="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-300 data-[state=open]:duration-500"
-          className="max-h-[85vh] z-[60] pb-6 rounded-t-2xl border-t border-x shadow-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-300 data-[state=open]:duration-500"
+          overlayClassName="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-500 data-[state=open]:duration-500"
+          className="max-h-[85vh] z-[60] pb-6 rounded-t-2xl border-t border-x shadow-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-500 data-[state=open]:duration-500"
         >
           <SheetHeader className="pb-2">
             <SheetTitle className="text-left text-lg">{t('createMenu.title')}</SheetTitle>
