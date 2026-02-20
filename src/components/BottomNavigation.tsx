@@ -12,6 +12,7 @@ import {
   MusicalNoteIcon,
   SparklesIcon,
   PlusIcon,
+  XMarkIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { 
@@ -93,7 +94,7 @@ export default function BottomNavigation() {
                 key={item.href}
                 href={item.href}
                 prefetch={true}
-                className={`flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 rounded-lg transition-colors ${
+                className={`flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 rounded-lg transition-all duration-150 active:scale-95 active:bg-gray-100 dark:active:bg-gray-800 ${
                   item.isActive
                     ? 'text-blue-600 dark:text-blue-400'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -109,11 +110,11 @@ export default function BottomNavigation() {
             );
           })}
           <button
-            onClick={() => setIsCreateMenuOpen(true)}
-            className="flex items-center justify-center w-12 h-12 rounded-full transition-colors bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 active:scale-95 shadow-lg"
-            aria-label={t('common.create')}
+            onClick={() => (isCreateMenuOpen ? setIsCreateMenuOpen(false) : setIsCreateMenuOpen(true))}
+            className="flex items-center justify-center w-12 h-12 rounded-full transition-transform duration-150 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 active:scale-90 shadow-lg"
+            aria-label={isCreateMenuOpen ? t('common.close') ?? 'Fermer' : t('common.create')}
           >
-            <PlusIcon className="h-6 w-6" />
+            {isCreateMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <PlusIcon className="h-6 w-6" />}
           </button>
         </div>
       </nav>

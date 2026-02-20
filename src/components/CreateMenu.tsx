@@ -25,11 +25,13 @@ interface CreateMenuProps {
   isOpen: boolean
   onClose: () => void
   folders?: Folder[]
+  /** Portal container: when set, the sheet renders inside this element (e.g. main area) instead of document body */
+  container?: HTMLElement | null
 }
 
 type CreateOption = 'menu' | 'search' | 'manual' | 'playlist' | 'folder' | 'import'
 
-export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenuProps) {
+export default function CreateMenu({ isOpen, onClose, folders = [], container }: CreateMenuProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const [currentView, setCurrentView] = useState<CreateOption>('menu')
@@ -100,7 +102,12 @@ export default function CreateMenu({ isOpen, onClose, folders = [] }: CreateMenu
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <SheetContent side="bottom" className="max-h-[auto] z-50 pb-6">
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          overlayClassName="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-300 data-[state=open]:duration-500"
+          className="max-h-[85vh] z-[60] pb-6 rounded-t-2xl border-t border-x shadow-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-300 data-[state=open]:duration-500"
+        >
           <SheetHeader className="pb-2">
             <SheetTitle className="text-left text-lg">{t('createMenu.title')}</SheetTitle>
           </SheetHeader>

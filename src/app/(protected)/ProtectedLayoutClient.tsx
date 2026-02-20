@@ -9,7 +9,7 @@ import { useFoldersContext } from '@/context/FoldersContext'
 import { SidebarProvider } from '@/context/SidebarContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { folderRepo } from '@/lib/services/folderRepo'
 import { songRepo } from '@/lib/services/songRepo'
@@ -218,7 +218,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const pageTitle = getPageTitle(pathname)
 
   return (
-        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="h-screen flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
           <Header onMenuClick={() => {}} pageTitle={pageTitle} />
 
       <div className="flex-1 flex overflow-hidden">
@@ -227,7 +227,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         {/* Main content */}
           <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden pb-16 lg:pb-0">
             {children}
-        </div>
+          </div>
           </div>
           
           {/* Bottom Navigation - Mobile only */}
