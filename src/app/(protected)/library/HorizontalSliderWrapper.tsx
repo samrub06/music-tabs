@@ -18,7 +18,7 @@ export default function HorizontalSliderWrapper({ title, songs, userId }: Horizo
 
   const handleAddToLibrary = useCallback(async (song: Song) => {
     if (!userId) {
-      router.push('/login?next=/library')
+      router.push('/login?next=/search')
       return
     }
 

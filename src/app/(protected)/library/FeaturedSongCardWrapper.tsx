@@ -17,7 +17,7 @@ export default function FeaturedSongCardWrapper({ song, userId }: FeaturedSongCa
 
   const handleAddToLibrary = useCallback(async (song: Song) => {
     if (!userId) {
-      router.push('/login?next=/library')
+      router.push('/login?next=/search')
       return
     }
 

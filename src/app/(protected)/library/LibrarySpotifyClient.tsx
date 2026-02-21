@@ -31,7 +31,7 @@ export default function LibrarySpotifyClient({
   const handleAddToLibrary = useCallback(async (song: Song) => {
     // If not logged in, redirect to login
     if (!userId) {
-      router.push('/login?next=/library')
+      router.push('/login?next=/search')
       return
     }
 

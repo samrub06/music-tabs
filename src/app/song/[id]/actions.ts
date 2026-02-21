@@ -59,7 +59,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
   }
   
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
   revalidatePath(`/song/${id}`)
   return updated
 }
@@ -69,6 +69,6 @@ export async function deleteSongAction(id: string) {
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
   revalidatePath(`/song/${id}`)
 }

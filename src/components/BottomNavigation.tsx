@@ -6,7 +6,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  GlobeAltIcon, 
   RectangleStackIcon, 
   FolderIcon, 
   MusicalNoteIcon,
@@ -16,7 +15,6 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { 
-  GlobeAltIcon as GlobeAltIconSolid, 
   RectangleStackIcon as RectangleStackIconSolid, 
   FolderIcon as FolderIconSolid, 
   MusicalNoteIcon as MusicalNoteIconSolid,
@@ -39,13 +37,6 @@ export default function BottomNavigation() {
   }
 
   const navItems = [
-    {
-      href: '/library',
-      label: t('navigation.library'),
-      icon: GlobeAltIcon,
-      iconSolid: GlobeAltIconSolid,
-      isActive: pathname === '/library' || pathname.startsWith('/library/'),
-    },
     {
       href: '/search',
       label: t('navigation.search'),

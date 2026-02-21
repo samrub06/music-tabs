@@ -75,7 +75,7 @@ export async function addSongAction(payload: NewSongData) {
   }
   
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
   return created
 }
 
@@ -101,7 +101,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
   }
   
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
   revalidatePath(`/song/${id}`)
   return updated
 }
@@ -112,7 +112,7 @@ export async function updateSongFolderAction(id: string, folderId?: string) {
   const repo = songRepo(supabase)
   await repo.updateSongFolder(id, folderId)
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
 }
 
 export async function deleteSongsAction(ids: string[]) {
@@ -122,7 +122,7 @@ export async function deleteSongsAction(ids: string[]) {
   const repo = songRepo(supabase)
   await repo.deleteSongs(ids)
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
 }
 
 export async function deleteAllSongsAction() {
@@ -130,7 +130,7 @@ export async function deleteAllSongsAction() {
   const repo = songRepo(supabase)
   await repo.deleteAllSongs()
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
 }
 
 export async function deleteSongAction(id: string) {
@@ -138,7 +138,7 @@ export async function deleteSongAction(id: string) {
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
 }
 
 export async function addFolderAction(name: string) {
@@ -262,6 +262,6 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
   }
   
   revalidatePath('/songs')
-  revalidatePath('/library')
+  revalidatePath('/search')
   return created
 }

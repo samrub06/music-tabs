@@ -3,7 +3,7 @@
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, GlobeAltIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -30,7 +30,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
     if (user) {
       router.push('/songs');
     } else {
-      router.push('/library');
+      router.push('/search');
     }
   };
 
@@ -83,11 +83,11 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             {!user && (
               <nav className="flex md:hidden items-center">
                 <Link
-                  href="/library"
+                  href="/search"
                   className="p-2 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <GlobeAltIcon className="h-6 w-6" />
-                  <span className="sr-only">Library</span>
+                  <MagnifyingGlassIcon className="h-6 w-6" />
+                  <span className="sr-only">{t('navigation.search')}</span>
                 </Link>
               </nav>
             )}
@@ -95,14 +95,6 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             {/* Authenticated navigation - Desktop only (tablets use bottom nav) */}
             {user && (
               <nav className="hidden lg:flex items-center space-x-2">
-                 <Link
-                  href="/library"
-                  prefetch={true}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <GlobeAltIcon className="h-5 w-5" />
-                  <span>Library</span>
-                </Link>
                 <Link
                   href="/search"
                   prefetch={true}

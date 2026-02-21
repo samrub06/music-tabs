@@ -149,22 +149,22 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false)
   const { folders: createMenuFolders } = useFoldersContext()
 
-  // Check if this is a library route (allowed without auth)
-  const isLibraryRoute = pathname === '/library' || pathname.startsWith('/library/')
+  // Check if this is a public route (allowed without auth: search and library playlist detail)
+  const isPublicRoute = pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/library/')
   
-  // Redirect non-authenticated users from protected routes (except /library)
+  // Redirect non-authenticated users from protected routes (except public routes)
   useEffect(() => {
     // Don't redirect while auth is loading
     if (authLoading) return
     
-    // Don't redirect if already on home page or library route
-    if (pathname === '/' || isLibraryRoute) return
+    // Don't redirect if already on home page or public route
+    if (pathname === '/' || isPublicRoute) return
     
     // Redirect non-authenticated users from protected routes
     if (!user) {
       router.push('/')
     }
-  }, [user, authLoading, pathname, isLibraryRoute, router])
+  }, [user, authLoading, pathname, isPublicRoute, router])
 
   // Update streak on page load (once per session)
   useEffect(() => {
@@ -181,7 +181,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/song/')) {
       return undefined // No title for song pages
     }
-    if (path === '/library' || path.startsWith('/library/')) {
+    if (path.startsWith('/library/')) {
       return t('navigation.library')
     }
     if (path === '/search' || path.startsWith('/search/')) {

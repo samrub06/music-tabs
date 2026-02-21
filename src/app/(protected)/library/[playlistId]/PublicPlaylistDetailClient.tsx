@@ -30,7 +30,7 @@ export default function PublicPlaylistDetailClient({
   const handleAddToLibrary = useCallback(
     async (song: Song) => {
       if (!userId) {
-        router.push('/login?next=/library')
+        router.push('/login?next=/search')
         return
       }
 
@@ -83,7 +83,7 @@ export default function PublicPlaylistDetailClient({
         <div className="mb-4 sm:mb-6">
           <div className="flex items-center gap-2 sm:gap-3 mb-2">
             <button
-              onClick={() => router.push('/library')}
+              onClick={() => router.push('/search')}
               className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
               aria-label={t('common.back')}
             >

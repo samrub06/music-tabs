@@ -22,7 +22,7 @@ export default async function SongPage({
   ])
 
   if (!song) {
-    redirect('/library')
+    redirect('/search')
   }
 
   // Check if song is in user's library (song belongs to user)
