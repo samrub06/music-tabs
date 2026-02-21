@@ -217,10 +217,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
     // Apply tab-based filtering
     if (activeTab === 'recent') {
-      // Sort by createdAt descending (most recent first)
+      // Sort by updatedAt descending (most recently viewed/updated first)
       sorted.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime()
-        const dateB = new Date(b.createdAt).getTime()
+        const dateA = new Date(a.updatedAt).getTime()
+        const dateB = new Date(b.updatedAt).getTime()
         return dateB - dateA
       })
     } else if (activeTab === 'popular') {

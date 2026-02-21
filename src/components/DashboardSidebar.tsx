@@ -123,7 +123,7 @@ export default function DashboardSidebar({
 
   const recentSongs = useMemo(() => {
     return [...songs]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 10);
   }, [songs]);
 

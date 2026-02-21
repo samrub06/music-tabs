@@ -481,7 +481,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .from('songs')
       .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
       .or('is_trending.eq.true,is_public.eq.true')
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .limit(limit)
 
     if (error) throw error
