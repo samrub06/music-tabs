@@ -7,7 +7,7 @@ export const songService = {
   // Récupérer toutes les chansons (sans contenu) avec pagination
   // Si connecté : uniquement les chansons de l'utilisateur
   // Si non connecté : uniquement les chansons publiques (user_id = null)
-  async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 100, q?: string): Promise<{ songs: Song[], total: number }> {
+  async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 100, q?: string, orderBy?: 'created_at' | 'updated_at' | 'view_count'): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
       throw new Error('Supabase client is required');
@@ -31,8 +31,14 @@ export const songService = {
       baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
     }
 
+    // Pour popular : ne garder que les chansons avec view_count > 0
+    if (orderBy === 'view_count') {
+      baseQuery = baseQuery.not('view_count', 'is', null).gt('view_count', 0);
+    }
+
+    const orderColumn = orderBy === 'updated_at' ? 'updated_at' : orderBy === 'view_count' ? 'view_count' : 'created_at';
     const { data, error, count } = await baseQuery
-      .order('created_at', { ascending: false })
+      .order(orderColumn, { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
 
     if (error) {

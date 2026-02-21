@@ -6,10 +6,13 @@ import { playlistRepo } from '@/lib/services/playlistRepo'
 import SongsClient from './SongsClient'
 import type { Folder, Playlist } from '@/types'
 
+type OrderByOption = 'created_at' | 'updated_at' | 'view_count'
+
 async function SongsDataLoader({
   page,
   limit,
   q,
+  tab,
   initialSongId,
   initialFolder,
   initialSortOrder,
@@ -17,12 +20,14 @@ async function SongsDataLoader({
   page: number
   limit: number
   q: string
+  tab: 'all' | 'recent' | 'popular'
   initialSongId?: string
   initialFolder?: string
   initialSortOrder?: 'asc' | 'desc'
 }) {
   const supabase = await createSafeServerClient()
-  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q)
+  const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
+  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q, orderBy)
   return { songs, total }
 }
 
@@ -89,12 +94,14 @@ function PlaylistsSkeleton() {
 export default async function SongsData({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string }>
+  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string }>
 }) {
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
   const limit = Math.max(1, parseInt(params?.limit || '100', 10))
   const q = params?.searchQuery || ''
+  const tabParam = params?.tab as string | undefined
+  const tab = (tabParam === 'recent' || tabParam === 'popular' ? tabParam : 'all') as 'all' | 'recent' | 'popular'
   const initialSongId = params?.songId || undefined
   const initialFolder = params?.folder || undefined
   const initialSortOrder = (params?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
@@ -106,6 +113,7 @@ export default async function SongsData({
         page={page}
         limit={limit}
         q={q}
+        tab={tab}
         view={view}
         initialSongId={initialSongId}
         initialFolder={initialFolder}
@@ -119,6 +127,7 @@ async function SongsDataWrapper({
   page,
   limit,
   q,
+  tab,
   view,
   initialSongId,
   initialFolder,
@@ -127,6 +136,7 @@ async function SongsDataWrapper({
   page: number
   limit: number
   q: string
+  tab: 'all' | 'recent' | 'popular'
   view: 'gallery' | 'table'
   initialSongId?: string
   initialFolder?: string
@@ -134,7 +144,7 @@ async function SongsDataWrapper({
 }) {
   // Stream all data in parallel with Suspense
   const [songsData, foldersData, playlistsData] = await Promise.all([
-    SongsDataLoader({ page, limit, q, initialSongId, initialFolder, initialSortOrder }),
+    SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder }),
     FoldersDataLoader(),
     PlaylistsDataLoader(),
   ])
@@ -147,6 +157,7 @@ async function SongsDataWrapper({
       limit={limit}
       initialView={view}
       initialQuery={q}
+      initialTab={tab}
       folders={foldersData}
       playlists={playlistsData}
       initialSongId={initialSongId}

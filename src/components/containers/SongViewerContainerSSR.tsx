@@ -10,14 +10,13 @@ import { useAutoScroll } from '@/lib/hooks/useAutoScroll';
 import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
 import { useFontSize } from '@/lib/hooks/useFontSize';
 import { useMetronome } from '@/lib/hooks/useMetronome';
-import { songService } from '@/lib/services/songService';
 import { songRepo } from '@/lib/services/songRepo';
 import { supabase } from '@/lib/supabase';
 import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
-import { viewSongAction } from '@/app/song/[id]/actions';
+import { recordSongViewAction } from '@/app/song/[id]/actions';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -161,18 +160,13 @@ export default function SongViewerContainerSSR({
     }));
   }, [song.bpm]);
 
-  // Increment view count and award XP when component mounts
+  // Record view: increment view count, update updated_at, award XP, revalidate /songs
   useEffect(() => {
     const handleView = async () => {
       try {
-        // Increment view count (existing functionality)
-        await songService.incrementViewCount(song.id, supabase);
-        console.log('View count incremented for song:', song.id);
-        
-        // Award XP for viewing (gamification)
-        await viewSongAction(song.id);
+        await recordSongViewAction(song.id);
       } catch (error) {
-        console.error('Failed to increment view count or award XP:', error);
+        console.error('Failed to record song view:', error);
       }
     };
 

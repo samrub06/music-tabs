@@ -28,6 +28,7 @@ interface SongsClientProps {
   limit: number
   initialView?: 'gallery' | 'table'
   initialQuery?: string
+  initialTab?: 'all' | 'recent' | 'popular'
   folders: Folder[]
   playlists?: Playlist[]
   initialSongId?: string
@@ -35,7 +36,7 @@ interface SongsClientProps {
   initialSortOrder?: 'asc' | 'desc'
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc' }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc' }: SongsClientProps) {
   const { t } = useLanguage()
   
   const sortFieldLabels: Record<SortField, string> = {
@@ -70,7 +71,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   // Other state
   const [isSelectMode, setIsSelectMode] = useState(false)
   const [currentFolder, setCurrentFolder] = useState<string | null>(selectedFolder || null)
-  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>(initialTab)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draggedSong, setDraggedSong] = useState<Song | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -136,16 +137,22 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
   }, [searchParams, router])
 
-  // Sync folder and sortOrder from URL
+  // Sync folder, sortOrder, and tab from URL
   useEffect(() => {
     const folderFromUrl = searchParams?.get('folder')
     const sortOrderFromUrl = searchParams?.get('sortOrder')
+    const tabFromUrl = searchParams?.get('tab')
     if (folderFromUrl !== null) {
       setSelectedFolder(folderFromUrl || undefined)
       setCurrentFolder(folderFromUrl || null)
     }
     if (sortOrderFromUrl === 'desc' || sortOrderFromUrl === 'asc') {
       setSortDirection(sortOrderFromUrl)
+    }
+    if (tabFromUrl === 'recent' || tabFromUrl === 'popular') {
+      setActiveTab(tabFromUrl)
+    } else {
+      setActiveTab('all')
     }
   }, [searchParams])
 
@@ -259,7 +266,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return sorted
   }, [filteredSongs, searchQuery, activeTab])
 
-  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc'; searchQuery?: string }) => {
+  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc'; searchQuery?: string; tab?: 'all' | 'recent' | 'popular' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.delete('q')
     if (next.searchQuery !== undefined) {
@@ -281,6 +288,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     if (next.sortOrder !== undefined) {
       if (next.sortOrder) params.set('sortOrder', next.sortOrder)
       else params.delete('sortOrder')
+    }
+    if (next.tab !== undefined) {
+      if (next.tab !== 'all') params.set('tab', next.tab)
+      else params.delete('tab')
     }
     router.push(`${pathname}?${params.toString()}`)
   }
@@ -431,7 +442,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           <div className="flex rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
             <button
               type="button"
-              onClick={() => setActiveTab('all')}
+              onClick={() => applyQuery({ tab: 'all', page: 1 })}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
                 activeTab === 'all'
                   ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
@@ -443,7 +454,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('recent')}
+              onClick={() => applyQuery({ tab: 'recent', page: 1 })}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
                 activeTab === 'recent'
                   ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
@@ -455,7 +466,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('popular')}
+              onClick={() => applyQuery({ tab: 'popular', page: 1 })}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
                 activeTab === 'popular'
                   ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
