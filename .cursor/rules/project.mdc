@@ -5,6 +5,8 @@ description: This is a new rule
 
 # Overview
 
+See also `ui-ux-product-goals.mdc` for product vision and UX goals.
+
 # Règles d'Architecture et Conventions pour Cursor
 
 Document de référence pour développer des applications Next.js 15 avec Supabase, TypeScript et Tailwind CSS.

@@ -1,0 +1,46 @@
+---
+name: ui-ux-product-goals
+description: UI/UX product vision and competitive benchmark
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# UI/UX Product Goals
+
+## Product Vision
+
+The UI must be **user-friendly and easy to understand** for musicians. Prioritize clarity, discoverability, and minimal cognitive load. Every screen should feel intuitive at a glance.
+
+## Modern UX Standards
+
+Follow best practices:
+
+- Clear visual hierarchy and consistent patterns
+- Responsive design (mobile-first for practice and live use)
+- Accessible controls (labels, focus states, touch targets)
+- Smooth transitions and feedback on interactions
+- Dark mode support for low-light environments
+
+## Competitive Benchmark
+
+**Goal: Do better than Ultimate Guitar** (https://www.ultimate-guitar.com/)
+
+Aim to outperform in UX:
+
+- Fewer distractions (no intrusive ads or clutter)
+- Simpler, faster navigation
+- Streamlined workflows (add song, find song, transpose, play)
+- Mobile-first experience
+- Cleaner song viewer with readable chords and lyrics
+- Faster page loads and interactions
+
+## Principles Checklist
+
+When designing or editing UI components:
+
+- Readable typography (font size, line height, contrast)
+- Minimal cognitive load (fewer options per screen, clear primary actions)
+- Clear affordances (buttons look clickable, controls are self-explanatory)
+- Touch-friendly on mobile (min 44px targets, spacing for fingers)
+- Dark mode variants for all surfaces and text
+- Consistent with existing patterns (see `ui-design-toolsbar.mdc` for styling)
