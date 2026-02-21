@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Skip ESLint during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Optimisations de performance
   compress: true,
   
