@@ -495,7 +495,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 onToggleSelectMode={toggleSelectMode}
               />
               <div className="hidden sm:block mt-4">
-                <Pagination page={page} limit={limit} total={total} />
+                <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
               </div>
               {/* Compact Pagination for Mobile */}
               {(() => {
@@ -503,27 +503,40 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 const canPrev = page > 1
                 const canNext = page < totalPages
                 
-                if (totalPages <= 1) return null
+                if (totalPages <= 1 && total <= limit) return null
                 
                 return (
-                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page - 1 })}
-                      disabled={!canPrev}
-                    >
-                      ‹
-                    </button>
-                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
-                      {page} / {totalPages}
-                    </span>
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page + 1 })}
-                      disabled={!canNext}
-                    >
-                      ›
-                    </button>
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:hidden">
+                    {totalPages > 1 && (
+                      <>
+                        <button
+                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px]"
+                          onClick={() => applyQuery({ page: page - 1 })}
+                          disabled={!canPrev}
+                        >
+                          ‹
+                        </button>
+                        <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
+                          {page} / {totalPages}
+                        </span>
+                        <button
+                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px]"
+                          onClick={() => applyQuery({ page: page + 1 })}
+                          disabled={!canNext}
+                        >
+                          ›
+                        </button>
+                      </>
+                    )}
+                    {total > limit && (
+                      <button
+                        type="button"
+                        className="px-3 py-2 rounded border text-sm font-medium min-h-[44px] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        onClick={() => applyQuery({ limit: 10000, page: 1 })}
+                      >
+                        {t('common.showAll')}
+                      </button>
+                    )}
                   </div>
                 )
               })()}
@@ -532,7 +545,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             <>
               <SongGallery songs={sortedSongs} hasUser={true} />
               <div className="hidden sm:block mt-4">
-                <Pagination page={page} limit={limit} total={total} />
+                <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
               </div>
               {/* Compact Pagination for Mobile */}
               {(() => {
@@ -540,27 +553,40 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 const canPrev = page > 1
                 const canNext = page < totalPages
                 
-                if (totalPages <= 1) return null
+                if (totalPages <= 1 && total <= limit) return null
                 
                 return (
-                  <div className="flex items-center justify-center gap-2 mt-4 sm:hidden">
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page - 1 })}
-                      disabled={!canPrev}
-                    >
-                      ‹
-                    </button>
-                    <span className="text-sm text-gray-600 whitespace-nowrap font-medium">
-                      {page} / {totalPages}
-                    </span>
-                    <button
-                      className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px]"
-                      onClick={() => applyQuery({ page: page + 1 })}
-                      disabled={!canNext}
-                    >
-                      ›
-                    </button>
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:hidden">
+                    {totalPages > 1 && (
+                      <>
+                        <button
+                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px]"
+                          onClick={() => applyQuery({ page: page - 1 })}
+                          disabled={!canPrev}
+                        >
+                          ‹
+                        </button>
+                        <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
+                          {page} / {totalPages}
+                        </span>
+                        <button
+                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px]"
+                          onClick={() => applyQuery({ page: page + 1 })}
+                          disabled={!canNext}
+                        >
+                          ›
+                        </button>
+                      </>
+                    )}
+                    {total > limit && (
+                      <button
+                        type="button"
+                        className="px-3 py-2 rounded border text-sm font-medium min-h-[44px] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        onClick={() => applyQuery({ limit: 10000, page: 1 })}
+                      >
+                        {t('common.showAll')}
+                      </button>
+                    )}
                   </div>
                 )
               })()}

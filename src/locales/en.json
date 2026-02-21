@@ -30,7 +30,8 @@
     "darkMode": "Dark mode",
     "importUltimateGuitar": "Import Ultimate Guitar",
     "view": "View",
-    "play": "Play"
+    "play": "Play",
+    "showAll": "Show all"
   },
   "navigation": {
     "home": "Home",

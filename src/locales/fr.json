@@ -28,7 +28,8 @@
     "switchToDarkMode": "Passer en mode sombre",
     "lightMode": "Mode clair",
     "darkMode": "Mode sombre",
-    "importUltimateGuitar": "Importer Ultimate Guitar"
+    "importUltimateGuitar": "Importer Ultimate Guitar",
+    "showAll": "Voir tout"
   },
   "navigation": {
     "home": "Accueil",
