@@ -5,6 +5,9 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline'
+
+const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
+const MAX_RECENT_SEARCHES = 10
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -14,7 +17,6 @@ import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
@@ -56,7 +58,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   // Search state
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [isInputFocused, setIsInputFocused] = useState(false)
   
   // Filter state
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
@@ -75,14 +78,55 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
 
-  // Debounced search - update searchQuery after user stops typing
+  // Load recent searches from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(RECENT_SONGS_SEARCHES_KEY)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          setRecentSearches(Array.isArray(parsed) ? parsed : [])
+        } catch (e) {
+          console.error('Error parsing recent songs searches:', e)
+        }
+      }
+    }
+  }, [])
+
+  // Sync state from initialQuery when parent passes new value (e.g. after URL update)
+  useEffect(() => {
+    setLocalSearchValue(initialQuery)
+    setSearchQuery(initialQuery)
+  }, [initialQuery])
+
+  // Debounced search - update searchQuery, save to recent, and sync URL
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearchQuery(localSearchValue)
+      const trimmed = localSearchValue.trim()
+      setSearchQuery(trimmed)
+      if (trimmed) {
+        setRecentSearches(prev => {
+          const filtered = prev.filter(s => s.toLowerCase() !== trimmed.toLowerCase())
+          const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(RECENT_SONGS_SEARCHES_KEY, JSON.stringify(updated))
+          }
+          return updated
+        })
+      }
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      if (trimmed) {
+        params.set('searchQuery', trimmed)
+        params.set('page', '1')
+      } else {
+        params.delete('searchQuery')
+        params.delete('page')
+      }
+      router.push(`${pathname}?${params.toString()}`)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [localSearchValue])
+  }, [localSearchValue, pathname, router, searchParams])
 
   // Handle songId from URL - navigate to song page if present
   useEffect(() => {
@@ -215,10 +259,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return sorted
   }, [filteredSongs, searchQuery, activeTab])
 
-  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc' }) => {
+  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc'; searchQuery?: string }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.delete('q')
-    params.delete('searchQuery')
+    if (next.searchQuery !== undefined) {
+      if (next.searchQuery) params.set('searchQuery', next.searchQuery)
+      else params.delete('searchQuery')
+    }
     if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
@@ -254,19 +301,17 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     setIsSelectMode(prev => !prev)
   }
 
-  // Handle search expansion (mobile)
-  const handleSearchIconClick = () => {
-    setIsSearchExpanded(true)
-    setTimeout(() => {
-      searchInputRef.current?.focus()
-    }, 100)
-  }
-
-  // Handle search clear
   const handleClearSearch = () => {
     setLocalSearchValue('')
     setSearchQuery('')
-    setIsSearchExpanded(false)
+    applyQuery({ searchQuery: '', page: 1 })
+  }
+
+  const handleRecentSearchClick = (query: string) => {
+    setLocalSearchValue(query)
+    setSearchQuery(query)
+    applyQuery({ searchQuery: query, page: 1 })
+    searchInputRef.current?.blur()
   }
 
   // Handle filter apply
@@ -292,112 +337,132 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragEnd={handleDragEnd}
     >
       <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-        {/* Header with Search and Filter Icons */}
-        <div className="mb-4 flex items-center justify-between gap-2">
-          {/* Mobile: Search Icon / Desktop: Search Bar */}
-          <div className="flex-1 flex items-center gap-2">
-            {/* Mobile: Search Icon Button */}
-            {!isSearchExpanded && (
+        {/* Search bar - full width, same style as Search page */}
+        <div className="mb-6 relative">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={localSearchValue}
+              onChange={(e) => setLocalSearchValue(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              placeholder={t('songs.search')}
+              className="block w-full pl-12 pr-12 py-3 sm:py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 dark:text-gray-100"
+            />
+            {localSearchValue && (
               <button
-                onClick={handleSearchIconClick}
-                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Search"
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 min-w-[44px] min-h-[44px] justify-center"
+                aria-label={t('common.clear')}
               >
-                <MagnifyingGlassIcon className="h-5 w-5" />
+                <XMarkIcon className="h-5 w-5" />
               </button>
             )}
-
-            {/* Mobile: Expanded Search / Desktop: Always Visible Search */}
-            <div className={`${isSearchExpanded ? 'flex-1' : 'hidden lg:flex flex-1'} relative`}>
-              <div className="relative w-full">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          </div>
+          {/* Recent searches dropdown */}
+          {isInputFocused && !localSearchValue.trim() && recentSearches.length > 0 && (
+            <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+              <div className="p-2">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-3 py-2">
+                  {t('songs.recentSearches')}
                 </div>
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={t('songs.search')}
-                  value={localSearchValue}
-                  onChange={(e) => setLocalSearchValue(e.target.value)}
-                  onBlur={() => {
-                    // On mobile, collapse search if empty
-                    if (!localSearchValue.trim() && window.innerWidth < 1024) {
-                      setIsSearchExpanded(false)
-                    }
-                  }}
-                  className="pl-9 pr-9"
-                />
-                {localSearchValue && (
+                {recentSearches.map((query, index) => (
                   <button
-                    onClick={handleClearSearch}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    key={index}
                     type="button"
+                    onClick={() => handleRecentSearchClick(query)}
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors min-h-[44px]"
                   >
-                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <ClockIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <span className="truncate">{query}</span>
                   </button>
-                )}
+                ))}
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* View Toggle */}
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
-              <button
-                className={`px-3 py-2 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => applyQuery({ view: 'gallery', page: 1 })}
-                title={t('songs.galleryView')}
-              >
-                <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-              <button
-                className={`px-3 py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => applyQuery({ view: 'table', page: 1 })}
-                title={t('songs.tableView')}
-              >
-                <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Filter Icon Button */}
+        {/* Secondary row: Filter + View toggle - touch-friendly */}
+        <div className="mb-4 flex items-center justify-between gap-2">
           <button
             onClick={() => setIsFilterSheetOpen(true)}
-            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
             aria-label={t('songs.filters')}
           >
             <AdjustmentsHorizontalIcon className="h-5 w-5" />
           </button>
+          <div className="flex items-center gap-1 rounded-full bg-muted/80 dark:bg-gray-800 p-0.5">
+            <button
+              type="button"
+              className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                view === 'gallery'
+                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+              title={t('songs.galleryView')}
+            >
+              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">{t('songs.galleryView')}</span>
+            </button>
+            <button
+              type="button"
+              className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                view === 'table'
+                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => applyQuery({ view: 'table', page: 1 })}
+              title={t('songs.tableView')}
+            >
+              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">{t('songs.tableView')}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Filtering Tabs - Mobile optimized */}
+        {/* Filtering Tabs - segmented control style, touch-friendly */}
         <div className="mb-4 lg:hidden">
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
             <button
+              type="button"
               onClick={() => setActiveTab('all')}
-              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
+                activeTab === 'all'
+                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <MusicalNoteIcon className="h-4 w-4 mr-2" />
+              <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
               <span>{t('songs.all')}</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('recent')}
-              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'recent' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
+                activeTab === 'recent'
+                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <ClockIcon className="h-4 w-4 mr-2" />
+              <ClockIcon className="h-4 w-4 flex-shrink-0" />
               <span>{t('songs.recent')}</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('popular')}
-              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'popular' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
+                activeTab === 'popular'
+                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <FireIcon className="h-4 w-4 mr-2" />
+              <FireIcon className="h-4 w-4 flex-shrink-0" />
               <span>{t('songs.popular')}</span>
             </button>
           </div>
@@ -544,22 +609,32 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         duration={5000}
       />
 
-      {/* Advanced Filter Sheet */}
+      {/* Advanced Filter Sheet - ui-design-toolsbar style */}
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-        <SheetContent side="bottom" className="h-[80vh] max-h-[600px]">
-          <SheetHeader>
-            <SheetTitle>{t('songs.advancedFilters')}</SheetTitle>
+        <SheetContent
+          side="bottom"
+          className="h-[85vh] max-h-[640px] rounded-t-[1.75rem] border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
+        >
+          {/* Drag handle */}
+          <div className="py-3.5 cursor-ns-resize touch-none flex justify-center -mt-1">
+            <div className="w-14 h-1 rounded-full bg-muted-foreground/25" />
+          </div>
+
+          <SheetHeader className="px-1 pb-2">
+            <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
-          
-          <div className="mt-6 space-y-6 overflow-y-auto pb-20">
-            {/* Folder Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="folder">{t('songs.folder')}</Label>
+
+          <div className="space-y-4 overflow-y-auto pb-24 px-1">
+            {/* Folder Selection - card style */}
+            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+              <Label htmlFor="folder" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+                {t('songs.folder')}
+              </Label>
               <Select
                 value={selectedFolder || 'all'}
                 onValueChange={(value) => setSelectedFolder(value === 'all' ? undefined : value)}
               >
-                <SelectTrigger id="folder">
+                <SelectTrigger id="folder" className="h-10 rounded-xl">
                   <SelectValue placeholder={t('songs.allFolders')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -574,14 +649,16 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               </Select>
             </div>
 
-            {/* Sort Field */}
-            <div className="space-y-2">
-              <Label htmlFor="sortField">{t('songs.sortBy')}</Label>
+            {/* Sort Field - card style */}
+            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+                {t('songs.sortBy')}
+              </Label>
               <Select
                 value={sortField}
                 onValueChange={(value) => setSortField(value as SortField)}
               >
-                <SelectTrigger id="sortField">
+                <SelectTrigger id="sortField" className="h-10 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -594,14 +671,16 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               </Select>
             </div>
 
-            {/* Sort Direction */}
-            <div className="space-y-2">
-              <Label htmlFor="sortDirection">{t('songs.sortOrder')}</Label>
+            {/* Sort Direction - card style */}
+            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+                {t('songs.sortOrder')}
+              </Label>
               <Select
                 value={sortDirection}
                 onValueChange={(value) => setSortDirection(value as SortDirection)}
               >
-                <SelectTrigger id="sortDirection">
+                <SelectTrigger id="sortDirection" className="h-10 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -612,11 +691,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </div>
           </div>
 
-          <SheetFooter className="mt-6">
-            <Button variant="outline" onClick={handleClearFilters}>
+          <SheetFooter className="flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+            >
               {t('common.clear')}
             </Button>
-            <Button onClick={handleApplyFilters}>
+            <Button
+              onClick={handleApplyFilters}
+              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+            >
               {t('common.apply')}
             </Button>
           </SheetFooter>
