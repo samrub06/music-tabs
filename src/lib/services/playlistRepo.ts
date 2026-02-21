@@ -3,14 +3,16 @@ import type { Database } from '@/types/db'
 import type { Playlist } from '@/types'
 import type { CreatePlaylistInput } from '@/lib/validation/schemas'
 
-function mapDbPlaylistToDomain(dbPlaylist: Database['public']['Tables']['playlists']['Row']): Playlist {
+function mapDbPlaylistToDomain(dbPlaylist: Database['public']['Tables']['playlists']['Row'] & { image_url?: string | null; is_public?: boolean }): Playlist {
   return {
     id: dbPlaylist.id,
     name: dbPlaylist.name,
     description: dbPlaylist.description || undefined,
     createdAt: new Date(dbPlaylist.created_at),
     updatedAt: new Date(dbPlaylist.updated_at),
-    songIds: dbPlaylist.song_ids || []
+    songIds: dbPlaylist.song_ids || [],
+    imageUrl: dbPlaylist.image_url || undefined,
+    isPublic: dbPlaylist.is_public
   }
 }
 
@@ -117,6 +119,38 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
       songCount: (p.song_ids as string[] || []).length,
       createdAt: new Date(p.created_at)
     }))
+  },
+
+  // Public playlists for Library (no auth required, RLS filters)
+  async getPublicPlaylistsLightweight(): Promise<Array<{ id: string; name: string; imageUrl?: string; songCount: number; createdAt: Date }>> {
+    const { data, error } = await client
+      .from('playlists')
+      .select('id, name, image_url, song_ids, created_at')
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return ((data || []) as Array<{ id: string; name: string; image_url: string | null; song_ids: string[] | null; created_at: string }>).map(p => ({
+      id: p.id,
+      name: p.name,
+      imageUrl: p.image_url || undefined,
+      songCount: (p.song_ids as string[] || []).length,
+      createdAt: new Date(p.created_at)
+    }))
+  },
+
+  async getPublicPlaylist(id: string): Promise<Playlist> {
+    const { data, error } = await client
+      .from('playlists')
+      .select('*')
+      .eq('id', id)
+      .eq('is_public', true)
+      .single()
+
+    if (error || !data) throw new Error('Playlist not found')
+
+    return mapDbPlaylistToDomain(data as Database['public']['Tables']['playlists']['Row'] & { image_url?: string | null; is_public?: boolean })
   }
 })
 

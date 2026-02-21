@@ -180,6 +180,8 @@ export interface Database {
           song_ids: string[]
           created_at: string
           updated_at: string
+          is_public?: boolean
+          image_url?: string | null
         }
         Insert: {
           id?: string

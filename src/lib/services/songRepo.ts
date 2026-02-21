@@ -630,6 +630,32 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .filter((song): song is Song => song !== undefined)
   },
 
+  // For public playlists: fetch songs by IDs without user filter (RLS allows public/trending/own)
+  async getSongsByIdsForPublicPlaylist(songIds: string[]): Promise<Song[]> {
+    if (songIds.length === 0) return []
+
+    const { data, error } = await (client.from('songs') as any)
+      .select('id, title, author, folder_id, created_at, updated_at, key, song_image_url, artist_image_url, view_count, version, version_description, genre')
+      .in('id', songIds)
+
+    if (error) throw error
+
+    const songMap = new Map((data || []).map((dbSong: any) => {
+      const mappedSong = mapDbSongToList(dbSong)
+      return [
+        dbSong.id,
+        {
+          ...mappedSong,
+          key: dbSong.key || undefined
+        }
+      ]
+    }))
+
+    return songIds
+      .map(id => songMap.get(id))
+      .filter((song): song is Song => song !== undefined)
+  },
+
   // Lightweight method for getting minimal song info (for navigation, lists, etc.)
   async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author'> | null> {
     const { data, error } = await (client

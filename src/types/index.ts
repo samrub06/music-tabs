@@ -204,6 +204,8 @@ export interface Playlist {
   createdAt: Date;
   updatedAt: Date;
   songIds: string[];
+  imageUrl?: string;
+  isPublic?: boolean;
 }
 
 export interface ChordData {
