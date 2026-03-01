@@ -133,6 +133,13 @@
     "version": "גרסה",
     "viewCount": "צפיות",
     "createdAt": "תאריך",
+    "easyChord": "אקורד קל",
+    "easyChordAll": "כל השירים",
+    "easyChordOnly": "אקורד קל בלבד",
+    "capo": "קאפו",
+    "capoAny": "הכל",
+    "capoWith": "עם קאפו",
+    "capoWithout": "בלי קאפו",
     "theFolder": "התיקייה",
     "theSong": "השיר"
   },

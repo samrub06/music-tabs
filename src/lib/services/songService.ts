@@ -7,7 +7,15 @@ export const songService = {
   // Récupérer toutes les chansons (sans contenu) avec pagination
   // Si connecté : uniquement les chansons de l'utilisateur
   // Si non connecté : uniquement les chansons publiques (user_id = null)
-  async getAllSongs(clientSupabase?: any, page: number = 1, limit: number = 100, q?: string, orderBy?: 'created_at' | 'updated_at' | 'view_count'): Promise<{ songs: Song[], total: number }> {
+  async getAllSongs(
+    clientSupabase?: any,
+    page: number = 1,
+    limit: number = 100,
+    q?: string,
+    orderBy?: 'created_at' | 'updated_at' | 'view_count',
+    easyChord?: boolean,
+    capoFilter?: 'any' | 'with' | 'without'
+  ): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
       throw new Error('Supabase client is required');
@@ -16,7 +24,7 @@ export const songService = {
     
     let baseQuery = client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, all_chords, tab_id, genre, bpm', { count: 'exact' });
+      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, all_chords, tab_id, genre, bpm', { count: 'exact' });
     
     // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
     if (!user) {
@@ -29,6 +37,18 @@ export const songService = {
     if (q && q.trim()) {
       const query = q.trim()
       baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+    }
+
+    // Filtre accord facile (difficulty easy/facile/beginner)
+    if (easyChord === true) {
+      baseQuery = baseQuery.or('difficulty.ilike.%easy%,difficulty.ilike.%facile%,difficulty.ilike.%beginner%,difficulty.ilike.%débutant%');
+    }
+
+    // Filtre capo : avec capo / sans capo
+    if (capoFilter === 'with') {
+      baseQuery = baseQuery.not('capo', 'is', null).gt('capo', 0);
+    } else if (capoFilter === 'without') {
+      baseQuery = baseQuery.or('capo.is.null,capo.eq.0');
     }
 
     // Pour popular : ne garder que les chansons avec view_count > 0
@@ -57,6 +77,7 @@ export const songService = {
       versionDescription: song.version_description,
       rating: song.rating,
       difficulty: song.difficulty,
+      capo: song.capo ?? undefined,
       artistImageUrl: song.artist_image_url,
       songImageUrl: song.song_image_url,
       viewCount: song.view_count || 0,

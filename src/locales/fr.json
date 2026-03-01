@@ -131,6 +131,13 @@
     "version": "Version",
     "viewCount": "Vues",
     "createdAt": "Date",
+    "easyChord": "Accord facile",
+    "easyChordAll": "Toutes les chansons",
+    "easyChordOnly": "Accord facile uniquement",
+    "capo": "Capodastre",
+    "capoAny": "Toutes",
+    "capoWith": "Avec capo",
+    "capoWithout": "Sans capo",
     "theFolder": "le dossier",
     "theSong": "la chanson"
   },

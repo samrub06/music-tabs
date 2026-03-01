@@ -16,6 +16,8 @@ async function SongsDataLoader({
   initialSongId,
   initialFolder,
   initialSortOrder,
+  easyChord,
+  capoFilter,
 }: {
   page: number
   limit: number
@@ -24,10 +26,12 @@ async function SongsDataLoader({
   initialSongId?: string
   initialFolder?: string
   initialSortOrder?: 'asc' | 'desc'
+  easyChord?: boolean
+  capoFilter?: 'any' | 'with' | 'without'
 }) {
   const supabase = await createSafeServerClient()
   const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
-  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q, orderBy)
+  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q, orderBy, easyChord, capoFilter)
   return { songs, total }
 }
 
@@ -94,7 +98,7 @@ function PlaylistsSkeleton() {
 export default async function SongsData({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string }>
+  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string; easyChord?: string; capo?: string }>
 }) {
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
@@ -106,6 +110,9 @@ export default async function SongsData({
   const initialFolder = params?.folder || undefined
   const initialSortOrder = (params?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
   const view = (params?.view === 'table' ? 'table' : 'table') as 'gallery' | 'table'
+  const easyChord = params?.easyChord === '1' || params?.easyChord === 'true'
+  const capoParam = params?.capo as string | undefined
+  const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'
 
   return (
     <Suspense fallback={<SongsSkeleton />}>
@@ -118,6 +125,8 @@ export default async function SongsData({
         initialSongId={initialSongId}
         initialFolder={initialFolder}
         initialSortOrder={initialSortOrder}
+        easyChord={easyChord}
+        capoFilter={capoFilter}
       />
     </Suspense>
   )
@@ -132,6 +141,8 @@ async function SongsDataWrapper({
   initialSongId,
   initialFolder,
   initialSortOrder,
+  easyChord,
+  capoFilter,
 }: {
   page: number
   limit: number
@@ -141,10 +152,12 @@ async function SongsDataWrapper({
   initialSongId?: string
   initialFolder?: string
   initialSortOrder?: 'asc' | 'desc'
+  easyChord?: boolean
+  capoFilter?: 'any' | 'with' | 'without'
 }) {
   // Stream all data in parallel with Suspense
   const [songsData, foldersData, playlistsData] = await Promise.all([
-    SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder }),
+    SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder, easyChord, capoFilter }),
     FoldersDataLoader(),
     PlaylistsDataLoader(),
   ])
@@ -163,6 +176,8 @@ async function SongsDataWrapper({
       initialSongId={initialSongId}
       initialFolder={initialFolder}
       initialSortOrder={initialSortOrder}
+      initialEasyChord={easyChord}
+      initialCapoFilter={capoFilter}
     />
   )
 }

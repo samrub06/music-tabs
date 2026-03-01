@@ -133,6 +133,13 @@
     "version": "Version",
     "viewCount": "Views",
     "createdAt": "Date",
+    "easyChord": "Easy chord",
+    "easyChordAll": "All songs",
+    "easyChordOnly": "Easy chord only",
+    "capo": "Capo",
+    "capoAny": "Any",
+    "capoWith": "With capo",
+    "capoWithout": "Without capo",
     "theFolder": "the folder",
     "theSong": "the song"
   },
