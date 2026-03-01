@@ -128,18 +128,18 @@ export default function ToolsBottomBar({
         role="separator"
         aria-label="Redimensionner"
         onPointerDown={onPointerDown}
-        className="relative flex items-center justify-center py-3.5 cursor-ns-resize touch-none"
+        className="relative flex items-center justify-center py-6 cursor-ns-resize touch-none min-h-[3.5rem]"
       >
         <div className="w-14 h-1 rounded-full bg-muted-foreground/25" />
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label="Fermer"
         >
-          <XMarkIcon className="h-7 w-7" />
+          <XMarkIcon className="h-8 w-8" />
         </Button>
       </div>
 
