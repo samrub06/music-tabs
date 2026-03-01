@@ -11,7 +11,7 @@ import {
   MusicalNoteIcon,
   ArrowRightIcon,
   CheckIcon,
-  EllipsisVerticalIcon
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import { Button } from '@/components/ui/button';
@@ -59,12 +59,11 @@ export default function SongHeader({
   onToggleToolsBar,
 }: SongHeaderProps) {
   const { t } = useLanguage();
-  const showAddToLibrary = !isInLibrary && onAddToLibrary;
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
-      {/* Row 1: Back, cover+title+artist, prev/next, library check, dropdown (Add to library only) */}
-      <div className="flex items-center justify-between gap-2 p-2 md:p-4 w-full min-w-0">
+      {/* Single row: back, cover+title, auto-scroll, tools, prev/next, saved or add */}
+      <div className="flex items-center justify-between gap-2 p-2 sm:p-3 md:p-4 w-full min-w-0">
         <Button
           variant="ghost"
           size="icon"
@@ -74,21 +73,96 @@ export default function SongHeader({
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </Button>
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          {song.songImageUrl ? (
-            <img src={song.songImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
+
+        {/* Cover + title: from sm = inline; below sm = cover only, title/subtitle in dropdown on click */}
+        <div className="flex items-center gap-2 min-w-0 flex-1 sm:max-w-[50%]">
+          {/* Below sm: cover only, click opens dropdown with title + subtitle + library */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="sm:hidden flex items-center outline-none rounded-lg focus:ring-2 focus:ring-ring focus:ring-offset-2 flex-shrink-0">
+                {song.songImageUrl ? (
+                  <img src={song.songImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-[200px] p-3 sm:hidden">
+              <p className="font-semibold text-sm break-words" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</p>
+              {song.author && (
+                <p className="text-xs text-muted-foreground mt-0.5 break-words" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>{song.author}</p>
+              )}
+              <div className="mt-2 pt-2 border-t border-border">
+                {isInLibrary ? (
+                  <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                    <CheckIcon className="h-4 w-4 flex-shrink-0" />
+                    <span>Dans la bibliothèque</span>
+                  </div>
+                ) : onAddToLibrary ? (
+                  <DropdownMenuItem onClick={onAddToLibrary} className="cursor-pointer">
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Ajouter à la bibliothèque
+                  </DropdownMenuItem>
+                ) : null}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* From sm: cover + title + subtitle always visible */}
+          <div className="hidden sm:flex items-center gap-2 min-w-0 flex-1">
+            {song.songImageUrl ? (
+              <img src={song.songImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm font-bold truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
+              {song.author && (
+                <p className="text-xs text-muted-foreground truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>{song.author}</p>
+              )}
             </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h1 className="text-sm font-bold truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
-            {song.author && (
-              <p className="text-xs text-muted-foreground truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>{song.author}</p>
+          </div>
+        </div>
+
+        {/* Capo: show in header on all breakpoints (including mobile), same height as other buttons (h-10) */}
+        {song.capo !== undefined && song.capo !== null && (
+          <span className="flex-shrink-0 flex items-center h-10 text-xs font-medium text-muted-foreground bg-muted/60 dark:bg-muted/40 px-2.5 rounded-md" title={t('songHeader.capo')}>
+            Capo {song.capo}
+          </span>
+        )}
+
+        {/* Auto-scroll: from md show label "Auto scroll" + play + speed, +/- when playing */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className="hidden md:inline text-xs text-muted-foreground whitespace-nowrap">Auto scroll</span>
+          <div className="flex items-center gap-0.5 border rounded-md px-1 py-0.5">
+            <Button variant={autoScroll.isActive ? 'default' : 'ghost'} size="icon" className="h-9 w-9" onClick={onToggleAutoScroll} title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}>
+              {autoScroll.isActive ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+            </Button>
+            <span className="text-xs font-medium min-w-[2rem] text-center">{autoScroll.speed.toFixed(1)}x</span>
+            {autoScroll.isActive && (
+              <>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}>
+                  <MinusIcon className="h-3 w-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}>
+                  <PlusIcon className="h-3 w-3" />
+                </Button>
+              </>
             )}
           </div>
         </div>
+
+        {/* Tools: icon only below md, icon + "Outils" from md */}
+        {onToggleToolsBar && (
+          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10 md:h-9 md:gap-1.5 md:px-3 md:w-auto md:min-w-0" onClick={() => onToggleToolsBar()} aria-label="Outils" title="Outils">
+            <Cog6ToothIcon className="h-5 w-5 md:h-4 md:w-4" />
+            <span className="hidden md:inline text-sm">Outils</span>
+          </Button>
+        )}
+
         {onPrevSong && onNextSong && (
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="ghost" size="icon" onClick={onPrevSong} disabled={!canPrevSong} className="h-10 w-10" aria-label={t('common.back')}>
@@ -105,49 +179,17 @@ export default function SongHeader({
             </Button>
           </div>
         )}
+        {/* From sm: saved or add to library icon in header */}
         {isInLibrary && (
-          <div className="flex-shrink-0 p-2 text-green-600 dark:text-green-400" title="Dans la bibliothèque">
+          <div className="hidden sm:flex flex-shrink-0 p-2 text-green-600 dark:text-green-400" title="Dans la bibliothèque">
             <CheckIcon className="h-5 w-5" />
           </div>
         )}
-        {showAddToLibrary && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="flex-shrink-0 h-10 w-10" aria-label="Menu">
-                <EllipsisVerticalIcon className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onAddToLibrary}>
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Ajouter à la bibliothèque
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {!isInLibrary && onAddToLibrary && (
+          <Button variant="ghost" size="icon" className="hidden sm:flex flex-shrink-0 h-10 w-10" onClick={onAddToLibrary} aria-label="Ajouter à la bibliothèque" title="Ajouter à la bibliothèque">
+            <PlusIcon className="h-5 w-5" />
+          </Button>
         )}
-      </div>
-
-      {/* Row 2: Auto-scroll + Toggle tools bar only */}
-      <div className="flex items-center gap-2 px-2 pb-2 md:px-4 md:pb-4">
-        <div className="flex items-center gap-0.5 border rounded-md px-1 py-0.5 flex-shrink-0">
-          <Button variant={autoScroll.isActive ? 'default' : 'ghost'} size="icon" className="h-9 w-9" onClick={onToggleAutoScroll} title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}>
-            {autoScroll.isActive ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}>
-            <MinusIcon className="h-3 w-3" />
-          </Button>
-          <span className="text-xs font-medium min-w-[2rem] text-center">{autoScroll.speed.toFixed(1)}x</span>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}>
-            <PlusIcon className="h-3 w-3" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onResetScroll} title="Haut">
-            <span className="text-sm font-bold">↑</span>
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" className="flex-shrink-0 h-9 gap-1" onClick={() => onToggleToolsBar?.()}>
-          <MusicalNoteIcon className="h-4 w-4" />
-          Outils
-        </Button>
       </div>
     </div>
   );
