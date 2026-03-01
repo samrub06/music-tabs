@@ -411,17 +411,17 @@ export default function SongTable({
               )}
               {visibleColumns.includes('key') && (
                 <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="key">🎵 Key</SortButton>
+                  <SortButton field="key">🎵 {t('songs.key')}</SortButton>
                 </th>
               )}
               {visibleColumns.includes('rating') && (
                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="rating">⭐ Rating</SortButton>
+                  <SortButton field="rating">⭐ {t('songs.rating')}</SortButton>
                 </th>
               )}
               {visibleColumns.includes('reviews') && (
                 <th className="hidden xl:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="reviews">👥 Reviews</SortButton>
+                  <SortButton field="reviews">👥 {t('songs.reviews')}</SortButton>
                 </th>
               )}
               {visibleColumns.includes('difficulty') && (

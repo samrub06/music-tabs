@@ -103,7 +103,7 @@ export default function BottomNavigation() {
           <button
             onClick={() => (isCreateMenuOpen ? setIsCreateMenuOpen(false) : setIsCreateMenuOpen(true))}
             className="flex items-center justify-center w-12 h-12 rounded-full transition-transform duration-150 bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 active:scale-90 shadow-lg"
-            aria-label={isCreateMenuOpen ? t('common.close') ?? 'Fermer' : t('common.create')}
+            aria-label={isCreateMenuOpen ? t('common.close') : t('common.create')}
           >
             {isCreateMenuOpen ? <XMarkIcon className="h-6 w-6" /> : <PlusIcon className="h-6 w-6" />}
           </button>

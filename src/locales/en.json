@@ -141,7 +141,17 @@
     "capoWith": "With capo",
     "capoWithout": "Without capo",
     "theFolder": "the folder",
-    "theSong": "the song"
+    "theSong": "the song",
+    "emptyUnorganized": "No songs without folder",
+    "emptyInFolder": "No songs in \"{name}\"",
+    "emptyNoResults": "No songs found",
+    "emptyNoSongs": "No songs",
+    "emptyDescUnorganized": "All your songs are organized in folders",
+    "emptyDescInFolder": "Try selecting another folder or add songs to this folder",
+    "emptyDescNoResults": "Try different keywords",
+    "emptyDescNoSongs": "Start by adding your first song",
+    "viewAllSongs": "View all songs",
+    "confirmDeleteSong": "Are you sure you want to delete this song?"
   },
   "songForm": {
     "addSong": "Add Song",
@@ -172,7 +182,8 @@
     "loading": "Loading...",
     "reviews": "reviews",
     "searchResults": "Results",
-    "selectFiles": "Select one or more text files containing your songs"
+    "selectFiles": "Select one or more text files containing your songs",
+    "search": "Search"
   },
   "songViewer": {
     "chords": "Chords",
@@ -193,12 +204,22 @@
     "failedToSave": "Failed to save song",
     "failedToDelete": "Failed to delete song",
     "invalidUrl": "Invalid URL",
-    "importFailed": "Failed to import song"
+    "importFailed": "Failed to import song",
+    "configError": "Configuration error: Supabase environment variables are not set. Please create a .env.local file with your Supabase keys.",
+    "updateError": "Error updating song.",
+    "playlistGenerationError": "Error generating playlist.",
+    "retrieveError": "Unable to retrieve the song.",
+    "retrieveErrorRetry": "Error retrieving the song. Please try again.",
+    "invalidSongData": "Invalid song data."
   },
   "success": {
     "songSaved": "Song saved successfully",
     "songDeleted": "Song deleted successfully",
     "songImported": "Song imported successfully"
+  },
+  "library": {
+    "recentlyAdded": "Recently added songs",
+    "mostPlayed": "Most played songs"
   },
   "auth": {
     "signIn": "Sign In",
@@ -320,7 +341,9 @@
     "addError": "Error adding song.",
     "enterTitleOrArtist": "Enter a song title or artist name",
     "addingSong": "Adding song...",
-    "songsFound": "Songs found"
+    "songsFound": "Songs found",
+    "noSongsForStyle": "No songs found for this style",
+    "noResultsForAISuggestions": "No search results found for the AI suggestions"
   },
   "folders": {
     "newFolder": "New folder",
@@ -345,7 +368,26 @@
     "noSongsInFolder": "No songs in this folder.",
     "noPlaylist": "No playlist",
     "noRecentSongs": "No recent songs",
-    "noViewData": "No view data available"
+    "noViewData": "No view data available",
+    "noResults": "No folders found",
+    "noFoldersEmpty": "No folders",
+    "tryOtherKeywords": "Try different keywords.",
+    "startByCreating": "Start by creating your first folder.",
+    "viewAllFolders": "View all folders",
+    "name": "Name",
+    "createdAt": "Created",
+    "modifiedAt": "Modified",
+    "folderSelected": "folder selected",
+    "foldersSelected": "folders selected",
+    "deleteSelection": "Delete selection",
+    "deleteAll": "Delete all",
+    "confirmDeleteAllFolders": "Delete all folders?",
+    "confirmDeleteSelectedFolders": "Delete selected folders?",
+    "confirmDeleteFoldersMessageAll": "This will delete all folders. Songs will not be deleted, only removed from their folders.",
+    "confirmDeleteFoldersMessageSelected": "This will delete {count} folder(s). Songs will not be deleted.",
+    "confirmDeleteFolderSingle": "Are you sure you want to delete the folder \"{name}\"? Songs in this folder will not be deleted.",
+    "folderSingular": "folder",
+    "folderPlural": "folders"
   },
   "playlistsPage": {
     "searchPlaceholder": "Search for a playlist...",
@@ -409,7 +451,16 @@
     "noCapo": "No capo",
     "key": "Key:",
     "delete": "Delete",
-    "by": "By"
+    "by": "By",
+    "resize": "Resize",
+    "close": "Close",
+    "keyTranspose": "Key · Transpose",
+    "easyChords": "Easy chords",
+    "fontSize": "Text size",
+    "instrument": "Instrument",
+    "piano": "Piano",
+    "guitar": "Guitar",
+    "edit": "Edit"
   },
   "songContent": {
     "saving": "Saving...",

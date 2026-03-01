@@ -126,7 +126,7 @@ export default function ToolsBottomBar({
     >
       <div
         role="separator"
-        aria-label="Redimensionner"
+        aria-label={t('songHeader.resize')}
         onPointerDown={onPointerDown}
         className="relative flex items-center justify-center py-6 cursor-ns-resize touch-none min-h-[3.5rem]"
       >
@@ -137,7 +137,7 @@ export default function ToolsBottomBar({
           className="absolute right-3 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
           onClick={(e) => { e.stopPropagation(); onClose(); }}
           onPointerDown={(e) => e.stopPropagation()}
-          aria-label="Fermer"
+          aria-label={t('songHeader.close')}
         >
           <XMarkIcon className="h-8 w-8" />
         </Button>
@@ -149,7 +149,7 @@ export default function ToolsBottomBar({
           <div className="flex flex-wrap gap-3 items-end">
             {(song.firstChord || song.key) && (
               <div className="flex-1 min-w-[180px]">
-                <p className={labelClass}>{t('songHeader.key')} · Transpose</p>
+                <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
                 <div className="flex gap-2 items-center">
                   <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
                     <SelectTrigger className="flex-1 h-10 rounded-xl border border-amber-200/80 dark:border-amber-700/50 bg-background/50 focus:ring-amber-500/20">
@@ -176,12 +176,12 @@ export default function ToolsBottomBar({
             {!hasOnlyEasyChords && (
               <div className={song.firstChord || song.key ? 'flex-shrink-0' : 'w-full'}>
                 <button type="button" onClick={onToggleEasyChordMode} className={`rounded-xl py-2.5 text-sm font-medium transition-all min-h-[2.5rem] ${song.firstChord || song.key ? 'px-4' : 'w-full'} ${easyChordMode ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
-                  Accords faciles
+                  {t('songHeader.easyChords')}
                 </button>
               </div>
             )}
           </div>
-          <p className={`${labelClass} mt-3`}>Taille du texte</p>
+          <p className={`${labelClass} mt-3`}>{t('songHeader.fontSize')}</p>
           <div className="flex items-center justify-center gap-3">
             <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10} className="h-9 w-9 rounded-xl shrink-0">
               <MinusIcon className="h-4 w-4" />
@@ -196,7 +196,7 @@ export default function ToolsBottomBar({
           </div>
         </div>
         <div className={cardClass}>
-          <p className={labelClass}>Capo</p>
+          <p className={labelClass}>{t('songHeader.capo')}</p>
           {song.capo !== undefined && song.capo !== null ? (
             <div className={segmentClass}>
               <button type="button" onClick={() => onToggleCapo(true)} className={segmentOptionClass(useCapo)}>Capo {song.capo}</button>
@@ -207,24 +207,23 @@ export default function ToolsBottomBar({
           )}
         </div>
 
-        {/* Piano, Guitare, Éditer, Supprimer */}
         <div className={cardClass}>
-          <p className={labelClass}>Instrument</p>
+          <p className={labelClass}>{t('songHeader.instrument')}</p>
           <div className={segmentClass}>
             <button type="button" onClick={() => onSetSelectedInstrument('piano')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'piano' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-              <Piano className="h-4 w-4 shrink-0" /> Piano
+              <Piano className="h-4 w-4 shrink-0" /> {t('songHeader.piano')}
             </button>
             <button type="button" onClick={() => onSetSelectedInstrument('guitar')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'guitar' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-              <Guitar className="h-4 w-4 shrink-0" /> Guitare
+              <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
             </button>
           </div>
         </div>
         <div className="flex gap-2.5 pt-0.5">
           <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
-            <PencilIcon className="h-4 w-4 mr-1.5" /> Éditer
+            <PencilIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.edit')}
           </Button>
           <Button variant="destructive" size="sm" onClick={onDelete} className="h-10 rounded-xl font-medium px-4">
-            <TrashIcon className="h-4 w-4 mr-1.5" /> Supprimer
+            <TrashIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.delete')}
           </Button>
         </div>
       </div>

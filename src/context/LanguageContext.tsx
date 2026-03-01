@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
 
 type Language = 'en' | 'fr' | 'he';
 
@@ -23,8 +23,26 @@ const translations = {
   he: heTranslations,
 };
 
+const STORAGE_KEY = 'language';
+
+function getStoredLanguage(): Language {
+  if (typeof window === 'undefined') return 'en';
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === 'fr' || stored === 'he' || stored === 'en') return stored;
+  return 'en';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>('en');
+
+  useEffect(() => {
+    setLanguageState(getStoredLanguage());
+  }, []);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    if (typeof window !== 'undefined') localStorage.setItem(STORAGE_KEY, lang);
+  };
 
   const t = (key: string): string => {
     const keys = key.split('.');

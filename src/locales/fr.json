@@ -139,7 +139,17 @@
     "capoWith": "Avec capo",
     "capoWithout": "Sans capo",
     "theFolder": "le dossier",
-    "theSong": "la chanson"
+    "theSong": "la chanson",
+    "emptyUnorganized": "Aucune chanson sans dossier",
+    "emptyInFolder": "Aucune chanson dans \"{name}\"",
+    "emptyNoResults": "Aucune chanson trouvée",
+    "emptyNoSongs": "Aucune chanson",
+    "emptyDescUnorganized": "Toutes vos chansons sont organisées dans des dossiers",
+    "emptyDescInFolder": "Essayez de sélectionner un autre dossier ou ajoutez des chansons à ce dossier",
+    "emptyDescNoResults": "Essayez avec d'autres mots-clés",
+    "emptyDescNoSongs": "Commencez par ajouter votre première chanson",
+    "viewAllSongs": "Voir toutes les chansons",
+    "confirmDeleteSong": "Êtes-vous sûr de vouloir supprimer cette chanson ?"
   },
   "songForm": {
     "addSong": "Ajouter une chanson",
@@ -170,7 +180,8 @@
     "loading": "Chargement...",
     "reviews": "avis",
     "searchResults": "Résultats",
-    "selectFiles": "Sélectionnez un ou plusieurs fichiers texte contenant vos chansons"
+    "selectFiles": "Sélectionnez un ou plusieurs fichiers texte contenant vos chansons",
+    "search": "Rechercher"
   },
   "songViewer": {
     "chords": "Accords",
@@ -191,12 +202,22 @@
     "failedToSave": "Échec de l'enregistrement de la chanson",
     "failedToDelete": "Échec de la suppression de la chanson",
     "invalidUrl": "URL invalide",
-    "importFailed": "Échec de l'importation de la chanson"
+    "importFailed": "Échec de l'importation de la chanson",
+    "configError": "Erreur de configuration : Les variables d'environnement Supabase ne sont pas configurées. Veuillez créer un fichier .env.local avec vos clés Supabase.",
+    "updateError": "Erreur lors de la mise à jour de la chanson.",
+    "playlistGenerationError": "Erreur lors de la génération de la playlist.",
+    "retrieveError": "Impossible de récupérer la chanson.",
+    "retrieveErrorRetry": "Erreur lors de la récupération de la chanson. Veuillez réessayer.",
+    "invalidSongData": "Données de chanson invalides."
   },
   "success": {
     "songSaved": "Chanson enregistrée avec succès",
     "songDeleted": "Chanson supprimée avec succès",
     "songImported": "Chanson importée avec succès"
+  },
+  "library": {
+    "recentlyAdded": "Dernières chansons ajoutées",
+    "mostPlayed": "Chansons les plus écoutées"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -318,7 +339,9 @@
     "addError": "Impossible de récupérer la chanson.",
     "enterTitleOrArtist": "Entrez un titre de chanson ou un nom d'artiste",
     "addingSong": "Ajout de la chanson...",
-    "songsFound": "Chansons trouvées"
+    "songsFound": "Chansons trouvées",
+    "noSongsForStyle": "Aucune chanson trouvée pour ce style",
+    "noResultsForAISuggestions": "Aucun résultat pour les suggestions de l'IA"
   },
   "folders": {
     "newFolder": "Nouveau dossier",
@@ -343,7 +366,26 @@
     "noSongsInFolder": "Aucune chanson dans ce dossier.",
     "noPlaylist": "Aucune playlist",
     "noRecentSongs": "Aucune chanson récente",
-    "noViewData": "Aucune donnée de vues disponible"
+    "noViewData": "Aucune donnée de vues disponible",
+    "noResults": "Aucun dossier trouvé",
+    "noFoldersEmpty": "Aucun dossier",
+    "tryOtherKeywords": "Essayez avec d'autres mots-clés",
+    "startByCreating": "Commencez par créer votre premier dossier",
+    "viewAllFolders": "Voir tous les dossiers",
+    "name": "Nom",
+    "createdAt": "Créé le",
+    "modifiedAt": "Modifié le",
+    "folderSelected": "dossier sélectionné",
+    "foldersSelected": "dossiers sélectionnés",
+    "deleteSelection": "Supprimer la sélection",
+    "deleteAll": "Tout supprimer",
+    "confirmDeleteAllFolders": "Supprimer tous les dossiers ?",
+    "confirmDeleteSelectedFolders": "Supprimer les dossiers sélectionnés ?",
+    "confirmDeleteFoldersMessageAll": "Cette action supprimera tous les dossiers. Les chansons ne seront pas supprimées, elles seront simplement retirées de leurs dossiers.",
+    "confirmDeleteFoldersMessageSelected": "Cette action supprimera {count} dossier(s). Les chansons ne seront pas supprimées.",
+    "confirmDeleteFolderSingle": "Êtes-vous sûr de vouloir supprimer le dossier \"{name}\" ? Les chansons dans ce dossier ne seront pas supprimées.",
+    "folderSingular": "dossier",
+    "folderPlural": "dossiers"
   },
   "playlistsPage": {
     "searchPlaceholder": "Rechercher une playlist...",
@@ -407,7 +449,16 @@
     "noCapo": "Sans capo",
     "key": "Tonalité :",
     "delete": "Supprimer",
-    "by": "Par"
+    "by": "Par",
+    "resize": "Redimensionner",
+    "close": "Fermer",
+    "keyTranspose": "Tonalité · Transposer",
+    "easyChords": "Accords faciles",
+    "fontSize": "Taille du texte",
+    "instrument": "Instrument",
+    "piano": "Piano",
+    "guitar": "Guitare",
+    "edit": "Éditer"
   },
   "songContent": {
     "saving": "Sauvegarde...",

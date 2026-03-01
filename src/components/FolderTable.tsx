@@ -7,6 +7,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline'
 import React, { useMemo, useState } from 'react'
+import { useLanguage } from '@/context/LanguageContext'
 import FolderTableHeader from './folder-table/FolderTableHeader'
 import FolderTableRow from './folder-table/FolderTableRow'
 import FolderTableEmptyState from './folder-table/FolderTableEmptyState'
@@ -31,6 +32,7 @@ export default function FolderTable({
   onDelete,
   onDeleteMultiple
 }: FolderTableProps) {
+  const { t } = useLanguage()
   const [sortField, setSortField] = useState<SortField>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set())
@@ -189,16 +191,16 @@ export default function FolderTable({
                 />
               </th>
               <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <SortButton field="name">Nom</SortButton>
+                <SortButton field="name">{t('folders.name')}</SortButton>
               </th>
               <th className="hidden sm:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <SortButton field="songCount">Chansons</SortButton>
+                <SortButton field="songCount">{t('folders.songCount')}</SortButton>
               </th>
               <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <SortButton field="createdAt">Créé le</SortButton>
+                <SortButton field="createdAt">{t('folders.createdAt')}</SortButton>
               </th>
               <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <SortButton field="updatedAt">Modifié le</SortButton>
+                <SortButton field="updatedAt">{t('folders.modifiedAt')}</SortButton>
               </th>
             </tr>
           </thead>
@@ -239,28 +241,27 @@ export default function FolderTable({
                 <TrashIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-4">
-                {deleteType === 'all' ? 'Supprimer tous les dossiers ?' : 'Supprimer les dossiers sélectionnés ?'}
+                {deleteType === 'all' ? t('folders.confirmDeleteAllFolders') : t('folders.confirmDeleteSelectedFolders')}
               </h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {deleteType === 'all' 
-                    ? 'Cette action supprimera tous les dossiers. Les chansons ne seront pas supprimées, elles seront simplement retirées de leurs dossiers.'
-                    : `Cette action supprimera ${selectedFolders.size} ${selectedFolders.size === 1 ? 'dossier' : 'dossiers'}. Les chansons ne seront pas supprimées, elles seront simplement retirées de leurs dossiers.`
-                  }
+                  {deleteType === 'all'
+                    ? t('folders.confirmDeleteFoldersMessageAll')
+                    : t('folders.confirmDeleteFoldersMessageSelected').replace('{count}', String(selectedFolders.size))}
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-4">
                 <button
                   onClick={cancelBulkDelete}
-                  className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-lg shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-[52px] sm:min-h-0"
+                  className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-base font-medium rounded-lg shadow-sm hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-[52px] sm:min-h-0"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={confirmBulkDelete}
                   className="px-6 py-3 sm:px-4 sm:py-2 bg-red-600 text-white text-base font-medium rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[52px] sm:min-h-0"
                 >
-                  Supprimer
+                  {t('common.delete')}
                 </button>
               </div>
             </div>

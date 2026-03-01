@@ -17,6 +17,7 @@ import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
 import { recordSongViewAction } from '@/app/song/[id]/actions';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -38,6 +39,7 @@ export default function SongViewerContainerSSR({
   initialInstrument
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Local state instead of AppContext; initial value from user profile preference
   const [selectedInstrument, setSelectedInstrument] = useState<'piano' | 'guitar'>(initialInstrument ?? 'piano');
@@ -130,7 +132,7 @@ export default function SongViewerContainerSSR({
     handleSave,
     handleCancelEdit,
     handleToggleEdit
-  } = useSongEditor({ song, updateSong: onUpdate });
+  } = useSongEditor({ song, updateSong: onUpdate, getMessage: t });
 
   const { selectedChord, showChordDiagram, handleChordClick, handleCloseChordDiagram } = useChordDiagram();
   
@@ -247,7 +249,7 @@ export default function SongViewerContainerSSR({
 
   // Business logic handlers
   const handleDelete = () => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette chanson ?')) {
+    if (confirm(t('songs.confirmDeleteSong'))) {
       onDelete(song.id);
       router.push('/songs');
     }

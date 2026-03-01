@@ -141,7 +141,17 @@
     "capoWith": "עם קאפו",
     "capoWithout": "בלי קאפו",
     "theFolder": "התיקייה",
-    "theSong": "השיר"
+    "theSong": "השיר",
+    "emptyUnorganized": "אין שירים ללא תיקייה",
+    "emptyInFolder": "אין שירים ב\"{name}\"",
+    "emptyNoResults": "לא נמצאו שירים",
+    "emptyNoSongs": "אין שירים",
+    "emptyDescUnorganized": "כל השירים שלך מאורגנים בתיקיות",
+    "emptyDescInFolder": "נסה לבחור תיקייה אחרת או להוסיף שירים לתיקייה זו",
+    "emptyDescNoResults": "נסה מילות חיפוש אחרות",
+    "emptyDescNoSongs": "התחל בהוספת השיר הראשון שלך",
+    "viewAllSongs": "הצג את כל השירים",
+    "confirmDeleteSong": "האם אתה בטוח שברצונך למחוק את השיר הזה?"
   },
   "songForm": {
     "addSong": "הוסף שיר",
@@ -172,7 +182,8 @@
     "loading": "טוען...",
     "reviews": "ביקורות",
     "searchResults": "תוצאות",
-    "selectFiles": "בחר קובץ טקסט אחד או יותר המכיל את השירים שלך"
+    "selectFiles": "בחר קובץ טקסט אחד או יותר המכיל את השירים שלך",
+    "search": "חפש"
   },
   "songViewer": {
     "chords": "אקורדים",
@@ -193,12 +204,22 @@
     "failedToSave": "נכשל בשמירת השיר",
     "failedToDelete": "נכשל במחיקת השיר",
     "invalidUrl": "URL לא תקין",
-    "importFailed": "נכשל בייבוא השיר"
+    "importFailed": "נכשל בייבוא השיר",
+    "configError": "שגיאת תצורה: משתני הסביבה של Supabase לא הוגדרו. אנא צור קובץ .env.local עם המפתחות שלך.",
+    "updateError": "שגיאה בעדכון השיר.",
+    "playlistGenerationError": "שגיאה ביצירת הפלייליסט.",
+    "retrieveError": "לא ניתן לאחזר את השיר.",
+    "retrieveErrorRetry": "שגיאה באחזור השיר. אנא נסה שוב.",
+    "invalidSongData": "נתוני שיר לא תקינים."
   },
   "success": {
     "songSaved": "השיר נשמר בהצלחה",
     "songDeleted": "השיר נמחק בהצלחה",
     "songImported": "השיר יובא בהצלחה"
+  },
+  "library": {
+    "recentlyAdded": "שירים שנוספו לאחרונה",
+    "mostPlayed": "השירים המושמעים ביותר"
   },
   "auth": {
     "signIn": "התחבר",
@@ -320,7 +341,9 @@
     "addError": "שגיאה בהוספת השיר.",
     "enterTitleOrArtist": "הכנס כותרת שיר או שם אמן",
     "addingSong": "מוסיף שיר...",
-    "songsFound": "שירים שנמצאו"
+    "songsFound": "שירים שנמצאו",
+    "noSongsForStyle": "לא נמצאו שירים לסגנון זה",
+    "noResultsForAISuggestions": "לא נמצאו תוצאות להצעות ה-AI"
   },
   "folders": {
     "newFolder": "תיקייה חדשה",
@@ -345,7 +368,26 @@
     "noSongsInFolder": "אין שירים בתיקייה זו.",
     "noPlaylist": "אין פלייליסט",
     "noRecentSongs": "אין שירים אחרונים",
-    "noViewData": "אין נתוני צפיות זמינים"
+    "noViewData": "אין נתוני צפיות זמינים",
+    "noResults": "לא נמצאו תיקיות",
+    "noFoldersEmpty": "אין תיקיות",
+    "tryOtherKeywords": "נסה מילות חיפוש אחרות.",
+    "startByCreating": "התחל ביצירת התיקייה הראשונה שלך.",
+    "viewAllFolders": "הצג את כל התיקיות",
+    "name": "שם",
+    "createdAt": "נוצר",
+    "modifiedAt": "עודכן",
+    "folderSelected": "תיקייה נבחרה",
+    "foldersSelected": "תיקיות נבחרו",
+    "deleteSelection": "מחק בחירה",
+    "deleteAll": "מחק הכל",
+    "confirmDeleteAllFolders": "מחק את כל התיקיות?",
+    "confirmDeleteSelectedFolders": "מחק תיקיות נבחרות?",
+    "confirmDeleteFoldersMessageAll": "פעולה זו תמחק את כל התיקיות. השירים לא יימחקו, רק יוסרו מהתיקיות שלהם.",
+    "confirmDeleteFoldersMessageSelected": "פעולה זו תמחק {count} תיקייה/ות. השירים לא יימחקו.",
+    "confirmDeleteFolderSingle": "האם אתה בטוח שברצונך למחוק את התיקייה \"{name}\"? השירים בתיקייה זו לא יימחקו.",
+    "folderSingular": "תיקייה",
+    "folderPlural": "תיקיות"
   },
   "playlistsPage": {
     "searchPlaceholder": "חפש פלייליסט...",
@@ -409,7 +451,16 @@
     "noCapo": "ללא קאפו",
     "key": "טון:",
     "delete": "מחק",
-    "by": "על ידי"
+    "by": "על ידי",
+    "resize": "שנה גודל",
+    "close": "סגור",
+    "keyTranspose": "טון · העבר",
+    "easyChords": "אקורדים קלים",
+    "fontSize": "גודל טקסט",
+    "instrument": "כלי נגינה",
+    "piano": "פסנתר",
+    "guitar": "גיטרה",
+    "edit": "ערוך"
   },
   "songContent": {
     "saving": "שומר...",

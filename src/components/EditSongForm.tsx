@@ -66,11 +66,10 @@ export default function EditSongForm({ isOpen, onClose, song, folders = [], onUp
     } catch (error: any) {
       console.error('Error updating song:', error);
       
-      // Vérifier si c'est un problème de configuration Supabase
       if (error.message && error.message.includes('Invalid API key')) {
-        alert('Erreur de configuration : Les variables d\'environnement Supabase ne sont pas configurées. Veuillez créer un fichier .env.local avec vos clés Supabase.');
+        alert(t('errors.configError'));
       } else {
-        alert(`Erreur lors de la mise à jour de la chanson: ${error.message || error}`);
+        alert(t('errors.updateError') + (error?.message ? ` ${error.message}` : ''));
       }
     } finally {
       setIsLoading(false);

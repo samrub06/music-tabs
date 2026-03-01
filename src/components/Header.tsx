@@ -101,7 +101,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <MagnifyingGlassIcon className="h-5 w-5" />
-                  <span>Search</span>
+                  <span>{t('navigation.search')}</span>
                 </Link>
                 <Link
                   href="/songs"
@@ -109,7 +109,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <RectangleStackIcon className="h-5 w-5" />
-                  <span>Songs</span>
+                  <span>{t('navigation.songs')}</span>
                 </Link>
                 <Link
                   href="/folders"
@@ -117,7 +117,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <FolderIcon className="h-5 w-5" />
-                  <span>Folders</span>
+                  <span>{t('navigation.folders')}</span>
                 </Link>
                 <Link
                   href="/chords"
@@ -125,7 +125,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <MusicalNoteIcon className="h-5 w-5" />
-                  <span>Chords</span>
+                  <span>{t('navigation.chords')}</span>
                 </Link>
                 <Link
                   href="/leaderboard"
@@ -133,7 +133,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <TrophyIcon className="h-5 w-5" />
-                  <span>Leaderboard</span>
+                  <span>{t('navigation.leaderboard')}</span>
                 </Link>
               </nav>
             )}
@@ -201,7 +201,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               <Link
                 href="/leaderboard"
                 className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Leaderboard"
+                aria-label={t('navigation.leaderboard')}
               >
                 <TrophyIcon className="h-6 w-6" />
               </Link>

@@ -76,7 +76,7 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
       onClose();
     } catch (error) {
       console.error('Error adding song:', error);
-      const errorMessage = error instanceof Error ? error.message : '❌ Error adding song. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : t('search.addError');
       setMessage({ type: 'error', text: errorMessage });
     } finally {
       setIsSaving(false);
@@ -129,7 +129,7 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
   // Recherche automatique qui détecte la langue
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      alert('Veuillez entrer un titre ou un artiste à rechercher.');
+      alert(t('search.enterTitleOrArtist'));
       return;
     }
 
@@ -148,17 +148,11 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
         setSearchResults(data.results);
         setShowSearchResults(true);
       } else {
-        const errorMsg = isHebrewText 
-          ? data.error || 'לא נמצאו תוצאות ב-Tab4U.'
-          : data.error || 'Aucune partition trouvée.';
-        alert(errorMsg);
+        alert(data.error || t('search.searchError'));
       }
     } catch (error) {
       console.error('Error searching:', error);
-      const errorMsg = isHebrewText 
-        ? 'שגיאה בחיפוש. נסה שוב.'
-        : 'Erreur lors de la recherche. Veuillez réessayer.';
-      alert(errorMsg);
+      alert(t('search.searchError'));
     } finally {
       setIsSearching(false);
     }
@@ -182,11 +176,11 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
         const payload = buildNewSongDataFromScrape(data.song, searchResult, formData.folderId);
         await handleDirectSave(payload);
       } else {
-        setMessage({ type: 'error', text: data.error || '❌ Unable to retrieve the song.' });
+        setMessage({ type: 'error', text: data.error || t('errors.retrieveError') });
       }
     } catch (error) {
       console.error('Error fetching song:', error);
-      setMessage({ type: 'error', text: '❌ Error retrieving the song. Please try again.' });
+      setMessage({ type: 'error', text: t('errors.retrieveErrorRetry') });
     } finally {
       setIsSearching(false);
     }
@@ -199,8 +193,8 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
     folderId?: string
   ): NewSongData {
     return {
-      title: (scraped.title || result?.title || 'Unknown title').trim(),
-      author: (scraped.author || result?.author || 'Unknown artist').trim(),
+      title: (scraped.title || result?.title || t('songs.unknownTitle')).trim(),
+      author: (scraped.author || result?.author || t('songs.unknownArtist')).trim(),
       content: (scraped as any).content || '',
       folderId: folderId || undefined,
       reviews: (result?.reviews ?? scraped.reviews) || 0,
@@ -224,7 +218,7 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
   // Direct save function for scraped songs
   const handleDirectSave = async (songData: NewSongData) => {
     if (!songData.title.trim() || !songData.content.trim()) {
-      setMessage({ type: 'error', text: 'Données de chanson invalides.' });
+      setMessage({ type: 'error', text: t('errors.invalidSongData') });
       return;
     }
 
@@ -319,7 +313,7 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
                   className="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <span className="text-lg">🔍</span>
-                  {isSearching ? t('songForm.loading') : 'Rechercher'}
+                  {isSearching ? t('songForm.loading') : t('songForm.search')}
                 </button>
               </div>
 

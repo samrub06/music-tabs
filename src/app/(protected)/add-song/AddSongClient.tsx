@@ -139,11 +139,11 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
         const newSong = await addSongAction(normalizedPayload)
         router.push(`/song/${newSong.id}`)
       } else {
-        setMessage({ type: 'error', text: data.error || '❌ Unable to retrieve the song.' })
+        setMessage({ type: 'error', text: data.error || t('errors.retrieveError') })
       }
     } catch (error) {
       console.error('Error fetching song:', error)
-      const errorMessage = error instanceof Error ? error.message : '❌ Error retrieving the song. Please try again.'
+      const errorMessage = error instanceof Error ? error.message : t('errors.retrieveErrorRetry')
       setMessage({ type: 'error', text: errorMessage })
     } finally {
       setIsSaving(false)

@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Song } from '@/types'
+import { useLanguage } from '@/context/LanguageContext'
 import LibraryGridSection, { type PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 import FeaturedSongCard from '@/components/library/FeaturedSongCard'
 import HorizontalSongSlider from '@/components/library/HorizontalSongSlider'
@@ -26,6 +27,7 @@ export default function LibrarySpotifyClient({
   userId
 }: LibrarySpotifyClientProps) {
   const router = useRouter()
+  const { t } = useLanguage()
   const [cloningId, setCloningId] = useState<string | null>(null)
 
   const handleAddToLibrary = useCallback(async (song: Song) => {
@@ -64,20 +66,18 @@ export default function LibrarySpotifyClient({
           />
         )}
 
-        {/* Section 3: Dernières chansons ajoutées */}
         {recentSongs.length > 0 && (
           <HorizontalSongSlider
-            title="Dernières chansons ajoutées"
+            title={t('library.recentlyAdded')}
             songs={recentSongs}
             onAddClick={handleAddToLibrary}
             addingId={cloningId}
           />
         )}
 
-        {/* Section 4: Chansons les plus écoutées */}
         {popularSongs.length > 0 && (
           <HorizontalSongSlider
-            title="Chansons les plus écoutées"
+            title={t('library.mostPlayed')}
             songs={popularSongs}
             onAddClick={handleAddToLibrary}
             addingId={cloningId}

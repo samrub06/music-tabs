@@ -1,9 +1,10 @@
 'use client'
 
 import { Folder } from '@/types'
-import { FolderIcon, FolderOpenIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface FolderTableRowProps {
   folder: Folder
@@ -31,8 +32,11 @@ export default function FolderTableRow({
   hasUser
 }: FolderTableRowProps) {
   const router = useRouter()
+  const { t, language } = useLanguage()
   const [editName, setEditName] = useState(folder.name)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const dateLocale = language === 'fr' ? 'fr-FR' : language === 'he' ? 'he-IL' : 'en-US'
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -72,7 +76,7 @@ export default function FolderTableRow({
   }
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
+    return new Date(date).toLocaleDateString(dateLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -125,19 +129,19 @@ export default function FolderTableRow({
                       onStartEdit(folder.id)
                     }}
                     className="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 rounded"
-                    title="Renommer"
+                    title={t('sidebar.rename')}
                   >
                     <PencilIcon className="h-4 w-4" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      if (confirm(`Êtes-vous sûr de vouloir supprimer le dossier "${folder.name}" ? Les chansons dans ce dossier ne seront pas supprimées.`)) {
+                      if (confirm(t('folders.confirmDeleteFolderSingle').replace('{name}', folder.name))) {
                         onDelete(folder.id)
                       }
                     }}
                     className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded"
-                    title="Supprimer"
+                    title={t('common.delete')}
                   >
                     <TrashIcon className="h-4 w-4" />
                   </button>
@@ -150,7 +154,7 @@ export default function FolderTableRow({
 
       {/* Song count column */}
       <td className="hidden sm:table-cell px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-        {songCount} {songCount === 1 ? 'chanson' : 'chansons'}
+        {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
       </td>
 
       {/* Created date column */}

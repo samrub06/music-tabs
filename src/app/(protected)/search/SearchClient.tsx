@@ -190,7 +190,7 @@ export default function SearchClient({
         const aiResult = await searchSongsByStyleAction(query.trim())
         
         if (!aiResult.success || aiResult.songs.length === 0) {
-          setMessage({ type: 'error', text: aiResult.error || 'No songs found for this style' })
+          setMessage({ type: 'error', text: aiResult.error || t('search.noSongsForStyle') })
           setSearchResults([])
           setExistingSongs(new Map())
           setIsSearching(false)
@@ -214,7 +214,7 @@ export default function SearchClient({
           saveToRecentSearches(query.trim())
           await checkExistingSongs(allResults)
         } else {
-          setMessage({ type: 'error', text: 'No search results found for the AI suggestions' })
+          setMessage({ type: 'error', text: t('search.noResultsForAISuggestions') })
           setSearchResults([])
           setExistingSongs(new Map())
         }

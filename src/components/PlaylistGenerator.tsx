@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { PlaylistResult, generatePlaylistSequence, getRandomSongs } from '@/lib/services/playlistGeneratorService';
 import { Song, Folder } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PlaylistGeneratorProps {
   songs: Song[];
@@ -20,7 +21,7 @@ interface PlaylistGeneratorProps {
 }
 
 export default function PlaylistGenerator({ songs, folders, onPlaylistGenerated }: PlaylistGeneratorProps) {
-  
+  const { t } = useLanguage();
   const [targetKey, setTargetKey] = useState('');
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   const [selectedSongs, setSelectedSongs] = useState<string[]>([]);
@@ -106,7 +107,7 @@ export default function PlaylistGenerator({ songs, folders, onPlaylistGenerated 
       onPlaylistGenerated(result);
     } catch (error) {
       console.error('Error generating playlist:', error);
-      alert('Erreur lors de la génération de la playlist');
+      alert(t('errors.playlistGenerationError'));
     } finally {
       setIsGenerating(false);
     }

@@ -5,9 +5,10 @@ import { renderStructuredSong } from '@/utils/structuredSong';
 interface UseSongEditorProps {
   song: Song;
   updateSong: (id: string, data: SongEditData) => Promise<void>;
+  getMessage?: (key: string) => string;
 }
 
-export function useSongEditor({ song, updateSong }: UseSongEditorProps) {
+export function useSongEditor({ song, updateSong, getMessage }: UseSongEditorProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +55,7 @@ export function useSongEditor({ song, updateSong }: UseSongEditorProps) {
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving song:', error);
-      alert('Erreur lors de la sauvegarde de la chanson');
+      alert(getMessage ? getMessage('errors.failedToSave') : 'Failed to save song.');
     } finally {
       setIsSaving(false);
     }
