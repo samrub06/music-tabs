@@ -317,7 +317,8 @@
     "addSuccess": "Chanson ajoutée avec succès !",
     "addError": "Impossible de récupérer la chanson.",
     "enterTitleOrArtist": "Entrez un titre de chanson ou un nom d'artiste",
-    "addingSong": "Ajout de la chanson..."
+    "addingSong": "Ajout de la chanson...",
+    "songsFound": "Chansons trouvées"
   },
   "folders": {
     "newFolder": "Nouveau dossier",

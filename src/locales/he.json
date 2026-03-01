@@ -319,7 +319,8 @@
     "addSuccess": "שיר נוסף בהצלחה!",
     "addError": "שגיאה בהוספת השיר.",
     "enterTitleOrArtist": "הכנס כותרת שיר או שם אמן",
-    "addingSong": "מוסיף שיר..."
+    "addingSong": "מוסיף שיר...",
+    "songsFound": "שירים שנמצאו"
   },
   "folders": {
     "newFolder": "תיקייה חדשה",

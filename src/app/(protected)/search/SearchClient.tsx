@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon, ClockIcon, PlusIcon, ArrowRightIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, ClockIcon, PlusIcon, PlayIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
@@ -10,6 +10,7 @@ import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
 import type { NewSongData } from '@/types'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 import type { Song } from '@/types'
 import type { ReactNode } from 'react'
@@ -405,13 +406,13 @@ export default function SearchClient({
   const showLibrarySections = !searchQuery.trim() && !isInputFocused
 
   return (
-    <div className="p-4 sm:p-6 lg:px-0 lg:py-8 overflow-y-auto min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0">
+    <div className="p-4 pt-8 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 overflow-y-auto min-h-screen bg-background overflow-x-hidden">
+      <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0 pb-24 lg:pb-10">
         {/* Search Input - Full Width */}
         <div className="mb-6 relative">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
             </div>
             <input
               ref={searchInputRef}
@@ -422,10 +423,10 @@ export default function SearchClient({
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               placeholder={isAIMode ? 'Describe a musical style...' : t('search.searchPlaceholder')}
-              className={`block w-full pl-12 pr-24 py-4 border rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 text-base transition-colors ${
+              className={`block w-full pl-12 pr-24 py-4 border rounded-xl leading-5 bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 text-base transition-colors border-border ${
                 isAIMode 
-                  ? 'border-purple-500 focus:ring-purple-500 focus:border-purple-500' 
-                  : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500'
+                  ? 'focus:ring-primary/30 focus:border-primary' 
+                  : 'focus:ring-primary/30 focus:border-primary'
               }`}
             />
             {/* AI Toggle Button and Clear Button */}
@@ -436,10 +437,10 @@ export default function SearchClient({
                   e.preventDefault()
                   setIsAIMode(!isAIMode)
                 }}
-                className={`p-1.5 rounded-md transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   isAIMode
-                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
                 aria-label={isAIMode ? 'Disable AI mode' : 'Enable AI mode'}
                 title={isAIMode ? 'Disable AI style search' : 'Enable AI style search'}
@@ -451,7 +452,7 @@ export default function SearchClient({
               {searchQuery && (
                 <button
                   onClick={handleClearSearch}
-                  className="flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="flex items-center text-muted-foreground hover:text-foreground"
                   type="button"
                 >
                   <XMarkIcon className="h-5 w-5" />
@@ -463,16 +464,16 @@ export default function SearchClient({
 
         {/* Message */}
         {message && (
-          <div className={`mb-4 p-3 rounded-md ${
+          <div className={`mb-4 p-3 rounded-xl border ${
             message.type === 'error' 
-              ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' 
-              : 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+              ? 'bg-destructive/10 border-destructive/30 text-destructive' 
+              : 'bg-primary/10 border-primary/30 text-primary'
           }`}>
-            <div className="flex items-center justify-between">
-              <span>{message.text}</span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium">{message.text}</span>
               <button
                 onClick={() => setMessage(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-2"
+                className="text-muted-foreground hover:text-foreground shrink-0 p-1 rounded-md"
               >
                 <XMarkIcon className="h-4 w-4" />
               </button>
@@ -483,8 +484,8 @@ export default function SearchClient({
         {/* Loading State */}
         {(isSearching || isCheckingExisting) && (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-border border-t-primary"></div>
+            <p className="mt-4 text-sm text-muted-foreground">
               {isSearching ? t('search.searching') : t('search.checkingExisting')}
             </p>
           </div>
@@ -492,18 +493,18 @@ export default function SearchClient({
 
         {/* Recent Searches Dropdown - Shown when input is focused and empty */}
         {isInputFocused && !searchQuery.trim() && recentSearches.length > 0 && (
-          <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+          <div className="absolute z-10 w-full mt-2 bg-card border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
             <div className="p-2">
-              <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-3 py-2">
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 py-2">
                 Recherches récentes
               </div>
               {recentSearches.map((query, index) => (
                 <button
                   key={index}
                   onClick={() => handleRecentSearchClick(query)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left text-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
                 >
-                  <ClockIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <ClockIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="truncate">{query}</span>
                 </button>
               ))}
@@ -513,11 +514,24 @@ export default function SearchClient({
 
         {/* Search Results */}
         {!isSearching && !isCheckingExisting && hasSearchResults && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Résultats de recherche ({searchResults.length})
-            </h2>
-            <div className="space-y-4">
+          <div className="mb-6">
+            <div className="flex items-center gap-2.5 mb-3 w-fit min-h-[2rem] py-0.5 overflow-visible">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0">
+                <MusicalNoteIcon className="w-4 h-4" />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 gap-y-0 min-w-0 overflow-visible">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground whitespace-nowrap leading-tight">
+                  {t('search.songsFound')}
+                </h2>
+                <span
+                  className="inline-flex items-center justify-center min-w-[1.75rem] h-6 px-2 rounded-full text-xs font-medium bg-muted text-muted-foreground flex-shrink-0"
+                  aria-label={`${searchResults.length} résultat${searchResults.length > 1 ? 's' : ''}`}
+                >
+                  {searchResults.length}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-1.5">
               {searchResults.map((result, index) => {
                 const existingSongId = existingSongs.get(index)
                 const imageUrl = result.songImageUrl || result.artistImageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
@@ -525,10 +539,12 @@ export default function SearchClient({
                 const isViewing = viewingSongId === result.url
                 const isAdding = addingSongId === result.url
 
+                const hasMeta = (!isTab4U && (result.rating != null || result.reviews != null)) || result.difficulty
+
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                    className="flex items-center gap-2 sm:gap-3 py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
                     onClick={() => {
                       if (existingSongId) {
                         router.push(`/song/${existingSongId}`)
@@ -537,82 +553,86 @@ export default function SearchClient({
                       }
                     }}
                   >
-                    {/* Image */}
-                    <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
+                    {/* Photo compacte */}
+                    <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-md overflow-hidden bg-muted">
                       <img
                         src={imageUrl}
-                        alt={result.title}
+                        alt=""
                         className="w-full h-full object-cover"
                       />
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-                        {result.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        {result.author}
-                      </p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {!isTab4U && result.rating && (
-                          <span>⭐ {result.rating.toFixed(1)}</span>
-                        )}
-                        {!isTab4U && result.reviews && (
-                          <span>💬 {result.reviews}</span>
-                        )}
-                        {result.difficulty && (
-                          <span>🎸 {result.difficulty}</span>
-                        )}
+                    {/* Titre et auteur visibles sur 2 lignes max, étoiles en dessous */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-0">
+                      <div className="min-w-0">
+                        <h3
+                          className="text-sm font-semibold text-foreground line-clamp-2 break-words"
+                          title={result.title}
+                        >
+                          {result.title}
+                        </h3>
+                        <p
+                          className="text-xs text-muted-foreground truncate mt-0.5"
+                          title={result.author}
+                        >
+                          {result.author}
+                        </p>
                       </div>
+                      {hasMeta && (
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] sm:text-xs text-muted-foreground">
+                          {!isTab4U && result.rating != null && (
+                            <span>⭐ {Number(result.rating).toFixed(1)}</span>
+                          )}
+                          {!isTab4U && result.reviews != null && (
+                            <span>💬 {result.reviews}</span>
+                          )}
+                          {result.difficulty && (
+                            <span>🎸 {result.difficulty}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex-shrink-0 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    {/* Actions icône compactes */}
+                    <div className="flex-shrink-0 flex items-center gap-1 border-l border-border/60 pl-2 sm:pl-2.5" onClick={(e) => e.stopPropagation()}>
                       {existingSongId ? (
-                        <Link
-                          href={`/song/${existingSongId}`}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          <ArrowRightIcon className="h-4 w-4" />
-                          {t('search.viewSong')}
-                        </Link>
+                        <Button asChild size="icon" className="rounded-lg h-8 w-8" aria-label={t('search.viewSong')}>
+                          <Link href={`/song/${existingSongId}`}>
+                            <PlayIcon className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
                       ) : (
                         <>
-                          <button
+                          <Button
+                            size="icon"
+                            variant="default"
+                            className="rounded-lg h-8 w-8"
                             onClick={() => handleViewSong(result)}
                             disabled={isViewing}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            aria-label={t('search.viewSong')}
+                            title={t('search.viewSong')}
                           >
                             {isViewing ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                Loading...
-                              </>
+                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-current border-t-transparent" />
                             ) : (
-                              <>
-                                <ArrowRightIcon className="h-4 w-4" />
-                                View
-                              </>
+                              <PlayIcon className="h-3.5 w-3.5" />
                             )}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="rounded-lg h-8 w-8"
                             onClick={() => handleAddSong(result, index)}
                             disabled={isAdding || !userId}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            aria-label={t('common.create')}
+                            title={t('common.create')}
                           >
                             {isAdding ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                {t('search.addingSong')}
-                              </>
+                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-current border-t-transparent" />
                             ) : (
-                              <>
-                                <PlusIcon className="h-4 w-4" />
-                                {t('common.create')}
-                              </>
+                              <PlusIcon className="h-3.5 w-3.5" />
                             )}
-                          </button>
+                          </Button>
                         </>
                       )}
                     </div>
@@ -625,8 +645,8 @@ export default function SearchClient({
 
         {/* No Results - Only show if search was performed (Enter pressed) */}
         {!isSearching && !isCheckingExisting && hasSearched && searchQuery.trim() && searchResults.length === 0 && !message && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
+          <div className="text-center py-12 rounded-2xl bg-card border border-border">
+            <p className="text-muted-foreground text-base">
               {t('search.noResultsFor').replace('{query}', searchQuery)}
             </p>
           </div>

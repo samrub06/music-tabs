@@ -319,7 +319,8 @@
     "addSuccess": "Song added successfully!",
     "addError": "Error adding song.",
     "enterTitleOrArtist": "Enter a song title or artist name",
-    "addingSong": "Adding song..."
+    "addingSong": "Adding song...",
+    "songsFound": "Songs found"
   },
   "folders": {
     "newFolder": "New folder",
