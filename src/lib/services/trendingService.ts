@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/db';
-import { delayBeforeUgRequest, getUltimateGuitarFetchHeaders, scrapeSongFromUrl, ScrapedSong } from './scraperService';
+import { delayBeforeUgRequest, getOrRefreshUgCookies, getUltimateGuitarFetchHeaders, scrapeSongFromUrl, ScrapedSong } from './scraperService';
 import { songRepo } from './songRepo';
 
 export interface TrendingSong {
@@ -55,9 +55,12 @@ export const trendingService = {
       
       console.log(`🔍 Fetching trending songs from: ${exploreUrl}`);
       await delayBeforeUgRequest();
-      const response = await fetch(exploreUrl, {
-        headers: getUltimateGuitarFetchHeaders({ referer: 'https://www.ultimate-guitar.com/explore' }),
-      });
+      const cookies = await getOrRefreshUgCookies();
+      const headers = {
+        ...getUltimateGuitarFetchHeaders({ referer: 'https://www.ultimate-guitar.com/explore' }),
+        ...(cookies && { Cookie: cookies }),
+      };
+      const response = await fetch(exploreUrl, { headers });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch trending songs: ${response.status}`);

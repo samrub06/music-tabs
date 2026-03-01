@@ -80,12 +80,33 @@ export interface SearchResult {
 
 const UG_HOMEPAGE = 'https://www.ultimate-guitar.com/';
 
+const UG_USE_MOBILE_UA = process.env.UG_USE_MOBILE_UA === '1' || process.env.UG_USE_MOBILE_UA === 'true';
+
 /**
  * Headers type navigateur pour réduire la détection bot sur Ultimate Guitar.
  * Utilisé par scraperService et trendingService.
+ * Si UG_USE_MOBILE_UA=1 : Safari iPhone (certains sites sont moins stricts avec le trafic mobile).
  */
 export function getUltimateGuitarFetchHeaders(options?: { referer?: string }): Record<string, string> {
   const referer = options?.referer ?? UG_HOMEPAGE;
+  if (UG_USE_MOBILE_UA) {
+    return {
+      'User-Agent':
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      Referer: referer,
+      'sec-ch-ua': '"Apple";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+      'sec-ch-ua-mobile': '?1',
+      'sec-ch-ua-platform': '"iOS"',
+      'sec-fetch-site': referer === UG_HOMEPAGE ? 'none' : 'same-origin',
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-dest': 'document',
+      'sec-fetch-user': '?1',
+      'Upgrade-Insecure-Requests': '1',
+    };
+  }
   return {
     'User-Agent':
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -113,6 +134,34 @@ export function delayBeforeUgRequest(): Promise<void> {
   const minMs = 300;
   const maxMs = 800;
   return new Promise((r) => setTimeout(r, minMs + Math.random() * (maxMs - minMs)));
+}
+
+/** Cache de cookies UG (session) pour réduire la détection bot. */
+let ugSessionCookies: string | null = null;
+let ugSessionCookiesTime = 0;
+const UG_SESSION_TTL_MS = 20 * 60 * 1000; // 20 min
+
+/**
+ * Récupère ou rafraîchit les cookies de session UG (GET homepage puis réutilisation).
+ * À appeler avant search/scrape pour simuler une visite préalable.
+ */
+export async function getOrRefreshUgCookies(): Promise<string> {
+  if (ugSessionCookies && Date.now() - ugSessionCookiesTime < UG_SESSION_TTL_MS) {
+    return ugSessionCookies;
+  }
+  await delayBeforeUgRequest();
+  const res = await fetch(UG_HOMEPAGE, {
+    headers: getUltimateGuitarFetchHeaders(),
+  });
+  const headers = res.headers as Headers & { getSetCookie?: () => string[] };
+  const setCookies = headers.getSetCookie ? headers.getSetCookie() : [];
+  const cookieString = setCookies
+    .map((s: string) => s.split(';')[0].trim())
+    .filter(Boolean)
+    .join('; ');
+  ugSessionCookies = cookieString;
+  ugSessionCookiesTime = Date.now();
+  return ugSessionCookies;
 }
 
 /**
@@ -260,10 +309,10 @@ function detectCapo(content: string): number | undefined {
 async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
     await delayBeforeUgRequest();
+    const cookies = await getOrRefreshUgCookies();
+    const headers = { ...getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }), ...(cookies && { Cookie: cookies }) };
     console.log('🎸 scrapeUltimateGuitar called with:', { url, searchResult });
-    const response = await fetch(url, {
-      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
-    });
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       return null;
@@ -482,10 +531,10 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
 
   try {
     await delayBeforeUgRequest();
+    const cookies = await getOrRefreshUgCookies();
+    const headers = { ...getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }), ...(cookies && { Cookie: cookies }) };
     const searchUrl = `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(query)}`;
-    const response = await fetch(searchUrl, {
-      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
-    });
+    const response = await fetch(searchUrl, { headers });
 
     if (!response.ok) {
       return results;
