@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/db';
-import { scrapeSongFromUrl, ScrapedSong } from './scraperService';
+import { delayBeforeUgRequest, getUltimateGuitarFetchHeaders, scrapeSongFromUrl, ScrapedSong } from './scraperService';
 import { songRepo } from './songRepo';
 
 export interface TrendingSong {
@@ -54,10 +54,9 @@ export const trendingService = {
         : baseUrl;
       
       console.log(`🔍 Fetching trending songs from: ${exploreUrl}`);
+      await delayBeforeUgRequest();
       const response = await fetch(exploreUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        },
+        headers: getUltimateGuitarFetchHeaders({ referer: 'https://www.ultimate-guitar.com/explore' }),
       });
 
       if (!response.ok) {

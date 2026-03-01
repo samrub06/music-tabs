@@ -78,6 +78,43 @@ export interface SearchResult {
   versionDescription?: string;
 }
 
+const UG_HOMEPAGE = 'https://www.ultimate-guitar.com/';
+
+/**
+ * Headers type navigateur pour réduire la détection bot sur Ultimate Guitar.
+ * Utilisé par scraperService et trendingService.
+ */
+export function getUltimateGuitarFetchHeaders(options?: { referer?: string }): Record<string, string> {
+  const referer = options?.referer ?? UG_HOMEPAGE;
+  return {
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    Accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    Referer: referer,
+    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-site': referer === UG_HOMEPAGE ? 'none' : 'same-origin',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-dest': 'document',
+    'sec-fetch-user': '?1',
+    'Upgrade-Insecure-Requests': '1',
+  };
+}
+
+/**
+ * Délai aléatoire avant une requête UG pour éviter les rafales (anti-bot).
+ * Exporté pour utilisation dans trendingService.
+ */
+export function delayBeforeUgRequest(): Promise<void> {
+  const minMs = 300;
+  const maxMs = 800;
+  return new Promise((r) => setTimeout(r, minMs + Math.random() * (maxMs - minMs)));
+}
+
 /**
  * Nettoie et formate le contenu de la partition
  */
@@ -222,11 +259,10 @@ function detectCapo(content: string): number | undefined {
  */
 async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
+    await delayBeforeUgRequest();
     console.log('🎸 scrapeUltimateGuitar called with:', { url, searchResult });
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      },
+      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
     });
 
     if (!response.ok) {
@@ -445,11 +481,10 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
   const results: SearchResult[] = [];
 
   try {
+    await delayBeforeUgRequest();
     const searchUrl = `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(query)}`;
     const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      },
+      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
     });
 
     if (!response.ok) {
@@ -733,9 +768,7 @@ export async function scrapeSongFromUrl(url: string, searchResult?: SearchResult
 
     // Pour les autres sites, utiliser le scraper générique
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      },
+      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
     });
 
     if (!response.ok) {
@@ -880,15 +913,16 @@ export async function scrapeUltimateGuitarPlaylists(
   userAgent?: string
 ): Promise<PlaylistData[]> {
   try {
+    await delayBeforeUgRequest();
+    const ugHeaders = getUltimateGuitarFetchHeaders({
+      referer: 'https://www.ultimate-guitar.com/user/mytabs',
+    });
     const response = await fetch('https://www.ultimate-guitar.com/user/mytabs', {
       headers: {
-        'User-Agent': userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Cookie': cookies,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
+        ...ugHeaders,
+        ...(userAgent && { 'User-Agent': userAgent }),
+        Cookie: cookies,
+        Connection: 'keep-alive',
       },
     });
 
@@ -1221,9 +1255,7 @@ async function importSongToDatabase(scrapedSong: ScrapedSong, userId: string, ta
 export async function scrapeFromCustomSite(url: string): Promise<ScrapedSong | null> {
   try {
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      },
+      headers: getUltimateGuitarFetchHeaders(),
     });
 
     if (!response.ok) {
