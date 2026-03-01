@@ -346,6 +346,22 @@
     "noRecentSongs": "No recent songs",
     "noViewData": "No view data available"
   },
+  "playlistsPage": {
+    "searchPlaceholder": "Search for a playlist...",
+    "filters": "Filters",
+    "newPlaylist": "New playlist",
+    "gridView": "Grid",
+    "tableView": "Table",
+    "sortBy": "Sort by",
+    "name": "Name",
+    "description": "Description",
+    "songCount": "Songs",
+    "createdAt": "Created",
+    "noPlaylists": "No playlists",
+    "noPlaylistsMatch": "No playlists match your search.",
+    "startCreating": "Create your first playlist.",
+    "playPlaylist": "Play"
+  },
   "chords": {
     "markAsKnown": "Mark as unknown",
     "markAsUnknown": "Mark as known",

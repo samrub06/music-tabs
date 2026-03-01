@@ -344,6 +344,22 @@
     "noRecentSongs": "Aucune chanson récente",
     "noViewData": "Aucune donnée de vues disponible"
   },
+  "playlistsPage": {
+    "searchPlaceholder": "Rechercher une playlist...",
+    "filters": "Filtres",
+    "newPlaylist": "Nouvelle playlist",
+    "gridView": "Grille",
+    "tableView": "Tableau",
+    "sortBy": "Trier par",
+    "name": "Nom",
+    "description": "Description",
+    "songCount": "Chansons",
+    "createdAt": "Créé le",
+    "noPlaylists": "Aucune playlist",
+    "noPlaylistsMatch": "Aucune playlist ne correspond à votre recherche.",
+    "startCreating": "Créez votre première playlist.",
+    "playPlaylist": "Lire"
+  },
   "chords": {
     "markAsKnown": "Marquer comme inconnu",
     "markAsUnknown": "Marquer comme connu",

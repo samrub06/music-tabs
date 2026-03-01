@@ -346,6 +346,22 @@
     "noRecentSongs": "אין שירים אחרונים",
     "noViewData": "אין נתוני צפיות זמינים"
   },
+  "playlistsPage": {
+    "searchPlaceholder": "חפש פלייליסט...",
+    "filters": "מסננים",
+    "newPlaylist": "פלייליסט חדש",
+    "gridView": "רשת",
+    "tableView": "טבלה",
+    "sortBy": "מיין לפי",
+    "name": "שם",
+    "description": "תיאור",
+    "songCount": "שירים",
+    "createdAt": "נוצר",
+    "noPlaylists": "אין פלייליסטים",
+    "noPlaylistsMatch": "אין פלייליסטים התואמים לחיפוש.",
+    "startCreating": "צור את הפלייליסט הראשון שלך.",
+    "playPlaylist": "השמע"
+  },
   "chords": {
     "markAsKnown": "סמן כלא ידוע",
     "markAsUnknown": "סמן כידוע",
