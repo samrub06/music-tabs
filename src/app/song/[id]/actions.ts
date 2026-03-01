@@ -12,7 +12,8 @@ export async function recordSongViewAction(songId: string) {
   const supabase = await createActionServerClient()
 
   // 1. Increment view count and update updated_at (RPC updates both)
-  const { error } = await supabase.rpc('increment_view_count', { song_id: songId })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC args inferred as undefined by client types
+  const { error } = await (supabase as any).rpc('increment_view_count', { song_id: songId })
   if (error) {
     console.error('Error incrementing view count:', error)
   }
