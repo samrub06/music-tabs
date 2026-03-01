@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
-import { FolderIcon, FolderOpenIcon, PlusIcon, MusicalNoteIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, FunnelIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, FolderOpenIcon, PlusIcon, MusicalNoteIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import { Folder } from '@/types'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -11,7 +11,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { updateFolderOrderAction } from './actions'
 import { addFolderAction } from '@/app/(protected)/dashboard/actions'
 import Snackbar from '@/components/Snackbar'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -121,7 +121,7 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="w-full min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onFolderClick(folder.id)}
     >
       <div className="p-2 sm:p-3">
@@ -173,13 +173,12 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [view, setView] = useState<'grid' | 'table'>('table')
   const [searchQuery, setSearchQuery] = useState('')
   const [localSearchValue, setLocalSearchValue] = useState('')
   const [isDragMode, setIsDragMode] = useState(false)
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'songCount'>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -277,14 +276,18 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       try {
         await addFolderAction(newFolderName.trim())
         setNewFolderName('')
-        setShowAddForm(false)
-        // Refresh the page to get updated folders list
+        setIsAddSheetOpen(false)
         router.refresh()
       } catch (error) {
         console.error('Error adding folder:', error)
         setError(t('folders.createError'))
       }
     }
+  }
+
+  const handleCloseAddSheet = () => {
+    setIsAddSheetOpen(false)
+    setNewFolderName('')
   }
 
   const getSongCount = useCallback((folderId: string) => {
@@ -345,9 +348,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const handleClearSearch = () => {
     setLocalSearchValue('')
     setSearchQuery('')
-    if (isSearchExpanded) {
-      setIsSearchExpanded(false)
-    }
   }
   
   const handleApplyFilters = () => {
@@ -367,169 +367,103 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-screen">
-        {/* Header with Search, Filter, View Toggle, and Actions */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          {/* Mobile Search Icon / Expanded Search */}
-          <div className="flex-1 lg:hidden">
-            {!isSearchExpanded ? (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setIsSearchExpanded(true)
-                  searchInputRef.current?.focus()
-                }}
-                className="h-10 w-10"
-              >
-                <MagnifyingGlassIcon className="h-5 w-5" />
-              </Button>
-            ) : (
-              <div className="relative flex items-center w-full">
-                <Input
+      <div className="flex flex-col flex-1 min-h-0">
+        {/* Scrollable content */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6">
+          {/* Search + Filter on same line (like songs page), touch-friendly */}
+          <div className="mb-4 flex items-stretch gap-2">
+            <div className="flex-1 min-w-0 relative">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder={t('folders.searchPlaceholder')}
                   value={localSearchValue}
                   onChange={(e) => setLocalSearchValue(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5"
+                  placeholder={t('folders.searchPlaceholder')}
+                  className="block w-full pl-12 pr-12 py-3 sm:py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 dark:text-gray-100"
                 />
                 {localSearchValue && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <button
+                    type="button"
                     onClick={handleClearSearch}
-                    className="absolute right-0 h-full"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 min-w-[44px] min-h-[44px] justify-center"
+                    aria-label={t('common.clear')}
                   >
                     <XMarkIcon className="h-5 w-5" />
-                  </Button>
+                  </button>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSearchExpanded(false)}
-                  className="absolute right-10 h-full lg:hidden"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </Button>
               </div>
-            )}
-          </div>
-
-          {/* Desktop Search Bar */}
-          <div className="hidden lg:flex flex-1 relative">
-            <Input
-              type="text"
-              placeholder={t('folders.searchPlaceholder')}
-              value={localSearchValue}
-              onChange={(e) => setLocalSearchValue(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5"
-            />
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            {localSearchValue && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearSearch}
-                className="absolute right-0 h-full"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </Button>
-            )}
-          </div>
-
-          {/* View Toggle - Desktop only */}
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="inline-flex rounded-md shadow-sm border overflow-hidden">
-              <button
-                className={`px-3 py-2 text-sm flex items-center justify-center ${view === 'grid' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => setView('grid')}
-                title="Grid View"
-              >
-                <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-              <button
-                className={`px-3 py-2 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                onClick={() => setView('table')}
-                title="Table View"
-              >
-                <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
             </div>
-          </div>
-
-          {/* Filter Button */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsFilterSheetOpen(true)}
-            className="h-10 w-10 flex-shrink-0"
-          >
-            <FunnelIcon className="h-5 w-5" />
-          </Button>
-
-          {/* Drag Mode Toggle */}
-          <Button
-            variant={isDragMode ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => setIsDragMode(!isDragMode)}
-            className="h-10 w-10 flex-shrink-0"
-            title={isDragMode ? 'Disable Drag & Drop' : 'Enable Drag & Drop'}
-          >
-            <ArrowsUpDownIcon className="h-5 w-5" />
-          </Button>
-
-          {/* Add Folder Button */}
-          {!showAddForm ? (
-            <Button
-              onClick={() => setShowAddForm(true)}
-              className="h-10"
+            <button
+              type="button"
+              onClick={() => setIsDragMode(!isDragMode)}
+              className={`shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center transition-colors ${
+                isDragMode
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
+              }`}
+              title={isDragMode ? t('folders.disableDrag') : t('folders.enableDrag')}
+              aria-label={isDragMode ? t('folders.disableDrag') : t('folders.enableDrag')}
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">{t('folders.newFolder')}</span>
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder={t('folders.folderNamePlaceholder')}
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') handleAddFolder()
-                  if (e.key === 'Escape') {
-                    setShowAddForm(false)
-                    setNewFolderName('')
-                  }
-                }}
-                className="w-48"
-                autoFocus
-              />
-              <Button
-                onClick={handleAddFolder}
-                disabled={!newFolderName.trim()}
-              >
-                {t('common.create')}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAddForm(false)
-                  setNewFolderName('')
-                }}
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
-          )}
-        </div>
+              <ArrowsUpDownIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setIsFilterSheetOpen(true)}
+              className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+              aria-label={t('folders.filters')}
+            >
+              <AdjustmentsHorizontalIcon className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setIsAddSheetOpen(true)}
+              className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+              aria-label={t('folders.newFolder')}
+            >
+              <PlusIcon className="h-5 w-5" />
+            </button>
+          </div>
 
-        {/* Folders Display */}
+          {/* View toggle - below search, full width */}
+          <div className="mb-4 w-full">
+            <div className="flex w-full rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
+              <button
+                type="button"
+                onClick={() => setView('grid')}
+                className={`flex-1 min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  view === 'grid'
+                    ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title={t('folders.gridView')}
+              >
+                <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span>{t('folders.gridView')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('table')}
+                className={`flex-1 min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                  view === 'table'
+                    ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+                title={t('folders.tableView')}
+              >
+                <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span>{t('folders.tableView')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Folders Display */}
         {filteredFolders.length > 0 ? (
           view === 'grid' ? (
             isDragMode ? (
               <SortableContext items={filteredFolders.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2 justify-items-start">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2">
                   {filteredFolders.map((folder) => (
                     <SortableFolderItem
                       key={folder.id}
@@ -542,7 +476,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 </div>
               </SortableContext>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2 justify-items-start">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2">
                 {filteredFolders.map((folder) => (
                   <SortableFolderItem
                     key={folder.id}
@@ -623,6 +557,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             </p>
           </div>
         )}
+        </div>
       </div>
 
       {/* Drag Overlay */}
@@ -661,21 +596,39 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         duration={5000}
       />
 
-      {/* Filter Sheet */}
+      {/* Filter Sheet - bottom sheet like songs page */}
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
-        <SheetContent side="bottom" className="h-auto max-h-[90vh] overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{t('songs.advancedFilters')}</SheetTitle>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="flex h-[85vh] max-h-[640px] flex-col rounded-t-[1.75rem] border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
+        >
+          <div className="shrink-0 flex items-center py-1.5 -mt-1">
+            <div className="flex-1" aria-hidden />
+            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
+            <div className="flex flex-1 justify-end">
+              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+                <XMarkIcon className="h-5 w-5" />
+                <span className="sr-only">{t('common.close')}</span>
+              </SheetClose>
+            </div>
+          </div>
+
+          <SheetHeader className="shrink-0 px-1 pb-2">
+            <SheetTitle className="text-xl font-semibold">{t('folders.filters')}</SheetTitle>
           </SheetHeader>
-          <div className="grid gap-4 py-4">
-            {/* Sort By */}
-            <div className="grid gap-2">
-              <Label htmlFor="sort-by">{t('folders.sortBy')}</Label>
+
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
+            {/* Sort By - card style */}
+            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+              <Label htmlFor="sort-by" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+                {t('folders.sortBy')}
+              </Label>
               <Select
                 value={sortBy}
                 onValueChange={(value: 'name' | 'createdAt' | 'songCount') => setSortBy(value)}
               >
-                <SelectTrigger id="sort-by">
+                <SelectTrigger id="sort-by" className="h-10 rounded-xl">
                   <SelectValue placeholder={t('folders.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -686,14 +639,16 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               </Select>
             </div>
 
-            {/* Sort Direction */}
-            <div className="grid gap-2">
-              <Label htmlFor="sort-direction">{t('songs.sortOrder')}</Label>
+            {/* Sort Direction - card style */}
+            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+              <Label htmlFor="sort-direction" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+                {t('songs.sortOrder')}
+              </Label>
               <Select
                 value={sortDirection}
                 onValueChange={(value: 'asc' | 'desc') => setSortDirection(value)}
               >
-                <SelectTrigger id="sort-direction">
+                <SelectTrigger id="sort-direction" className="h-10 rounded-xl">
                   <SelectValue placeholder={t('songs.sortOrder')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -703,12 +658,82 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               </Select>
             </div>
           </div>
-          <SheetFooter className="flex-row justify-between gap-2 mt-4">
-            <Button variant="outline" onClick={handleClearFilters} className="w-full">
-              Effacer les filtres
+
+          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+            >
+              {t('common.clear')}
             </Button>
-            <Button onClick={handleApplyFilters} className="w-full">
-              Appliquer les filtres
+            <Button
+              onClick={handleApplyFilters}
+              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+            >
+              {t('common.apply')}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* New folder bottom sheet */}
+      <Sheet open={isAddSheetOpen} onOpenChange={(open) => !open && handleCloseAddSheet()}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="flex h-auto max-h-[50vh] flex-col rounded-t-[1.75rem] border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
+        >
+          <div className="shrink-0 flex items-center py-1.5 -mt-1">
+            <div className="flex-1" aria-hidden />
+            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
+            <div className="flex flex-1 justify-end">
+              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+                <XMarkIcon className="h-5 w-5" />
+                <span className="sr-only">{t('common.close')}</span>
+              </SheetClose>
+            </div>
+          </div>
+
+          <SheetHeader className="shrink-0 px-1 pb-2">
+            <SheetTitle className="text-xl font-semibold">{t('folders.newFolder')}</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex-1 min-h-0 overflow-y-auto px-1 pb-4">
+            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+              <Label htmlFor="new-folder-name" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+                {t('sidebar.folderName')}
+              </Label>
+              <Input
+                id="new-folder-name"
+                type="text"
+                placeholder={t('folders.folderNamePlaceholder')}
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleAddFolder()
+                  if (e.key === 'Escape') handleCloseAddSheet()
+                }}
+                className="h-10 rounded-xl"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
+            <Button
+              variant="outline"
+              onClick={handleCloseAddSheet}
+              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleAddFolder}
+              disabled={!newFolderName.trim()}
+              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+            >
+              {t('common.create')}
             </Button>
           </SheetFooter>
         </SheetContent>

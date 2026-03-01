@@ -9,7 +9,7 @@ export default async function FolderSongsPage({
   searchParams 
 }: { 
   params: Promise<{ id: string }>
-  searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string }>
+  searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string; sortOrder?: string }>
 }) {
   // Removed noStore() - data is revalidated via revalidatePath() after mutations
   const supabase = await createSafeServerClient()
@@ -26,6 +26,7 @@ export default async function FolderSongsPage({
   const limit = Math.max(1, parseInt(searchParamsResolved?.limit || '50', 10))
   const view = (searchParamsResolved?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const q = searchParamsResolved?.q || ''
+  const sortOrder = (searchParamsResolved?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
 
   // Fetch folder directly by ID
   const folder = await folderRepo(supabase).getFolderById(id)
@@ -47,6 +48,7 @@ export default async function FolderSongsPage({
       limit={limit}
       initialView={view}
       initialQuery={q}
+      initialSortOrder={sortOrder}
     />
   )
 }
