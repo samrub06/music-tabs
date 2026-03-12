@@ -1,0 +1,84 @@
+---
+description: Next.js 15 + Supabase architecture, DB, server/client split, RLS, repos
+globs: "**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Next.js 15 + Supabase Architecture
+
+## Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **DB**: Supabase (PostgreSQL + RLS)
+- **Auth**: Supabase Auth
+- **Validation**: Zod (all Server Actions)
+- **Types**: Domain = camelCase in `types/index.ts`; DB = snake_case in `types/db.ts` (Supabase-generated)
+
+## Principles
+
+1. **Server-first**: Initial data in Server Components; no DB calls from Client except realtime/SSE.
+2. **Client-injected repos**: Repos receive the Supabase client as an argument; never create it inside the repo.
+3. **RLS as primary security**: Rely on Row Level Security; never trust client-supplied `userId` (use `client.auth.getUser()`).
+4. **Centralized mapping**: DB (snake_case) → Domain (camelCase) only in repos/services, never in components.
+5. **Validate in Server Actions**: Always validate inputs with Zod in Server Actions.
+
+## File layout
+
+- `app/**/page.tsx` — Server Component; fetches via `createSafeServerClient()` + repos.
+- `app/**/actions.ts` — `'use server'`; `createActionServerClient()`; Zod parse; repo call; `revalidatePath()`.
+- `app/**/[Feature]Client.tsx` — Client Component for UI and calling Server Actions.
+- `lib/supabase/server.ts` — `createSafeServerClient()` (read-only, no cookie write), `createActionServerClient()` (read-write cookies).
+- `lib/supabase.ts` — Browser client only; never import in server code.
+- `lib/services/[entity]Repo.ts` — `(client) => ({ ... })` with methods like `createX`, `updateX`, `getById`; do DB↔domain mapping here.
+- `lib/validation/schemas.ts` — Zod schemas for Server Action payloads.
+- `types/index.ts` — Domain types (camelCase). `types/db.ts` — Supabase-generated (snake_case).
+- `db/*.sql` — Migrations and RLS policies.
+
+## Supabase clients
+
+- **Server Component (read-only)**: `createSafeServerClient()` — cookies `getAll` only, no `setAll`.
+- **Server Actions / API routes (read-write)**: `createActionServerClient()` — full cookie read/write for session refresh.
+- **Browser**: `createBrowserClient()` from `lib/supabase.ts`. Use only in Client Components (and realtime/SSE).
+
+Never import the browser client in server code. Never pass `userId` from client; always get it server-side via the injected client.
+
+## Data flow
+
+**Read**: Page (RSC) → `createSafeServerClient()` → repo(client) → Supabase (RLS) → map to domain → pass as props to Client.
+
+**Write**: Client → Server Action → Zod parse → `createActionServerClient()` → repo(client) → Supabase (RLS) → `revalidatePath()` (and optionally `revalidateTag()`).
+
+## Naming
+
+- Server Actions: `addXAction`, `updateXAction`, `deleteXAction` (camelCase).
+- Repos: `xRepo(supabase)` with methods `createX`, `updateX`, `getXById`, etc.
+- Page components: `XPage`; client shells: `XClient`.
+
+## Caching & revalidation
+
+- User-scoped pages: use `noStore()` (or read `cookies()`) so they are not statically cached.
+- After any mutation in a Server Action: call `revalidatePath(...)` (and `revalidateTag(...)` if using tags).
+
+## DB & RLS
+
+- Prefer explicit column lists; avoid `select('*')` in production.
+- RLS policies in migrations; design them so access is deterministic (e.g. by `auth.uid()`).
+- Generate `types/db.ts` from Supabase (CLI). Use keyset pagination for large lists; add DB indexes as needed.
+- Service role: only in scripts/tooling, never in web runtime.
+
+## Security & validation
+
+- Validate all Server Action inputs with Zod.
+- Do not trust client for auth: use injected Supabase client and RLS.
+- Unify or sanitize error messages to clients; avoid leaking internals.
+- Optional: rate limit public API routes.
+
+## Checklist for new features
+
+- [ ] Initial fetch in Server Component with `createSafeServerClient()` + repo.
+- [ ] Mutations only via Server Actions with Zod and `createActionServerClient()`.
+- [ ] Repo receives client; mapping DB→domain only in repo.
+- [ ] `revalidatePath()` (and tags if used) after mutations.
+- [ ] User-dependent pages use `noStore()` or cookie read.
+- [ ] No browser Supabase client imported in server code.
+- [ ] No `select('*')` in production; pagination for large lists.

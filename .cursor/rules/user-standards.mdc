@@ -1,0 +1,15 @@
+---
+description: Portable coding standards — TypeScript, structure, validation, error handling
+globs: "**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# User Coding Standards
+
+- Use TypeScript strict mode. Prefer explicit types at boundaries (API, DB, props).
+- Validate external/input data (e.g. Zod) in server actions and API handlers.
+- Prefer small, focused modules; one main concern per file.
+- Prefer named exports for components and utilities.
+- Centralize mapping between layers (e.g. DB snake_case → domain camelCase) in repos/services, not in UI.
+- Avoid `any`; use `unknown` and narrowing when types are uncertain.
+- Handle errors explicitly: log and rethrow or return typed errors instead of swallowing.

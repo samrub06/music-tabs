@@ -1,0 +1,14 @@
+---
+description: Portable UI/UX preferences — clarity, modern UX, dark mode, touch targets
+globs: "**/*.{tsx,css,scss}"
+alwaysApply: false
+---
+
+# User UI/UX Preferences
+
+- Prioritize clarity and low cognitive load: clear hierarchy, obvious primary actions.
+- Design mobile-first when the app is used on phones; touch targets at least 44px.
+- Support dark mode for all main surfaces and text (e.g. Tailwind `dark:` variants).
+- Use subtle borders and backgrounds (e.g. opacity like `/0.06`, `/0.08`) and consistent radius (`rounded-xl` / `rounded-2xl`).
+- Use transitions on interactive elements (e.g. `transition-all duration-200`).
+- Prefer backdrop blur on floating panels; keep a consistent visual language across toolbars and cards.
