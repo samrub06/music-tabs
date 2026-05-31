@@ -43,7 +43,7 @@ export function buildUgSearchErrorMessage(meta: UgFetchMeta): string {
     return 'Ultimate Guitar bloque les requêtes depuis le serveur (Cloudflare). Ajoutez UG_PROXY_URL sur Vercel (proxy résidentiel recommandé).';
   }
   if (meta.cloudflare || meta.blocked) {
-    return 'Proxy actif mais Ultimate Guitar bloque encore la requête (Cloudflare). Le plan datacenter Webshare gratuit ne suffit généralement pas — passez à Rotating Residential.';
+    return 'Impossible de récupérer les résultats Ultimate Guitar. Vérifiez UG_PROXY_URL ou réessayez plus tard.';
   }
   return 'Aucun résultat trouvé sur Ultimate Guitar pour cette recherche.';
 }
@@ -115,9 +115,17 @@ async function fetchViaGotScraping(
   proxyUrl?: string
 ): Promise<UgFetchResult> {
   const gotScraping = await loadGotScraping();
+  // Through a proxy, got-scraping defaults (HTTP/2 + header generator) often trigger
+  // Cloudflare 403 even with a good residential IP. Plain HTTP/1.1 + manual headers works.
   const response = await gotScraping.get(url, {
     headers,
-    ...(proxyUrl ? { proxyUrl } : {}),
+    ...(proxyUrl
+      ? {
+          proxyUrl,
+          useHeaderGenerator: false,
+          http2: false,
+        }
+      : {}),
     timeout: { request: 30_000 },
   });
   const statusCode = response.statusCode ?? 0;
