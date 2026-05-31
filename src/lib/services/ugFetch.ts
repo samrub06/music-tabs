@@ -24,6 +24,17 @@ export function isCloudflareBlocked(body: string, statusCode: number): boolean {
   );
 }
 
+/** UG embeds search/tab data in .js-store — 200 without it is a failed scrape. */
+export function isMissingUgPageData(body: string, url: string): boolean {
+  if (!url.includes('ultimate-guitar.com')) return false;
+  if (body.length < 500) return true;
+  return !body.includes('js-store') && !body.includes('data-content');
+}
+
+function getUgProxyUrl(): string | undefined {
+  return process.env.UG_PROXY_URL?.trim() || undefined;
+}
+
 async function loadGotScraping() {
   if (!gotScrapingModule) {
     gotScrapingModule = await import('got-scraping');
@@ -49,7 +60,7 @@ async function fetchViaGotScraping(
   });
   const statusCode = response.statusCode ?? 0;
   const body = typeof response.body === 'string' ? response.body : String(response.body);
-  const blocked = isCloudflareBlocked(body, statusCode);
+  const blocked = isCloudflareBlocked(body, statusCode) || isMissingUgPageData(body, url);
   return {
     ok: statusCode >= 200 && statusCode < 300 && !blocked,
     statusCode,
@@ -95,12 +106,14 @@ export async function fetchUltimateGuitarHtml(
   lastFetchBlocked = false;
 
   try {
-    let result = await fetchViaGotScraping(url, headers);
+    const proxyUrl = getUgProxyUrl();
+    let result: UgFetchResult;
 
-    const proxyUrl = process.env.UG_PROXY_URL;
-    if ((!result.ok || result.blocked) && proxyUrl) {
-      console.warn('UG direct fetch blocked/failed, retrying via proxy:', result.statusCode);
+    if (proxyUrl) {
+      console.log('UG fetch via proxy (UG_PROXY_URL configured):', url);
       result = await fetchViaGotScraping(url, headers, proxyUrl);
+    } else {
+      result = await fetchViaGotScraping(url, headers);
     }
 
     if ((!result.ok || result.blocked) && process.env.SCRAPER_API_KEY) {
@@ -111,7 +124,7 @@ export async function fetchUltimateGuitarHtml(
       }
     }
 
-    lastFetchBlocked = result.blocked || (!result.ok && !result.body.includes('js-store'));
+    lastFetchBlocked = result.blocked || isMissingUgPageData(result.body, url);
     if (lastFetchBlocked) {
       console.error('Ultimate Guitar fetch blocked or empty:', {
         url,
