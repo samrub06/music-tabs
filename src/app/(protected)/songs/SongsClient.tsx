@@ -4,7 +4,7 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, PlusIcon } from '@heroicons/react/24/outline'
 
 const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
 const MAX_RECENT_SEARCHES = 10
@@ -15,6 +15,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
+import AddSongForm from '@/components/AddSongForm'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -68,6 +69,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   
   // Filter state
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [isAddSongOpen, setIsAddSongOpen] = useState(false)
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
@@ -440,6 +442,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             aria-label={t('songs.filters')}
           >
             <AdjustmentsHorizontalIcon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setIsAddSongOpen(true)}
+            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center"
+            aria-label={t('navigation.addSong')}
+          >
+            <PlusIcon className="h-5 w-5" />
           </button>
         </div>
 
@@ -862,6 +871,15 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <AddSongForm
+        isOpen={isAddSongOpen}
+        onClose={() => setIsAddSongOpen(false)}
+        folders={folders}
+        defaultFolderId={selectedFolder}
+        redirectAfterAdd={false}
+        onSuccess={() => router.refresh()}
+      />
 
     </DndContext>
   )

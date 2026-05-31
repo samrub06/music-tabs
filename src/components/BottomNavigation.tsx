@@ -10,17 +10,21 @@ import {
   SparklesIcon,
   MagnifyingGlassIcon,
   EllipsisHorizontalIcon,
+  FolderIcon,
+  MusicalNoteIcon,
 } from '@heroicons/react/24/outline';
 import { 
   RectangleStackIcon as RectangleStackIconSolid, 
   SparklesIcon as SparklesIconSolid,
   MagnifyingGlassIcon as MagnifyingGlassIconSolid,
   EllipsisHorizontalIcon as EllipsisHorizontalIconSolid,
+  FolderIcon as FolderIconSolid,
+  MusicalNoteIcon as MusicalNoteIconSolid,
 } from '@heroicons/react/24/solid';
 import MoreMenu from './MoreMenu';
 import { useFoldersContext } from '@/context/FoldersContext';
 
-const MORE_PATHS = ['/folders', '/chords', '/leaderboard', '/profile', '/ai-playlist'];
+const MORE_PATHS = ['/leaderboard', '/profile', '/ai-playlist'];
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -59,12 +63,26 @@ export default function BottomNavigation() {
       iconSolid: SparklesIconSolid,
       isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
     },
+    {
+      href: '/folders',
+      label: t('navigation.folders'),
+      icon: FolderIcon,
+      iconSolid: FolderIconSolid,
+      isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
+    },
+    {
+      href: '/chords',
+      label: t('navigation.chords'),
+      icon: MusicalNoteIcon,
+      iconSolid: MusicalNoteIconSolid,
+      isActive: pathname === '/chords' || pathname.startsWith('/chords/'),
+    },
   ];
 
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-black/[0.06] dark:border-white/[0.08] lg:hidden safe-area-inset-bottom">
-        <div className="flex items-stretch h-16 px-1">
+        <div className="flex items-stretch h-16 px-0.5">
           {navItems.map((item) => {
             const IconComponent = item.isActive ? item.iconSolid : item.icon;
             return (
@@ -72,14 +90,14 @@ export default function BottomNavigation() {
                 key={item.href}
                 href={item.href}
                 prefetch={true}
-                className={`flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
+                className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
                   item.isActive
                     ? 'text-blue-600 dark:text-blue-400'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                <IconComponent className="h-6 w-6 flex-shrink-0" />
-                <span className={`text-xs mt-0.5 truncate w-full text-center ${
+                <IconComponent className="h-5 w-5 flex-shrink-0" />
+                <span className={`text-[10px] sm:text-xs mt-0.5 truncate w-full text-center ${
                   item.isActive ? 'font-semibold' : 'font-medium'
                 }`}>
                   {item.label}
@@ -89,7 +107,7 @@ export default function BottomNavigation() {
           })}
           <button
             onClick={() => setIsMoreMenuOpen((open) => !open)}
-            className={`flex flex-col items-center justify-center flex-1 min-w-0 px-1 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
+            className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
               isMoreActive || isMoreMenuOpen
                 ? 'text-blue-600 dark:text-blue-400'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -97,11 +115,11 @@ export default function BottomNavigation() {
             aria-label={t('navigation.more')}
           >
             {isMoreActive || isMoreMenuOpen ? (
-              <EllipsisHorizontalIconSolid className="h-6 w-6 flex-shrink-0" />
+              <EllipsisHorizontalIconSolid className="h-5 w-5 flex-shrink-0" />
             ) : (
-              <EllipsisHorizontalIcon className="h-6 w-6 flex-shrink-0" />
+              <EllipsisHorizontalIcon className="h-5 w-5 flex-shrink-0" />
             )}
-            <span className={`text-xs mt-0.5 truncate w-full text-center ${
+            <span className={`text-[10px] sm:text-xs mt-0.5 truncate w-full text-center ${
               isMoreActive || isMoreMenuOpen ? 'font-semibold' : 'font-medium'
             }`}>
               {t('navigation.more')}

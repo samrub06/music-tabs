@@ -42,12 +42,18 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="group-data-[collapsible=icon]:items-center">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+            >
               <Link href="/search">
-                <span className="text-xl leading-none">🌶️</span>
+                <span className="text-xl leading-none group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-full group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center">
+                  🌶️
+                </span>
                 <span className="font-semibold group-data-[collapsible=icon]:hidden">{t('common.appName')}</span>
               </Link>
             </SidebarMenuButton>

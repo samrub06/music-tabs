@@ -9,9 +9,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import {
-  MusicalNoteIcon,
   SparklesIcon,
-  FolderIcon,
   CloudArrowDownIcon,
   TrophyIcon,
   ChevronRightIcon,
@@ -102,20 +100,6 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
         <div className="mt-4">
           {currentView === 'menu' && (
             <div className="space-y-2 pb-2">
-              <MenuNavItem
-                icon={<FolderIcon className="h-5 w-5 text-green-600 dark:text-green-400" />}
-                iconBg="bg-green-100 dark:bg-green-900/40"
-                title={t('navigation.folders')}
-                description={t('moreMenu.foldersDescription')}
-                onClick={() => navigate('/folders')}
-              />
-              <MenuNavItem
-                icon={<MusicalNoteIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />}
-                iconBg="bg-amber-100 dark:bg-amber-900/40"
-                title={t('navigation.chords')}
-                description={t('moreMenu.chordsDescription')}
-                onClick={() => navigate('/chords')}
-              />
               <MenuNavItem
                 icon={<TrophyIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />}
                 iconBg="bg-yellow-100 dark:bg-yellow-900/40"

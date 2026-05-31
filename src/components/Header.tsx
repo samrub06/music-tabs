@@ -1,21 +1,20 @@
 'use client'
 
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import {
+  LogOut,
+  Menu,
+  Moon,
+  Search,
+  Sun,
+  Trophy,
+  User,
+} from 'lucide-react'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useTheme } from '@/context/ThemeContext'
-import { usePathname, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import {
-  Menu,
-  Search,
-  Trophy,
-  Sun,
-  Moon,
-  LogOut,
-  User,
-} from 'lucide-react'
 import CompactStatsDisplay from './gamification/CompactStatsDisplay'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -27,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 
 interface HeaderProps {
@@ -63,10 +63,7 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-function getInitials(
-  name: string | null | undefined,
-  email: string | null | undefined
-): string {
+function getInitials(name: string | null | undefined, email: string | null | undefined) {
   if (name) {
     const parts = name.trim().split(' ')
     if (parts.length >= 2) {
@@ -80,6 +77,35 @@ function getInitials(
   return 'U'
 }
 
+function UserAvatar({
+  avatarUrl,
+  name,
+  email,
+  alt,
+}: {
+  avatarUrl?: string | null
+  name?: string | null
+  email?: string | null
+  alt: string
+}) {
+  if (avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={alt}
+        className="h-8 w-8 rounded-full object-cover border-2 border-border"
+      />
+    )
+  }
+
+  return (
+    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs border-2 border-border">
+      {getInitials(name, email)}
+    </div>
+  )
+}
+
 export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -90,179 +116,155 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const isSongPage = pathname.includes('/song/')
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
-  const currentLanguage =
-    LANGUAGES.find((lang) => lang.code === language) ?? LANGUAGES[0]
-
-  const handleLogoClick = () => {
-    router.push('/search')
-  }
+  const currentLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
 
   return (
-    <header className="flex-shrink-0 border-b border-border bg-transparent lg:bg-background">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 sm:h-16 sm:px-6 lg:max-w-none lg:px-4">
-        {/* Left */}
-        <div className="flex items-center gap-1 md:gap-2">
-          {showMenuButton && user && (
-            onMenuClick ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onMenuClick}
-                className="hidden lg:inline-flex"
-                aria-label={t('common.openMenu')}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            ) : (
-              <SidebarTrigger className="hidden lg:flex -ml-1" />
-            )
-          )}
-
-          {!user && (
-            <Button asChild variant="ghost" size="icon" className="md:hidden">
-              <Link href="/search">
-                <Search className="h-5 w-5" />
-                <span className="sr-only">{t('navigation.search')}</span>
-              </Link>
+    <header className="sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        {showMenuButton && user && (
+          onMenuClick ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onMenuClick}
+              className="hidden lg:inline-flex"
+              aria-label={t('common.openMenu')}
+            >
+              <Menu className="h-5 w-5" />
             </Button>
-          )}
-        </div>
-
-        {/* Mobile page title */}
-        {pageTitle && (
-          <div className="flex-1 lg:hidden">
-            <h1 className="text-left text-lg font-semibold text-foreground">
-              {pageTitle}
-            </h1>
-          </div>
+          ) : (
+            <SidebarTrigger className="hidden lg:flex -ml-1" />
+          )
         )}
 
-        {/* Logo */}
-        <button
-          type="button"
-          onClick={handleLogoClick}
-          aria-label={t('common.backToHome')}
-          className={cn(
-            'absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 transition-opacity hover:opacity-80 sm:gap-2',
-            usesAppSidebar && 'lg:hidden'
-          )}
-        >
-          <span className="text-xl md:text-2xl">🌶️</span>
-          <span className="hidden text-lg font-semibold text-foreground sm:inline">
-            {t('common.appName')}
-          </span>
-        </button>
+        {!user && (
+          <Button variant="ghost" size="icon" className="md:hidden" asChild>
+            <Link href="/search" aria-label={t('navigation.search')}>
+              <Search className="h-5 w-5" />
+            </Link>
+          </Button>
+        )}
 
-        {/* Right */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="min-w-9"
-                aria-label={t('common.selectLanguage')}
-              >
-                <span className="text-base sm:text-lg">{currentLanguage.flag}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuRadioGroup
-                value={language}
-                onValueChange={(value) =>
-                  setLanguage(value as 'en' | 'fr' | 'he')
-                }
-              >
-                {LANGUAGES.map((lang) => (
-                  <DropdownMenuRadioItem key={lang.code} value={lang.code}>
-                    <span>{lang.flag}</span>
-                    <span>{lang.name}</span>
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {pageTitle && (
+          <h1 className="truncate text-base font-semibold text-foreground lg:hidden">
+            {pageTitle}
+          </h1>
+        )}
+      </div>
 
-          {user && (
-            <Button asChild variant="ghost" size="icon" className="lg:hidden">
-              <Link href="/leaderboard" aria-label={t('navigation.leaderboard')}>
-                <Trophy className="h-5 w-5" />
-              </Link>
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => router.push('/search')}
+        className={cn(
+          'absolute left-1/2 -translate-x-1/2 gap-1.5 px-2 hover:bg-transparent sm:gap-2 sm:px-3',
+          usesAppSidebar && 'lg:hidden'
+        )}
+        aria-label={t('common.backToHome')}
+      >
+        <span className="text-lg md:text-xl leading-none">🌶️</span>
+        <span className="hidden text-base font-semibold sm:inline">{t('common.appName')}</span>
+      </Button>
+
+      <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="min-w-9 text-base sm:text-lg"
+              aria-label={t('common.selectLanguage')}
+            >
+              {currentLanguage.flag}
             </Button>
-          )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuLabel>{t('common.selectLanguage')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={language}
+              onValueChange={(value) => setLanguage(value as 'en' | 'fr' | 'he')}
+            >
+              {LANGUAGES.map((lang) => (
+                <DropdownMenuRadioItem key={lang.code} value={lang.code}>
+                  <span>{lang.flag}</span>
+                  <span>{lang.name}</span>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {!loading && (
-            user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-full p-0"
-                    aria-label={t('navigation.profile')}
-                  >
-                    {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.full_name || t('common.user')}
-                        className="h-8 w-8 rounded-full border-2 border-border object-cover sm:h-9 sm:w-9"
-                      />
-                    ) : (
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-border bg-gradient-to-br from-blue-500 to-indigo-600 text-xs font-semibold text-white sm:h-9 sm:w-9 sm:text-sm">
-                        {getInitials(profile?.full_name, profile?.email)}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <p className="truncate text-sm font-medium">
+        {user && (
+          <Button variant="ghost" size="icon" className="lg:hidden" asChild>
+            <Link href="/leaderboard" aria-label={t('navigation.leaderboard')}>
+              <Trophy className="h-5 w-5" />
+            </Link>
+          </Button>
+        )}
+
+        {!loading && (
+          user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full p-0.5 sm:p-1 h-auto w-auto"
+                  aria-label={t('navigation.profile')}
+                >
+                  <UserAvatar
+                    avatarUrl={profile?.avatar_url}
+                    name={profile?.full_name}
+                    email={profile?.email}
+                    alt={profile?.full_name || t('common.user')}
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none truncate">
                       {profile?.full_name || t('common.user')}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p className="text-xs leading-none text-muted-foreground truncate">
                       {profile?.email}
                     </p>
-                    <div className="mt-2">
-                      <CompactStatsDisplay />
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">
-                      <User />
-                      {t('navigation.profile')}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleTheme}>
-                    {theme === 'dark' ? <Sun /> : <Moon />}
-                    {theme === 'dark'
-                      ? t('common.lightMode')
-                      : t('common.darkMode')}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut}>
-                    <LogOut />
-                    {t('auth.signOut')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={signInWithGoogle}
-                title={t('auth.signInWithGoogle')}
-                className="gap-2"
-              >
-                <GoogleIcon className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
-              </Button>
-            )
-          )}
-        </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-border">
+                    <CompactStatsDisplay />
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">
+                    <User className="h-4 w-4" />
+                    {t('navigation.profile')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleTheme}>
+                  {theme === 'dark' ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                  {theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="h-4 w-4" />
+                  {t('auth.signOut')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="outline" size="sm" onClick={signInWithGoogle} className="gap-2">
+              <GoogleIcon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
+            </Button>
+          )
+        )}
       </div>
     </header>
   )
