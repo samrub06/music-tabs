@@ -82,9 +82,7 @@ export interface SearchResult {
 const UG_HOMEPAGE = 'https://www.ultimate-guitar.com/';
 
 const UG_USE_MOBILE_UA =
-  process.env.UG_USE_MOBILE_UA === '1' ||
-  process.env.UG_USE_MOBILE_UA === 'true' ||
-  process.env.VERCEL === '1';
+  process.env.UG_USE_MOBILE_UA === '1' || process.env.UG_USE_MOBILE_UA === 'true';
 
 /**
  * Headers type navigateur pour réduire la détection bot sur Ultimate Guitar.

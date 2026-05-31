@@ -109,16 +109,29 @@ function parseSetCookies(raw: string | string[] | undefined): string[] {
   return Array.isArray(raw) ? raw : [raw];
 }
 
+/** Minimal consistent headers for proxy requests — sec-ch-ua + mobile UA triggers CF 403. */
+function getProxySafeHeaders(headers: Record<string, string>): Record<string, string> {
+  return {
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': headers['Accept-Language'] || 'en-US,en;q=0.9',
+    Referer: headers['Referer'] || 'https://www.ultimate-guitar.com/',
+    ...(headers['Cookie'] ? { Cookie: headers['Cookie'] } : {}),
+  };
+}
+
 async function fetchViaGotScraping(
   url: string,
   headers: Record<string, string>,
   proxyUrl?: string
 ): Promise<UgFetchResult> {
   const gotScraping = await loadGotScraping();
+  const requestHeaders = proxyUrl ? getProxySafeHeaders(headers) : headers;
   // Through a proxy, got-scraping defaults (HTTP/2 + header generator) often trigger
   // Cloudflare 403 even with a good residential IP. Plain HTTP/1.1 + manual headers works.
   const response = await gotScraping.get(url, {
-    headers,
+    headers: requestHeaders,
     ...(proxyUrl
       ? {
           proxyUrl,
