@@ -463,11 +463,6 @@ export default function SearchClient({
               )}
             </div>
           </div>
-          {!searchQuery.trim() && (
-            <p className="mt-2 text-xs text-muted-foreground text-center">
-              {t('search.sourceHint')}
-            </p>
-          )}
         </div>
 
         {/* Message */}
