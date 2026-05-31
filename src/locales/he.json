@@ -360,7 +360,16 @@
     "viewAllRecent": "הצג הכל",
     "noRecentSearches": "אין חיפושים אחרונים.",
     "clearRecent": "נקה הכל",
-    "startSearching": "התחל לחפש"
+    "startSearching": "התחל לחפש",
+    "askWithAI": "שאל עם AI",
+    "aiPlaceholder": "תאר סגנון מוזיקלי...",
+    "aiSuggestions": "נסה לשאול",
+    "aiSuggestion1": "פולק אקוסטי משנות ה-70",
+    "aiSuggestion2": "פופ צרפתי משנות ה-2000",
+    "aiSuggestion3": "שירים קלים למתחילים בגיטרה",
+    "aiSuggestion4": "להיטים לשיר סביב מדורה",
+    "enableAIStyleSearch": "הפעל חיפוש סגנון עם AI",
+    "disableAIStyleSearch": "כבה חיפוש סגנון עם AI"
   },
   "folders": {
     "newFolder": "תיקייה חדשה",

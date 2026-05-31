@@ -358,7 +358,16 @@
     "viewAllRecent": "Tout voir",
     "noRecentSearches": "Aucune recherche récente.",
     "clearRecent": "Tout effacer",
-    "startSearching": "Commencer à chercher"
+    "startSearching": "Commencer à chercher",
+    "askWithAI": "Demander à l'IA",
+    "aiPlaceholder": "Décrivez un style musical...",
+    "aiSuggestions": "Suggestions",
+    "aiSuggestion1": "Folk acoustique des années 70",
+    "aiSuggestion2": "Pop française des années 2000",
+    "aiSuggestion3": "Chansons faciles pour débutants",
+    "aiSuggestion4": "Hits pour feu de camp",
+    "enableAIStyleSearch": "Activer la recherche par style IA",
+    "disableAIStyleSearch": "Désactiver la recherche par style IA"
   },
   "folders": {
     "newFolder": "Nouveau dossier",

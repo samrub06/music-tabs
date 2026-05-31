@@ -362,7 +362,14 @@
     "clearRecent": "Clear all",
     "startSearching": "Start searching",
     "askWithAI": "Ask with AI",
-    "aiPlaceholder": "Describe a musical style..."
+    "aiPlaceholder": "Describe a musical style...",
+    "aiSuggestions": "Try asking",
+    "aiSuggestion1": "Acoustic folk songs from the 70s",
+    "aiSuggestion2": "French pop from the 2000s",
+    "aiSuggestion3": "Easy beginner guitar songs",
+    "aiSuggestion4": "Campfire sing-along hits",
+    "enableAIStyleSearch": "Enable AI style search",
+    "disableAIStyleSearch": "Disable AI style search"
   },
   "folders": {
     "newFolder": "New folder",

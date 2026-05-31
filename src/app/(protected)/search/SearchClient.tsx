@@ -47,6 +47,13 @@ interface SearchResult {
   tabId?: string
 }
 
+const AI_SUGGESTION_KEYS = [
+  'search.aiSuggestion1',
+  'search.aiSuggestion2',
+  'search.aiSuggestion3',
+  'search.aiSuggestion4',
+] as const
+
 export default function SearchClient({
   userId,
   children
@@ -56,6 +63,7 @@ export default function SearchClient({
   const { t } = useLanguage()
   const { supabase } = useSupabase()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
   const initialQueryApplied = useRef(false)
   
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,6 +81,11 @@ export default function SearchClient({
   useEffect(() => {
     setRecentSearches(loadRecentSearches())
   }, [])
+
+  useEffect(() => {
+    if (!isAIMode) return
+    aiTextareaRef.current?.focus()
+  }, [isAIMode])
 
   const saveToRecentSearches = (query: string, previewResult?: SearchResult) => {
     const updated = upsertRecentSearch(query, previewResult)
@@ -237,13 +250,18 @@ export default function SearchClient({
   }
 
   // Handle Enter key
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (!isAIMode || !e.shiftKey)) {
       e.preventDefault()
       if (searchQuery.trim()) {
         performSearch(searchQuery)
       }
     }
+  }
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchQuery(suggestion)
+    performSearch(suggestion)
   }
 
   // Handle recent search click
@@ -369,55 +387,97 @@ export default function SearchClient({
   const hasSearchResults = searchQuery.trim() && searchResults.length > 0
   const showLibrarySections = !searchQuery.trim() && searchResults.length === 0 && !hasSearched
   const showRecentSearches =
-    !searchQuery.trim() && searchResults.length === 0 && !isSearching && recentSearches.length > 0
+    !isAIMode &&
+    !searchQuery.trim() &&
+    searchResults.length === 0 &&
+    !isSearching &&
+    recentSearches.length > 0
+  const showAISuggestions = isAIMode && !searchQuery.trim() && !isSearching && !hasSearchResults
 
   return (
     <div className="p-4 pt-8 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 overflow-y-auto min-h-screen bg-background overflow-x-hidden">
       <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0 pb-24 lg:pb-10">
         {/* Search Input - Full Width */}
-        <div className="mb-6 relative">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
+        <div className="mb-6">
+          <div
+            className={cn(
+              'relative rounded-xl border bg-card transition-all duration-300 ease-in-out',
+              isAIMode
+                ? 'min-h-[8.5rem] border-primary/40 ring-2 ring-primary/15 shadow-sm'
+                : 'min-h-[3.5rem] border-border focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary'
+            )}
+          >
+            <div
+              className={cn(
+                'absolute left-0 pl-4 pointer-events-none text-muted-foreground transition-all duration-300',
+                isAIMode ? 'top-4' : 'inset-y-0 flex items-center'
+              )}
+            >
+              {isAIMode ? (
+                <SparklesIcon className="h-5 w-5 text-primary" />
+              ) : (
+                <MagnifyingGlassIcon className="h-5 w-5" />
+              )}
             </div>
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={isAIMode ? 'Describe a musical style...' : t('search.searchPlaceholder')}
-              className={`block w-full pl-12 pr-24 py-4 border rounded-xl leading-5 bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 text-base transition-colors border-border ${
-                isAIMode 
-                  ? 'focus:ring-primary/30 focus:border-primary' 
-                  : 'focus:ring-primary/30 focus:border-primary'
-              }`}
-            />
-            {/* AI Toggle Button and Clear Button */}
-            <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-4">
-              {/* AI Toggle Button */}
+
+            {isAIMode ? (
+              <textarea
+                ref={aiTextareaRef}
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t('search.aiPlaceholder')}
+                rows={3}
+                className={cn(
+                  'block w-full min-h-[8.5rem] pl-12 pt-4 pb-3 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-relaxed resize-none transition-all duration-300',
+                  searchQuery ? 'pr-36 sm:pr-40' : 'pr-28 sm:pr-32'
+                )}
+              />
+            ) : (
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={t('search.searchPlaceholder')}
+                className={cn(
+                  'block w-full h-14 pl-12 py-4 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-5 transition-all duration-300',
+                  searchQuery ? 'pr-40 sm:pr-44' : 'pr-32 sm:pr-36'
+                )}
+              />
+            )}
+
+            <div
+              className={cn(
+                'absolute right-0 flex items-center gap-1.5 pr-3 sm:pr-4',
+                isAIMode ? 'top-3' : 'inset-y-0'
+              )}
+            >
               <button
                 onClick={(e) => {
                   e.preventDefault()
                   setIsAIMode(!isAIMode)
                 }}
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={cn(
+                  'flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors shrink-0',
                   isAIMode
                     ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-                aria-label={isAIMode ? 'Disable AI mode' : 'Enable AI mode'}
-                title={isAIMode ? 'Disable AI style search' : 'Enable AI style search'}
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                )}
+                aria-label={isAIMode ? t('search.disableAIStyleSearch') : t('search.enableAIStyleSearch')}
+                aria-pressed={isAIMode}
                 type="button"
               >
-                <SparklesIcon className="h-5 w-5" />
+                <SparklesIcon className="h-4 w-4 shrink-0" />
+                <span className="text-xs font-medium whitespace-nowrap">{t('search.askWithAI')}</span>
               </button>
-              {/* Clear Button */}
               {searchQuery && (
                 <button
                   onClick={handleClearSearch}
-                  className="flex items-center text-muted-foreground hover:text-foreground"
+                  className="flex items-center text-muted-foreground hover:text-foreground p-1"
                   type="button"
+                  aria-label={t('common.clear')}
                 >
                   <XMarkIcon className="h-5 w-5" />
                 </button>
@@ -425,6 +485,26 @@ export default function SearchClient({
             </div>
           </div>
 
+          {showAISuggestions && (
+            <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+              <p className="text-xs font-medium text-muted-foreground">{t('search.aiSuggestions')}</p>
+              <div className="flex flex-wrap gap-2">
+                {AI_SUGGESTION_KEYS.map((key) => {
+                  const suggestion = t(key)
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-3 py-1.5 text-xs sm:text-sm rounded-full border border-border bg-card text-foreground hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors text-left"
+                    >
+                      {suggestion}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Recent searches — below search bar with vignettes */}
