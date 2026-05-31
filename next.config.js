@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // got-scraping reads JSON data files at runtime — must not be webpack-bundled
+  serverExternalPackages: ['got-scraping', 'header-generator'],
+
   // Skip ESLint during build
   eslint: {
     ignoreDuringBuilds: true,

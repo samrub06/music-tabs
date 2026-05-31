@@ -1,6 +1,8 @@
 import { scrapeSongFromUrl, searchAndScrapeSong, searchSong, searchTab4UOnly, searchUltimateGuitarOnly } from '@/lib/services/scraperService';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+
 /**
  * API Route pour rechercher des partitions
  * GET /api/songs/search?q=titre+de+la+chanson
@@ -78,7 +80,7 @@ export async function GET(request: NextRequest) {
       if (results.length === 0) {
         return NextResponse.json(
           { error: 'Aucun résultat trouvé', results: [] },
-          { status: 404 }
+          { status: 200 }
         );
       }
 

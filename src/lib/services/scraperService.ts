@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { gotScraping } from 'got-scraping';
 import { songService } from './songService';
 
 /**
@@ -136,6 +137,38 @@ export function delayBeforeUgRequest(): Promise<void> {
   return new Promise((r) => setTimeout(r, minMs + Math.random() * (maxMs - minMs)));
 }
 
+/** Fetch UG HTML bypassing Cloudflare (plain fetch often returns 403). */
+async function fetchUltimateGuitarHtml(
+  url: string,
+  options?: { referer?: string; cookie?: string; userAgent?: string }
+): Promise<{ ok: boolean; statusCode: number; body: string; setCookies: string[] }> {
+  const referer = options?.referer ?? UG_HOMEPAGE;
+  const headers = {
+    ...getUltimateGuitarFetchHeaders({ referer }),
+    ...(options?.cookie ? { Cookie: options.cookie } : {}),
+    ...(options?.userAgent ? { 'User-Agent': options.userAgent } : {}),
+  };
+  try {
+    const response = await gotScraping.get(url, { headers });
+    const statusCode = response.statusCode ?? 0;
+    const rawSetCookie = response.headers['set-cookie'];
+    const setCookies = Array.isArray(rawSetCookie)
+      ? rawSetCookie
+      : rawSetCookie
+        ? [rawSetCookie]
+        : [];
+    return {
+      ok: statusCode >= 200 && statusCode < 300,
+      statusCode,
+      body: typeof response.body === 'string' ? response.body : String(response.body),
+      setCookies,
+    };
+  } catch (error) {
+    console.error('Ultimate Guitar fetch failed:', url, error);
+    return { ok: false, statusCode: 0, body: '', setCookies: [] };
+  }
+}
+
 /** Cache de cookies UG (session) pour réduire la détection bot. */
 let ugSessionCookies: string | null = null;
 let ugSessionCookiesTime = 0;
@@ -150,13 +183,14 @@ export async function getOrRefreshUgCookies(): Promise<string> {
     return ugSessionCookies;
   }
   await delayBeforeUgRequest();
-  const res = await fetch(UG_HOMEPAGE, {
-    headers: getUltimateGuitarFetchHeaders(),
-  });
-  const headers = res.headers as Headers & { getSetCookie?: () => string[] };
-  const setCookies = headers.getSetCookie ? headers.getSetCookie() : [];
-  const cookieString = setCookies
-    .map((s: string) => s.split(';')[0].trim())
+  const res = await fetchUltimateGuitarHtml(UG_HOMEPAGE);
+  if (!res.ok) {
+    ugSessionCookies = '';
+    ugSessionCookiesTime = Date.now();
+    return ugSessionCookies;
+  }
+  const cookieString = res.setCookies
+    .map((s) => s.split(';')[0].trim())
     .filter(Boolean)
     .join('; ');
   ugSessionCookies = cookieString;
@@ -310,15 +344,17 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
   try {
     await delayBeforeUgRequest();
     const cookies = await getOrRefreshUgCookies();
-    const headers = { ...getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }), ...(cookies && { Cookie: cookies }) };
     console.log('🎸 scrapeUltimateGuitar called with:', { url, searchResult });
-    const response = await fetch(url, { headers });
+    const response = await fetchUltimateGuitarHtml(url, {
+      referer: UG_HOMEPAGE,
+      cookie: cookies || undefined,
+    });
 
     if (!response.ok) {
       return null;
     }
 
-    const html = await response.text();
+    const html = response.body;
     const $ = cheerio.load(html);
 
     // Les données sont stockées dans l'attribut data-content
@@ -532,15 +568,18 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
   try {
     await delayBeforeUgRequest();
     const cookies = await getOrRefreshUgCookies();
-    const headers = { ...getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }), ...(cookies && { Cookie: cookies }) };
     const searchUrl = `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(query)}`;
-    const response = await fetch(searchUrl, { headers });
+    const response = await fetchUltimateGuitarHtml(searchUrl, {
+      referer: UG_HOMEPAGE,
+      cookie: cookies || undefined,
+    });
 
     if (!response.ok) {
+      console.error('Ultimate Guitar search failed:', response.statusCode, query);
       return results;
     }
 
-    const html = await response.text();
+    const html = response.body;
     const $ = cheerio.load(html);
 
     // Extraire les données JSON
@@ -966,20 +1005,17 @@ export async function scrapeUltimateGuitarPlaylists(
     const ugHeaders = getUltimateGuitarFetchHeaders({
       referer: 'https://www.ultimate-guitar.com/user/mytabs',
     });
-    const response = await fetch('https://www.ultimate-guitar.com/user/mytabs', {
-      headers: {
-        ...ugHeaders,
-        ...(userAgent && { 'User-Agent': userAgent }),
-        Cookie: cookies,
-        Connection: 'keep-alive',
-      },
+    const response = await fetchUltimateGuitarHtml('https://www.ultimate-guitar.com/user/mytabs', {
+      referer: 'https://www.ultimate-guitar.com/user/mytabs',
+      cookie: cookies,
+      userAgent: userAgent ?? ugHeaders['User-Agent'],
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.statusCode}`);
     }
 
-    const html = await response.text();
+    const html = response.body;
     const $ = cheerio.load(html);
 
     // Vérifier si l'utilisateur est connecté
