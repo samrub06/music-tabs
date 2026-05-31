@@ -1,7 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // got-scraping reads JSON data files at runtime — must not be webpack-bundled
-  serverExternalPackages: ['got-scraping', 'header-generator'],
+  serverExternalPackages: [
+    'got-scraping',
+    'got',
+    'header-generator',
+    'generative-bayesian-network',
+    'http2-wrapper',
+  ],
+  outputFileTracingIncludes: {
+    '/api/songs/search': [
+      './node_modules/header-generator/data_files/**/*',
+      './node_modules/generative-bayesian-network/**/*',
+    ],
+    '/api/cron/update-trending': [
+      './node_modules/header-generator/data_files/**/*',
+      './node_modules/generative-bayesian-network/**/*',
+    ],
+  },
 
   // Skip ESLint during build
   eslint: {

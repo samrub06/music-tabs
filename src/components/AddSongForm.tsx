@@ -143,12 +143,12 @@ export default function AddSongForm({ isOpen, onClose, folders = [] }: AddSongFo
       const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${source}`);
       const data = await response.json();
 
-      if (response.ok && data.results) {
+      if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
         console.log('Search results:', data.results); // Debug log
         setSearchResults(data.results);
         setShowSearchResults(true);
       } else {
-        alert(data.error || t('search.searchError'));
+        alert(data.error || (data.blocked ? t('search.ugBlocked') : t('search.searchError')));
       }
     } catch (error) {
       console.error('Error searching:', error);

@@ -63,11 +63,13 @@ export default function AddSongClient({ folders }: AddSongClientProps) {
       const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${source}`)
       const data = await response.json()
 
-      if (response.ok && data.results) {
+      if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
         setSearchResults(data.results)
         setShowSearchResults(true)
       } else {
-        const errorMsg = data.error || t('search.noResultsFor').replace('{query}', searchQuery)
+        const errorMsg =
+          data.error ||
+          (data.blocked ? t('search.ugBlocked') : t('search.noResultsFor').replace('{query}', searchQuery))
         setMessage({ type: 'error', text: errorMsg })
       }
     } catch (error) {

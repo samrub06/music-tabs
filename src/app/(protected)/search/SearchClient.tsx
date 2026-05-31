@@ -226,13 +226,15 @@ export default function SearchClient({
         const response = await fetch(`/api/songs/search?q=${encodeURIComponent(query.trim())}&source=${source}`)
         const data = await response.json()
 
-        if (response.ok && data.results) {
+        if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
           setSearchResults(data.results)
           saveToRecentSearches(query.trim())
           // Check if results exist in user's songs
           await checkExistingSongs(data.results)
         } else {
-          const errorMsg = data.error || t('search.noResultsFor').replace('{query}', query)
+          const errorMsg =
+            data.error ||
+            (data.blocked ? t('search.ugBlocked') : t('search.noResultsFor').replace('{query}', query))
           setMessage({ type: 'error', text: errorMsg })
           setSearchResults([])
           setExistingSongs(new Map())

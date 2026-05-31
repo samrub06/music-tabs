@@ -336,6 +336,7 @@
     "recentSongs": "Recently added songs",
     "popularSongs": "Most played songs",
     "searchError": "Error during search. Please try again.",
+    "ugBlocked": "Ultimate Guitar is blocking server requests. Contact the administrator or try again later.",
     "invalidData": "Invalid song data.",
     "addSuccess": "Song added successfully!",
     "addError": "Error adding song.",

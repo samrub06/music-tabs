@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { gotScraping } from 'got-scraping';
+import { fetchUltimateGuitarHtml } from './ugFetch';
 import { songService } from './songService';
 
 /**
@@ -81,7 +81,10 @@ export interface SearchResult {
 
 const UG_HOMEPAGE = 'https://www.ultimate-guitar.com/';
 
-const UG_USE_MOBILE_UA = process.env.UG_USE_MOBILE_UA === '1' || process.env.UG_USE_MOBILE_UA === 'true';
+const UG_USE_MOBILE_UA =
+  process.env.UG_USE_MOBILE_UA === '1' ||
+  process.env.UG_USE_MOBILE_UA === 'true' ||
+  process.env.VERCEL === '1';
 
 /**
  * Headers type navigateur pour réduire la détection bot sur Ultimate Guitar.
@@ -132,41 +135,9 @@ export function getUltimateGuitarFetchHeaders(options?: { referer?: string }): R
  * Exporté pour utilisation dans trendingService.
  */
 export function delayBeforeUgRequest(): Promise<void> {
-  const minMs = 300;
-  const maxMs = 800;
+  const minMs = process.env.VERCEL === '1' ? 100 : 300;
+  const maxMs = process.env.VERCEL === '1' ? 300 : 800;
   return new Promise((r) => setTimeout(r, minMs + Math.random() * (maxMs - minMs)));
-}
-
-/** Fetch UG HTML bypassing Cloudflare (plain fetch often returns 403). */
-async function fetchUltimateGuitarHtml(
-  url: string,
-  options?: { referer?: string; cookie?: string; userAgent?: string }
-): Promise<{ ok: boolean; statusCode: number; body: string; setCookies: string[] }> {
-  const referer = options?.referer ?? UG_HOMEPAGE;
-  const headers = {
-    ...getUltimateGuitarFetchHeaders({ referer }),
-    ...(options?.cookie ? { Cookie: options.cookie } : {}),
-    ...(options?.userAgent ? { 'User-Agent': options.userAgent } : {}),
-  };
-  try {
-    const response = await gotScraping.get(url, { headers });
-    const statusCode = response.statusCode ?? 0;
-    const rawSetCookie = response.headers['set-cookie'];
-    const setCookies = Array.isArray(rawSetCookie)
-      ? rawSetCookie
-      : rawSetCookie
-        ? [rawSetCookie]
-        : [];
-    return {
-      ok: statusCode >= 200 && statusCode < 300,
-      statusCode,
-      body: typeof response.body === 'string' ? response.body : String(response.body),
-      setCookies,
-    };
-  } catch (error) {
-    console.error('Ultimate Guitar fetch failed:', url, error);
-    return { ok: false, statusCode: 0, body: '', setCookies: [] };
-  }
 }
 
 /** Cache de cookies UG (session) pour réduire la détection bot. */
@@ -183,7 +154,9 @@ export async function getOrRefreshUgCookies(): Promise<string> {
     return ugSessionCookies;
   }
   await delayBeforeUgRequest();
-  const res = await fetchUltimateGuitarHtml(UG_HOMEPAGE);
+  const res = await fetchUltimateGuitarHtml(UG_HOMEPAGE, {
+    headers: getUltimateGuitarFetchHeaders(),
+  });
   if (!res.ok) {
     ugSessionCookies = '';
     ugSessionCookiesTime = Date.now();
@@ -346,7 +319,7 @@ async function scrapeUltimateGuitar(url: string, searchResult?: SearchResult): P
     const cookies = await getOrRefreshUgCookies();
     console.log('🎸 scrapeUltimateGuitar called with:', { url, searchResult });
     const response = await fetchUltimateGuitarHtml(url, {
-      referer: UG_HOMEPAGE,
+      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
       cookie: cookies || undefined,
     });
 
@@ -570,12 +543,15 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
     const cookies = await getOrRefreshUgCookies();
     const searchUrl = `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(query)}`;
     const response = await fetchUltimateGuitarHtml(searchUrl, {
-      referer: UG_HOMEPAGE,
+      headers: getUltimateGuitarFetchHeaders({ referer: UG_HOMEPAGE }),
       cookie: cookies || undefined,
     });
 
     if (!response.ok) {
-      console.error('Ultimate Guitar search failed:', response.statusCode, query);
+      console.error('Ultimate Guitar search failed:', response.statusCode, query, {
+        blocked: response.blocked,
+        via: response.via,
+      });
       return results;
     }
 
@@ -1006,7 +982,7 @@ export async function scrapeUltimateGuitarPlaylists(
       referer: 'https://www.ultimate-guitar.com/user/mytabs',
     });
     const response = await fetchUltimateGuitarHtml('https://www.ultimate-guitar.com/user/mytabs', {
-      referer: 'https://www.ultimate-guitar.com/user/mytabs',
+      headers: ugHeaders,
       cookie: cookies,
       userAgent: userAgent ?? ugHeaders['User-Agent'],
     });
