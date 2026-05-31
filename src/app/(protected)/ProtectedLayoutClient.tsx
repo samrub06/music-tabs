@@ -35,12 +35,16 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const getPageTitle = (path: string): string | undefined => {
     if (path.startsWith('/song/')) return undefined
     if (path.startsWith('/library/')) return t('navigation.library')
-    if (path === '/search/recent') return t('search.recentSearches')
-    if (path === '/search' || path.startsWith('/search/')) return t('navigation.search')
-    if (path === '/songs' || path.startsWith('/songs/')) return t('navigation.songs')
-    if (path === '/folders' || path.startsWith('/folders/')) return t('navigation.folders')
-    if (path === '/chords' || path.startsWith('/chords/')) return t('navigation.chords')
-    if (path === '/playlists' || path.startsWith('/playlists/')) return t('navigation.playlists')
+    if (path === '/search') return t('navigation.search')
+    if (path.startsWith('/search/')) return undefined
+    if (path === '/songs') return t('navigation.songs')
+    if (path.startsWith('/songs/')) return undefined
+    if (path === '/folders') return t('navigation.folders')
+    if (path.startsWith('/folders/')) return undefined
+    if (path === '/chords') return t('navigation.chords')
+    if (path.startsWith('/chords/')) return undefined
+    if (path === '/playlists') return t('navigation.playlists')
+    if (path.startsWith('/playlists/')) return undefined
     if (path === '/playlist' || path.startsWith('/playlist/')) {
       if (path.match(/^\/playlist\/[^/]+$/)) return undefined
       return t('createMenu.createPlaylist')

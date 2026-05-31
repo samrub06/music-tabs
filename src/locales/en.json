@@ -225,7 +225,11 @@
   },
   "library": {
     "recentlyAdded": "Recently added songs",
-    "mostPlayed": "Most played songs"
+    "mostPlayed": "Most played songs",
+    "viewAll": "See all",
+    "listView": "List",
+    "gridView": "Grid",
+    "noRecentlyAdded": "No recently added songs."
   },
   "auth": {
     "signIn": "Sign In",

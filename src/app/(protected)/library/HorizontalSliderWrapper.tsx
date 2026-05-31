@@ -10,9 +10,17 @@ interface HorizontalSliderWrapperProps {
   title: string
   songs: Song[]
   userId?: string
+  viewAllHref?: string
+  viewAllLabel?: string
 }
 
-export default function HorizontalSliderWrapper({ title, songs, userId }: HorizontalSliderWrapperProps) {
+export default function HorizontalSliderWrapper({
+  title,
+  songs,
+  userId,
+  viewAllHref,
+  viewAllLabel,
+}: HorizontalSliderWrapperProps) {
   const router = useRouter()
   const [cloningId, setCloningId] = useState<string | null>(null)
 
@@ -39,6 +47,8 @@ export default function HorizontalSliderWrapper({ title, songs, userId }: Horizo
       songs={songs}
       onAddClick={handleAddToLibrary}
       addingId={cloningId}
+      viewAllHref={viewAllHref}
+      viewAllLabel={viewAllLabel}
     />
   )
 }

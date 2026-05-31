@@ -72,6 +72,8 @@ export default function LibrarySpotifyClient({
             songs={recentSongs}
             onAddClick={handleAddToLibrary}
             addingId={cloningId}
+            viewAllHref="/search/recent-songs"
+            viewAllLabel={t('library.viewAll')}
           />
         )}
 

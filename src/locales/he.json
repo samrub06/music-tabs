@@ -225,7 +225,11 @@
   },
   "library": {
     "recentlyAdded": "שירים שנוספו לאחרונה",
-    "mostPlayed": "השירים המושמעים ביותר"
+    "mostPlayed": "השירים המושמעים ביותר",
+    "viewAll": "הצג הכל",
+    "listView": "רשימה",
+    "gridView": "רשת",
+    "noRecentlyAdded": "אין שירים שנוספו לאחרונה."
   },
   "auth": {
     "signIn": "התחבר",

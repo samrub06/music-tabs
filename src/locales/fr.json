@@ -223,7 +223,11 @@
   },
   "library": {
     "recentlyAdded": "Dernières chansons ajoutées",
-    "mostPlayed": "Chansons les plus écoutées"
+    "mostPlayed": "Chansons les plus écoutées",
+    "viewAll": "Tout voir",
+    "listView": "Liste",
+    "gridView": "Grille",
+    "noRecentlyAdded": "Aucune chanson ajoutée récemment."
   },
   "auth": {
     "signIn": "Se connecter",

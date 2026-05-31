@@ -10,9 +10,18 @@ interface HorizontalSongSliderProps {
   songs: Song[]
   onAddClick?: (song: Song) => void
   addingId?: string | null
+  viewAllHref?: string
+  viewAllLabel?: string
 }
 
-export default function HorizontalSongSlider({ title, songs, onAddClick, addingId }: HorizontalSongSliderProps) {
+export default function HorizontalSongSlider({
+  title,
+  songs,
+  onAddClick,
+  addingId,
+  viewAllHref,
+  viewAllLabel,
+}: HorizontalSongSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
@@ -31,11 +40,19 @@ export default function HorizontalSongSlider({ title, songs, onAddClick, addingI
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0 truncate">
           {title}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 shrink-0">
+          {viewAllHref && viewAllLabel && (
+            <Link
+              href={viewAllHref}
+              className="text-sm font-medium text-primary hover:text-primary/80 whitespace-nowrap"
+            >
+              {viewAllLabel}
+            </Link>
+          )}
           <button
             onClick={() => scroll('left')}
             className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
