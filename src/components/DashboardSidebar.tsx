@@ -7,6 +7,7 @@ import {
     MusicalNoteIcon,
     PencilIcon,
     PlusIcon,
+    MagnifyingGlassIcon,
     TrashIcon,
     ClockIcon,
     FireIcon,
@@ -27,7 +28,6 @@ interface DashboardSidebarProps {
   onFolderChange: (folderId: string | null) => void;
   onClose?: () => void;
   onMoveSong?: (songId: string, folderId: string | undefined) => Promise<void>;
-  onCreateClick?: () => void;
 }
 
 // Component for droppable folder
@@ -76,8 +76,7 @@ export default function DashboardSidebar({
   currentFolder, 
   onFolderChange,
   onClose,
-  onMoveSong,
-  onCreateClick
+  onMoveSong
 }: DashboardSidebarProps) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -150,47 +149,31 @@ export default function DashboardSidebar({
   return (
     <aside className="w-72 bg-white dark:bg-gray-900 shadow-sm border-r border-gray-200 dark:border-gray-700 h-full overflow-y-auto">
       <div className="p-4">
-        {/* Add Song Button - Desktop only */}
-        {onCreateClick && (
-          <div className="mb-4 hidden lg:block">
-            <button
-              onClick={() => {
-                onCreateClick();
-                onClose?.();
-              }}
-              className="w-full flex items-center justify-center px-4 py-3 bg-blue-200 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg hover:bg-blue-300 dark:hover:bg-blue-900/50 transition-colors shadow-sm"
-            >
-              <PlusIcon className="h-5 w-5 mr-2" />
-              Ajouter une chanson
-            </button>
-          </div>
-        )}
-
-        {/* Generate Playlist with AI Button */}
-        <div className="mb-4">
+        {/* Search shortcut */}
+        <div className="mb-4 hidden lg:block">
           <button
             onClick={() => {
-              router.push('/ai-playlist');
+              router.push('/search');
               onClose?.();
             }}
-            className="w-full flex items-center justify-center px-4 py-3 bg-emerald-200 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-sm font-medium rounded-lg hover:bg-emerald-300 dark:hover:bg-emerald-900/50 transition-colors shadow-sm"
+            className="w-full flex items-center justify-center px-4 py-3 bg-blue-200 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg hover:bg-blue-300 dark:hover:bg-blue-900/50 transition-colors shadow-sm"
           >
-            <SparklesIcon className="h-5 w-5 mr-2" />
-            {t('sidebar.generatePlaylistWithAI')}
+            <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
+            {t('navigation.search')}
           </button>
         </div>
 
-        {/* Create Playlist Button */}
+        {/* Playlists shortcut */}
         <div className="mb-4">
           <button
             onClick={() => {
-              router.push('/playlist');
+              router.push('/playlists');
               onClose?.();
             }}
             className="w-full flex items-center justify-center px-4 py-3 bg-purple-200 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 text-sm font-medium rounded-lg hover:bg-purple-300 dark:hover:bg-purple-900/50 transition-colors shadow-sm"
           >
             <SparklesIcon className="h-5 w-5 mr-2" />
-            Créer une playlist
+            {t('navigation.playlists')}
           </button>
         </div>
 

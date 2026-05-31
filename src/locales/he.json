@@ -44,7 +44,13 @@
     "playlists": "פלייליסטים",
     "chords": "אקורדים",
     "profile": "פרופיל",
-    "leaderboard": "לוח תוצאות"
+    "leaderboard": "לוח תוצאות",
+    "more": "עוד"
+  },
+  "moreMenu": {
+    "foldersDescription": "ארגן את השירים שלך",
+    "chordsDescription": "דיאגרמות אקורדים לגיטרה ופסנתר",
+    "addContent": "הוסף תוכן"
   },
   "profile": {
     "title": "פרופיל",
@@ -345,7 +351,9 @@
     "addingSong": "מוסיף שיר...",
     "songsFound": "שירים שנמצאו",
     "noSongsForStyle": "לא נמצאו שירים לסגנון זה",
-    "noResultsForAISuggestions": "לא נמצאו תוצאות להצעות ה-AI"
+    "noResultsForAISuggestions": "לא נמצאו תוצאות להצעות ה-AI",
+    "recentSearches": "חיפושים אחרונים",
+    "sourceHint": "בינלאומי (Ultimate Guitar) · עברית (Tab4U)"
   },
   "folders": {
     "newFolder": "תיקייה חדשה",

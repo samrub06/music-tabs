@@ -3,11 +3,13 @@
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, MusicalNoteIcon, FolderOpenIcon, RectangleStackIcon, FolderIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import { ArrowRightOnRectangleIcon, Bars3Icon, RectangleStackIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon, SparklesIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 import CompactStatsDisplay from './gamification/CompactStatsDisplay';
+import MoreMenu from './MoreMenu';
+import { useFoldersContext } from '@/context/FoldersContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -22,16 +24,14 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const { user, profile, session, loading, signInWithGoogle, signOut } = useAuthContext();
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const { folders } = useFoldersContext();
   
   const isSongPage = pathname.includes('/song/');
   const showMenuButton = !isSongPage;
 
   const handleLogoClick = () => {
-    if (user) {
-      router.push('/songs');
-    } else {
-      router.push('/search');
-    }
+    router.push('/search');
   };
 
   const handleLanguageChange = (newLanguage: 'en' | 'fr' | 'he') => {
@@ -63,6 +63,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   };
 
   return (
+    <>
     <header className="bg-transparent lg:bg-white dark:lg:bg-gray-900 lg:shadow-sm border-0 lg:border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:max-w-none lg:mx-0 lg:px-0">
         <div className="relative flex items-center justify-between h-14 md:h-16">
@@ -112,21 +113,20 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   <span>{t('navigation.songs')}</span>
                 </Link>
                 <Link
-                  href="/folders"
+                  href="/playlists"
                   prefetch={true}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <FolderIcon className="h-5 w-5" />
-                  <span>{t('navigation.folders')}</span>
+                  <SparklesIcon className="h-5 w-5" />
+                  <span>{t('navigation.playlists')}</span>
                 </Link>
-                <Link
-                  href="/chords"
-                  prefetch={true}
+                <button
+                  onClick={() => setIsMoreMenuOpen(true)}
                   className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <MusicalNoteIcon className="h-5 w-5" />
-                  <span>{t('navigation.chords')}</span>
-                </Link>
+                  <EllipsisHorizontalIcon className="h-5 w-5" />
+                  <span>{t('navigation.more')}</span>
+                </button>
                 <Link
                   href="/leaderboard"
                   prefetch={true}
@@ -323,5 +323,13 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         </div>
       </div>
     </header>
+    {user && (
+      <MoreMenu
+        isOpen={isMoreMenuOpen}
+        onClose={() => setIsMoreMenuOpen(false)}
+        folders={folders}
+      />
+    )}
+  </>
   );
 }

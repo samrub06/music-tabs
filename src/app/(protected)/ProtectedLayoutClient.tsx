@@ -3,9 +3,7 @@
 import Header from '@/components/Header'
 import DashboardSidebar from '@/components/DashboardSidebar'
 import BottomNavigation from '@/components/BottomNavigation'
-import CreateMenu from '@/components/CreateMenu'
 import { useAuthContext } from '@/context/AuthContext'
-import { useFoldersContext } from '@/context/FoldersContext'
 import { SidebarProvider } from '@/context/SidebarContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useRouter, usePathname } from 'next/navigation'
@@ -134,7 +132,6 @@ function SidebarWrapper({ onCreateClick }: { onCreateClick?: () => void }) {
           }}
           onClose={() => {}}
           onMoveSong={updateSongFolderAction}
-          onCreateClick={onCreateClick}
         />
       </div>
     </>
@@ -146,9 +143,6 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage()
   const pathname = usePathname()
   const router = useRouter()
-  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false)
-  const { folders: createMenuFolders } = useFoldersContext()
-
   // Check if this is a public route (allowed without auth: search and library playlist detail)
   const isPublicRoute = pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/library/')
   
@@ -222,7 +216,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           <Header onMenuClick={() => {}} pageTitle={pageTitle} />
 
       <div className="flex-1 flex overflow-hidden">
-        {user && <SidebarWrapper onCreateClick={() => setIsCreateMenuOpen(true)} />}
+        {user && <SidebarWrapper />}
         
         {/* Main content */}
           <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden pb-16 lg:pb-0">
@@ -233,14 +227,6 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           {/* Bottom Navigation - Mobile only */}
           <BottomNavigation />
           
-          {/* Create Menu - Desktop only (mobile uses BottomNavigation) */}
-          {user && (
-            <CreateMenu
-              isOpen={isCreateMenuOpen}
-              onClose={() => setIsCreateMenuOpen(false)}
-              folders={createMenuFolders}
-            />
-          )}
         </div>
   )
 }

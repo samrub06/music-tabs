@@ -44,7 +44,13 @@
     "playlists": "Playlists",
     "chords": "Chords",
     "profile": "Profile",
-    "leaderboard": "Leaderboard"
+    "leaderboard": "Leaderboard",
+    "more": "More"
+  },
+  "moreMenu": {
+    "foldersDescription": "Organize your songs",
+    "chordsDescription": "Guitar and piano chord diagrams",
+    "addContent": "Add content"
   },
   "profile": {
     "title": "Profile",
@@ -345,7 +351,9 @@
     "addingSong": "Adding song...",
     "songsFound": "Songs found",
     "noSongsForStyle": "No songs found for this style",
-    "noResultsForAISuggestions": "No search results found for the AI suggestions"
+    "noResultsForAISuggestions": "No search results found for the AI suggestions",
+    "recentSearches": "Recent searches",
+    "sourceHint": "International (Ultimate Guitar) · עברית (Tab4U)"
   },
   "folders": {
     "newFolder": "New folder",

@@ -78,16 +78,13 @@ export default function SearchClient({
     }
   }, [])
 
-  // Auto-focus search input only if focus=true in query params
+  // Auto-focus search input on mount
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search)
-    const shouldFocus = searchParams.get('focus') === 'true'
-    
-    if (shouldFocus && searchInputRef.current) {
-      // Small delay to ensure the input is fully rendered
-      setTimeout(() => {
+    if (searchInputRef.current) {
+      const timer = setTimeout(() => {
         searchInputRef.current?.focus()
-      }, 100)
+      }, 150)
+      return () => clearTimeout(timer)
     }
   }, [])
 
@@ -466,6 +463,11 @@ export default function SearchClient({
               )}
             </div>
           </div>
+          {!searchQuery.trim() && (
+            <p className="mt-2 text-xs text-muted-foreground text-center">
+              {t('search.sourceHint')}
+            </p>
+          )}
         </div>
 
         {/* Message */}
@@ -502,7 +504,7 @@ export default function SearchClient({
           <div className="absolute z-10 w-full mt-2 bg-card border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
             <div className="p-2">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 py-2">
-                Recherches récentes
+                {t('search.recentSearches')}
               </div>
               {recentSearches.map((query, index) => (
                 <button

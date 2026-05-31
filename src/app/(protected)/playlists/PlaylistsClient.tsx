@@ -235,6 +235,13 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
           >
             <PlusIcon className="h-5 w-5" />
           </button>
+          <button
+            onClick={() => router.push('/ai-playlist')}
+            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 transition-colors flex items-center justify-center"
+            aria-label={t('createMenu.generatePlaylistWithAI')}
+          >
+            <SparklesIcon className="h-5 w-5" />
+          </button>
         </div>
 
         {/* View toggle - full width */}
