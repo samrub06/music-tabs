@@ -1,6 +1,26 @@
 let gotScrapingModule: typeof import('got-scraping') | null = null;
 let lastFetchBlocked = false;
 
+export type UgFetchMeta = {
+  blocked: boolean;
+  proxyConfigured: boolean;
+  via: UgFetchResult['via'];
+  statusCode: number;
+  bodyLength: number;
+  hasJsStore: boolean;
+  cloudflare: boolean;
+};
+
+let lastFetchMeta: UgFetchMeta = {
+  blocked: false,
+  proxyConfigured: false,
+  via: 'direct',
+  statusCode: 0,
+  bodyLength: 0,
+  hasJsStore: false,
+  cloudflare: false,
+};
+
 export type UgFetchResult = {
   ok: boolean;
   statusCode: number;
@@ -12,6 +32,20 @@ export type UgFetchResult = {
 
 export function wasUgLastFetchBlocked(): boolean {
   return lastFetchBlocked;
+}
+
+export function getLastUgFetchMeta(): UgFetchMeta {
+  return lastFetchMeta;
+}
+
+export function buildUgSearchErrorMessage(meta: UgFetchMeta): string {
+  if (!meta.proxyConfigured) {
+    return 'Ultimate Guitar bloque les requêtes depuis le serveur (Cloudflare). Ajoutez UG_PROXY_URL sur Vercel (proxy résidentiel recommandé).';
+  }
+  if (meta.cloudflare || meta.blocked) {
+    return 'Proxy actif mais Ultimate Guitar bloque encore la requête (Cloudflare). Le plan datacenter Webshare gratuit ne suffit généralement pas — passez à Rotating Residential.';
+  }
+  return 'Aucun résultat trouvé sur Ultimate Guitar pour cette recherche.';
 }
 
 export function isCloudflareBlocked(body: string, statusCode: number): boolean {
@@ -32,7 +66,35 @@ export function isMissingUgPageData(body: string, url: string): boolean {
 }
 
 function getUgProxyUrl(): string | undefined {
-  return process.env.UG_PROXY_URL?.trim() || undefined;
+  const raw = process.env.UG_PROXY_URL?.trim();
+  if (raw) {
+    return raw.replace(/^['"]|['"]$/g, '');
+  }
+
+  const host = process.env.UG_PROXY_HOST?.trim();
+  const port = process.env.UG_PROXY_PORT?.trim();
+  const username = process.env.UG_PROXY_USERNAME?.trim();
+  const password = process.env.UG_PROXY_PASSWORD?.trim();
+  if (host && port && username && password) {
+    return `http://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}`;
+  }
+
+  return undefined;
+}
+
+function updateLastFetchMeta(result: UgFetchResult, url: string, proxyConfigured: boolean): void {
+  const cloudflare = isCloudflareBlocked(result.body, result.statusCode);
+  const blocked = result.blocked || isMissingUgPageData(result.body, url);
+  lastFetchMeta = {
+    blocked,
+    proxyConfigured,
+    via: result.via,
+    statusCode: result.statusCode,
+    bodyLength: result.body.length,
+    hasJsStore: result.body.includes('js-store'),
+    cloudflare,
+  };
+  lastFetchBlocked = blocked;
 }
 
 async function loadGotScraping() {
@@ -107,6 +169,7 @@ export async function fetchUltimateGuitarHtml(
 
   try {
     const proxyUrl = getUgProxyUrl();
+    const proxyConfigured = Boolean(proxyUrl);
     let result: UgFetchResult;
 
     if (proxyUrl) {
@@ -124,13 +187,11 @@ export async function fetchUltimateGuitarHtml(
       }
     }
 
-    lastFetchBlocked = result.blocked || isMissingUgPageData(result.body, url);
+    updateLastFetchMeta(result, url, proxyConfigured);
     if (lastFetchBlocked) {
       console.error('Ultimate Guitar fetch blocked or empty:', {
         url,
-        statusCode: result.statusCode,
-        via: result.via,
-        bodyLength: result.body.length,
+        ...lastFetchMeta,
         vercel: process.env.VERCEL === '1',
       });
     }
@@ -138,6 +199,16 @@ export async function fetchUltimateGuitarHtml(
     return result;
   } catch (error) {
     console.error('Ultimate Guitar fetch failed:', url, error);
+    const proxyConfigured = Boolean(getUgProxyUrl());
+    lastFetchMeta = {
+      blocked: true,
+      proxyConfigured,
+      via: proxyConfigured ? 'proxy' : 'direct',
+      statusCode: 0,
+      bodyLength: 0,
+      hasJsStore: false,
+      cloudflare: true,
+    };
     lastFetchBlocked = true;
     return {
       ok: false,

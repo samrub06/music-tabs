@@ -337,6 +337,7 @@
     "popularSongs": "השירים המושמעים ביותר",
     "searchError": "שגיאה במהלך החיפוש. אנא נסה שוב.",
     "ugBlocked": "Ultimate Guitar חוסם בקשות מהשרת. פנה למנהל המערכת או נסה שוב מאוחר יותר.",
+    "ugProxyBlocked": "ה-proxy פעיל אך Ultimate Guitar עדיין חוסם (Cloudflare). השתמש ב-Webshare Rotating Residential, לא בתוכנית datacenter החינמית.",
     "invalidData": "נתוני שיר לא תקינים.",
     "addSuccess": "שיר נוסף בהצלחה!",
     "addError": "שגיאה בהוספת השיר.",

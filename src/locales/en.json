@@ -337,6 +337,7 @@
     "popularSongs": "Most played songs",
     "searchError": "Error during search. Please try again.",
     "ugBlocked": "Ultimate Guitar is blocking server requests. Contact the administrator or try again later.",
+    "ugProxyBlocked": "Proxy is active but Ultimate Guitar still blocks the request (Cloudflare). Use Webshare Rotating Residential, not the free datacenter plan.",
     "invalidData": "Invalid song data.",
     "addSuccess": "Song added successfully!",
     "addError": "Error adding song.",

@@ -1,5 +1,5 @@
 import { scrapeSongFromUrl, searchAndScrapeSong, searchSong, searchTab4UOnly, searchUltimateGuitarOnly } from '@/lib/services/scraperService';
-import { wasUgLastFetchBlocked } from '@/lib/services/ugFetch';
+import { wasUgLastFetchBlocked, getLastUgFetchMeta, buildUgSearchErrorMessage } from '@/lib/services/ugFetch';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -79,14 +79,27 @@ export async function GET(request: NextRequest) {
       }
 
       if (results.length === 0) {
+        const meta = source === 'ultimate-guitar' ? getLastUgFetchMeta() : null;
         const blocked = source === 'ultimate-guitar' && wasUgLastFetchBlocked();
         return NextResponse.json(
           {
-            error: blocked
-              ? 'Ultimate Guitar bloque les requêtes depuis le serveur (Cloudflare). Configurez UG_PROXY_URL ou SCRAPER_API_KEY sur Vercel.'
-              : 'Aucun résultat trouvé',
+            error:
+              source === 'ultimate-guitar' && meta
+                ? buildUgSearchErrorMessage(meta)
+                : 'Aucun résultat trouvé',
             results: [],
             blocked,
+            ...(meta
+              ? {
+                  debug: {
+                    proxyConfigured: meta.proxyConfigured,
+                    via: meta.via,
+                    statusCode: meta.statusCode,
+                    hasJsStore: meta.hasJsStore,
+                    cloudflare: meta.cloudflare,
+                  },
+                }
+              : {}),
           },
           { status: 200 }
         );

@@ -234,7 +234,11 @@ export default function SearchClient({
         } else {
           const errorMsg =
             data.error ||
-            (data.blocked ? t('search.ugBlocked') : t('search.noResultsFor').replace('{query}', query))
+            (data.debug?.proxyConfigured && data.blocked
+              ? t('search.ugProxyBlocked')
+              : data.blocked
+                ? t('search.ugBlocked')
+                : t('search.noResultsFor').replace('{query}', query))
           setMessage({ type: 'error', text: errorMsg })
           setSearchResults([])
           setExistingSongs(new Map())

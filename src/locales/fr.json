@@ -335,6 +335,7 @@
     "popularSongs": "Chansons les plus écoutées",
     "searchError": "Erreur lors de la recherche. Veuillez réessayer.",
     "ugBlocked": "Ultimate Guitar bloque les requêtes depuis le serveur. Contactez l'administrateur ou réessayez plus tard.",
+    "ugProxyBlocked": "Proxy actif mais Ultimate Guitar bloque encore (Cloudflare). Utilisez un proxy résidentiel Webshare, pas le plan datacenter gratuit.",
     "invalidData": "Données de chanson invalides.",
     "addSuccess": "Chanson ajoutée avec succès !",
     "addError": "Impossible de récupérer la chanson.",
