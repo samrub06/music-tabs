@@ -1,241 +1,72 @@
 'use client'
 
 import Header from '@/components/Header'
-import DashboardSidebar from '@/components/DashboardSidebar'
+import { AppSidebar } from '@/components/AppSidebar'
 import BottomNavigation from '@/components/BottomNavigation'
 import { useAuthContext } from '@/context/AuthContext'
-import { SidebarProvider } from '@/context/SidebarContext'
 import { useLanguage } from '@/context/LanguageContext'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState, useMemo, useRef } from 'react'
-import { useSupabase } from '@/lib/hooks/useSupabase'
-import { folderRepo } from '@/lib/services/folderRepo'
-import { songRepo } from '@/lib/services/songRepo'
-import { playlistRepo } from '@/lib/services/playlistRepo'
-import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions'
+import { useEffect } from 'react'
 import { updateStreakAction } from '@/app/(protected)/gamification/actions'
-import type { Folder, Song, Playlist } from '@/types'
-
-// Cache global pour les données de la sidebar (persiste entre navigations)
-let sidebarDataCache: {
-  folders: Folder[]
-  songs: Song[]
-  playlists: Playlist[]
-  timestamp: number
-  userId: string | null
-} | null = null
-
-const CACHE_DURATION = 30000 // 30 secondes
-
-function SidebarWrapper({ onCreateClick }: { onCreateClick?: () => void }) {
-  const { user, loading: authLoading } = useAuthContext()
-  const { supabase } = useSupabase()
-  const [folders, setFolders] = useState<Folder[]>([])
-  const [songs, setSongs] = useState<Song[]>([])
-  const [playlists, setPlaylists] = useState<Playlist[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentFolder, setCurrentFolder] = useState<string | null>(null)
-  const router = useRouter()
-
-  // Vérifier si le cache est valide
-  const isCacheValid = useMemo(() => {
-    if (!sidebarDataCache) return false
-    if (sidebarDataCache.userId !== user?.id) return false
-    const now = Date.now()
-    return (now - sidebarDataCache.timestamp) < CACHE_DURATION
-  }, [user?.id])
-
-  useEffect(() => {
-    if (!user || authLoading) {
-      setLoading(false)
-      return
-    }
-
-    // Utiliser le cache si valide
-    if (isCacheValid && sidebarDataCache) {
-      setFolders(sidebarDataCache.folders)
-      setSongs(sidebarDataCache.songs)
-      setPlaylists(sidebarDataCache.playlists)
-      setLoading(false)
-      return
-    }
-
-    // Sinon, charger les données
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        // Use lightweight versions for folders and playlists
-        const [foldersData, songsData, playlistsData] = await Promise.all([
-          folderRepo(supabase).getAllFoldersLightweight(),
-          songRepo(supabase).getAllSongs(),
-          playlistRepo(supabase).getAllPlaylistsLightweight()
-        ])
-        
-        // Convert lightweight folders to full Folder objects
-        const foldersFull: Folder[] = foldersData.map(f => ({
-          id: f.id,
-          name: f.name,
-          parentId: undefined,
-          displayOrder: f.displayOrder,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }))
-        
-        // Convert lightweight playlists to full Playlist objects
-        const playlistsFull: Playlist[] = playlistsData.map(p => ({
-          id: p.id,
-          name: p.name,
-          description: undefined,
-          createdAt: p.createdAt,
-          updatedAt: p.createdAt,
-          songIds: [] // Will be loaded when playlist is clicked
-        }))
-        
-        // Mettre à jour le cache
-        sidebarDataCache = {
-          folders: foldersFull,
-          songs: songsData,
-          playlists: playlistsFull,
-          timestamp: Date.now(),
-          userId: user.id
-        }
-        
-        setFolders(foldersFull)
-        setSongs(songsData)
-        setPlaylists(playlistsFull)
-      } catch (error) {
-        console.error('Error fetching sidebar data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [user, authLoading, supabase, isCacheValid])
-
-  if (!user || (loading && !isCacheValid)) {
-    return null
-  }
-
-  return (
-    <>
-      {/* Sidebar - Desktop only */}
-      <div className="hidden lg:block">
-        <DashboardSidebar
-          songs={songs}
-          folders={folders}
-          playlists={playlists}
-          currentFolder={currentFolder}
-          onFolderChange={(folderId) => {
-            setCurrentFolder(folderId)
-            router.refresh()
-          }}
-          onClose={() => {}}
-          onMoveSong={updateSongFolderAction}
-        />
-      </div>
-    </>
-  )
-}
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuthContext()
   const { t } = useLanguage()
   const pathname = usePathname()
   const router = useRouter()
-  // Check if this is a public route (allowed without auth: search and library playlist detail)
   const isPublicRoute = pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/library/')
-  
-  // Redirect non-authenticated users from protected routes (except public routes)
+
   useEffect(() => {
-    // Don't redirect while auth is loading
     if (authLoading) return
-    
-    // Don't redirect if already on home page or public route
     if (pathname === '/' || isPublicRoute) return
-    
-    // Redirect non-authenticated users from protected routes
     if (!user) {
       router.push('/')
     }
   }, [user, authLoading, pathname, isPublicRoute, router])
 
-  // Update streak on page load (once per session)
   useEffect(() => {
     if (!user || authLoading) return
-    
-    // Update streak (only once per page load, not on every navigation)
     updateStreakAction().catch(error => {
       console.error('Error updating streak:', error)
     })
-  }, [user?.id, authLoading]) // Run when user changes or auth loading completes
+  }, [user?.id, authLoading])
 
-  // Map pathname to page title
   const getPageTitle = (path: string): string | undefined => {
-    if (path.startsWith('/song/')) {
-      return undefined // No title for song pages
-    }
-    if (path.startsWith('/library/')) {
-      return t('navigation.library')
-    }
-    if (path === '/search' || path.startsWith('/search/')) {
-      return t('navigation.search')
-    }
-    if (path === '/songs' || path.startsWith('/songs/')) {
-      return t('navigation.songs')
-    }
-    if (path === '/folders' || path.startsWith('/folders/')) {
-      return t('navigation.folders')
-    }
-    if (path === '/chords' || path.startsWith('/chords/')) {
-      return t('navigation.chords')
-    }
-    if (path === '/playlists' || path.startsWith('/playlists/')) {
-      return t('navigation.playlists')
-    }
+    if (path.startsWith('/song/')) return undefined
+    if (path.startsWith('/library/')) return t('navigation.library')
+    if (path === '/search' || path.startsWith('/search/')) return t('navigation.search')
+    if (path === '/songs' || path.startsWith('/songs/')) return t('navigation.songs')
+    if (path === '/folders' || path.startsWith('/folders/')) return t('navigation.folders')
+    if (path === '/chords' || path.startsWith('/chords/')) return t('navigation.chords')
+    if (path === '/playlists' || path.startsWith('/playlists/')) return t('navigation.playlists')
     if (path === '/playlist' || path.startsWith('/playlist/')) {
-      // Si c'est /playlist/[playlistId], on ne met pas de titre (sera géré par la page)
-      if (path.match(/^\/playlist\/[^/]+$/)) {
-        return undefined
-      }
+      if (path.match(/^\/playlist\/[^/]+$/)) return undefined
       return t('createMenu.createPlaylist')
     }
-    if (path === '/profile' || path.startsWith('/profile/')) {
-      return t('navigation.profile')
-    }
-    if (path === '/leaderboard' || path.startsWith('/leaderboard/')) {
-      return t('navigation.leaderboard')
-    }
+    if (path === '/profile' || path.startsWith('/profile/')) return t('navigation.profile')
+    if (path === '/leaderboard' || path.startsWith('/leaderboard/')) return t('navigation.leaderboard')
     return undefined
   }
 
   const pageTitle = getPageTitle(pathname)
 
   return (
-        <div className="h-screen flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
-          <Header onMenuClick={() => {}} pageTitle={pageTitle} />
-
-      <div className="flex-1 flex overflow-hidden">
-        {user && <SidebarWrapper />}
-        
-        {/* Main content */}
+    <SidebarProvider defaultOpen>
+      <div className="flex h-svh w-full bg-gray-50 dark:bg-gray-900">
+        {user && <AppSidebar />}
+        <SidebarInset className="flex flex-col overflow-hidden">
+          <Header pageTitle={pageTitle} />
           <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden pb-16 lg:pb-0">
             {children}
           </div>
-          </div>
-          
-          {/* Bottom Navigation - Mobile only */}
           <BottomNavigation />
-          
-        </div>
-  )
-}
-
-export default function ProtectedLayoutClient({ children }: { children: React.ReactNode }) {
-  return (
-    <SidebarProvider>
-      <ProtectedLayoutContent>{children}</ProtectedLayoutContent>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   )
 }
 
+export default function ProtectedLayoutClient({ children }: { children: React.ReactNode }) {
+  return <ProtectedLayoutContent>{children}</ProtectedLayoutContent>
+}

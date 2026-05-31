@@ -1,335 +1,269 @@
-'use client';
+'use client'
 
-import { useAuthContext } from '@/context/AuthContext';
-import { useLanguage } from '@/context/LanguageContext';
-import { useTheme } from '@/context/ThemeContext';
-import { ArrowRightOnRectangleIcon, Bars3Icon, RectangleStackIcon, SunIcon, MoonIcon, MagnifyingGlassIcon, TrophyIcon, SparklesIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
-import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useState } from 'react';
-import CompactStatsDisplay from './gamification/CompactStatsDisplay';
-import MoreMenu from './MoreMenu';
-import { useFoldersContext } from '@/context/FoldersContext';
+import { useAuthContext } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
+import { useTheme } from '@/context/ThemeContext'
+import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import {
+  Menu,
+  Search,
+  Trophy,
+  Sun,
+  Moon,
+  LogOut,
+  User,
+} from 'lucide-react'
+import CompactStatsDisplay from './gamification/CompactStatsDisplay'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 interface HeaderProps {
-  onMenuClick?: () => void;
-  pageTitle?: string;
+  onMenuClick?: () => void
+  pageTitle?: string
+}
+
+const LANGUAGES = [
+  { code: 'en' as const, name: 'English', flag: '🇺🇸' },
+  { code: 'fr' as const, name: 'Français', flag: '🇫🇷' },
+  { code: 'he' as const, name: 'עברית', flag: '🇮🇱' },
+]
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      />
+    </svg>
+  )
+}
+
+function getInitials(
+  name: string | null | undefined,
+  email: string | null | undefined
+): string {
+  if (name) {
+    const parts = name.trim().split(' ')
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    }
+    return parts[0].substring(0, 2).toUpperCase()
+  }
+  if (email) {
+    return email.substring(0, 2).toUpperCase()
+  }
+  return 'U'
 }
 
 export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { language, setLanguage, t } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
-  const { user, profile, session, loading, signInWithGoogle, signOut } = useAuthContext();
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const { folders } = useFoldersContext();
-  
-  const isSongPage = pathname.includes('/song/');
-  const showMenuButton = !isSongPage;
+  const pathname = usePathname()
+  const router = useRouter()
+  const { language, setLanguage, t } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
+  const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext()
+
+  const isSongPage = pathname.includes('/song/')
+  const showMenuButton = !isSongPage
+  const usesAppSidebar = !!user && !onMenuClick
+  const currentLanguage =
+    LANGUAGES.find((lang) => lang.code === language) ?? LANGUAGES[0]
 
   const handleLogoClick = () => {
-    router.push('/search');
-  };
-
-  const handleLanguageChange = (newLanguage: 'en' | 'fr' | 'he') => {
-    setLanguage(newLanguage);
-    setShowLanguageMenu(false);
-  };
-
-  const languages = [
-    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
-    { code: 'fr' as const, name: 'Français', flag: '🇫🇷' },
-    { code: 'he' as const, name: 'עברית', flag: '🇮🇱' }
-  ];
-
-  const currentLanguage = languages.find(lang => lang.code === language) || languages[0];
-
-  // Générer les initiales de l'utilisateur
-  const getInitials = (name: string | null | undefined, email: string | null | undefined) => {
-    if (name) {
-      const parts = name.trim().split(' ');
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      }
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-    if (email) {
-      return email.substring(0, 2).toUpperCase();
-    }
-    return 'U';
-  };
+    router.push('/search')
+  }
 
   return (
-    <>
-    <header className="bg-transparent lg:bg-white dark:lg:bg-gray-900 lg:shadow-sm border-0 lg:border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:max-w-none lg:mx-0 lg:px-0">
-        <div className="relative flex items-center justify-between h-14 md:h-16">
-          {/* Left side: Mobile menu button + Navigation */}
-          <div className="flex items-center space-x-1 md:space-x-4">
-            {/* Mobile menu button - Desktop only (sidebar hidden on mobile) */}
-            {showMenuButton && (
-              <button
+    <header className="flex-shrink-0 border-b border-border bg-transparent lg:bg-background">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 sm:h-16 sm:px-6 lg:max-w-none lg:px-4">
+        {/* Left */}
+        <div className="flex items-center gap-1 md:gap-2">
+          {showMenuButton && user && (
+            onMenuClick ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={onMenuClick}
-                className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="hidden lg:inline-flex"
                 aria-label={t('common.openMenu')}
               >
-                <Bars3Icon className="h-6 w-6" />
-              </button>
-            )}
-
-            {/* Mobile icon navigation - Hidden for authenticated users (replaced by bottom nav) */}
-            {!user && (
-              <nav className="flex md:hidden items-center">
-                <Link
-                  href="/search"
-                  className="p-2 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <MagnifyingGlassIcon className="h-6 w-6" />
-                  <span className="sr-only">{t('navigation.search')}</span>
-                </Link>
-              </nav>
-            )}
-            
-            {/* Authenticated navigation - Desktop only (tablets use bottom nav) */}
-            {user && (
-              <nav className="hidden lg:flex items-center space-x-2">
-                <Link
-                  href="/search"
-                  prefetch={true}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <MagnifyingGlassIcon className="h-5 w-5" />
-                  <span>{t('navigation.search')}</span>
-                </Link>
-                <Link
-                  href="/songs"
-                  prefetch={true}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <RectangleStackIcon className="h-5 w-5" />
-                  <span>{t('navigation.songs')}</span>
-                </Link>
-                <Link
-                  href="/playlists"
-                  prefetch={true}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <SparklesIcon className="h-5 w-5" />
-                  <span>{t('navigation.playlists')}</span>
-                </Link>
-                <button
-                  onClick={() => setIsMoreMenuOpen(true)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <EllipsisHorizontalIcon className="h-5 w-5" />
-                  <span>{t('navigation.more')}</span>
-                </button>
-                <Link
-                  href="/leaderboard"
-                  prefetch={true}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <TrophyIcon className="h-5 w-5" />
-                  <span>{t('navigation.leaderboard')}</span>
-                </Link>
-              </nav>
-            )}
-          </div>
-          
-          {/* Page Title - Mobile only, left-aligned */}
-          {pageTitle && (
-            <div className="lg:hidden flex-1">
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 text-left">{pageTitle}</h1>
-            </div>
+                <Menu className="h-5 w-5" />
+              </Button>
+            ) : (
+              <SidebarTrigger className="hidden lg:flex -ml-1" />
+            )
           )}
-          
-          {/* Logo - Centered on all screen sizes */}
-          <button 
-            onClick={handleLogoClick}
-            className="flex items-center space-x-1 sm:space-x-2 hover:opacity-80 transition-opacity cursor-pointer absolute left-1/2 transform -translate-x-1/2"
-            aria-label={t('common.backToHome')}
-          >
-            <span className="text-xl md:text-2xl">🌶️</span>
-            <span className="hidden sm:inline text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {t('common.appName')}
-            </span>
-          </button>
-          
-          {/* Right side: Language + Leaderboard + Theme + Avatar */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* Language selector */}
-            <div className="relative">
-              <button
-                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-                className="flex items-center justify-center p-1.5 sm:p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors min-w-[36px] sm:min-w-0"
+
+          {!user && (
+            <Button asChild variant="ghost" size="icon" className="md:hidden">
+              <Link href="/search">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">{t('navigation.search')}</span>
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        {/* Mobile page title */}
+        {pageTitle && (
+          <div className="flex-1 lg:hidden">
+            <h1 className="text-left text-lg font-semibold text-foreground">
+              {pageTitle}
+            </h1>
+          </div>
+        )}
+
+        {/* Logo */}
+        <button
+          type="button"
+          onClick={handleLogoClick}
+          aria-label={t('common.backToHome')}
+          className={cn(
+            'absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 transition-opacity hover:opacity-80 sm:gap-2',
+            usesAppSidebar && 'lg:hidden'
+          )}
+        >
+          <span className="text-xl md:text-2xl">🌶️</span>
+          <span className="hidden text-lg font-semibold text-foreground sm:inline">
+            {t('common.appName')}
+          </span>
+        </button>
+
+        {/* Right */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="min-w-9"
                 aria-label={t('common.selectLanguage')}
               >
-                <span className="text-base sm:text-lg font-medium">{currentLanguage.flag}</span>
-              </button>
-              
-              {showLanguageMenu && (
-                <>
-                  {/* Overlay pour fermer le menu */}
-                  <div 
-                    className="fixed inset-0 z-[50]" 
-                    onClick={() => setShowLanguageMenu(false)}
-                  />
-                  {/* Menu */}
-                  <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
-                  {languages.map((language) => (
-                    <button
-                      key={language.code}
-                      onClick={() => handleLanguageChange(language.code)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2 ${
-                        language.code === currentLanguage.code ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      <span>{language.flag}</span>
-                      <span>{language.name}</span>
-                    </button>
-                  ))}
-                </div>
-                </>
-              )}
-            </div>
-
-            {/* Leaderboard button - Mobile only (for authenticated users) */}
-            {user && (
-              <Link
-                href="/leaderboard"
-                className="lg:hidden p-2 rounded-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label={t('navigation.leaderboard')}
+                <span className="text-base sm:text-lg">{currentLanguage.flag}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuRadioGroup
+                value={language}
+                onValueChange={(value) =>
+                  setLanguage(value as 'en' | 'fr' | 'he')
+                }
               >
-                <TrophyIcon className="h-6 w-6" />
+                {LANGUAGES.map((lang) => (
+                  <DropdownMenuRadioItem key={lang.code} value={lang.code}>
+                    <span>{lang.flag}</span>
+                    <span>{lang.name}</span>
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {user && (
+            <Button asChild variant="ghost" size="icon" className="lg:hidden">
+              <Link href="/leaderboard" aria-label={t('navigation.leaderboard')}>
+                <Trophy className="h-5 w-5" />
               </Link>
-            )}
-            
-            {/* User menu - Avatar (tout à droite) */}
-            {!loading && (
-              <div className="relative">
-                {user ? (
-                  <>
-                    <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 p-0.5 sm:p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      {profile?.avatar_url ? (
-                        <img 
-                          src={profile.avatar_url} 
-                          alt={profile.full_name || t('common.user')} 
-                          className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
-                        />
-                      ) : (
-                        <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm border-2 border-gray-200 dark:border-gray-700">
-                          {getInitials(profile?.full_name, profile?.email)}
-                        </div>
-                      )}
-                    </button>
-                    
-                    {showUserMenu && (
-                      <>
-                        {/* Overlay pour fermer le menu */}
-                        <div 
-                          className="fixed inset-0 z-[50]" 
-                          onClick={() => setShowUserMenu(false)}
-                        />
-                        {/* Menu */}
-                        <div className="fixed right-3 sm:absolute sm:right-0 sm:mt-2 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[55] border border-gray-200 dark:border-gray-700">
-                        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {profile?.full_name || t('common.user')}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {profile?.email}
-                          </p>
-                          <div className="mt-2">
-                            <CompactStatsDisplay />
-                          </div>
-                        </div>
-                       
-                        <Link
-                          href="/profile"
-                          onClick={() => setShowUserMenu(false)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                        >
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          <span>{t('navigation.profile')}</span>
-                        </Link>
-                       
-                        <button
-                          onClick={() => {
-                            toggleTheme();
-                            setShowUserMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                        >
-                          {theme === 'dark' ? (
-                            <SunIcon className="h-5 w-5" />
-                          ) : (
-                            <MoonIcon className="h-5 w-5" />
-                          )}
-                          <span>{theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}</span>
-                        </button>
-                       
-                        <button
-                          onClick={() => {
-                            signOut();
-                            setShowUserMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                        >
-                          <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                          <span>{t('auth.signOut')}</span>
-                        </button>
-                      </div>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <button
-                    onClick={signInWithGoogle}
-                    className="flex items-center space-x-2 px-2 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
-                    title={t('auth.signInWithGoogle')}
+            </Button>
+          )}
+
+          {!loading && (
+            user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-full p-0"
+                    aria-label={t('navigation.profile')}
                   >
-                    <svg className="h-5 w-5 flex-shrink-0" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.full_name || t('common.user')}
+                        className="h-8 w-8 rounded-full border-2 border-border object-cover sm:h-9 sm:w-9"
                       />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+                    ) : (
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-border bg-gradient-to-br from-blue-500 to-indigo-600 text-xs font-semibold text-white sm:h-9 sm:w-9 sm:text-sm">
+                        {getInitials(profile?.full_name, profile?.email)}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="truncate text-sm font-medium">
+                      {profile?.full_name || t('common.user')}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {profile?.email}
+                    </p>
+                    <div className="mt-2">
+                      <CompactStatsDisplay />
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <User />
+                      {t('navigation.profile')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={toggleTheme}>
+                    {theme === 'dark' ? <Sun /> : <Moon />}
+                    {theme === 'dark'
+                      ? t('common.lightMode')
+                      : t('common.darkMode')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut />
+                    {t('auth.signOut')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={signInWithGoogle}
+                title={t('auth.signInWithGoogle')}
+                className="gap-2"
+              >
+                <GoogleIcon className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
+              </Button>
+            )
+          )}
         </div>
       </div>
     </header>
-    {user && (
-      <MoreMenu
-        isOpen={isMoreMenuOpen}
-        onClose={() => setIsMoreMenuOpen(false)}
-        folders={folders}
-      />
-    )}
-  </>
-  );
+  )
 }
