@@ -460,17 +460,19 @@ export default function SearchClient({
                   setIsAIMode(!isAIMode)
                 }}
                 className={cn(
-                  'flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors shrink-0',
+                  'flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors shrink-0 text-purple-600 dark:text-purple-400',
                   isAIMode
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                    ? 'bg-purple-500/15 hover:bg-purple-500/20'
+                    : 'hover:bg-purple-500/10'
                 )}
                 aria-label={isAIMode ? t('search.disableAIStyleSearch') : t('search.enableAIStyleSearch')}
                 aria-pressed={isAIMode}
                 type="button"
               >
-                <SparklesIcon className="h-4 w-4 shrink-0" />
-                <span className="text-xs font-medium whitespace-nowrap">{t('search.askWithAI')}</span>
+                <SparklesIcon className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                <span className="text-xs font-medium whitespace-nowrap text-purple-600 dark:text-purple-400">
+                  {t('search.askWithAI')}
+                </span>
               </button>
               {searchQuery && (
                 <button
@@ -509,14 +511,15 @@ export default function SearchClient({
 
         {/* Recent searches — below search bar with vignettes */}
         {showRecentSearches && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between gap-3 mb-2">
+          <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2 mb-2 min-w-0">
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 {t('search.recentSearches')}
               </h2>
               <Link
                 href="/search/recent"
                 className="text-xs font-medium text-primary hover:text-primary/80 shrink-0"
+                onMouseDown={(e) => e.preventDefault()}
               >
                 {t('search.viewAllRecent')}
               </Link>

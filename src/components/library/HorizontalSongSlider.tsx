@@ -41,18 +41,20 @@ export default function HorizontalSongSlider({
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4 gap-3">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0 truncate">
-          {title}
-        </h2>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
+            {title}
+          </h2>
           {viewAllHref && viewAllLabel && (
             <Link
               href={viewAllHref}
-              className="text-sm font-medium text-primary hover:text-primary/80 whitespace-nowrap"
+              className="text-sm font-medium text-primary hover:text-primary/80 whitespace-nowrap shrink-0"
             >
               {viewAllLabel}
             </Link>
           )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => scroll('left')}
             className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
