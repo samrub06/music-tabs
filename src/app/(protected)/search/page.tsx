@@ -10,8 +10,10 @@ export default async function SearchPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <SearchClient userId={user?.id}>
-      <LibrarySections userId={user?.id} />
-    </SearchClient>
+    <Suspense fallback={<div className="p-4 pt-8 animate-pulse h-14 bg-muted rounded-xl max-w-7xl mx-auto" />}>
+      <SearchClient userId={user?.id}>
+        <LibrarySections userId={user?.id} />
+      </SearchClient>
+    </Suspense>
   )
 }

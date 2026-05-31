@@ -39,7 +39,7 @@
     "addSongMobile": "Add Song",
     "songs": "Songs",
     "library": "Library",
-    "search": "Search",
+    "search": "Exploreur",
     "folders": "Folders",
     "playlists": "Playlists",
     "chords": "Chords",
@@ -352,7 +352,13 @@
     "songsFound": "Songs found",
     "noSongsForStyle": "No songs found for this style",
     "noResultsForAISuggestions": "No search results found for the AI suggestions",
-    "recentSearches": "Recent searches"
+    "recentSearches": "Recent searches",
+    "viewAllRecent": "View all",
+    "noRecentSearches": "No recent searches yet.",
+    "clearRecent": "Clear all",
+    "startSearching": "Start searching",
+    "askWithAI": "Ask with AI",
+    "aiPlaceholder": "Describe a musical style..."
   },
   "folders": {
     "newFolder": "New folder",

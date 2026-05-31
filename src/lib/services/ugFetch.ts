@@ -65,7 +65,18 @@ export function isMissingUgPageData(body: string, url: string): boolean {
   return !body.includes('js-store') && !body.includes('data-content');
 }
 
-function getUgProxyUrl(): string | undefined {
+function isUgProxyDisabled(): boolean {
+  if (process.env.UG_SKIP_PROXY === 'true' || process.env.UG_SKIP_PROXY === '1') {
+    return true;
+  }
+  // Local dev: residential IP usually works; skip proxy unless explicitly forced
+  if (process.env.NODE_ENV === 'development' && process.env.UG_FORCE_PROXY !== 'true' && process.env.UG_FORCE_PROXY !== '1') {
+    return true;
+  }
+  return false;
+}
+
+function getUgProxyUrlFromEnv(): string | undefined {
   const raw = process.env.UG_PROXY_URL?.trim();
   if (raw) {
     return raw.replace(/^['"]|['"]$/g, '');
@@ -80,6 +91,18 @@ function getUgProxyUrl(): string | undefined {
   }
 
   return undefined;
+}
+
+function getUgProxyUrl(): string | undefined {
+  if (isUgProxyDisabled()) {
+    return undefined;
+  }
+  return getUgProxyUrlFromEnv();
+}
+
+/** True when proxy credentials exist in env (even if skipped in development). */
+function isUgProxyConfiguredInEnv(): boolean {
+  return Boolean(getUgProxyUrlFromEnv());
 }
 
 function updateLastFetchMeta(result: UgFetchResult, url: string, proxyConfigured: boolean): void {
@@ -197,6 +220,9 @@ export async function fetchUltimateGuitarHtml(
       console.log('UG fetch via proxy (UG_PROXY_URL configured):', url);
       result = await fetchViaGotScraping(url, headers, proxyUrl);
     } else {
+      if (isUgProxyConfiguredInEnv() && isUgProxyDisabled()) {
+        console.log('UG fetch direct (development, proxy skipped):', url);
+      }
       result = await fetchViaGotScraping(url, headers);
     }
 

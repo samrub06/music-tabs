@@ -39,7 +39,7 @@
     "addSongMobile": "הוסף",
     "songs": "שירים",
     "library": "ספרייה",
-    "search": "חיפוש",
+    "search": "Exploreur",
     "folders": "תיקיות",
     "playlists": "פלייליסטים",
     "chords": "אקורדים",
@@ -352,7 +352,11 @@
     "songsFound": "שירים שנמצאו",
     "noSongsForStyle": "לא נמצאו שירים לסגנון זה",
     "noResultsForAISuggestions": "לא נמצאו תוצאות להצעות ה-AI",
-    "recentSearches": "חיפושים אחרונים"
+    "recentSearches": "חיפושים אחרונים",
+    "viewAllRecent": "הצג הכל",
+    "noRecentSearches": "אין חיפושים אחרונים.",
+    "clearRecent": "נקה הכל",
+    "startSearching": "התחל לחפש"
   },
   "folders": {
     "newFolder": "תיקייה חדשה",

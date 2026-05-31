@@ -35,6 +35,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const getPageTitle = (path: string): string | undefined => {
     if (path.startsWith('/song/')) return undefined
     if (path.startsWith('/library/')) return t('navigation.library')
+    if (path === '/search/recent') return t('search.recentSearches')
     if (path === '/search' || path.startsWith('/search/')) return t('navigation.search')
     if (path === '/songs' || path.startsWith('/songs/')) return t('navigation.songs')
     if (path === '/folders' || path.startsWith('/folders/')) return t('navigation.folders')

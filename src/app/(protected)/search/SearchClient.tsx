@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon, ClockIcon, PlusIcon, PlayIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, PlayIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
@@ -11,6 +11,15 @@ import { songRepo } from '@/lib/services/songRepo'
 import type { NewSongData } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { RecentSearchList } from '@/components/search/RecentSearchList'
+import {
+  FALLBACK_SEARCH_IMAGE_URL,
+  loadRecentSearches,
+  RECENT_SEARCHES_PREVIEW,
+  upsertRecentSearch,
+  type RecentSearchItem,
+} from '@/lib/recentSearches'
 
 import type { Song } from '@/types'
 import type { ReactNode } from 'react'
@@ -38,74 +47,36 @@ interface SearchResult {
   tabId?: string
 }
 
-const RECENT_SEARCHES_KEY = 'recentSearches'
-const MAX_RECENT_SEARCHES = 10
-
 export default function SearchClient({
   userId,
   children
 }: SearchClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { t } = useLanguage()
   const { supabase } = useSupabase()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const initialQueryApplied = useRef(false)
   
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [existingSongs, setExistingSongs] = useState<Map<number, string>>(new Map()) // resultIndex -> songId
   const [isSearching, setIsSearching] = useState(false)
   const [isCheckingExisting, setIsCheckingExisting] = useState(false)
-  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([])
   const [addingSongId, setAddingSongId] = useState<string | null>(null)
   const [viewingSongId, setViewingSongId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
-  const [isInputFocused, setIsInputFocused] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false) // Track if search was performed
-  const [isAIMode, setIsAIMode] = useState(false) // AI mode toggle
+  const [hasSearched, setHasSearched] = useState(false)
+  const [isAIMode, setIsAIMode] = useState(false)
 
-  // Load recent searches from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(RECENT_SEARCHES_KEY)
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          setRecentSearches(Array.isArray(parsed) ? parsed : [])
-        } catch (e) {
-          console.error('Error parsing recent searches:', e)
-        }
-      }
-    }
+    setRecentSearches(loadRecentSearches())
   }, [])
 
-  // Auto-focus search input on mount
-  useEffect(() => {
-    if (searchInputRef.current) {
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus()
-      }, 150)
-      return () => clearTimeout(timer)
-    }
-  }, [])
-
-  // Save search to recent searches
-  const saveToRecentSearches = (query: string) => {
-    if (!query.trim()) return
-    
-    const trimmed = query.trim()
-    setRecentSearches(prev => {
-      // Remove if already exists
-      const filtered = prev.filter(s => s.toLowerCase() !== trimmed.toLowerCase())
-      // Add to beginning
-      const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated))
-      }
-      
-      return updated
-    })
+  const saveToRecentSearches = (query: string, previewResult?: SearchResult) => {
+    const updated = upsertRecentSearch(query, previewResult)
+    setRecentSearches(updated)
   }
 
   // Check if Hebrew text
@@ -208,7 +179,7 @@ export default function SearchClient({
 
         if (allResults.length > 0) {
           setSearchResults(allResults)
-          saveToRecentSearches(query.trim())
+          saveToRecentSearches(query.trim(), allResults[0])
           await checkExistingSongs(allResults)
         } else {
           setMessage({ type: 'error', text: t('search.noResultsForAISuggestions') })
@@ -225,7 +196,7 @@ export default function SearchClient({
 
         if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
           setSearchResults(data.results)
-          saveToRecentSearches(query.trim())
+          saveToRecentSearches(query.trim(), data.results[0])
           // Check if results exist in user's songs
           await checkExistingSongs(data.results)
         } else {
@@ -252,6 +223,14 @@ export default function SearchClient({
     }
   }, [isAIMode, checkExistingSongs, t])
 
+  useEffect(() => {
+    const q = searchParams.get('q')?.trim()
+    if (!q || initialQueryApplied.current) return
+    initialQueryApplied.current = true
+    setSearchQuery(q)
+    performSearch(q)
+  }, [searchParams, performSearch])
+
   // Handle search input change
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
@@ -268,9 +247,9 @@ export default function SearchClient({
   }
 
   // Handle recent search click
-  const handleRecentSearchClick = (query: string) => {
-    setSearchQuery(query)
-    performSearch(query)
+  const handleRecentSearchClick = (item: RecentSearchItem) => {
+    setSearchQuery(item.query)
+    performSearch(item.query)
   }
 
   // Handle clear search - Reset all search state
@@ -280,26 +259,8 @@ export default function SearchClient({
     setExistingSongs(new Map())
     setMessage(null)
     setHasSearched(false)
-    setIsInputFocused(false)
     setAddingSongId(null)
-    if (searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
   }
-
-  // Handle input focus
-  const handleInputFocus = () => {
-    setIsInputFocused(true)
-  }
-
-  // Handle input blur
-  const handleInputBlur = () => {
-    // Delay to allow click on recent search items
-    setTimeout(() => {
-      setIsInputFocused(false)
-    }, 200)
-  }
-
 
   // Build NewSongData from scraped data
   const buildNewSongDataFromScrape = (
@@ -406,7 +367,9 @@ export default function SearchClient({
   }
 
   const hasSearchResults = searchQuery.trim() && searchResults.length > 0
-  const showLibrarySections = !searchQuery.trim() && !isInputFocused
+  const showLibrarySections = !searchQuery.trim() && searchResults.length === 0 && !hasSearched
+  const showRecentSearches =
+    !searchQuery.trim() && searchResults.length === 0 && !isSearching && recentSearches.length > 0
 
   return (
     <div className="p-4 pt-8 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 overflow-y-auto min-h-screen bg-background overflow-x-hidden">
@@ -423,8 +386,6 @@ export default function SearchClient({
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
               placeholder={isAIMode ? 'Describe a musical style...' : t('search.searchPlaceholder')}
               className={`block w-full pl-12 pr-24 py-4 border rounded-xl leading-5 bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 text-base transition-colors border-border ${
                 isAIMode 
@@ -463,7 +424,30 @@ export default function SearchClient({
               )}
             </div>
           </div>
+
         </div>
+
+        {/* Recent searches — below search bar with vignettes */}
+        {showRecentSearches && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                {t('search.recentSearches')}
+              </h2>
+              <Link
+                href="/search/recent"
+                className="text-xs font-medium text-primary hover:text-primary/80 shrink-0"
+              >
+                {t('search.viewAllRecent')}
+              </Link>
+            </div>
+            <RecentSearchList
+              compact
+              items={recentSearches.slice(0, RECENT_SEARCHES_PREVIEW)}
+              onItemClick={handleRecentSearchClick}
+            />
+          </div>
+        )}
 
         {/* Message */}
         {message && (
@@ -484,39 +468,18 @@ export default function SearchClient({
           </div>
         )}
 
-        {/* Loading State */}
-        {(isSearching || isCheckingExisting) && (
+        {/* Loading State — only during external search, not library check */}
+        {isSearching && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-border border-t-primary"></div>
             <p className="mt-4 text-sm text-muted-foreground">
-              {isSearching ? t('search.searching') : t('search.checkingExisting')}
+              {t('search.searching')}
             </p>
           </div>
         )}
 
-        {/* Recent Searches Dropdown - Shown when input is focused and empty */}
-        {isInputFocused && !searchQuery.trim() && recentSearches.length > 0 && (
-          <div className="absolute z-10 w-full mt-2 bg-card border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
-            <div className="p-2">
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-3 py-2">
-                {t('search.recentSearches')}
-              </div>
-              {recentSearches.map((query, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleRecentSearchClick(query)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left text-foreground hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
-                >
-                  <ClockIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate">{query}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Search Results */}
-        {!isSearching && !isCheckingExisting && hasSearchResults && (
+        {!isSearching && hasSearchResults && (
           <div className="mb-6">
             <div className="flex items-center gap-2.5 mb-3 w-fit min-h-[2rem] py-0.5 overflow-visible">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0">
@@ -537,7 +500,7 @@ export default function SearchClient({
             <div className="space-y-1.5">
               {searchResults.map((result, index) => {
                 const existingSongId = existingSongs.get(index)
-                const imageUrl = result.songImageUrl || result.artistImageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
+                const imageUrl = result.songImageUrl || result.artistImageUrl || FALLBACK_SEARCH_IMAGE_URL
                 const isTab4U = result.source === 'Tab4U' || result.sourceSite === 'Tab4U'
                 const isViewing = viewingSongId === result.url
                 const isAdding = addingSongId === result.url
@@ -647,7 +610,7 @@ export default function SearchClient({
         )}
 
         {/* No Results - Only show if search was performed (Enter pressed) */}
-        {!isSearching && !isCheckingExisting && hasSearched && searchQuery.trim() && searchResults.length === 0 && !message && (
+        {!isSearching && hasSearched && searchQuery.trim() && searchResults.length === 0 && !message && (
           <div className="text-center py-12 rounded-2xl bg-card border border-border">
             <p className="text-muted-foreground text-base">
               {t('search.noResultsFor').replace('{query}', searchQuery)}
@@ -655,8 +618,10 @@ export default function SearchClient({
           </div>
         )}
 
-        {/* Library Sections - Shown when no search and input not focused */}
-        {!isSearching && !isCheckingExisting && showLibrarySections && children}
+        {/* Library sections — always mounted, hidden via CSS to avoid RSC reload flash */}
+        <div className={cn((!showLibrarySections || isSearching) && 'hidden')}>
+          {children}
+        </div>
       </div>
     </div>
   )

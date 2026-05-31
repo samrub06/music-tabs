@@ -37,7 +37,7 @@
     "addSongMobile": "Ajouter une chanson",
     "songs": "Chansons",
     "library": "Bibliothèque",
-    "search": "Recherche",
+    "search": "Explorateur",
     "folders": "Dossiers",
     "playlists": "Playlists",
     "chords": "Accords",
@@ -350,7 +350,11 @@
     "songsFound": "Chansons trouvées",
     "noSongsForStyle": "Aucune chanson trouvée pour ce style",
     "noResultsForAISuggestions": "Aucun résultat pour les suggestions de l'IA",
-    "recentSearches": "Recherches récentes"
+    "recentSearches": "Recherches récentes",
+    "viewAllRecent": "Tout voir",
+    "noRecentSearches": "Aucune recherche récente.",
+    "clearRecent": "Tout effacer",
+    "startSearching": "Commencer à chercher"
   },
   "folders": {
     "newFolder": "Nouveau dossier",
