@@ -542,6 +542,54 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return (data || []).map(mapDbSongToList)
   },
 
+  async getUserSongsByAuthorLightweight(author: string, limit: number = 15): Promise<Song[]> {
+    const trimmed = author.trim()
+    if (!trimmed) return []
+
+    const {
+      data: { user },
+    } = await client.auth.getUser()
+    if (!user) return []
+
+    const { data, error } = await (client.from('songs') as any)
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
+      .eq('user_id', user.id)
+      .ilike('author', trimmed)
+      .order('updated_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+    return (data || []).map(mapDbSongToList)
+  },
+
+  async getMergedArtistSongsLightweight(
+    author: string,
+    limit: number = 15
+  ): Promise<Song[]> {
+    const trimmed = author.trim()
+    if (!trimmed) return []
+
+    const [userSongs, publicSongs] = await Promise.all([
+      this.getUserSongsByAuthorLightweight(trimmed, limit),
+      this.getPublicSongsByAuthorLightweight(trimmed, limit),
+    ])
+
+    const seen = new Set<string>()
+    const merged: Song[] = []
+
+    for (const song of [...userSongs, ...publicSongs]) {
+      const key = song.tabId
+        ? `tab:${song.tabId}`
+        : `meta:${song.title.toLowerCase().trim()}|${song.author.toLowerCase().trim()}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      merged.push(song)
+      if (merged.length >= limit) break
+    }
+
+    return merged
+  },
+
   // Lightweight method for checking existing songs (only needed fields)
   async getAllSongsLightweight(): Promise<Pick<Song, 'id' | 'tabId' | 'sourceUrl' | 'title' | 'author'>[]> {
     const { data: { user } } = await client.auth.getUser()

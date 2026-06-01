@@ -250,9 +250,21 @@ export default function SearchClient({
     performSearch(q)
   }, [searchParams, performSearch])
 
-  // Handle search input change
+  // Handle search input change — reset search session when cleared so recents & library show again
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
+    if (!value.trim()) {
+      setSearchResults([])
+      setExistingSongs(new Map())
+      setHasSearched(false)
+      setMessage(null)
+    }
+  }
+
+  const handleSubmitSearch = () => {
+    const q = searchQuery.trim()
+    if (!q || isSearching) return
+    performSearch(q)
   }
 
   // Handle Enter key
@@ -390,14 +402,18 @@ export default function SearchClient({
     }
   }
 
-  const hasSearchResults = searchQuery.trim() && searchResults.length > 0
-  const showSearchResultsPanel = hasSearched || isSearching || hasSearchResults
-  const showLibrarySections = !searchQuery.trim() && searchResults.length === 0 && !hasSearched
+  const queryTrimmed = searchQuery.trim()
+  const hasSearchResults = queryTrimmed.length > 0 && searchResults.length > 0
+  const showSearchResultsPanel =
+    isSearching || hasSearchResults || (hasSearched && queryTrimmed.length > 0)
+  const showLibrarySections =
+    !queryTrimmed && searchResults.length === 0 && !hasSearched && !isSearching
   const showRecentSearches =
     !isAIMode &&
-    !searchQuery.trim() &&
+    !queryTrimmed &&
     searchResults.length === 0 &&
     !isSearching &&
+    !hasSearched &&
     recentSearches.length > 0
   const showAISuggestions = isAIMode && !searchQuery.trim() && !isSearching && !hasSearchResults
 
@@ -456,17 +472,47 @@ export default function SearchClient({
                 placeholder={t('search.searchPlaceholder')}
                 className={cn(
                   'block w-full h-14 pl-12 py-4 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-5 transition-all duration-300',
-                  searchQuery ? 'pr-40 sm:pr-44' : 'pr-36 sm:pr-40'
+                  searchQuery ? 'pr-48 sm:pr-56' : 'pr-44 sm:pr-52'
                 )}
               />
             )}
 
             <div
               className={cn(
-                'absolute right-0 flex items-center gap-1.5 pr-3 sm:pr-4',
+                'absolute right-0 flex items-center gap-1 pr-2 sm:pr-3',
                 isAIMode ? 'top-3' : 'inset-y-0'
               )}
             >
+              {!isAIMode && (
+                <button
+                  type="button"
+                  onClick={handleSubmitSearch}
+                  disabled={!queryTrimmed || isSearching}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                  aria-label={t('common.search')}
+                >
+                  {isSearching ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    <MagnifyingGlassIcon className="h-5 w-5" />
+                  )}
+                </button>
+              )}
+              {isAIMode && (
+                <button
+                  type="button"
+                  onClick={handleSubmitSearch}
+                  disabled={!queryTrimmed || isSearching}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                  aria-label={t('search.askWithAI')}
+                >
+                  {isSearching ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    <SparklesIcon className="h-5 w-5" />
+                  )}
+                </button>
+              )}
               <button
                 onClick={(e) => {
                   e.preventDefault()
@@ -500,15 +546,6 @@ export default function SearchClient({
                   </>
                 )}
               </button>
-              {isSearching && (
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center"
-                  aria-label={t('search.searching')}
-                  aria-live="polite"
-                >
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                </div>
-              )}
               {searchQuery && !isSearching && (
                 <button
                   onClick={handleClearSearch}
@@ -721,10 +758,10 @@ export default function SearchClient({
               })}
             </div>
           </>
-            ) : hasSearched && searchQuery.trim() && !message ? (
+            ) : hasSearched && queryTrimmed && !message ? (
               <div className="px-4 py-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  {t('search.noResultsFor').replace('{query}', searchQuery)}
+                  {t('search.noResultsFor').replace('{query}', queryTrimmed)}
                 </p>
               </div>
             ) : null}

@@ -19,14 +19,21 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
   const forYouService = personalizedForYouService(supabase)
 
-  const [trendingSongs, recentSongs, popularSongs, publicPlaylists, forYouData] =
+  const [trendingSongs, recentSongs, popularSongs, publicPlaylists, forYouResult] =
     await Promise.all([
       songRepoInstance.getTrendingSongsLightweight(),
       songRepoInstance.getRecentSongsLightweight(15),
       songRepoInstance.getPopularSongsLightweight(15),
       playlistRepoInstance.getPublicPlaylistsLightweight(),
-      userId ? forYouService.getForYouData(userId) : Promise.resolve(null),
+      userId
+        ? forYouService.getForYouData(userId).catch((err) => {
+            console.error('LibrarySections forYou fetch failed:', err)
+            return { featuredSong: null, topArtist: null, artistSongs: [] }
+          })
+        : Promise.resolve(null),
     ])
+
+  const forYouData = forYouResult
 
   const featuredSong =
     forYouData?.featuredSong ?? (trendingSongs.length > 0 ? trendingSongs[0] : null)
