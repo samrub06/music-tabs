@@ -9,6 +9,7 @@ import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Ic
 const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
 const MAX_RECENT_SEARCHES = 10
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
+import { cn } from '@/lib/utils'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -389,10 +390,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragEnd={handleDragEnd}
     >
       <div
-        ref={scrollContainerRef}
-        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6"
+        className={cn(
+          'flex flex-1 flex-col min-h-0 overflow-hidden p-3 sm:p-6',
+          isAddSongOpen && 'overflow-hidden'
+        )}
       >
-        <div className="mb-4 flex items-stretch gap-2">
+        <div className="shrink-0 space-y-4 pb-4">
+        <div className="flex items-stretch gap-2">
           <div className="flex-1 min-w-0 relative">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -458,7 +462,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         </div>
 
         {/* Filtering Tabs + View toggle - same row, touch-friendly */}
-        <div className="mb-4 flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0 lg:hidden">
             <div className="flex rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
               <button
@@ -528,8 +532,16 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </button>
           </div>
         </div>
+        </div>
 
-        {/* Content */}
+        <div
+          ref={scrollContainerRef}
+          data-main-scroll
+          className={cn(
+            'min-h-0 flex-1 overflow-y-auto overscroll-contain',
+            isAddSongOpen && 'overflow-hidden'
+          )}
+        >
         {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' ? (
             <>
@@ -660,6 +672,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </p>
           </div>
         )}
+        </div>
       </div>
 
       {/* Drag overlay */}

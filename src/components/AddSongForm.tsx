@@ -1,17 +1,17 @@
 'use client'
 
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { NewSongData, Folder } from '@/types'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,6 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { cn } from '@/lib/utils'
 
 interface AddSongFormProps {
   isOpen: boolean
@@ -71,16 +77,45 @@ export default function AddSongForm({
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [manualEntryOpen, setManualEntryOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (isOpen) {
-      searchInputRef.current?.focus()
-      if (defaultFolderId) {
-        setFormData((prev) => ({ ...prev, folderId: defaultFolderId }))
-      }
+    if (!isOpen) return
+    if (defaultFolderId) {
+      setFormData((prev) => ({ ...prev, folderId: defaultFolderId }))
     }
+    const focusTimer = window.setTimeout(() => {
+      searchInputRef.current?.focus({ preventScroll: true })
+    }, 150)
+    return () => window.clearTimeout(focusTimer)
   }, [isOpen, defaultFolderId])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const html = document.documentElement
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = document.body.style.overflow
+    html.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+
+    const scrollContainers = document.querySelectorAll('[data-main-scroll]')
+    const previousOverflows = Array.from(scrollContainers).map(
+      (el) => (el as HTMLElement).style.overflow
+    )
+    scrollContainers.forEach((el) => {
+      ;(el as HTMLElement).style.overflow = 'hidden'
+    })
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow
+      document.body.style.overflow = prevBodyOverflow
+      scrollContainers.forEach((el, index) => {
+        ;(el as HTMLElement).style.overflow = previousOverflows[index] ?? ''
+      })
+    }
+  }, [isOpen])
 
   function normalizeNewSongData(d: NewSongData): NewSongData {
     return {
@@ -103,6 +138,7 @@ export default function AddSongForm({
     setShowSearchResults(false)
     setSearchQuery('')
     setMessage(null)
+    setManualEntryOpen(false)
   }
 
   const handleClose = () => {
@@ -238,16 +274,27 @@ export default function AddSongForm({
   }
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <SheetContent
-        side="left"
-        className="w-full sm:max-w-xl overflow-y-auto p-0 flex flex-col"
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className={cn(
+          'z-[100] flex flex-col gap-0 overflow-hidden p-0 rounded-2xl border bg-background shadow-lg',
+          'max-lg:fixed max-lg:inset-x-4 max-lg:top-[max(0.75rem,env(safe-area-inset-top,0px))]',
+          'max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-lg:left-4 max-lg:right-4',
+          'max-lg:h-auto max-lg:w-auto max-lg:max-h-none max-lg:max-w-none',
+          'max-lg:translate-x-0 max-lg:translate-y-0',
+          'max-lg:data-[state=open]:slide-in-from-bottom-4 max-lg:data-[state=closed]:slide-out-to-bottom-4',
+          'max-lg:data-[state=open]:zoom-in-100 max-lg:data-[state=closed]:zoom-out-100',
+          'sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:right-auto sm:inset-x-auto',
+          'sm:h-auto sm:w-[calc(100%-2rem)] sm:max-w-xl sm:max-h-[min(88dvh,680px)]',
+          'sm:translate-x-[-50%] sm:translate-y-[-50%]'
+        )}
       >
-        <SheetHeader className="px-4 pt-4 pb-2 border-b border-border shrink-0">
-          <SheetTitle>{t('songForm.addSong')}</SheetTitle>
-        </SheetHeader>
+        <DialogHeader className="shrink-0 border-b border-border px-4 pb-3 pt-4 pr-12 text-left">
+          <DialogTitle>{t('songForm.addSong')}</DialogTitle>
+        </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-6">
           {message && (
             <div
               className={`mb-4 p-3 rounded-xl text-sm border ${
@@ -335,13 +382,31 @@ export default function AddSongForm({
               )}
             </div>
 
-            {/* Manual entry */}
-            <div className="space-y-3 pt-2 border-t border-border">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <PlusIcon className="h-5 w-5" />
-                {t('songForm.manualEntry')}
-              </h4>
+            <Collapsible
+              open={manualEntryOpen}
+              onOpenChange={setManualEntryOpen}
+              className="border-t border-border pt-2"
+            >
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg py-2 text-left transition-colors hover:bg-muted/50"
+                  aria-expanded={manualEntryOpen}
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <PlusIcon className="h-5 w-5 shrink-0" />
+                    {t('songForm.manualEntry')}
+                  </span>
+                  <ChevronDownIcon
+                    className={cn(
+                      'h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200',
+                      manualEntryOpen && 'rotate-180'
+                    )}
+                  />
+                </button>
+              </CollapsibleTrigger>
 
+              <CollapsibleContent className="space-y-3 pt-2">
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="add-song-title">{t('songForm.songTitle')} *</Label>
@@ -409,7 +474,8 @@ export default function AddSongForm({
                   </Button>
                 </div>
               </form>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </div>
 
@@ -423,7 +489,7 @@ export default function AddSongForm({
             </div>
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }

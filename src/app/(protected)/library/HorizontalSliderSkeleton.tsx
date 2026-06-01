@@ -1,21 +1,28 @@
 export default function HorizontalSliderSkeleton() {
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
-        <div className="flex gap-2">
-          <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-          <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+    <div className="mb-8 w-full">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="h-7 w-48 max-w-[70%] animate-pulse rounded bg-muted" />
+        <div className="flex shrink-0 gap-2">
+          <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
+          <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
         </div>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
+      <div
+        className="flex w-full gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex-shrink-0 w-40 sm:w-48">
-            <div className="aspect-square rounded-lg bg-gray-200 dark:bg-gray-700 mb-2 animate-pulse"></div>
+          <div key={i} className="w-40 flex-shrink-0 sm:w-48">
+            <div className="mb-2 aspect-square w-full animate-pulse rounded-lg bg-muted" />
             <div className="px-1">
-              <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2 animate-pulse"></div>
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse"></div>
+              <div className="mb-2 h-5 w-3/4 animate-pulse rounded bg-muted" />
+              <div className="mb-2 h-4 w-1/2 animate-pulse rounded bg-muted" />
+              <div className="h-8 w-full animate-pulse rounded bg-muted" />
             </div>
           </div>
         ))}

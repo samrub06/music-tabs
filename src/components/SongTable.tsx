@@ -386,7 +386,7 @@ export default function SongTable({
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900">
+          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.08)]">
             <tr>
               {/* Checkbox column - Only show if user is logged in and select mode is active */}
               {hasUser && isSelectMode && (
