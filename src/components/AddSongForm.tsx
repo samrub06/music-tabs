@@ -1,18 +1,14 @@
 'use client'
 
-import { useLanguage } from '@/context/LanguageContext'
-import { ChevronDownIcon, MagnifyingGlassIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { NewSongData, Folder } from '@/types'
+import { searchSongsByStyleAction } from '@/app/(protected)/search/actions'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -22,12 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
+import type { Folder, NewSongData } from '@/types'
+import {
+  MagnifyingGlassIcon,
+  PlusIcon,
+  SparklesIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface AddSongFormProps {
   isOpen: boolean
@@ -55,6 +56,15 @@ interface SearchResult {
   sourceSite?: string
 }
 
+type AddSongTab = 'search' | 'ai' | 'manual'
+
+const AI_SUGGESTION_KEYS = [
+  'search.aiSuggestion1',
+  'search.aiSuggestion2',
+  'search.aiSuggestion3',
+  'search.aiSuggestion4',
+] as const
+
 export default function AddSongForm({
   isOpen,
   onClose,
@@ -65,6 +75,7 @@ export default function AddSongForm({
 }: AddSongFormProps) {
   const { t } = useLanguage()
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState<AddSongTab>('search')
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -73,12 +84,22 @@ export default function AddSongForm({
   })
   const [isSearching, setIsSearching] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [aiQuery, setAiQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error' | 'info'
+    text: string
+  } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [manualEntryOpen, setManualEntryOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const tabs: { id: AddSongTab; label: string; icon: typeof MagnifyingGlassIcon }[] = [
+    { id: 'search', label: t('songForm.tabSearch'), icon: MagnifyingGlassIcon },
+    { id: 'ai', label: t('songForm.tabAI'), icon: SparklesIcon },
+    { id: 'manual', label: t('songForm.tabManual'), icon: PlusIcon },
+  ]
 
   useEffect(() => {
     if (!isOpen) return
@@ -86,10 +107,14 @@ export default function AddSongForm({
       setFormData((prev) => ({ ...prev, folderId: defaultFolderId }))
     }
     const focusTimer = window.setTimeout(() => {
-      searchInputRef.current?.focus({ preventScroll: true })
+      if (activeTab === 'ai') {
+        aiTextareaRef.current?.focus({ preventScroll: true })
+      } else if (activeTab === 'search') {
+        searchInputRef.current?.focus({ preventScroll: true })
+      }
     }, 150)
     return () => window.clearTimeout(focusTimer)
-  }, [isOpen, defaultFolderId])
+  }, [isOpen, defaultFolderId, activeTab])
 
   useEffect(() => {
     if (!isOpen) return
@@ -128,6 +153,7 @@ export default function AddSongForm({
   }
 
   const handleReset = () => {
+    setActiveTab('search')
     setFormData({
       title: '',
       author: '',
@@ -137,8 +163,8 @@ export default function AddSongForm({
     setSearchResults([])
     setShowSearchResults(false)
     setSearchQuery('')
+    setAiQuery('')
     setMessage(null)
-    setManualEntryOpen(false)
   }
 
   const handleClose = () => {
@@ -185,39 +211,6 @@ export default function AddSongForm({
 
   const isHebrew = (text: string) => /[\u0590-\u05FF]/.test(text)
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setMessage({ type: 'error', text: t('search.enterTitleOrArtist') })
-      return
-    }
-
-    const source = isHebrew(searchQuery) ? 'tab4u' : 'ultimate-guitar'
-
-    setIsSearching(true)
-    setSearchResults([])
-    setMessage(null)
-
-    try {
-      const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${source}`)
-      const data = await response.json()
-
-      if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
-        setSearchResults(data.results)
-        setShowSearchResults(true)
-      } else {
-        setMessage({
-          type: 'error',
-          text: data.error || (data.blocked ? t('search.ugBlocked') : t('search.noResultsFor').replace('{query}', searchQuery)),
-        })
-      }
-    } catch (error) {
-      console.error('Error searching:', error)
-      setMessage({ type: 'error', text: t('search.searchError') })
-    } finally {
-      setIsSearching(false)
-    }
-  }
-
   function buildNewSongDataFromScrape(
     scraped: Partial<NewSongData> & { url?: string; source?: string; songImageUrl?: string },
     result?: SearchResult,
@@ -241,7 +234,9 @@ export default function AddSongForm({
       sourceUrl: scraped.url,
       sourceSite: scraped.source,
       tabId: scraped.tabId,
-      genre: (scraped as { songGenre?: string; genre?: string }).songGenre || (scraped as { genre?: string }).genre,
+      genre:
+        (scraped as { songGenre?: string; genre?: string }).songGenre ||
+        (scraped as { genre?: string }).genre,
       bpm: scraped.bpm,
     } as NewSongData
   }
@@ -251,12 +246,20 @@ export default function AddSongForm({
     setMessage(null)
 
     try {
-      const searchResultParam = searchResult ? encodeURIComponent(JSON.stringify(searchResult)) : ''
-      const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}&searchResult=${searchResultParam}`)
+      const searchResultParam = searchResult
+        ? encodeURIComponent(JSON.stringify(searchResult))
+        : ''
+      const response = await fetch(
+        `/api/songs/search?url=${encodeURIComponent(url)}&searchResult=${searchResultParam}`
+      )
       const data = await response.json()
 
       if (response.ok && data.song) {
-        const payload = buildNewSongDataFromScrape(data.song, searchResult, formData.folderId || defaultFolderId)
+        const payload = buildNewSongDataFromScrape(
+          data.song,
+          searchResult,
+          formData.folderId || defaultFolderId
+        )
         if (!payload.title.trim() || !payload.content.trim()) {
           setMessage({ type: 'error', text: t('errors.invalidSongData') })
           return
@@ -273,18 +276,154 @@ export default function AddSongForm({
     }
   }
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setMessage({ type: 'error', text: t('search.enterTitleOrArtist') })
+      return
+    }
+
+    const source = isHebrew(searchQuery) ? 'tab4u' : 'ultimate-guitar'
+
+    setIsSearching(true)
+    setSearchResults([])
+    setShowSearchResults(false)
+    setMessage(null)
+
+    try {
+      const response = await fetch(
+        `/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${source}`
+      )
+      const data = await response.json()
+
+      if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
+        setSearchResults(data.results)
+        setShowSearchResults(true)
+      } else {
+        setMessage({
+          type: 'error',
+          text:
+            data.error ||
+            (data.blocked
+              ? t('search.ugBlocked')
+              : t('search.noResultsFor').replace('{query}', searchQuery)),
+        })
+      }
+    } catch (error) {
+      console.error('Error searching:', error)
+      setMessage({ type: 'error', text: t('search.searchError') })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleAISearch = async (queryOverride?: string) => {
+    const query = (queryOverride ?? aiQuery).trim()
+    if (!query) {
+      setMessage({ type: 'error', text: t('search.enterTitleOrArtist') })
+      return
+    }
+
+    setIsSearching(true)
+    setSearchResults([])
+    setShowSearchResults(false)
+    setMessage(null)
+
+    try {
+      const aiResult = await searchSongsByStyleAction(query)
+
+      if (!aiResult.success || aiResult.songs.length === 0) {
+        setMessage({
+          type: 'error',
+          text: aiResult.error || t('search.noSongsForStyle'),
+        })
+        return
+      }
+
+      const allResults: SearchResult[] = []
+      for (const aiSong of aiResult.songs) {
+        const q = `${aiSong.title} ${aiSong.artist}`
+        const response = await fetch(
+          `/api/songs/search?q=${encodeURIComponent(q)}&source=${aiSong.source}`
+        )
+        const data = await response.json()
+        if (response.ok && data.results?.length > 0) {
+          allResults.push(...data.results)
+        }
+      }
+
+      if (allResults.length > 0) {
+        setSearchResults(allResults)
+        setShowSearchResults(true)
+      } else {
+        setMessage({ type: 'error', text: t('search.noResultsForAISuggestions') })
+      }
+    } catch (error) {
+      console.error('Error AI search:', error)
+      setMessage({ type: 'error', text: t('search.searchError') })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const renderSearchResults = () => (
+    <>
+      {isSearching && (
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-8">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="text-sm text-muted-foreground">{t('songForm.loading')}</span>
+        </div>
+      )}
+
+      {!isSearching && showSearchResults && searchResults.length > 0 && (
+        <div className="max-h-56 space-y-2 overflow-y-auto rounded-xl border border-border p-3 sm:max-h-64">
+          <p className="text-xs font-medium text-muted-foreground">
+            {t('songForm.searchResults')} ({searchResults.length})
+          </p>
+          {searchResults.map((result, index) => (
+            <button
+              key={`${result.url}-${index}`}
+              type="button"
+              disabled={isSearching || isSaving}
+              className="w-full rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted/50 disabled:opacity-50"
+              onClick={() => handleFetchFromUrl(result.url, result)}
+            >
+              <div className="text-sm font-medium text-foreground">{result.title}</div>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span className="truncate text-xs text-muted-foreground">{result.author}</span>
+                <div className="flex shrink-0 items-center gap-1">
+                  {result.rating != null && (
+                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                      ⭐ {result.rating.toFixed(1)}
+                    </span>
+                  )}
+                  {result.difficulty && (
+                    <span className="text-xs text-muted-foreground">{result.difficulty}</span>
+                  )}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!isSearching && !showSearchResults && (
+        <p className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
+          {t('songForm.clickToLoad')}
+        </p>
+      )}
+    </>
+  )
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
         className={cn(
-          'z-[100] flex flex-col gap-0 overflow-hidden p-0 rounded-2xl border bg-background shadow-lg',
+          'z-[100] flex flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 shadow-lg',
           'max-lg:fixed max-lg:inset-x-4 max-lg:top-[max(0.75rem,env(safe-area-inset-top,0px))]',
           'max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-lg:left-4 max-lg:right-4',
           'max-lg:h-auto max-lg:w-auto max-lg:max-h-none max-lg:max-w-none',
           'max-lg:translate-x-0 max-lg:translate-y-0',
-          'max-lg:data-[state=open]:slide-in-from-bottom-4 max-lg:data-[state=closed]:slide-out-to-bottom-4',
-          'max-lg:data-[state=open]:zoom-in-100 max-lg:data-[state=closed]:zoom-out-100',
           'sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:right-auto sm:inset-x-auto',
           'sm:h-auto sm:w-[calc(100%-2rem)] sm:max-w-xl sm:max-h-[min(88dvh,680px)]',
           'sm:translate-x-[-50%] sm:translate-y-[-50%]'
@@ -294,198 +433,243 @@ export default function AddSongForm({
           <DialogTitle>{t('songForm.addSong')}</DialogTitle>
         </DialogHeader>
 
+        <div className="shrink-0 border-b border-border px-4 py-3">
+          <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
+            {tabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setActiveTab(id)
+                  setMessage(null)
+                }}
+                className={cn(
+                  'flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs font-medium transition-all duration-200 sm:px-3 sm:text-sm',
+                  activeTab === id
+                    ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                    : 'text-muted-foreground hover:text-foreground',
+                  id === 'ai' && activeTab === id && 'text-purple-700 dark:text-purple-400'
+                )}
+              >
+                <Icon
+                  className={cn(
+                    'h-4 w-4 shrink-0',
+                    id === 'ai' && (activeTab === id ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500/80')
+                  )}
+                />
+                <span className="truncate">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-6">
           {message && (
             <div
-              className={`mb-4 p-3 rounded-xl text-sm border ${
+              className={cn(
+                'mb-4 rounded-xl border p-3 text-sm',
                 message.type === 'error'
-                  ? 'bg-destructive/10 border-destructive/30 text-destructive'
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : message.type === 'success'
-                    ? 'bg-primary/10 border-primary/30 text-primary'
-                    : 'bg-muted border-border text-foreground'
-              }`}
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-border bg-muted text-foreground'
+              )}
             >
               <div className="flex items-center justify-between gap-2">
                 <span>{message.text}</span>
-                <button type="button" onClick={() => setMessage(null)} className="text-muted-foreground hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => setMessage(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <XMarkIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* Online search */}
+          {activeTab === 'search' && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <MagnifyingGlassIcon className="h-5 w-5" />
-                {t('songForm.searchSongs')}
-              </h4>
+              <Label htmlFor="add-song-search">
+                {t('songForm.songTitle')} / {t('songForm.artist')}
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="add-song-search"
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder={t('songForm.searchPlaceholder')}
+                  disabled={isSearching || isSaving}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handleSearch}
+                  disabled={isSearching || isSaving || !searchQuery.trim()}
+                  className="min-w-[5.5rem]"
+                >
+                  {isSearching ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      <span className="sr-only sm:not-sr-only sm:inline">
+                        {t('songForm.loading')}
+                      </span>
+                    </span>
+                  ) : (
+                    t('songForm.search')
+                  )}
+                </Button>
+              </div>
+              {renderSearchResults()}
+            </div>
+          )}
 
+          {activeTab === 'ai' && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">{t('songForm.aiHint')}</p>
+              <Label htmlFor="add-song-ai">{t('search.aiPlaceholder')}</Label>
+              <textarea
+                id="add-song-ai"
+                ref={aiTextareaRef}
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleAISearch()
+                  }
+                }}
+                rows={4}
+                placeholder={t('search.aiPlaceholder')}
+                disabled={isSearching || isSaving}
+                className="flex w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
               <div className="space-y-2">
-                <Label htmlFor="add-song-search">{t('songForm.songTitle')} / {t('songForm.artist')}</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="add-song-search"
-                    ref={searchInputRef}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder={t('songForm.searchPlaceholder')}
-                    disabled={isSearching || isSaving}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleSearch}
-                    disabled={isSearching || isSaving || !searchQuery.trim()}
-                  >
-                    {isSearching ? t('songForm.loading') : t('songForm.search')}
-                  </Button>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t('search.aiSuggestions')}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {AI_SUGGESTION_KEYS.map((key) => {
+                    const suggestion = t(key)
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setAiQuery(suggestion)
+                          handleAISearch(suggestion)
+                        }}
+                        disabled={isSearching || isSaving}
+                        className="rounded-full border border-border bg-card px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:opacity-50 sm:text-sm"
+                      >
+                        {suggestion}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
-
-              {showSearchResults && searchResults.length > 0 && (
-                <div className="border border-border rounded-xl p-3 max-h-64 overflow-y-auto space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    {t('songForm.searchResults')} ({searchResults.length})
-                  </p>
-                  {searchResults.map((result, index) => (
-                    <button
-                      key={`${result.url}-${index}`}
-                      type="button"
-                      disabled={isSearching || isSaving}
-                      className="w-full p-3 text-left border border-border rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50"
-                      onClick={() => handleFetchFromUrl(result.url, result)}
-                    >
-                      <div className="text-sm font-medium text-foreground">{result.title}</div>
-                      <div className="flex items-center justify-between gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground truncate">{result.author}</span>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {result.rating != null && (
-                            <span className="text-xs text-amber-600 dark:text-amber-400">⭐ {result.rating.toFixed(1)}</span>
-                          )}
-                          {result.difficulty && (
-                            <span className="text-xs text-muted-foreground">{result.difficulty}</span>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {!showSearchResults && (
-                <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-xl">
-                  {t('songForm.clickToLoad')}
-                </p>
-              )}
-            </div>
-
-            <Collapsible
-              open={manualEntryOpen}
-              onOpenChange={setManualEntryOpen}
-              className="border-t border-border pt-2"
-            >
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-2 rounded-lg py-2 text-left transition-colors hover:bg-muted/50"
-                  aria-expanded={manualEntryOpen}
-                >
-                  <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <PlusIcon className="h-5 w-5 shrink-0" />
-                    {t('songForm.manualEntry')}
+              <Button
+                type="button"
+                onClick={() => handleAISearch()}
+                disabled={isSearching || isSaving || !aiQuery.trim()}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                {isSearching ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    {t('songForm.loading')}
                   </span>
-                  <ChevronDownIcon
-                    className={cn(
-                      'h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200',
-                      manualEntryOpen && 'rotate-180'
-                    )}
-                  />
-                </button>
-              </CollapsibleTrigger>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <SparklesIcon className="h-4 w-4" />
+                    {t('search.askWithAI')}
+                  </span>
+                )}
+              </Button>
+              {renderSearchResults()}
+            </div>
+          )}
 
-              <CollapsibleContent className="space-y-3 pt-2">
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="add-song-title">{t('songForm.songTitle')} *</Label>
-                  <Input
-                    id="add-song-title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    required
-                    disabled={isSaving}
-                  />
-                </div>
+          {activeTab === 'manual' && (
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="add-song-title">{t('songForm.songTitle')} *</Label>
+                <Input
+                  id="add-song-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                  disabled={isSaving}
+                />
+              </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="add-song-artist">{t('songForm.artist')}</Label>
-                  <Input
-                    id="add-song-artist"
-                    value={formData.author}
-                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                    disabled={isSaving}
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="add-song-artist">{t('songForm.artist')}</Label>
+                <Input
+                  id="add-song-artist"
+                  value={formData.author}
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  disabled={isSaving}
+                />
+              </div>
 
-                <div className="space-y-1.5">
-                  <Label>{t('songs.folder')}</Label>
-                  <Select
-                    value={formData.folderId || 'none'}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, folderId: value === 'none' ? '' : value })
-                    }
-                    disabled={isSaving}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('songs.unorganized')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{t('songs.unorganized')}</SelectItem>
-                      {folders.map((folder) => (
-                        <SelectItem key={folder.id} value={folder.id}>
-                          {folder.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1.5">
+                <Label>{t('songs.folder')}</Label>
+                <Select
+                  value={formData.folderId || 'none'}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, folderId: value === 'none' ? '' : value })
+                  }
+                  disabled={isSaving}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('songs.unorganized')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t('songs.unorganized')}</SelectItem>
+                    {folders.map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="add-song-content">{t('songForm.chords')} + {t('songForm.lyrics')} *</Label>
-                  <textarea
-                    id="add-song-content"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    rows={8}
-                    required
-                    disabled={isSaving}
-                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="add-song-content">
+                  {t('songForm.chords')} + {t('songForm.lyrics')} *
+                </Label>
+                <textarea
+                  id="add-song-content"
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  rows={10}
+                  required
+                  disabled={isSaving}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
 
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={handleClose} disabled={isSaving}>
-                    {t('songForm.cancel')}
-                  </Button>
-                  <Button type="submit" disabled={isSaving}>
-                    {isSaving ? t('songForm.loading') : t('songForm.addSong')}
-                  </Button>
-                </div>
-              </form>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={handleClose} disabled={isSaving}>
+                  {t('songForm.cancel')}
+                </Button>
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? t('songForm.loading') : t('songForm.addSong')}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
 
-        {(isSearching || isSaving) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+        {isSaving && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
             <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 shadow-sm">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
-              <span className="text-sm text-muted-foreground">
-                {isSaving ? t('search.addingSong') : t('songForm.loading')}
-              </span>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <span className="text-sm text-muted-foreground">{t('search.addingSong')}</span>
             </div>
           </div>
         )}

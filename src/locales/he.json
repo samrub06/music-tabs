@@ -189,7 +189,11 @@
     "reviews": "ביקורות",
     "searchResults": "תוצאות",
     "selectFiles": "בחר קובץ טקסט אחד או יותר המכיל את השירים שלך",
-    "search": "חפש"
+    "search": "חפש",
+    "tabSearch": "חיפוש",
+    "tabAI": "בינה",
+    "tabManual": "ידני",
+    "aiHint": "תאר סגנון, אווירה או תקופה — נציע שירים מתאימים."
   },
   "songViewer": {
     "chords": "אקורדים",

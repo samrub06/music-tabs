@@ -388,6 +388,7 @@ export default function SearchClient({
   }
 
   const hasSearchResults = searchQuery.trim() && searchResults.length > 0
+  const showSearchResultsPanel = hasSearched || isSearching || hasSearchResults
   const showLibrarySections = !searchQuery.trim() && searchResults.length === 0 && !hasSearched
   const showRecentSearches =
     !isAIMode &&
@@ -483,7 +484,16 @@ export default function SearchClient({
                   {t('search.askWithAI')}
                 </span>
               </button>
-              {searchQuery && (
+              {isSearching && (
+                <div
+                  className="flex h-8 w-8 shrink-0 items-center justify-center"
+                  aria-label={t('search.searching')}
+                  aria-live="polite"
+                >
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+              {searchQuery && !isSearching && (
                 <button
                   onClick={handleClearSearch}
                   className="flex items-center text-muted-foreground hover:text-foreground p-1"
@@ -560,20 +570,16 @@ export default function SearchClient({
           </div>
         )}
 
-        {/* Loading State — only during external search, not library check */}
-        {isSearching && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-border border-t-primary"></div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              {t('search.searching')}
-            </p>
-          </div>
-        )}
-
-        {/* Search Results */}
-        {!isSearching && hasSearchResults && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2.5 mb-3 w-fit min-h-[2rem] py-0.5 overflow-visible">
+        {showSearchResultsPanel && (
+          <div className="mb-6 rounded-xl border border-border bg-card/40">
+            {isSearching ? (
+              <div className="flex items-center justify-center gap-3 px-4 py-10">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm text-muted-foreground">{t('search.searching')}</p>
+              </div>
+            ) : hasSearchResults ? (
+          <>
+            <div className="flex items-center gap-2.5 border-b border-border px-3 py-2.5 sm:px-4 w-fit min-h-[2rem] overflow-visible">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0">
                 <MusicalNoteIcon className="w-4 h-4" />
               </div>
@@ -589,7 +595,7 @@ export default function SearchClient({
                 </span>
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 p-2 sm:p-3">
               {searchResults.map((result, index) => {
                 const existingSongId = existingSongs.get(index)
                 const imageUrl = result.songImageUrl || result.artistImageUrl || FALLBACK_SEARCH_IMAGE_URL
@@ -698,20 +704,19 @@ export default function SearchClient({
                 )
               })}
             </div>
-          </div>
-        )}
-
-        {/* No Results - Only show if search was performed (Enter pressed) */}
-        {!isSearching && hasSearched && searchQuery.trim() && searchResults.length === 0 && !message && (
-          <div className="text-center py-12 rounded-2xl bg-card border border-border">
-            <p className="text-muted-foreground text-base">
-              {t('search.noResultsFor').replace('{query}', searchQuery)}
-            </p>
+          </>
+            ) : hasSearched && searchQuery.trim() && !message ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {t('search.noResultsFor').replace('{query}', searchQuery)}
+                </p>
+              </div>
+            ) : null}
           </div>
         )}
 
         {/* Library sections — always mounted, hidden via CSS to avoid RSC reload flash */}
-        <div className={cn((!showLibrarySections || isSearching) && 'hidden')}>
+        <div className={cn(!showLibrarySections && 'hidden')}>
           {children}
         </div>
       </div>

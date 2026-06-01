@@ -189,7 +189,11 @@
     "reviews": "reviews",
     "searchResults": "Results",
     "selectFiles": "Select one or more text files containing your songs",
-    "search": "Search"
+    "search": "Search",
+    "tabSearch": "Search",
+    "tabAI": "AI",
+    "tabManual": "Manual",
+    "aiHint": "Describe a style, mood, or era — we'll suggest matching songs."
   },
   "songViewer": {
     "chords": "Chords",

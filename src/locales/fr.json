@@ -187,7 +187,11 @@
     "reviews": "avis",
     "searchResults": "Résultats",
     "selectFiles": "Sélectionnez un ou plusieurs fichiers texte contenant vos chansons",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "tabSearch": "Rechercher",
+    "tabAI": "IA",
+    "tabManual": "Manuel",
+    "aiHint": "Décrivez un style, une ambiance ou une époque — nous suggérerons des chansons."
   },
   "songViewer": {
     "chords": "Accords",
