@@ -226,6 +226,10 @@
   "library": {
     "recentlyAdded": "Recently added songs",
     "mostPlayed": "Most played songs",
+    "selectedForYou": "Selected for you",
+    "forYouArtist": "More from {artist}",
+    "inYourLibrary": "In your library",
+    "viewInLibrary": "Open in library",
     "viewAll": "See all",
     "listView": "List",
     "gridView": "Grid",

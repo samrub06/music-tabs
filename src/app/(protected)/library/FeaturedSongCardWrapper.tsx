@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import FeaturedSongCard from '@/components/library/FeaturedSongCard'
+import { useLanguage } from '@/context/LanguageContext'
 import type { Song } from '@/types'
 
 interface FeaturedSongCardWrapperProps {
@@ -12,6 +13,7 @@ interface FeaturedSongCardWrapperProps {
 }
 
 export default function FeaturedSongCardWrapper({ song, userId }: FeaturedSongCardWrapperProps) {
+  const { t } = useLanguage()
   const router = useRouter()
   const [cloningId, setCloningId] = useState<string | null>(null)
 
@@ -35,6 +37,7 @@ export default function FeaturedSongCardWrapper({ song, userId }: FeaturedSongCa
   return (
     <FeaturedSongCard
       song={song}
+      title={t('library.selectedForYou')}
       onAddClick={handleAddToLibrary}
       addingId={cloningId}
     />

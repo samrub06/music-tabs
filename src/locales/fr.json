@@ -224,6 +224,10 @@
   "library": {
     "recentlyAdded": "Dernières chansons ajoutées",
     "mostPlayed": "Chansons les plus écoutées",
+    "selectedForYou": "Sélectionné pour vous",
+    "forYouArtist": "Plus de {artist}",
+    "inYourLibrary": "Dans votre bibliothèque",
+    "viewInLibrary": "Ouvrir dans la bibliothèque",
     "viewAll": "Tout voir",
     "listView": "Liste",
     "gridView": "Grille",

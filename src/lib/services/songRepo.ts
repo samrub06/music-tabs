@@ -67,8 +67,13 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
     songImageUrl: dbSong.song_image_url || undefined,
     viewCount: dbSong.view_count || 0,
     genre: dbSong.genre || undefined,
+    tabId: dbSong.tab_id || undefined,
+    sourceUrl: dbSong.source_url || undefined,
   } as Song
 }
+
+const LIGHTWEIGHT_LIST_COLUMNS =
+  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url'
 
 export const songRepo = (client: SupabaseClient<Database>) => ({
   async createSong(songData: NewSongData): Promise<Song> {
@@ -467,7 +472,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getTrendingSongsLightweight(): Promise<Song[]> {
     const { data, error } = await client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
       .eq('is_trending', true)
       .order('created_at', { ascending: false })
       .limit(24)
@@ -479,7 +484,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getRecentSongsLightweight(limit: number = 15): Promise<Song[]> {
     const { data, error } = await client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
       .or('is_trending.eq.true,is_public.eq.true')
       .order('updated_at', { ascending: false })
       .limit(limit)
@@ -491,13 +496,48 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getPopularSongsLightweight(limit: number = 15): Promise<Song[]> {
     const { data, error } = await client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre')
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
       .or('is_trending.eq.true,is_public.eq.true')
       .not('view_count', 'is', null)
       .gt('view_count', 0)
       .order('view_count', { ascending: false })
       .limit(limit)
 
+    if (error) throw error
+    return (data || []).map(mapDbSongToList)
+  },
+
+  async getSongLightweightById(id: string): Promise<Song | null> {
+    const { data, error } = await client
+      .from('songs')
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
+      .eq('id', id)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? mapDbSongToList(data) : null
+  },
+
+  async getPublicSongsByAuthorLightweight(
+    author: string,
+    limit: number = 15,
+    excludeSongId?: string
+  ): Promise<Song[]> {
+    const trimmed = author.trim()
+    if (!trimmed) return []
+
+    let builder = (client.from('songs') as any)
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
+      .or('is_trending.eq.true,is_public.eq.true')
+      .ilike('author', trimmed)
+      .order('view_count', { ascending: false })
+      .limit(limit)
+
+    if (excludeSongId) {
+      builder = builder.neq('id', excludeSongId)
+    }
+
+    const { data, error } = await builder
     if (error) throw error
     return (data || []).map(mapDbSongToList)
   },

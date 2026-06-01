@@ -5,6 +5,12 @@ import Link from 'next/link'
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
 import { useRef } from 'react'
 
+export interface SongLibraryStatus {
+  label: string
+  href?: string
+  actionLabel?: string
+}
+
 interface HorizontalSongSliderProps {
   title: string
   songs: Song[]
@@ -12,6 +18,7 @@ interface HorizontalSongSliderProps {
   addingId?: string | null
   viewAllHref?: string
   viewAllLabel?: string
+  getLibraryStatus?: (song: Song) => SongLibraryStatus | null
 }
 
 export default function HorizontalSongSlider({
@@ -21,6 +28,7 @@ export default function HorizontalSongSlider({
   addingId,
   viewAllHref,
   viewAllLabel,
+  getLibraryStatus,
 }: HorizontalSongSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -87,6 +95,7 @@ export default function HorizontalSongSlider({
       >
         {songs.map((song) => {
           const imageUrl = song.songImageUrl || song.artistImageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop'
+          const libraryStatus = getLibraryStatus?.(song) ?? null
 
           return (
             <div
@@ -119,27 +128,42 @@ export default function HorizontalSongSlider({
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate mb-2">
                   {song.author}
                 </p>
-                {onAddClick && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onAddClick(song)
-                    }}
-                    disabled={addingId === song.id}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
-                  >
-                    {addingId === song.id ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-gray-300"></div>
-                        <span>Ajout...</span>
-                      </>
-                    ) : (
-                      <>
-                        <PlusIcon className="h-4 w-4" />
-                        <span>Ajouter</span>
-                      </>
-                    )}
-                  </button>
+                {libraryStatus ? (
+                  libraryStatus.href ? (
+                    <Link
+                      href={libraryStatus.href}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 rounded-md transition-colors hover:bg-green-200 dark:hover:bg-green-900/60"
+                    >
+                      <span>{libraryStatus.actionLabel ?? libraryStatus.label}</span>
+                    </Link>
+                  ) : (
+                    <div className="w-full flex items-center justify-center px-3 py-1.5 text-xs sm:text-sm bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 rounded-md">
+                      <span>{libraryStatus.label}</span>
+                    </div>
+                  )
+                ) : (
+                  onAddClick && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onAddClick(song)
+                      }}
+                      disabled={addingId === song.id}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+                    >
+                      {addingId === song.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-gray-300"></div>
+                          <span>Ajout...</span>
+                        </>
+                      ) : (
+                        <>
+                          <PlusIcon className="h-4 w-4" />
+                          <span>Ajouter</span>
+                        </>
+                      )}
+                    </button>
+                  )
                 )}
               </div>
             </div>

@@ -226,6 +226,10 @@
   "library": {
     "recentlyAdded": "שירים שנוספו לאחרונה",
     "mostPlayed": "השירים המושמעים ביותר",
+    "selectedForYou": "נבחר עבורך",
+    "forYouArtist": "עוד מ-{artist}",
+    "inYourLibrary": "בספרייה שלך",
+    "viewInLibrary": "פתח בספרייה",
     "viewAll": "הצג הכל",
     "listView": "רשימה",
     "gridView": "רשת",

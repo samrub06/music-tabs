@@ -8,16 +8,17 @@ interface FeaturedSongCardProps {
   song: Song
   onAddClick?: (song: Song) => void
   addingId?: string | null
+  title?: string
 }
 
-export default function FeaturedSongCard({ song, onAddClick, addingId }: FeaturedSongCardProps) {
+export default function FeaturedSongCard({ song, onAddClick, addingId, title = 'Sélectionné pour vous' }: FeaturedSongCardProps) {
   const imageUrl = song.songImageUrl || song.artistImageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=600&fit=crop'
   const description = song.versionDescription || song.genre || 'Découvrez cette chanson'
 
   return (
     <div className="mb-8">
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-5">
-        Sélectionné pour vous
+        {title}
       </h2>
       <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group">
         <img
