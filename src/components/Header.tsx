@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
+import { useScrollChromeOptional } from '@/context/ScrollChromeContext'
 import { useTheme } from '@/context/ThemeContext'
 import CompactStatsDisplay from './gamification/CompactStatsDisplay'
 import { Button } from '@/components/ui/button'
@@ -112,14 +113,26 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const { language, setLanguage, t } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext()
+  const scrollChrome = useScrollChromeOptional()
+  const headerHidden = scrollChrome?.headerHidden ?? false
 
   const isSongPage = pathname.includes('/song/')
+  const hideHeaderOnScroll =
+    pathname === '/songs' || pathname === '/search' || pathname.startsWith('/search/')
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
   const currentLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
 
   return (
-    <header className="sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header
+      className={cn(
+        'sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 bg-background px-3',
+        hideHeaderOnScroll && 'max-lg:transition-[transform,margin,height] max-lg:duration-300 max-lg:ease-out',
+        hideHeaderOnScroll &&
+          headerHidden &&
+          'max-lg:-translate-y-full max-lg:-mb-11 max-lg:h-0 max-lg:min-h-0 max-lg:overflow-hidden max-lg:pointer-events-none'
+      )}
+    >
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {showMenuButton && user && (
           onMenuClick ? (

@@ -1,5 +1,6 @@
 'use client'
 
+import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, PlayIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
@@ -63,7 +64,9 @@ export default function SearchClient({
   const { t } = useLanguage()
   const { supabase } = useSupabase()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
+  useHideHeaderOnScroll(scrollContainerRef, true)
   const initialQueryApplied = useRef(false)
   
   const [searchQuery, setSearchQuery] = useState('')
@@ -395,9 +398,14 @@ export default function SearchClient({
   const showAISuggestions = isAIMode && !searchQuery.trim() && !isSearching && !hasSearchResults
 
   return (
-    <div className="p-4 pt-8 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 overflow-y-auto min-h-screen bg-background overflow-x-hidden">
+    <div
+      ref={scrollContainerRef}
+      className={cn(
+        'flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-background',
+        'p-4 pt-4 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 lg:min-h-screen'
+      )}
+    >
       <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0 pb-24 lg:pb-10">
-        {/* Search Input - Full Width */}
         <div className="mb-6">
           <div
             className={cn(

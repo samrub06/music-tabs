@@ -8,6 +8,7 @@ import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Ic
 
 const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
 const MAX_RECENT_SEARCHES = 10
+import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
@@ -60,6 +61,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  useHideHeaderOnScroll(scrollContainerRef, true)
   
   // Search state
   const [searchQuery, setSearchQuery] = useState(initialQuery)
@@ -385,8 +388,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-        {/* Search + Filter on same line (mobile), touch-friendly */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6"
+      >
         <div className="mb-4 flex items-stretch gap-2">
           <div className="flex-1 min-w-0 relative">
             <div className="relative">
