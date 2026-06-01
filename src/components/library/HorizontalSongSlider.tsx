@@ -1,5 +1,6 @@
 'use client'
 
+import { useLanguage } from '@/context/LanguageContext'
 import { Song } from '@/types'
 import Link from 'next/link'
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
@@ -9,6 +10,7 @@ export interface SongLibraryStatus {
   label: string
   href?: string
   actionLabel?: string
+  variant?: 'inLibrary' | 'notInLibrary'
 }
 
 interface HorizontalSongSliderProps {
@@ -30,6 +32,7 @@ export default function HorizontalSongSlider({
   viewAllLabel,
   getLibraryStatus,
 }: HorizontalSongSliderProps) {
+  const { t } = useLanguage()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
@@ -128,7 +131,7 @@ export default function HorizontalSongSlider({
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate mb-2">
                   {song.author}
                 </p>
-                {libraryStatus ? (
+                {libraryStatus?.variant === 'inLibrary' ? (
                   libraryStatus.href ? (
                     <Link
                       href={libraryStatus.href}
@@ -142,28 +145,36 @@ export default function HorizontalSongSlider({
                     </div>
                   )
                 ) : (
-                  onAddClick && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onAddClick(song)
-                      }}
-                      disabled={addingId === song.id}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
-                    >
-                      {addingId === song.id ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 dark:border-gray-300"></div>
-                          <span>Ajout...</span>
-                        </>
-                      ) : (
-                        <>
-                          <PlusIcon className="h-4 w-4" />
-                          <span>Ajouter</span>
-                        </>
-                      )}
-                    </button>
-                  )
+                  <>
+                    {libraryStatus?.variant === 'notInLibrary' && (
+                      <p className="mb-1.5 text-center text-[11px] font-medium text-muted-foreground">
+                        {libraryStatus.label}
+                      </p>
+                    )}
+                    {onAddClick && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onAddClick(song)
+                        }}
+                        disabled={addingId === song.id}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+                      >
+                        {addingId === song.id ? (
+                          <>
+                            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-600 dark:border-gray-300" />
+                            <span>{t('library.adding')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <PlusIcon className="h-4 w-4" />
+                            <span>{t('library.addToLibrary')}</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

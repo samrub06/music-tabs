@@ -59,11 +59,17 @@ export default function ForYouArtistSection({
       addingId={cloningId}
       getLibraryStatus={(song) => {
         const forYouSong = song as ForYouArtistSong
-        if (!forYouSong.inUserLibrary) return null
+        if (forYouSong.inUserLibrary) {
+          return {
+            variant: 'inLibrary' as const,
+            label: t('library.inYourLibrary'),
+            href: forYouSong.userSongId ? `/song/${forYouSong.userSongId}` : undefined,
+            actionLabel: t('library.viewInLibrary'),
+          }
+        }
         return {
-          label: t('library.inYourLibrary'),
-          href: forYouSong.userSongId ? `/song/${forYouSong.userSongId}` : undefined,
-          actionLabel: t('library.viewInLibrary'),
+          variant: 'notInLibrary' as const,
+          label: t('library.notInYourLibrary'),
         }
       }}
     />

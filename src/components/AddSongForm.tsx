@@ -423,11 +423,11 @@ export default function AddSongForm({
           'sm:translate-x-[-50%] sm:translate-y-[-50%]'
         )}
       >
-        <DialogHeader className="shrink-0 px-4 pb-2 pt-4 pr-12 text-left">
+        <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left">
           <DialogTitle>{t('songForm.addSong')}</DialogTitle>
         </DialogHeader>
 
-        <div className="shrink-0 px-4 pb-3">
+        <div className="shrink-0 px-4 pb-3 pt-3">
           <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
@@ -484,34 +484,39 @@ export default function AddSongForm({
 
           {activeTab === 'search' && (
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="relative">
+                <MagnifyingGlassIcon
+                  className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
                 <Input
                   id="add-song-search"
                   ref={searchInputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSearch()
+                    }
+                  }}
                   placeholder={t('songForm.searchPlaceholder')}
                   disabled={isSearching || isSaving}
-                  className="flex-1"
+                  className="h-11 pl-10 pr-12"
                 />
-                <Button
+                <button
                   type="button"
-                  onClick={handleSearch}
+                  onClick={() => handleSearch()}
                   disabled={isSearching || isSaving || !searchQuery.trim()}
-                  className="min-w-[5.5rem]"
+                  className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                  aria-label={t('songForm.search')}
                 >
                   {isSearching ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      <span className="sr-only sm:not-sr-only sm:inline">
-                        {t('songForm.loading')}
-                      </span>
-                    </span>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   ) : (
-                    t('songForm.search')
+                    <MagnifyingGlassIcon className="h-5 w-5" />
                   )}
-                </Button>
+                </button>
               </div>
               {renderSearchResults()}
             </div>

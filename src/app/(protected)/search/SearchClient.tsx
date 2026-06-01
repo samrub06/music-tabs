@@ -86,8 +86,11 @@ export default function SearchClient({
   }, [])
 
   useEffect(() => {
-    if (!isAIMode) return
-    aiTextareaRef.current?.focus()
+    if (isAIMode) {
+      aiTextareaRef.current?.focus()
+    } else {
+      searchInputRef.current?.focus()
+    }
   }, [isAIMode])
 
   const saveToRecentSearches = (query: string, previewResult?: SearchResult) => {
@@ -440,7 +443,7 @@ export default function SearchClient({
                 rows={3}
                 className={cn(
                   'block w-full min-h-[8.5rem] pl-12 pt-4 pb-3 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-relaxed resize-none transition-all duration-300',
-                  searchQuery ? 'pr-36 sm:pr-40' : 'pr-28 sm:pr-32'
+                  searchQuery ? 'pr-44 sm:pr-52' : 'pr-40 sm:pr-48'
                 )}
               />
             ) : (
@@ -453,7 +456,7 @@ export default function SearchClient({
                 placeholder={t('search.searchPlaceholder')}
                 className={cn(
                   'block w-full h-14 pl-12 py-4 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-5 transition-all duration-300',
-                  searchQuery ? 'pr-40 sm:pr-44' : 'pr-32 sm:pr-36'
+                  searchQuery ? 'pr-40 sm:pr-44' : 'pr-36 sm:pr-40'
                 )}
               />
             )}
@@ -467,22 +470,35 @@ export default function SearchClient({
               <button
                 onClick={(e) => {
                   e.preventDefault()
-                  setIsAIMode(!isAIMode)
+                  setIsAIMode((prev) => !prev)
                 }}
                 className={cn(
-                  'flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors shrink-0 text-purple-600 dark:text-purple-400',
+                  'flex min-h-[40px] items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors shrink-0',
                   isAIMode
-                    ? 'bg-purple-500/15 hover:bg-purple-500/20'
-                    : 'hover:bg-purple-500/10'
+                    ? 'text-primary hover:bg-primary/10'
+                    : 'text-purple-600 hover:bg-purple-500/10 dark:text-purple-400'
                 )}
-                aria-label={isAIMode ? t('search.disableAIStyleSearch') : t('search.enableAIStyleSearch')}
+                aria-label={
+                  isAIMode ? t('search.backToNormalSearch') : t('search.enableAIStyleSearch')
+                }
                 aria-pressed={isAIMode}
                 type="button"
               >
-                <SparklesIcon className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-                <span className="text-xs font-medium whitespace-nowrap text-purple-600 dark:text-purple-400">
-                  {t('search.askWithAI')}
-                </span>
+                {isAIMode ? (
+                  <>
+                    <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="text-xs font-medium whitespace-nowrap text-primary">
+                      {t('search.backToNormalSearch')}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                    <span className="text-xs font-medium whitespace-nowrap text-purple-600 dark:text-purple-400">
+                      {t('search.askWithAI')}
+                    </span>
+                  </>
+                )}
               </button>
               {isSearching && (
                 <div

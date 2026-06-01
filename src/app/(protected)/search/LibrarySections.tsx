@@ -38,6 +38,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         showLikedCard={!!userId}
       />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
+      <RecentSongsSection songs={recentSongs} userId={userId} />
       {userId && forYouData?.topArtist && forYouData.artistSongs.length > 0 && (
         <ForYouArtistSection
           artistName={forYouData.topArtist}
@@ -45,14 +46,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           userId={userId}
         />
       )}
-      <RecentSongsSection 
-        songs={recentSongs} 
-        userId={userId} 
-      />
-      <PopularSongsSection 
-        songs={popularSongs} 
-        userId={userId} 
-      />
+      <PopularSongsSection songs={popularSongs} userId={userId} />
     </>
   )
 }

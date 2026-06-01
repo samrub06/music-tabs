@@ -38,6 +38,7 @@ export default function ExplorerSectionsSkeleton() {
       <FeaturedSongSkeleton />
       <HorizontalSliderSkeleton />
       <HorizontalSliderSkeleton />
+      <HorizontalSliderSkeleton />
     </div>
   )
 }
