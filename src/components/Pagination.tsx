@@ -1,25 +1,38 @@
 'use client'
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
+import { cn } from '@/lib/utils'
 
 interface PaginationProps {
   page: number
   limit: number
   total: number
   showAllLimit?: number
+  className?: string
 }
 
-export default function Pagination({ page, limit, total, showAllLimit }: PaginationProps) {
+function interpolate(template: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce(
+    (str, [key, value]) => str.replace(new RegExp(`\\{${key}\\}`, 'g'), String(value)),
+    template
+  )
+}
+
+export default function Pagination({ page, limit, total, showAllLimit, className }: PaginationProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const totalPages = Math.max(1, Math.ceil(total / limit))
   const canPrev = page > 1
   const canNext = page < totalPages
   const showAllVisible = showAllLimit != null && total > limit
+  const from = total === 0 ? 0 : (page - 1) * limit + 1
+  const to = Math.min(page * limit, total)
+  const progress = totalPages > 1 ? (page / totalPages) * 100 : 100
 
   const navigate = (nextPage: number) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -37,42 +50,86 @@ export default function Pagination({ page, limit, total, showAllLimit }: Paginat
 
   if (totalPages <= 1 && !showAllVisible) return null
 
+  const pageLabel = interpolate(t('common.pageOf'), { current: page, total: totalPages })
+  const rangeLabel = interpolate(t('common.showingRange'), { from, to, total })
+
   return (
-    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+    <nav
+      dir={language === 'he' ? 'rtl' : 'ltr'}
+      className={cn('mt-4 pb-1', className)}
+      aria-label={t('common.pagination')}
+    >
       {totalPages > 1 && (
-        <>
-          <button
-            className="px-3 py-1.5 rounded-md border text-sm disabled:opacity-50"
-            onClick={() => navigate(page - 1)}
-            disabled={!canPrev}
+        <div className="space-y-3">
+          <div className="flex items-stretch gap-2 sm:justify-center sm:gap-3">
+            <button
+              type="button"
+              className={cn(
+                'flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium transition-colors sm:flex-initial sm:min-w-[7.5rem]',
+                canPrev
+                  ? 'bg-muted text-foreground active:bg-muted/80'
+                  : 'cursor-not-allowed bg-muted/40 text-muted-foreground'
+              )}
+              onClick={() => navigate(page - 1)}
+              disabled={!canPrev}
+              aria-label={t('common.previous')}
+            >
+              <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+              <span className="truncate">{t('common.previous')}</span>
+            </button>
+
+            <div className="flex min-w-[5.5rem] flex-col items-center justify-center px-1 text-center">
+              <span className="text-sm font-semibold tabular-nums text-foreground">{pageLabel}</span>
+              <span className="mt-0.5 text-[11px] tabular-nums text-muted-foreground sm:text-xs">
+                {rangeLabel}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              className={cn(
+                'flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium transition-colors sm:flex-initial sm:min-w-[7.5rem]',
+                canNext
+                  ? 'bg-muted text-foreground active:bg-muted/80'
+                  : 'cursor-not-allowed bg-muted/40 text-muted-foreground'
+              )}
+              onClick={() => navigate(page + 1)}
+              disabled={!canNext}
+              aria-label={t('common.next')}
+            >
+              <span className="truncate">{t('common.next')}</span>
+              <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+            </button>
+          </div>
+
+          <div
+            className="h-1 overflow-hidden rounded-full bg-muted sm:max-w-md sm:mx-auto"
+            role="progressbar"
+            aria-valuenow={page}
+            aria-valuemin={1}
+            aria-valuemax={totalPages}
+            aria-label={pageLabel}
           >
-            Prev
-          </button>
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Page {page} / {totalPages}
-          </span>
-          <button
-            className="px-3 py-1.5 rounded-md border text-sm disabled:opacity-50"
-            onClick={() => navigate(page + 1)}
-            disabled={!canNext}
-          >
-            Next
-          </button>
-        </>
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-200 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
       )}
+
       {showAllVisible && (
         <button
           type="button"
-          className="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className={cn(
+            'mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl text-sm font-medium text-primary transition-colors hover:bg-primary/10 active:bg-primary/15',
+            totalPages <= 1 && 'mt-0'
+          )}
           onClick={handleShowAll}
         >
           {t('common.showAll')}
         </button>
       )}
-    </div>
+    </nav>
   )
 }
-
-
-
-

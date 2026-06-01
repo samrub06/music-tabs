@@ -31,7 +31,12 @@
     "importUltimateGuitar": "ייבא מ-Ultimate Guitar",
     "view": "הצג",
     "play": "נגן",
-    "showAll": "הצג הכל"
+    "showAll": "הצג הכל",
+    "previous": "הקודם",
+    "next": "הבא",
+    "pageOf": "{current} / {total}",
+    "showingRange": "{from}–{to} מתוך {total}",
+    "pagination": "דפדוף"
   },
   "navigation": {
     "home": "בית",
@@ -177,7 +182,7 @@
     "manualEntry": "הזנה ידנית",
     "titleRequired": "הכותרת והתוכן נדרשים.",
     "searchSongs": "חפש שירים",
-    "searchPlaceholder": "חפש שירים...",
+    "searchPlaceholder": "חפש שיר או אמן",
     "howToUse": "איך להשתמש:",
     "enFrSongs": "EN/FR: לשירים באנגלית/צרפתית",
     "hebrewSongs": "עברית: לשירים בעברית",

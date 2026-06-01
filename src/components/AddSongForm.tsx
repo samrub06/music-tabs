@@ -368,15 +368,15 @@ export default function AddSongForm({
   const renderSearchResults = () => (
     <>
       {isSearching && (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-8">
+        <div className="flex items-center justify-center gap-2 rounded-xl bg-muted/40 px-3 py-8">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span className="text-sm text-muted-foreground">{t('songForm.loading')}</span>
         </div>
       )}
 
       {!isSearching && showSearchResults && searchResults.length > 0 && (
-        <div className="max-h-56 space-y-2 overflow-y-auto rounded-xl border border-border p-3 sm:max-h-64">
-          <p className="text-xs font-medium text-muted-foreground">
+        <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl bg-muted/30 p-2 sm:max-h-64">
+          <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">
             {t('songForm.searchResults')} ({searchResults.length})
           </p>
           {searchResults.map((result, index) => (
@@ -384,7 +384,7 @@ export default function AddSongForm({
               key={`${result.url}-${index}`}
               type="button"
               disabled={isSearching || isSaving}
-              className="w-full rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted/50 disabled:opacity-50"
+              className="w-full rounded-lg p-3 text-left transition-colors hover:bg-muted/60 disabled:opacity-50"
               onClick={() => handleFetchFromUrl(result.url, result)}
             >
               <div className="text-sm font-medium text-foreground">{result.title}</div>
@@ -405,12 +405,6 @@ export default function AddSongForm({
           ))}
         </div>
       )}
-
-      {!isSearching && !showSearchResults && (
-        <p className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
-          {t('songForm.clickToLoad')}
-        </p>
-      )}
     </>
   )
 
@@ -419,7 +413,7 @@ export default function AddSongForm({
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
         className={cn(
-          'z-[100] flex flex-col gap-0 overflow-hidden rounded-2xl border bg-background p-0 shadow-lg',
+          'z-[100] flex flex-col gap-0 overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-lg',
           'max-lg:fixed max-lg:inset-x-4 max-lg:top-[max(0.75rem,env(safe-area-inset-top,0px))]',
           'max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-lg:left-4 max-lg:right-4',
           'max-lg:h-auto max-lg:w-auto max-lg:max-h-none max-lg:max-w-none',
@@ -429,11 +423,11 @@ export default function AddSongForm({
           'sm:translate-x-[-50%] sm:translate-y-[-50%]'
         )}
       >
-        <DialogHeader className="shrink-0 border-b border-border px-4 pb-3 pt-4 pr-12 text-left">
+        <DialogHeader className="shrink-0 px-4 pb-2 pt-4 pr-12 text-left">
           <DialogTitle>{t('songForm.addSong')}</DialogTitle>
         </DialogHeader>
 
-        <div className="shrink-0 border-b border-border px-4 py-3">
+        <div className="shrink-0 px-4 pb-3">
           <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
@@ -467,12 +461,12 @@ export default function AddSongForm({
           {message && (
             <div
               className={cn(
-                'mb-4 rounded-xl border p-3 text-sm',
+                'mb-4 rounded-xl p-3 text-sm',
                 message.type === 'error'
-                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                  ? 'bg-destructive/10 text-destructive'
                   : message.type === 'success'
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border bg-muted text-foreground'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-foreground'
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -490,9 +484,6 @@ export default function AddSongForm({
 
           {activeTab === 'search' && (
             <div className="space-y-3">
-              <Label htmlFor="add-song-search">
-                {t('songForm.songTitle')} / {t('songForm.artist')}
-              </Label>
               <div className="flex gap-2">
                 <Input
                   id="add-song-search"
@@ -562,7 +553,7 @@ export default function AddSongForm({
                           handleAISearch(suggestion)
                         }}
                         disabled={isSearching || isSaving}
-                        className="rounded-full border border-border bg-card px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:opacity-50 sm:text-sm"
+                        className="rounded-full bg-muted/80 px-3 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-primary/15 hover:text-primary disabled:opacity-50 sm:text-sm"
                       >
                         {suggestion}
                       </button>
@@ -646,10 +637,10 @@ export default function AddSongForm({
                   id="add-song-content"
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows={10}
+                  rows={4}
                   required
                   disabled={isSaving}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex max-h-32 w-full resize-y rounded-md border border-input bg-background px-3 py-2 font-mono text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 sm:max-h-40"
                 />
               </div>
 
@@ -667,7 +658,7 @@ export default function AddSongForm({
 
         {isSaving && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-3 rounded-xl bg-background px-4 py-3 shadow-sm">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span className="text-sm text-muted-foreground">{t('search.addingSong')}</span>
             </div>

@@ -31,7 +31,12 @@
     "importUltimateGuitar": "Import Ultimate Guitar",
     "view": "View",
     "play": "Play",
-    "showAll": "Show all"
+    "showAll": "Show all",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "{current} / {total}",
+    "showingRange": "{from}–{to} of {total}",
+    "pagination": "Pagination"
   },
   "navigation": {
     "home": "Home",
@@ -177,7 +182,7 @@
     "manualEntry": "Manual Entry",
     "titleRequired": "Title and content are required.",
     "searchSongs": "Search Songs",
-    "searchPlaceholder": "Search for songs...",
+    "searchPlaceholder": "Search for a song or artist",
     "howToUse": "How to use:",
     "enFrSongs": "EN/FR: For English/French songs",
     "hebrewSongs": "עברית: For Hebrew songs",

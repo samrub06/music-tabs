@@ -340,96 +340,12 @@ export default function FolderSongsClient({
                 sortDirection={sortDirection}
                 onSortChange={handleSortChange}
               />
-              <div className="hidden sm:block mt-4">
-                <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
-              </div>
-              {(() => {
-                const totalPages = Math.max(1, Math.ceil(total / limit))
-                const canPrev = page > 1
-                const canNext = page < totalPages
-                if (totalPages <= 1 && total <= limit) return null
-                return (
-                  <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:hidden">
-                    {totalPages > 1 && (
-                      <>
-                        <button
-                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                          onClick={() => applyQuery({ page: page - 1 })}
-                          disabled={!canPrev}
-                        >
-                          ‹
-                        </button>
-                        <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
-                          {page} / {totalPages}
-                        </span>
-                        <button
-                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                          onClick={() => applyQuery({ page: page + 1 })}
-                          disabled={!canNext}
-                        >
-                          ›
-                        </button>
-                      </>
-                    )}
-                    {total > limit && (
-                      <button
-                        type="button"
-                        className="px-3 py-2 rounded border text-sm font-medium min-h-[44px] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-gray-300 dark:border-gray-600"
-                        onClick={() => applyQuery({ limit: 10000, page: 1 })}
-                      >
-                        {t('common.showAll')}
-                      </button>
-                    )}
-                  </div>
-                )
-              })()}
+              <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
             </>
           ) : (
             <>
               <SongGallery songs={sortedSongs} hasUser={true} />
-              <div className="hidden sm:block mt-4">
-                <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
-              </div>
-              {(() => {
-                const totalPages = Math.max(1, Math.ceil(total / limit))
-                const canPrev = page > 1
-                const canNext = page < totalPages
-                if (totalPages <= 1 && total <= limit) return null
-                return (
-                  <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:hidden">
-                    {totalPages > 1 && (
-                      <>
-                        <button
-                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                          onClick={() => applyQuery({ page: page - 1 })}
-                          disabled={!canPrev}
-                        >
-                          ‹
-                        </button>
-                        <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
-                          {page} / {totalPages}
-                        </span>
-                        <button
-                          className="px-3 py-2 rounded border text-sm font-medium disabled:opacity-50 min-w-[40px] min-h-[44px] border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                          onClick={() => applyQuery({ page: page + 1 })}
-                          disabled={!canNext}
-                        >
-                          ›
-                        </button>
-                      </>
-                    )}
-                    {total > limit && (
-                      <button
-                        type="button"
-                        className="px-3 py-2 rounded border text-sm font-medium min-h-[44px] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border-gray-300 dark:border-gray-600"
-                        onClick={() => applyQuery({ limit: 10000, page: 1 })}
-                      >
-                        {t('common.showAll')}
-                      </button>
-                    )}
-                  </div>
-                )
-              })()}
+              <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
             </>
           )
         ) : (
@@ -472,7 +388,7 @@ export default function FolderSongsClient({
         <SheetContent
           side="bottom"
           showCloseButton={false}
-          className="flex h-[85vh] max-h-[640px] flex-col rounded-t-[1.75rem] border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
+          className="flex h-[85vh] max-h-[640px] flex-col rounded-t-[1.75rem] border-0 bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
         >
           <div className="shrink-0 flex items-center py-1.5 -mt-1">
             <div className="flex-1" aria-hidden />
@@ -490,7 +406,7 @@ export default function FolderSongsClient({
           </SheetHeader>
 
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
-            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+            <div className="space-y-2.5 py-1">
               <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
                 {t('songs.sortBy')}
               </Label>
@@ -508,7 +424,7 @@ export default function FolderSongsClient({
               </Select>
             </div>
 
-            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
+            <div className="space-y-2.5 py-1">
               <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
                 {t('songs.sortOrder')}
               </Label>
@@ -524,7 +440,7 @@ export default function FolderSongsClient({
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
+          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 safe-area-inset-bottom">
             <Button
               variant="outline"
               onClick={handleClearFilters}

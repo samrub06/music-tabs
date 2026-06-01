@@ -29,7 +29,12 @@
     "lightMode": "Mode clair",
     "darkMode": "Mode sombre",
     "importUltimateGuitar": "Importer Ultimate Guitar",
-    "showAll": "Voir tout"
+    "showAll": "Voir tout",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "{current} / {total}",
+    "showingRange": "{from}–{to} sur {total}",
+    "pagination": "Pagination"
   },
   "navigation": {
     "home": "Accueil",
@@ -175,7 +180,7 @@
     "manualEntry": "Saisie manuelle",
     "titleRequired": "Le titre et le contenu sont obligatoires.",
     "searchSongs": "Rechercher des chansons",
-    "searchPlaceholder": "Rechercher des chansons...",
+    "searchPlaceholder": "Rechercher une chanson ou un artiste",
     "howToUse": "Comment utiliser :",
     "enFrSongs": "EN/FR : Pour les chansons en anglais/français",
     "hebrewSongs": "עברית : לשירים בעברית",
