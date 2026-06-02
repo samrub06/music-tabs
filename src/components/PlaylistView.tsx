@@ -13,6 +13,9 @@ import {
 import { PlaylistResult, PlaylistSong } from '@/lib/services/playlistGeneratorService';
 import { useLanguage } from '@/context/LanguageContext';
 import Snackbar from '@/components/Snackbar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface PlaylistViewProps {
   playlist: PlaylistResult;
@@ -132,73 +135,56 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+    <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-base font-semibold text-foreground">
             {t('playlistView.yourPlaylist')}
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {playlist.songs.length} {t('playlistView.songs')} • {Math.round(playlist.estimatedDuration)} {t('playlistView.minutes')}
           </p>
         </div>
-        
-        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
-          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-            {t('playlistView.score')} <span className="font-medium text-purple-600 dark:text-purple-400">{Math.round(playlist.totalScore * 100)}%</span>
+
+        <div className="flex items-center justify-between sm:justify-end gap-2">
+          <div className="text-xs text-muted-foreground">
+            {t('playlistView.score')}{' '}
+            <span className="font-medium text-primary">{Math.round(playlist.totalScore * 100)}%</span>
           </div>
           {onCreatePlaylist && (
-            <button
-              onClick={handleOpenModal}
-              className="px-3 py-2 text-xs sm:text-sm rounded-md bg-gray-600 text-white hover:bg-gray-700 transition-colors active:scale-95 flex-shrink-0"
-            >
+            <Button type="button" variant="secondary" size="sm" onClick={handleOpenModal}>
               {t('playlistView.save')}
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Start Playlist Button */}
       {playlist.songs.length > 0 && (
-        <div className="mb-4 sm:mb-6">
-          <button
-            onClick={handleStartPlaylist}
-            className="w-full flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-purple-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-md active:scale-95"
-          >
-            <PlayIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 flex-shrink-0" />
-            <span className="truncate">{t('playlistView.startPlaylist')}</span>
-          </button>
-          <p className="mt-2 text-[10px] sm:text-xs text-center text-gray-500 dark:text-gray-400 px-1">
-            {t('playlistView.startPlaylistDescription')}
-          </p>
-        </div>
+        <Button type="button" className="w-full mb-4" size="lg" onClick={handleStartPlaylist}>
+          <PlayIcon className="h-5 w-5" />
+          {t('playlistView.startPlaylist')}
+        </Button>
       )}
 
-      {/* Playlist Info */}
       {playlist.keyProgression.length > 0 && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
-            <div className="flex items-center flex-wrap gap-2">
-              <KeyIcon className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-              <span className="font-medium text-purple-900 dark:text-purple-200">{t('playlistView.playlistKey')}</span>
-              <span className="px-2 py-1 bg-white dark:bg-gray-800 rounded border border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-300 font-semibold text-xs">
-                {playlist.keyProgression[0]}
-              </span>
-            </div>
-            <div className="text-purple-700 dark:text-purple-300 text-xs sm:text-sm">
-              {t('playlistView.allSongsTransposed')}
-            </div>
+        <div className="mb-4 rounded-lg border border-border bg-muted/40 p-3 text-xs sm:text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <KeyIcon className="h-4 w-4 text-primary shrink-0" />
+            <span className="font-medium text-foreground">{t('playlistView.playlistKey')}</span>
+            <span className="rounded-md border border-border bg-background px-2 py-0.5 font-semibold text-foreground text-xs">
+              {playlist.keyProgression[0]}
+            </span>
+            <span className="text-muted-foreground">{t('playlistView.allSongsTransposed')}</span>
           </div>
         </div>
       )}
 
-      {/* Song List */}
-      <div className="space-y-2 max-h-96 overflow-y-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+      <div className="space-y-2 max-h-96 overflow-y-auto">
         {playlist.songs.map((song, index) => (
           <div
             key={song.id}
             onClick={() => onSongSelect?.(song)}
-            className="flex items-start sm:items-center p-2.5 sm:p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors active:scale-[0.98]"
+            className="flex items-start sm:items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-border bg-background/50 hover:bg-muted/50 cursor-pointer transition-colors"
           >
             <div className="flex-shrink-0 mr-2 sm:mr-3">
               {song.songImageUrl ? (
@@ -208,28 +194,28 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
                 />
               ) : (
-                <MusicalNoteIcon className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-500" />
+                <MusicalNoteIcon className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" />
               )}
             </div>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2 mb-1">
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <h4 className="text-xs sm:text-sm font-medium text-foreground truncate">
                     {song.title}
                   </h4>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5">
                     {song.author}
                   </p>
                 </div>
-                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium flex-shrink-0 ml-2">
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium flex-shrink-0 ml-2">
                   #{index + 1}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-1 flex-wrap">
                 {/* Original Key */}
                 {song.originalKey && song.originalKey !== 'Unknown' && (
-                  <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                  <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs bg-muted text-muted-foreground rounded-full">
                     <KeyIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('playlistView.original')} </span>
                     {song.originalKey}
@@ -246,7 +232,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                 
                 {/* Target Key */}
                 {song.targetKey && song.targetKey !== 'Unknown' && (
-                  <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                  <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs bg-primary/10 text-primary rounded-full">
                     <KeyIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('playlistView.target')} </span>
                     {song.targetKey}
@@ -274,62 +260,55 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
 
       {playlist.songs.length === 0 && (
         <div className="text-center py-12">
-          <MusicalNoteIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">{t('playlistView.noSongsInPlaylist')}</p>
+          <MusicalNoteIcon className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">{t('playlistView.noSongsInPlaylist')}</p>
         </div>
       )}
 
-      {/* Playlist Name Modal */}
       {showNameModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="relative w-full max-w-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg rounded-t-2xl sm:rounded-lg animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-300">
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
+          <div className="relative w-full max-w-md rounded-xl border border-border bg-card shadow-lg">
+            <div className="flex items-center justify-between border-b border-border p-4">
+              <h3 className="text-base font-semibold text-foreground">
                 {t('playlistView.playlistName')}
               </h3>
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleCloseModal}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1"
                 disabled={isSaving}
                 aria-label={t('common.close')}
               >
-                <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-              </button>
+                <XMarkIcon className="h-5 w-5" />
+              </Button>
             </div>
 
-            <div className="p-4 sm:p-5">
-              <div className="mb-4">
-                <label htmlFor="playlist-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('playlistView.playlistName')}
-                </label>
-                <input
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="playlist-name">{t('playlistView.playlistName')}</Label>
+                <Input
                   id="playlist-name"
                   ref={inputRef}
-                  type="text"
                   value={playlistName}
                   onChange={(e) => setPlaylistName(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={isSaving}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   placeholder={t('playlistView.playlistNamePlaceholder')}
                 />
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
-                <button
-                  onClick={handleCloseModal}
-                  disabled={isSaving}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm sm:text-base font-medium rounded-lg shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:opacity-50 transition-colors active:scale-95"
-                >
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleCloseModal} disabled={isSaving}>
                   {t('common.cancel')}
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
                   onClick={handleSavePlaylist}
                   disabled={isSaving || !playlistName.trim()}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-2 bg-gray-600 text-white text-sm sm:text-base font-medium rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 transition-colors active:scale-95"
                 >
                   {isSaving ? t('playlistView.saving') : t('playlistView.save')}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

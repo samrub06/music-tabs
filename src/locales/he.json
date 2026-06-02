@@ -336,6 +336,20 @@
     "exampleFormat": "הצג דוגמה לפורמט",
     "pasteContentError": "אנא הדבק את תוכן הפלייליסט שלך"
   },
+  "playlistGenerator": {
+    "preferredKey": "טונאליות מועדפת (אופציונלי)",
+    "noSpecificKey": "ללא טונאליות ספציפית",
+    "genre": "ז'אנר (אופציונלי)",
+    "allGenres": "כל הז'אנרים",
+    "folders": "תיקיות לכלול",
+    "unorganized": "שירים לא מאורגנים ({count})",
+    "specificSongs": "שירים ספציפיים (אופציונלי)",
+    "andMore": "... ועוד {count} שירים",
+    "randomSelection": "בחירה אקראית",
+    "maxSongs": "מספר שירים מקסימלי",
+    "generate": "צור פלייליסט",
+    "generating": "יוצר..."
+  },
   "playlistView": {
     "yourPlaylist": "הפלייליסט שלך",
     "songs": "שירים",

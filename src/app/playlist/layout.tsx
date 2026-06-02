@@ -91,7 +91,7 @@ export default function PlaylistLayout({ children }: { children: ReactNode }) {
   }, [user, authLoading, supabase, isCacheValid])
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex-1 flex overflow-hidden">
         {/* Only show sidebar if user is authenticated */}

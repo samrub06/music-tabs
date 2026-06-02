@@ -336,6 +336,20 @@
     "exampleFormat": "View example format",
     "pasteContentError": "Please paste your playlist content"
   },
+  "playlistGenerator": {
+    "preferredKey": "Preferred key (optional)",
+    "noSpecificKey": "No specific key",
+    "genre": "Genre (optional)",
+    "allGenres": "All genres",
+    "folders": "Folders to include",
+    "unorganized": "Unorganized songs ({count})",
+    "specificSongs": "Specific songs (optional)",
+    "andMore": "... and {count} more songs",
+    "randomSelection": "Random selection",
+    "maxSongs": "Maximum number of songs",
+    "generate": "Generate playlist",
+    "generating": "Generating..."
+  },
   "playlistView": {
     "yourPlaylist": "Your Playlist",
     "songs": "songs",

@@ -10,6 +10,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { updateStreakAction } from '@/app/(protected)/gamification/actions'
 import { ScrollChromeProvider } from '@/context/ScrollChromeContext'
+import { PageHeaderProvider } from '@/context/PageHeaderContext'
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuthContext()
@@ -60,6 +61,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <ScrollChromeProvider>
+    <PageHeaderProvider>
     <SidebarProvider defaultOpen>
       <div className="flex h-svh w-full bg-gray-50 dark:bg-gray-900">
         {user && <AppSidebar />}
@@ -72,6 +74,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarInset>
       </div>
     </SidebarProvider>
+    </PageHeaderProvider>
     </ScrollChromeProvider>
   )
 }

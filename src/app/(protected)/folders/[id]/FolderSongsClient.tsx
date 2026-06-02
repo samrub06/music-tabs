@@ -4,7 +4,8 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
-import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { usePageHeader } from '@/context/PageHeaderContext'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Song, Folder } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '@/app/(protected)/dashboard/actions'
@@ -78,6 +79,8 @@ export default function FolderSongsClient({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+
+  usePageHeader(folder.name, '/folders')
 
   // Sync local search from URL
   useEffect(() => {
@@ -230,25 +233,10 @@ export default function FolderSongsClient({
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex-1 p-3 sm:p-6 overflow-y-auto">
-        {/* Back + title */}
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <button
-              onClick={() => router.push('/folders')}
-              className="mb-2 inline-flex items-center text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-1" />
-              {t('folders.backToFolders')}
-            </button>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1 truncate">
-              {folder.name}
-            </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t('folders.songsInFolder').replace('{count}', String(total))}
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-1 flex-col min-h-0 overflow-y-auto bg-background p-4 sm:p-6">
+        <p className="mb-4 text-sm text-muted-foreground">
+          {t('folders.songsInFolder').replace('{count}', String(total))}
+        </p>
 
         {/* Search + Filter - same row as /songs */}
         <div className="mb-4 flex items-stretch gap-2">

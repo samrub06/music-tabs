@@ -334,6 +334,20 @@
     "exampleFormat": "Voir un exemple de format",
     "pasteContentError": "Veuillez coller le contenu de votre playlist"
   },
+  "playlistGenerator": {
+    "preferredKey": "Tonalité préférée (optionnel)",
+    "noSpecificKey": "Aucune tonalité spécifique",
+    "genre": "Genre (optionnel)",
+    "allGenres": "Tous les genres",
+    "folders": "Dossiers à inclure",
+    "unorganized": "Chansons non organisées ({count})",
+    "specificSongs": "Chansons spécifiques (optionnel)",
+    "andMore": "... et {count} autres chansons",
+    "randomSelection": "Sélection aléatoire",
+    "maxSongs": "Nombre maximum de chansons",
+    "generate": "Générer la playlist",
+    "generating": "Génération en cours..."
+  },
   "playlistView": {
     "yourPlaylist": "Votre Playlist",
     "songs": "chansons",
