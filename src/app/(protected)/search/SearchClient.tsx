@@ -403,6 +403,7 @@ export default function SearchClient({
   }
 
   const queryTrimmed = searchQuery.trim()
+  const showAIModeToggle = !queryTrimmed || isAIMode
   const hasSearchResults = queryTrimmed.length > 0 && searchResults.length > 0
   const showSearchResultsPanel =
     isSearching || hasSearchResults || (hasSearched && queryTrimmed.length > 0)
@@ -465,7 +466,13 @@ export default function SearchClient({
                 placeholder={t('search.searchPlaceholder')}
                 className={cn(
                   'block h-14 w-full border-0 bg-transparent py-4 pl-4 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none',
-                  searchQuery ? 'pr-48 sm:pr-56' : 'pr-44 sm:pr-52'
+                  !showAIModeToggle
+                    ? queryTrimmed
+                      ? 'pr-20 sm:pr-24'
+                      : 'pr-12 sm:pr-14'
+                    : searchQuery
+                      ? 'pr-48 sm:pr-56'
+                      : 'pr-44 sm:pr-52'
                 )}
               />
             )}
@@ -506,39 +513,41 @@ export default function SearchClient({
                   )}
                 </button>
               )}
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  setIsAIMode((prev) => !prev)
-                }}
-                className={cn(
-                  'flex min-h-[40px] items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors shrink-0',
-                  isAIMode
-                    ? 'text-primary hover:bg-primary/10'
-                    : 'text-purple-600 hover:bg-purple-500/10 dark:text-purple-400'
-                )}
-                aria-label={
-                  isAIMode ? t('search.backToNormalSearch') : t('search.enableAIStyleSearch')
-                }
-                aria-pressed={isAIMode}
-                type="button"
-              >
-                {isAIMode ? (
-                  <>
-                    <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="text-xs font-medium whitespace-nowrap text-primary">
-                      {t('search.backToNormalSearch')}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <SparklesIcon className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-                    <span className="text-xs font-medium whitespace-nowrap text-purple-600 dark:text-purple-400">
-                      {t('search.askWithAI')}
-                    </span>
-                  </>
-                )}
-              </button>
+              {showAIModeToggle && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setIsAIMode((prev) => !prev)
+                  }}
+                  className={cn(
+                    'flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors',
+                    isAIMode
+                      ? 'text-primary hover:bg-primary/10'
+                      : 'text-purple-600 hover:bg-purple-500/10 dark:text-purple-400'
+                  )}
+                  aria-label={
+                    isAIMode ? t('search.backToNormalSearch') : t('search.enableAIStyleSearch')
+                  }
+                  aria-pressed={isAIMode}
+                  type="button"
+                >
+                  {isAIMode ? (
+                    <>
+                      <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="text-xs font-medium whitespace-nowrap text-primary">
+                        {t('search.backToNormalSearch')}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <SparklesIcon className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                      <span className="text-xs font-medium whitespace-nowrap text-purple-600 dark:text-purple-400">
+                        {t('search.askWithAI')}
+                      </span>
+                    </>
+                  )}
+                </button>
+              )}
               {searchQuery && !isSearching && (
                 <button
                   onClick={handleClearSearch}
