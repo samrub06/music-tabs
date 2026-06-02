@@ -26,6 +26,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
+import { SongThumbnail } from './SongThumbnail';
+import type { LibrarySongRef } from '@/utils/songSuggestions';
 import {
   Select,
   SelectContent,
@@ -81,6 +84,9 @@ interface SongContentProps {
   onSetTransposeValue?: (value: number) => void;
   easyChordMode?: boolean;
   onToggleEasyChordMode?: () => void;
+  librarySongs?: LibrarySongRef[];
+  nextSong?: NextSongRef | null;
+  onPlayNext?: () => void;
 }
 
 export default function SongContent({
@@ -114,6 +120,9 @@ export default function SongContent({
   onSetTransposeValue,
   easyChordMode = false,
   onToggleEasyChordMode,
+  librarySongs = [],
+  nextSong = null,
+  onPlayNext,
 }: SongContentProps) {
   const { t } = useLanguage();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -222,7 +231,14 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60">
-            <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <SongThumbnail
+                songImageUrl={transposedSong?.songImageUrl}
+                artistImageUrl={transposedSong?.artistImageUrl}
+                alt={transposedSong?.title || ''}
+                size="lg"
+              />
+              <div className="min-w-0 flex-1">
               <h2
                 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
                 dir={/[\u0590-\u05FF]/.test(transposedSong?.title || '') ? 'rtl' : 'ltr'}
@@ -238,6 +254,7 @@ export default function SongContent({
                   {transposedSong.author}
                 </Link>
               )}
+              </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {onToggleEdit && (
@@ -449,6 +466,17 @@ export default function SongContent({
             onChordClick={onChordClick}
             fontSize={fontSize}
           />
+
+          {isAuthenticated && (
+            <SongEndSuggestions
+              currentSongId={transposedSong.id}
+              currentAuthor={transposedSong.author ?? ''}
+              currentGenre={transposedSong.genre}
+              librarySongs={librarySongs}
+              nextSong={nextSong}
+              onPlayNext={onPlayNext}
+            />
+          )}
         </div>
       </div>
 

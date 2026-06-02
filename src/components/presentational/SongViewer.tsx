@@ -7,6 +7,8 @@ import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ChordDiagramModal from './ChordDiagramModal';
 import ToolsBottomBar from './ToolsBottomBar';
+import type { LibrarySongRef } from '@/utils/songSuggestions';
+import type { NextSongRef } from './SongEndSuggestions';
 
 interface SongViewerProps {
   song: Song;
@@ -54,7 +56,9 @@ interface SongViewerProps {
   onNextSong?: () => void;
   canPrevSong?: boolean;
   canNextSong?: boolean;
-  nextSongInfo?: { title: string; author?: string } | null;
+  nextSongInfo?: NextSongRef | null;
+  librarySongs?: LibrarySongRef[];
+  onPlayNext?: () => void;
   isAuthenticated?: boolean;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
@@ -111,6 +115,8 @@ export default function SongViewer({
   canPrevSong,
   canNextSong,
     nextSongInfo,
+    librarySongs = [],
+    onPlayNext,
     isAuthenticated = false,
     manualBpm,
     onSetManualBpm,
@@ -197,6 +203,9 @@ export default function SongViewer({
               onSetTransposeValue={onSetTransposeValue}
               easyChordMode={easyChordMode}
               onToggleEasyChordMode={onToggleEasyChordMode}
+              librarySongs={librarySongs}
+              nextSong={nextSongInfo}
+              onPlayNext={onPlayNext}
             />
           </div>
 

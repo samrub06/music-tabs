@@ -19,6 +19,7 @@ import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
 import { recordSongViewAction, toggleSongFavoriteAction } from '@/app/song/[id]/actions';
 import { useLanguage } from '@/context/LanguageContext';
+import type { LibrarySongRef } from '@/utils/songSuggestions';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -28,6 +29,7 @@ interface SongViewerContainerSSRProps {
   isInLibrary?: boolean;
   onAddToLibrary?: () => void;
   initialInstrument?: 'piano' | 'guitar';
+  librarySongs?: LibrarySongRef[];
 }
 
 export default function SongViewerContainerSSR({ 
@@ -37,7 +39,8 @@ export default function SongViewerContainerSSR({
   isAuthenticated = false,
   isInLibrary = true,
   onAddToLibrary,
-  initialInstrument
+  initialInstrument,
+  librarySongs = [],
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
   const { t } = useLanguage();
@@ -55,7 +58,13 @@ export default function SongViewerContainerSSR({
   const [metronomeActive, setMetronomeActive] = useState(false);
   const [manualBpm, setManualBpm] = useState<number | null>(null);
   const [hasUsedNext, setHasUsedNext] = useState(false);
-  const [nextSongInfo, setNextSongInfo] = useState<{ title: string; author?: string } | null>(null);
+  const [nextSongInfo, setNextSongInfo] = useState<{
+    id: string;
+    title: string;
+    author?: string;
+    songImageUrl?: string;
+    artistImageUrl?: string;
+  } | null>(null);
   const [isFromPlaylist, setIsFromPlaylist] = useState(false);
   const [playlistTargetKey, setPlaylistTargetKey] = useState<string | null>(null);
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set());
@@ -126,8 +135,11 @@ export default function SongViewerContainerSSR({
             repo.getSongInfo(nextSongId).then(nextSong => {
               if (nextSong) {
                 setNextSongInfo({
+                  id: nextSong.id,
                   title: nextSong.title,
-                  author: nextSong.author
+                  author: nextSong.author,
+                  songImageUrl: nextSong.songImageUrl,
+                  artistImageUrl: nextSong.artistImageUrl,
                 });
               }
             }).catch(err => {
@@ -433,6 +445,8 @@ export default function SongViewerContainerSSR({
     canPrevSong: canPrevSong,
     canNextSong: canNextSong,
     nextSongInfo: nextSongInfo,
+    librarySongs,
+    onPlayNext: handleNextSong,
     isAuthenticated,
     knownChordIds,
     chordNameToIdMap,

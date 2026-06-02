@@ -473,7 +473,16 @@
     "markAsKnown": "סמן כלא ידוע",
     "markAsUnknown": "סמן כידוע",
     "iKnowIt": "אני יודע את זה",
-    "iDontKnowIt": "אני לא יודע את זה"
+    "iDontKnowIt": "אני לא יודע את זה",
+    "searchPlaceholder": "חפש אקורד...",
+    "statusAll": "כל האקורדים",
+    "statusToLearn": "ללמוד",
+    "statusKnown": "ידועים",
+    "difficultyAll": "כל הרמות",
+    "difficultyBeginner": "מתחיל",
+    "difficultyIntermediate": "בינוני",
+    "difficultyAdvanced": "מתקדם",
+    "noResults": "לא נמצאו אקורדים התואמים למסננים"
   },
   "aiPlaylist": {
     "title": "צור פלייליסט עם AI",
@@ -531,5 +540,11 @@
   "songContent": {
     "saving": "שומר...",
     "save": "שמור"
+  },
+  "songEnd": {
+    "continueListening": "המשך להאזין",
+    "nextInList": "הבא ברשימה שלך",
+    "sameArtist": "עוד מ-{artist}",
+    "sameGenre": "עוד ב-{genre}"
   }
 }

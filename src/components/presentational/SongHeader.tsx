@@ -123,13 +123,24 @@ export default function SongHeader({
               <ArrowLeftIcon className="h-5 w-5" />
             </Button>
             {nextSongInfo && canNextSong && (
-              <div className="hidden sm:flex flex-col items-center min-w-0 max-w-[80px]">
-                <span className="text-xs text-muted-foreground truncate w-full text-center">{t('songHeader.next')}:</span>
-                <span className="text-xs font-semibold truncate w-full text-center" dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}>{nextSongInfo.title}</span>
+              <div className="hidden md:flex min-w-0 max-w-[7rem] flex-col items-end">
+                <span
+                  className="truncate text-xs font-medium text-foreground"
+                  dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}
+                >
+                  {nextSongInfo.title}
+                </span>
               </div>
             )}
-            <Button variant="ghost" size="icon" onClick={onNextSong} disabled={!canNextSong} className="h-10 w-10" aria-label={t('songHeader.nextSong')}>
-              <ArrowRightIcon className="h-5 w-5" />
+            <Button
+              variant="outline"
+              onClick={onNextSong}
+              disabled={!canNextSong}
+              className="h-10 shrink-0 gap-1.5 px-4 min-w-[5.25rem]"
+              aria-label={t('songHeader.nextSong')}
+            >
+              <span className="text-sm font-medium">{t('songHeader.next')}</span>
+              <ArrowRightIcon className="h-5 w-5 shrink-0" />
             </Button>
           </div>
         )}

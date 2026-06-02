@@ -473,7 +473,16 @@
     "markAsKnown": "Mark as unknown",
     "markAsUnknown": "Mark as known",
     "iKnowIt": "I know it",
-    "iDontKnowIt": "I don't know it"
+    "iDontKnowIt": "I don't know it",
+    "searchPlaceholder": "Search chords...",
+    "statusAll": "All chords",
+    "statusToLearn": "To learn",
+    "statusKnown": "Known",
+    "difficultyAll": "All levels",
+    "difficultyBeginner": "Beginner",
+    "difficultyIntermediate": "Intermediate",
+    "difficultyAdvanced": "Advanced",
+    "noResults": "No chords match your filters"
   },
   "aiPlaylist": {
     "title": "Generate playlist with AI",
@@ -531,5 +540,11 @@
   "songContent": {
     "saving": "Saving...",
     "save": "Save"
+  },
+  "songEnd": {
+    "continueListening": "Keep playing",
+    "nextInList": "Next in your list",
+    "sameArtist": "More by {artist}",
+    "sameGenre": "More in {genre}"
   }
 }

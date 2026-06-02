@@ -471,7 +471,16 @@
     "markAsKnown": "Marquer comme inconnu",
     "markAsUnknown": "Marquer comme connu",
     "iKnowIt": "Je le connais",
-    "iDontKnowIt": "Je ne le connais pas"
+    "iDontKnowIt": "Je ne le connais pas",
+    "searchPlaceholder": "Rechercher un accord...",
+    "statusAll": "Tous les accords",
+    "statusToLearn": "À apprendre",
+    "statusKnown": "Déjà connus",
+    "difficultyAll": "Toutes difficultés",
+    "difficultyBeginner": "Débutant",
+    "difficultyIntermediate": "Intermédiaire",
+    "difficultyAdvanced": "Avancé",
+    "noResults": "Aucun accord ne correspond à vos filtres"
   },
   "aiPlaylist": {
     "title": "Générer une playlist avec AI",
@@ -529,5 +538,11 @@
   "songContent": {
     "saving": "Sauvegarde...",
     "save": "Sauvegarder"
+  },
+  "songEnd": {
+    "continueListening": "Continuer à écouter",
+    "nextInList": "Suivante dans votre liste",
+    "sameArtist": "Autres titres de {artist}",
+    "sameGenre": "Autres titres {genre}"
   }
 }

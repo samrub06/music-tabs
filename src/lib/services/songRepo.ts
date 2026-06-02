@@ -699,7 +699,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }
 
     const { data, error } = await (client.from('songs') as any)
-      .select('id, title, author, folder_id, genre, key, first_chord, last_chord')
+      .select('id, title, author, folder_id, genre, key, first_chord, last_chord, song_image_url, artist_image_url')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -711,6 +711,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       author: dbSong.author || '',
       folderId: dbSong.folder_id || undefined,
       genre: dbSong.genre || undefined,
+      songImageUrl: dbSong.song_image_url || undefined,
+      artistImageUrl: dbSong.artist_image_url || undefined,
       key: dbSong.key || undefined,
       firstChord: dbSong.first_chord || undefined,
       lastChord: dbSong.last_chord || undefined,
@@ -783,10 +785,10 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   },
 
   // Lightweight method for getting minimal song info (for navigation, lists, etc.)
-  async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author'> | null> {
+  async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author' | 'songImageUrl' | 'artistImageUrl'> | null> {
     const { data, error } = await (client
       .from('songs') as any)
-      .select('id, title, author')
+      .select('id, title, author, song_image_url, artist_image_url')
       .eq('id', id)
       .single()
 
@@ -802,6 +804,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       id: data.id,
       title: data.title,
       author: data.author || '',
+      songImageUrl: data.song_image_url || undefined,
+      artistImageUrl: data.artist_image_url || undefined,
     }
   }
 })

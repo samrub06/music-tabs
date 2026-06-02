@@ -1,0 +1,153 @@
+'use client'
+
+import Link from 'next/link'
+import { useMemo } from 'react'
+import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { SongThumbnail } from './SongThumbnail'
+import { useLanguage } from '@/context/LanguageContext'
+import {
+  pickAlternativeSong,
+  type LibrarySongRef,
+} from '@/utils/songSuggestions'
+import { cn } from '@/lib/utils'
+
+export type NextSongRef = {
+  id: string
+  title: string
+  author?: string
+  songImageUrl?: string
+  artistImageUrl?: string
+}
+
+interface SongEndSuggestionsProps {
+  currentSongId: string
+  currentAuthor: string
+  currentGenre?: string
+  librarySongs: LibrarySongRef[]
+  nextSong: NextSongRef | null
+  onPlayNext?: () => void
+}
+
+function SuggestionCard({
+  label,
+  title,
+  subtitle,
+  songImageUrl,
+  artistImageUrl,
+  href,
+  onNavigate,
+}: {
+  label: string
+  title: string
+  subtitle?: string
+  songImageUrl?: string
+  artistImageUrl?: string
+  href: string
+  onNavigate?: () => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={() => onNavigate?.()}
+      className={cn(
+        'group flex items-center gap-3 rounded-xl border border-border bg-card p-4',
+        'transition-colors hover:border-primary/30 hover:bg-muted/40'
+      )}
+    >
+      <SongThumbnail
+        songImageUrl={songImageUrl}
+        artistImageUrl={artistImageUrl}
+        alt={title}
+        size="sm"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p
+          className="truncate text-base font-semibold text-foreground"
+          dir={/[\u0590-\u05FF]/.test(title) ? 'rtl' : 'ltr'}
+        >
+          {title}
+        </p>
+        {subtitle && (
+          <p
+            className="truncate text-sm text-muted-foreground"
+            dir={/[\u0590-\u05FF]/.test(subtitle) ? 'rtl' : 'ltr'}
+          >
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <ChevronRightIcon
+        className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+        aria-hidden
+      />
+    </Link>
+  )
+}
+
+export function SongEndSuggestions({
+  currentSongId,
+  currentAuthor,
+  currentGenre,
+  librarySongs,
+  nextSong,
+  onPlayNext,
+}: SongEndSuggestionsProps) {
+  const { t } = useLanguage()
+
+  const alternative = useMemo(() => {
+    const exclude = new Set<string>([currentSongId])
+    if (nextSong) exclude.add(nextSong.id)
+    return pickAlternativeSong(
+      { id: currentSongId, author: currentAuthor, genre: currentGenre },
+      librarySongs,
+      exclude
+    )
+  }, [
+    currentSongId,
+    currentAuthor,
+    currentGenre,
+    librarySongs,
+    nextSong,
+  ])
+
+  if (!nextSong && !alternative) return null
+
+  return (
+    <div className="mt-8 space-y-3 border-t border-border pt-6">
+      <h3 className="text-sm font-semibold text-foreground">
+        {t('songEnd.continueListening')}
+      </h3>
+      {nextSong && (
+        <SuggestionCard
+          label={t('songEnd.nextInList')}
+          title={nextSong.title}
+          subtitle={nextSong.author}
+          songImageUrl={nextSong.songImageUrl}
+          artistImageUrl={nextSong.artistImageUrl}
+          href={`/song/${nextSong.id}`}
+          onNavigate={onPlayNext}
+        />
+      )}
+      {alternative && (
+        <SuggestionCard
+          label={
+            alternative.reason === 'artist'
+              ? t('songEnd.sameArtist').replace('{artist}', currentAuthor)
+              : t('songEnd.sameGenre').replace(
+                  '{genre}',
+                  alternative.genre ?? currentGenre ?? ''
+                )
+          }
+          title={alternative.title}
+          subtitle={alternative.author}
+          songImageUrl={alternative.songImageUrl}
+          artistImageUrl={alternative.artistImageUrl}
+          href={`/song/${alternative.id}`}
+        />
+      )}
+    </div>
+  )
+}

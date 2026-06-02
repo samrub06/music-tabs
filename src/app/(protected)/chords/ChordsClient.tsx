@@ -1,12 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { ChordBox } from 'vexchords';
 import { useLanguage } from '@/context/LanguageContext';
-import { MagnifyingGlassIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import type { Chord } from '@/types';
 import { markChordKnownAction, unmarkChordKnownAction } from './actions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface ChordsClientProps {
   initialChords: Chord[];
@@ -46,11 +54,47 @@ export default function ChordsClient({
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set(initialKnownChordIds));
   const [searchQuery, setSearchQuery] = useState('');
   const [localSearchValue, setLocalSearchValue] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [isPending, startTransition] = useTransition();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const chordBoxesRef = useRef<Map<string, ChordBox>>(new Map());
+
+  const chordNameSuggestions = useMemo(() => {
+    const q = localSearchValue.trim().toLowerCase();
+    if (!q) return [];
+    const uniqueNames = [...new Set(chords.map((c) => c.name))];
+    return uniqueNames
+      .filter((name) => name.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const aLower = a.toLowerCase();
+        const bLower = b.toLowerCase();
+        const aStarts = aLower.startsWith(q);
+        const bStarts = bLower.startsWith(q);
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return a.localeCompare(b);
+      })
+      .slice(0, 10);
+  }, [chords, localSearchValue]);
+
+  const showSuggestions =
+    isSearchFocused && localSearchValue.trim().length > 0 && chordNameSuggestions.length > 0;
+
+  const applyChordSearch = (value: string) => {
+    setLocalSearchValue(value);
+    setSearchQuery(value);
+    searchInputRef.current?.blur();
+    setIsSearchFocused(false);
+  };
+
+  const handleClearSearch = () => {
+    setLocalSearchValue('');
+    setSearchQuery('');
+    searchInputRef.current?.focus();
+  };
 
   // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
@@ -213,11 +257,11 @@ export default function ChordsClient({
   const getDifficultyLabel = (difficulty: string | null | undefined) => {
     switch (difficulty) {
       case 'beginner':
-        return 'Débutant';
+        return t('chords.difficultyBeginner');
       case 'intermediate':
-        return 'Intermédiaire';
+        return t('chords.difficultyIntermediate');
       case 'advanced':
-        return 'Avancé';
+        return t('chords.difficultyAdvanced');
       default:
         return 'N/A';
     }
@@ -226,54 +270,106 @@ export default function ChordsClient({
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            {/* Search Input - Full width on mobile */}
-            <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                value={localSearchValue}
-                onChange={(e) => setLocalSearchValue(e.target.value)}
-                placeholder="Search chords..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
+        <div className="mb-6 space-y-3">
+          {/* Search with chord name autocomplete */}
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+              <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
             </div>
-
-            {/* Status and Difficulty Filters - Side by side on mobile, in row on desktop */}
-            <div className="flex gap-3 sm:gap-4">
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                className="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={localSearchValue}
+              onChange={(e) => setLocalSearchValue(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 150)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && chordNameSuggestions[0]) {
+                  e.preventDefault();
+                  applyChordSearch(chordNameSuggestions[0]);
+                }
+                if (e.key === 'Escape') {
+                  setIsSearchFocused(false);
+                  searchInputRef.current?.blur();
+                }
+              }}
+              placeholder={t('chords.searchPlaceholder')}
+              className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
+              autoComplete="off"
+              role="combobox"
+              aria-expanded={showSuggestions}
+              aria-autocomplete="list"
+            />
+            {localSearchValue && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-3 text-muted-foreground hover:text-foreground sm:pr-4"
+                aria-label={t('common.clear')}
               >
-                <option value="all">Tous les accords</option>
-                <option value="to-learn">À apprendre</option>
-                <option value="known">Déjà connus</option>
-              </select>
-
-              {/* Difficulty Filter */}
-              <select
-                value={difficultyFilter}
-                onChange={(e) => setDifficultyFilter(e.target.value as DifficultyFilter)}
-                className="flex-1 sm:flex-initial px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            )}
+            {showSuggestions && (
+              <ul
+                className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-md"
+                role="listbox"
+                onMouseDown={(e) => e.preventDefault()}
               >
-                <option value="all">Toutes difficultés</option>
-                <option value="beginner">Débutant</option>
-                <option value="intermediate">Intermédiaire</option>
-                <option value="advanced">Avancé</option>
-              </select>
-            </div>
+                {chordNameSuggestions.map((name) => (
+                  <li key={name} role="option">
+                    <button
+                      type="button"
+                      className={cn(
+                        'flex w-full min-h-[44px] items-center px-4 py-2.5 text-left text-sm',
+                        'hover:bg-muted focus:bg-muted focus:outline-none'
+                      )}
+                      onClick={() => applyChordSearch(name)}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Status + difficulty — shadcn selects below search */}
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+            >
+              <SelectTrigger className="h-11 w-full rounded-xl border-border bg-card text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('chords.statusAll')}</SelectItem>
+                <SelectItem value="to-learn">{t('chords.statusToLearn')}</SelectItem>
+                <SelectItem value="known">{t('chords.statusKnown')}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={difficultyFilter}
+              onValueChange={(v) => setDifficultyFilter(v as DifficultyFilter)}
+            >
+              <SelectTrigger className="h-11 w-full rounded-xl border-border bg-card text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('chords.difficultyAll')}</SelectItem>
+                <SelectItem value="beginner">{t('chords.difficultyBeginner')}</SelectItem>
+                <SelectItem value="intermediate">{t('chords.difficultyIntermediate')}</SelectItem>
+                <SelectItem value="advanced">{t('chords.difficultyAdvanced')}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {filteredSections.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No chords found matching your filters</p>
+            <p className="text-gray-500 text-lg">{t('chords.noResults')}</p>
           </div>
         ) : (
           filteredSections.map((section, sectionIndex) => (

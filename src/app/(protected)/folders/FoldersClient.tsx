@@ -382,8 +382,8 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               )}
             >
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+                  <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
                 </div>
                 <input
                   ref={searchInputRef}
@@ -393,7 +393,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
                   placeholder={t('folders.searchPlaceholder')}
-                  className="block w-full rounded-xl border border-border bg-card py-3 pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4"
+                  className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
                 />
                 {localSearchValue && (
                   <button
