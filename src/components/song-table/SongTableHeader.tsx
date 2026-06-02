@@ -128,17 +128,6 @@ export function SongBulkActions({
           <FolderIcon className="h-4 w-4" />
         </Button>
       )}
-      <Button
-        type="button"
-        variant="destructive"
-        size="icon"
-        onClick={onDeleteSelected}
-        className="h-8 w-8"
-        aria-label={t('songs.deleteSelected')}
-        title={t('songs.deleteSelected')}
-      >
-        <TrashIcon className="h-4 w-4" />
-      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -158,6 +147,13 @@ export function SongBulkActions({
               {t('songs.createPlaylist')}
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem
+            onClick={onDeleteSelected}
+            className="text-destructive focus:text-destructive"
+          >
+            <TrashIcon className="h-4 w-4" />
+            {t('songs.deleteSelected')}
+          </DropdownMenuItem>
           {showDeleteAll && (
             <DropdownMenuItem
               onClick={onDeleteAll}
@@ -167,7 +163,7 @@ export function SongBulkActions({
               {t('songs.deleteAll')}
             </DropdownMenuItem>
           )}
-          {(onCreatePlaylist || showDeleteAll) && <DropdownMenuSeparator />}
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onCancelSelection}>
             {t('songs.clearSelection')}
           </DropdownMenuItem>

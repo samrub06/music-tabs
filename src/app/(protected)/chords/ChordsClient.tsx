@@ -65,7 +65,7 @@ export default function ChordsClient({
   const chordNameSuggestions = useMemo(() => {
     const q = localSearchValue.trim().toLowerCase();
     if (!q) return [];
-    const uniqueNames = [...new Set(chords.map((c) => c.name))];
+    const uniqueNames = Array.from(new Set(chords.map((c) => c.name)));
     return uniqueNames
       .filter((name) => name.toLowerCase().includes(q))
       .sort((a, b) => {
