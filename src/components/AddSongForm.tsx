@@ -739,7 +739,12 @@ export default function AddSongForm({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="flex max-h-[min(88dvh,680px)] w-[calc(100%-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl"
+        className={cn(
+          'flex w-[calc(100%-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl',
+          'max-lg:top-[calc(3rem+env(safe-area-inset-top,0px))] max-lg:translate-y-0',
+          'max-lg:max-h-[min(calc(100dvh-7rem-env(safe-area-inset-bottom,0px)),680px)]',
+          'sm:max-h-[min(88dvh,680px)]'
+        )}
       >
         <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left">
           <DialogTitle>{t('songForm.addSong')}</DialogTitle>

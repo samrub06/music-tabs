@@ -4,6 +4,8 @@ import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
+import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
+import { cn } from '@/lib/utils'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
 import { usePageHeader } from '@/context/PageHeaderContext'
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -47,6 +49,9 @@ export default function FolderSongsClient({
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  useHideHeaderOnScroll(scrollContainerRef, true)
+  const [isInputFocused, setIsInputFocused] = useState(false)
 
   const sortFieldLabels: Record<SortField, string> = {
     title: t('songs.title'),
@@ -233,56 +238,58 @@ export default function FolderSongsClient({
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-1 flex-col min-h-0 overflow-y-auto bg-background p-4 sm:p-6">
-        <p className="mb-4 text-sm text-muted-foreground">
-          {t('folders.songsInFolder').replace('{count}', String(total))}
-        </p>
-
-        {/* Search + Filter - same row as /songs */}
-        <div className="mb-4 flex items-stretch gap-2">
-          <div className="flex-1 min-w-0 relative">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={localSearchValue}
-                onChange={(e) => setLocalSearchValue(e.target.value)}
-                placeholder={t('songs.search')}
-                className="block w-full pl-12 pr-12 py-3 sm:py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 dark:text-gray-100"
-              />
-              {localSearchValue && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 min-w-[44px] min-h-[44px] justify-center"
-                  aria-label={t('common.clear')}
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background p-4 sm:p-6">
+        <div className={cn('relative shrink-0 pb-4', isInputFocused && 'z-30')}>
+          <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
+            <div
+              className={cn(
+                'relative min-w-0 transition-[flex] duration-200',
+                isInputFocused ? 'flex-1 max-lg:flex-[1_1_100%]' : 'flex-1'
               )}
+            >
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={localSearchValue}
+                  onChange={(e) => setLocalSearchValue(e.target.value)}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
+                  placeholder={t('songs.search')}
+                  className="block w-full rounded-xl border border-border bg-card py-3 pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4"
+                />
+                {localSearchValue && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-4 text-muted-foreground hover:text-foreground"
+                    aria-label={t('common.clear')}
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          <button
-            onClick={() => setIsFilterSheetOpen(true)}
-            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
-            aria-label={t('songs.filters')}
-          >
-            <AdjustmentsHorizontalIcon className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* View toggle - same pill style as /songs */}
-        <div className="mb-4 flex items-center gap-2">
-          <div className="flex-1 min-w-0" />
-          <div className="flex items-center gap-1 rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 shrink-0">
             <button
               type="button"
-              className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              onClick={() => setIsFilterSheetOpen(true)}
+              className={cn(
+                'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+              )}
+              aria-label={t('songs.filters')}
+            >
+              <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
+            </button>
+            <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
+            <button
+              type="button"
+              className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4 ${
                 view === 'gallery'
-                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => applyQuery({ view: 'gallery', page: 1 })}
@@ -293,9 +300,9 @@ export default function FolderSongsClient({
             </button>
             <button
               type="button"
-              className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4 ${
                 view === 'table'
-                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               onClick={() => applyQuery({ view: 'table', page: 1 })}
@@ -305,9 +312,14 @@ export default function FolderSongsClient({
               <span className="hidden sm:inline">{t('songs.tableView')}</span>
             </button>
           </div>
+          </div>
         </div>
 
-        {/* Content */}
+        <div
+          ref={scrollContainerRef}
+          data-main-scroll
+          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
         {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' ? (
             <>
@@ -343,6 +355,7 @@ export default function FolderSongsClient({
             </p>
           </div>
         )}
+        </div>
       </div>
 
       <DragOverlay>

@@ -128,6 +128,9 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
     pathname === '/songs' ||
     pathname === '/search' ||
     pathname.startsWith('/search/') ||
+    pathname === '/playlists' ||
+    pathname === '/folders' ||
+    pathname.startsWith('/folders/') ||
     isSongPage
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick

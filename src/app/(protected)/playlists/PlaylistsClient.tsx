@@ -14,6 +14,8 @@ import {
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
+import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll';
+import { cn } from '@/lib/utils';
 import { Song, Playlist } from '@/types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -85,8 +87,11 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
   const router = useRouter();
   const { t } = useLanguage();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  useHideHeaderOnScroll(scrollContainerRef, true);
 
   const [localSearchValue, setLocalSearchValue] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
@@ -192,28 +197,34 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
   const getSongCount = (p: Playlist) => (p as any).songCount ?? p.songIds?.length ?? 0;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6">
-        {/* Search + Filter + Add - same row as folders */}
-        <div className="mb-4 flex items-stretch gap-2">
-          <div className="flex-1 min-w-0 relative">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background p-4 sm:p-6">
+      <div className={cn('relative shrink-0 pb-4', isInputFocused && 'z-30')}>
+        <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
+          <div
+            className={cn(
+              'relative min-w-0 transition-[flex] duration-200',
+              isInputFocused ? 'flex-1 max-lg:flex-[1_1_100%]' : 'flex-1'
+            )}
+          >
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 ref={searchInputRef}
                 type="text"
                 value={localSearchValue}
                 onChange={(e) => setLocalSearchValue(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
                 placeholder={t('playlistsPage.searchPlaceholder')}
-                className="block w-full pl-12 pr-12 py-3 sm:py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 dark:text-gray-100"
+                className="block w-full rounded-xl border border-border bg-card py-3 pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4"
               />
               {localSearchValue && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 min-w-[44px] min-h-[44px] justify-center"
+                  className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-4 text-muted-foreground hover:text-foreground"
                   aria-label={t('common.clear')}
                 >
                   <XMarkIcon className="h-5 w-5" />
@@ -222,61 +233,73 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             </div>
           </div>
           <button
+            type="button"
             onClick={() => setIsFilterSheetOpen(true)}
-            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className={cn(
+              'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+            )}
             aria-label={t('playlistsPage.filters')}
           >
-            <AdjustmentsHorizontalIcon className="h-5 w-5" />
+            <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
           </button>
           <button
+            type="button"
             onClick={() => router.push('/playlist')}
-            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90"
             aria-label={t('playlistsPage.newPlaylist')}
           >
             <PlusIcon className="h-5 w-5" />
           </button>
           <button
+            type="button"
             onClick={() => router.push('/ai-playlist')}
-            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 transition-colors flex items-center justify-center"
+            className={cn(
+              'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-emerald-600 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400',
+              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+            )}
             aria-label={t('createMenu.generatePlaylistWithAI')}
           >
-            <SparklesIcon className="h-5 w-5" />
+            <SparklesIcon className="h-5 w-5 max-lg:shrink-0" />
           </button>
-        </div>
-
-        {/* View toggle - full width */}
-        <div className="mb-4 w-full">
-          <div className="flex w-full rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
+          <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
             <button
               type="button"
               onClick={() => setView('grid')}
-              className={`flex-1 min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              className={cn(
+                'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
                 view === 'grid'
-                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+              )}
               title={t('playlistsPage.gridView')}
             >
-              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-              <span>{t('playlistsPage.gridView')}</span>
+              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">{t('playlistsPage.gridView')}</span>
             </button>
             <button
               type="button"
               onClick={() => setView('table')}
-              className={`flex-1 min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              className={cn(
+                'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
                 view === 'table'
-                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+              )}
               title={t('playlistsPage.tableView')}
             >
-              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-              <span>{t('playlistsPage.tableView')}</span>
+              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">{t('playlistsPage.tableView')}</span>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Content */}
+      <div
+        ref={scrollContainerRef}
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
         {playlists.length === 0 ? (
           <div className="text-center py-12">
             <MusicalNoteIcon className="mx-auto h-12 w-12 text-gray-400" />

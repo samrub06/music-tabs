@@ -6,7 +6,6 @@ import {
   MusicalNoteIcon,
   PencilSquareIcon,
   HeartIcon,
-  PlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useAddSongModal } from '@/context/AddSongModalContext';
@@ -111,7 +110,7 @@ export default function SongContent({
   onToggleEasyChordMode,
 }: SongContentProps) {
   const { t } = useLanguage();
-  const { openAddSongModal, navigateToAddSongPage } = useAddSongModal();
+  const { navigateToAddSongPage } = useAddSongModal();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
   const lastPinchTime = useRef(0);
   const onFontSizeChangeRef = useRef(onFontSizeChange);
@@ -242,18 +241,6 @@ export default function SongContent({
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {isAuthenticated && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => openAddSongModal()}
-                  className="min-h-[44px] h-11 w-11 min-w-[44px] rounded-xl p-0"
-                  aria-label={t('navigation.addSong')}
-                  title={t('navigation.addSong')}
-                >
-                  <PlusIcon className="h-5 w-5" />
-                </Button>
-              )}
               {onToggleEdit && (
                 <Button
                   type="button"
