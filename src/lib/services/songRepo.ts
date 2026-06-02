@@ -44,7 +44,8 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     genre: dbSong.genre || undefined,
     decade: dbSong.decade || undefined,
     bpm: dbSong.bpm || undefined,
-    allChords: dbSong.all_chords || undefined
+    allChords: dbSong.all_chords || undefined,
+    isLiked: dbSong.is_liked ?? false,
   } as Song
 }
 

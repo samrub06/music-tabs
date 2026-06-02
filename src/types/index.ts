@@ -80,6 +80,7 @@ export interface StructuredSong {
   decade?: number;
   bpm?: number;
   allChords?: string[];
+  isLiked?: boolean;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)

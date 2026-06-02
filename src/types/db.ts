@@ -99,6 +99,7 @@ export interface Database {
           decade: number | null
           bpm: number | null
           all_chords: string[] | null
+          is_liked: boolean
         }
         Insert: {
           id?: string
@@ -134,6 +135,7 @@ export interface Database {
           decade?: number | null
           bpm?: number | null
           all_chords?: string[] | null
+          is_liked?: boolean
         }
         Update: {
           id?: string
@@ -164,6 +166,7 @@ export interface Database {
           format?: string | null
           sections?: Json | null
           is_public?: boolean
+          is_liked?: boolean
           is_trending?: boolean
           genre?: string | null
           decade?: number | null
