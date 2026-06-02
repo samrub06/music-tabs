@@ -184,6 +184,12 @@ export default function SongViewer({
               onToggleEdit={onToggleEdit}
               isInLibrary={isInLibrary}
               onAddToLibrary={onAddToLibrary}
+              selectedInstrument={selectedInstrument}
+              onSetSelectedInstrument={onSetSelectedInstrument}
+              transposeValue={transposeValue}
+              onSetTransposeValue={onSetTransposeValue}
+              easyChordMode={easyChordMode}
+              onToggleEasyChordMode={onToggleEasyChordMode}
             />
           </div>
 

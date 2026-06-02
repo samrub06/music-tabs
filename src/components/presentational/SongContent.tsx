@@ -9,6 +9,11 @@ import ChordDiagram from '../ChordDiagram';
 import { ChordBox } from 'vexchords';
 import type { Chord } from '@/types';
 import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
+import { generateAllKeys } from '@/utils/chords';
+import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Piano, Guitar } from 'lucide-react';
 
 import Link from 'next/link';
 import {
@@ -16,6 +21,22 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+
+const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
+const segmentOptionClass = (active: boolean) =>
+  cn(
+    'flex-1 rounded-full px-4 py-3 min-h-[44px] text-sm font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px]',
+    active
+      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+      : 'text-muted-foreground hover:text-foreground'
+  );
+const toolPillClass = (active: boolean) =>
+  cn(
+    'rounded-full px-4 py-3 min-h-[44px] text-sm font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px]',
+    active
+      ? 'bg-primary text-primary-foreground shadow-sm'
+      : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
+  );
 
 interface SongContentProps {
   isEditing: boolean;
@@ -39,6 +60,12 @@ interface SongContentProps {
   onToggleEdit?: () => void;
   isInLibrary?: boolean;
   onAddToLibrary?: () => void;
+  selectedInstrument?: 'piano' | 'guitar';
+  onSetSelectedInstrument?: (instrument: 'piano' | 'guitar') => void;
+  transposeValue?: number;
+  onSetTransposeValue?: (value: number) => void;
+  easyChordMode?: boolean;
+  onToggleEasyChordMode?: () => void;
 }
 
 export default function SongContent({
@@ -63,6 +90,12 @@ export default function SongContent({
   onToggleEdit,
   isInLibrary = false,
   onAddToLibrary,
+  selectedInstrument = 'piano',
+  onSetSelectedInstrument,
+  transposeValue = 0,
+  onSetTransposeValue,
+  easyChordMode = false,
+  onToggleEasyChordMode,
 }: SongContentProps) {
   const { t } = useLanguage();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -140,6 +173,21 @@ export default function SongContent({
   };
 
   const [chordSectionOpen, setChordSectionOpen] = useState(true);
+  const [showTransposeControls, setShowTransposeControls] = useState(false);
+  const hasOnlyEasyChords = songHasOnlyEasyChords(transposedSong?.allChords);
+  const baseChord = transposedSong?.firstChord || transposedSong?.key || 'C';
+  const availableKeys = generateAllKeys(baseChord);
+  const currentKey = availableKeys[(transposeValue + 12) % 12] || baseChord;
+
+  const handleKeySelect = (targetKey: string) => {
+    if (!onSetTransposeValue) return;
+    const targetIndex = availableKeys.findIndex((key) => key === targetKey);
+    if (targetIndex === -1) return;
+    let newTransposeValue = targetIndex;
+    if (newTransposeValue > 6) newTransposeValue -= 12;
+    else if (newTransposeValue < -6) newTransposeValue += 12;
+    onSetTransposeValue(newTransposeValue);
+  };
 
   return (
     <div 
@@ -153,35 +201,36 @@ export default function SongContent({
       onTouchStart={handleTouchStart}
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto w-full space-y-1" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-white px-3 py-2 dark:bg-gray-900/60">
-            <div className="min-w-0">
+        <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60">
+            <div className="min-w-0 flex-1">
               <h2
-                className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
+                className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
                 dir={/[\u0590-\u05FF]/.test(transposedSong?.title || '') ? 'rtl' : 'ltr'}
               >
                 {transposedSong?.title || ''}
               </h2>
               {transposedSong?.author && (
                 <p
-                  className="truncate text-xs text-muted-foreground"
+                  className="mt-0.5 truncate text-sm text-muted-foreground sm:text-xs"
                   dir={/[\u0590-\u05FF]/.test(transposedSong.author) ? 'rtl' : 'ltr'}
                 >
                   {transposedSong.author}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {onToggleEdit && (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={onToggleEdit}
-                  className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-primary hover:bg-primary/10"
+                  className="min-h-[44px] h-11 gap-1.5 rounded-xl px-3 text-sm font-medium"
                   aria-label={t('songHeader.edit')}
                 >
-                  <PencilSquareIcon className="h-4 w-4" />
-                  {t('songHeader.edit')}
-                </button>
+                  <PencilSquareIcon className="h-5 w-5" />
+                  <span>{t('songHeader.edit')}</span>
+                </Button>
               )}
               <button
                 type="button"
@@ -189,11 +238,15 @@ export default function SongContent({
                   if (!isInLibrary && onAddToLibrary) onAddToLibrary();
                 }}
                 disabled={isInLibrary || !onAddToLibrary}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-500 hover:bg-red-500/10 disabled:opacity-70"
+                className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
                 aria-label={isInLibrary ? 'Favorite' : 'Add to favorites'}
                 title={isInLibrary ? 'Favorite' : 'Add to favorites'}
               >
-                {isInLibrary ? <HeartSolidIcon className="h-4 w-4" /> : <HeartIcon className="h-4 w-4" />}
+                {isInLibrary ? (
+                  <HeartSolidIcon className="h-6 w-6" />
+                ) : (
+                  <HeartIcon className="h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
@@ -208,28 +261,116 @@ export default function SongContent({
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full font-semibold text-gray-900 dark:text-gray-100 py-2.5 px-3 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center"
+                className="w-full font-semibold text-gray-900 dark:text-gray-100 py-3 px-4 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px]"
               >
                 <MusicalNoteIcon className="w-5 h-5 mr-2 shrink-0" />
                 Accords utilisés
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="pb-2 md:pb-0 pt-1">
-                <ChordDiagramsGrid 
-                  song={transposedSong} 
-                  onChordClick={onChordClick} 
+              <div className="pt-4 space-y-2.5">
+                <ChordDiagramsGrid
+                  song={transposedSong}
+                  onChordClick={onChordClick}
                   fontSize={fontSize}
                   knownChordIds={knownChordIds}
                   chordNameToIdMap={chordNameToIdMap}
                   chords={chords}
                 />
+
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-2">
+                {!showTransposeControls ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowTransposeControls(true)}
+                    className={toolPillClass(false)}
+                  >
+                    Transpose
+                  </button>
+                ) : (
+                  <div className="flex w-full flex-wrap items-center gap-2">
+                    <select
+                      value={currentKey}
+                      onChange={(e) => handleKeySelect(e.target.value)}
+                      className="h-11 min-w-[5.5rem] flex-1 rounded-xl border border-amber-200/80 bg-background/50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50"
+                    >
+                      {availableKeys.map((key) => (
+                        <option key={key} value={key}>
+                          {key}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted/40">
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-10"
+                        onClick={() => onSetTransposeValue?.(Math.max(-11, transposeValue - 1))}
+                        disabled={transposeValue <= -11}
+                        aria-label="-"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-[2.75rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+                        {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                      </span>
+                      <button
+                        type="button"
+                        className="flex h-11 w-11 items-center justify-center text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-10"
+                        onClick={() => onSetTransposeValue?.(Math.min(11, transposeValue + 1))}
+                        disabled={transposeValue >= 11}
+                        aria-label="+"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowTransposeControls(false)}
+                      className="min-h-[44px] rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      {t('common.close')}
+                    </button>
+                  </div>
+                )}
+
+                {!hasOnlyEasyChords && onToggleEasyChordMode && (
+                  <button
+                    type="button"
+                    onClick={onToggleEasyChordMode}
+                    className={toolPillClass(easyChordMode)}
+                  >
+                    {t('songHeader.easyChords')}
+                  </button>
+                )}
+
+                {onSetSelectedInstrument && (
+                  <div className={cn(segmentClass, 'shrink-0')}>
+                    <button
+                      type="button"
+                      onClick={() => onSetSelectedInstrument('piano')}
+                      className={cn(segmentOptionClass(selectedInstrument === 'piano'), 'px-3 min-w-[44px]')}
+                      aria-label={t('songHeader.piano')}
+                      title={t('songHeader.piano')}
+                    >
+                      <Piano className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSetSelectedInstrument('guitar')}
+                      className={cn(segmentOptionClass(selectedInstrument === 'guitar'), 'px-3 min-w-[44px]')}
+                      aria-label={t('songHeader.guitar')}
+                      title={t('songHeader.guitar')}
+                    >
+                      <Guitar className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                </div>
+
+                {bpm && (
+                  <p className="text-sm font-medium text-blue-600">{bpm} BPM</p>
+                )}
               </div>
-              {bpm && (
-                <p className="text-sm text-blue-600 font-medium mt-4">
-                  {bpm} BPM
-                </p>
-              )}
             </CollapsibleContent>
           </Collapsible>
 
