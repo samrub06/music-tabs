@@ -427,7 +427,6 @@ export default function SearchClient({
         'p-4 pt-4 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 lg:min-h-screen'
       )}
     >
-      <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0 pb-24 lg:pb-10">
         <div className="mb-6">
           <div
             className={cn(
@@ -774,7 +773,6 @@ export default function SearchClient({
         <div className={cn(!showLibrarySections && 'hidden')}>
           {children}
         </div>
-      </div>
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { createSafeServerClient } from '@/lib/supabase/server'
 import { Suspense } from 'react'
 import SearchClient from './SearchClient'
 import LibrarySections from './LibrarySections'
-import SearchLoading from './loading'
+import ExplorerSectionsSkeleton from '@/components/library/ExplorerSectionsSkeleton'
 import { unstable_noStore as noStore } from 'next/cache'
 
 export default async function SearchPage() {
@@ -11,10 +11,10 @@ export default async function SearchPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <Suspense fallback={<SearchLoading />}>
-      <SearchClient userId={user?.id}>
+    <SearchClient userId={user?.id}>
+      <Suspense fallback={<ExplorerSectionsSkeleton />}>
         <LibrarySections userId={user?.id} />
-      </SearchClient>
-    </Suspense>
+      </Suspense>
+    </SearchClient>
   )
 }
