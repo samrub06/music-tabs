@@ -1,13 +1,23 @@
 'use client'
 
-import { Fragment, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useState,
+  useTransition,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
-import { Bars3Icon } from '@heroicons/react/24/outline'
+import { Bars3Icon, HeartIcon } from '@heroicons/react/24/outline'
+import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { useRouter, usePathname } from 'next/navigation'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+import { toggleSongFavoriteAction } from '@/app/song/[id]/actions'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface SongTableRowProps {
   song: Song
@@ -19,7 +29,6 @@ interface SongTableRowProps {
   onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>
   hasUser: boolean
   isSelectMode: boolean
-  t: (key: string) => string
 }
 
 export default function SongTableRow({
@@ -35,6 +44,13 @@ export default function SongTableRow({
 }: SongTableRowProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { t } = useLanguage()
+  const [isLiked, setIsLiked] = useState(song.isLiked ?? false)
+  const [isTogglingFavorite, startToggleFavorite] = useTransition()
+
+  useEffect(() => {
+    setIsLiked(song.isLiked ?? false)
+  }, [song.id, song.isLiked])
 
   const {
     attributes,
@@ -68,6 +84,19 @@ export default function SongTableRow({
     }
 
     router.push(`/song/${song.id}`)
+  }
+
+  const handleToggleFavorite = (e: MouseEvent) => {
+    e.stopPropagation()
+    if (!hasUser || isTogglingFavorite) return
+    startToggleFavorite(async () => {
+      try {
+        const { isLiked: next } = await toggleSongFavoriteAction(song.id)
+        setIsLiked(next)
+      } catch (error) {
+        console.error('Failed to toggle favorite:', error)
+      }
+    })
   }
 
   const metadataParts: ReactNode[] = []
@@ -217,6 +246,24 @@ export default function SongTableRow({
               disabled={!hasUser}
             />
           </div>
+        )}
+
+        {hasUser && (
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            disabled={isTogglingFavorite}
+            className="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-60"
+            aria-label={
+              isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')
+            }
+          >
+            {isLiked ? (
+              <HeartSolidIcon className="h-5 w-5" aria-hidden />
+            ) : (
+              <HeartIcon className="h-5 w-5" aria-hidden />
+            )}
+          </button>
         )}
       </div>
     </li>

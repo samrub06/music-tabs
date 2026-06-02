@@ -8,6 +8,7 @@ import SongContent from './SongContent';
 import ChordDiagramModal from './ChordDiagramModal';
 import ToolsBottomBar from './ToolsBottomBar';
 import type { LibrarySongRef } from '@/utils/songSuggestions';
+import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
 
 interface SongViewerProps {
@@ -74,6 +75,9 @@ interface SongViewerProps {
   bottomBarHeight?: number;
   setBottomBarHeight?: (height: number) => void;
   onToggleToolsBar?: () => void;
+  folders?: Folder[];
+  currentFolderId?: string;
+  onFolderChange?: (folderId: string | undefined) => Promise<void>;
 }
 
 export default function SongViewer({
@@ -134,6 +138,9 @@ export default function SongViewer({
     bottomBarHeight = 0,
     setBottomBarHeight,
     onToggleToolsBar,
+    folders = [],
+    currentFolderId,
+    onFolderChange,
 }: SongViewerProps) {
   if (!song) {
     return (
@@ -206,6 +213,9 @@ export default function SongViewer({
               librarySongs={librarySongs}
               nextSong={nextSongInfo}
               onPlayNext={onPlayNext}
+              folders={folders}
+              currentFolderId={currentFolderId}
+              onFolderChange={onFolderChange}
             />
           </div>
 

@@ -341,7 +341,6 @@ export default function SongTable({
               onFolderChange={handleFolderChange}
               hasUser={hasUser}
               isSelectMode={isSelectMode}
-              t={t}
             />
           ))
         )}

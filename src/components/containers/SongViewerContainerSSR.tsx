@@ -18,7 +18,9 @@ import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
 import { recordSongViewAction, toggleSongFavoriteAction } from '@/app/song/[id]/actions';
+import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions';
 import { useLanguage } from '@/context/LanguageContext';
+import { useFoldersContext } from '@/context/FoldersContext';
 import type { LibrarySongRef } from '@/utils/songSuggestions';
 
 interface SongViewerContainerSSRProps {
@@ -72,10 +74,24 @@ export default function SongViewerContainerSSR({
   const [chords, setChords] = useState<Chord[]>([]);
   const [isLiked, setIsLiked] = useState(song.isLiked ?? false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const { folders } = useFoldersContext();
+  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(
+    song.folderId
+  );
 
   useEffect(() => {
     setIsLiked(song.isLiked ?? false);
   }, [song.id, song.isLiked]);
+
+  useEffect(() => {
+    setCurrentFolderId(song.folderId);
+  }, [song.id, song.folderId]);
+
+  const handleFolderChange = async (folderId: string | undefined) => {
+    if (!isInLibrary) return;
+    await updateSongFolderAction(song.id, folderId);
+    setCurrentFolderId(folderId);
+  };
 
   const handleToggleFavorite = async () => {
     if (!isInLibrary) return;
@@ -461,6 +477,9 @@ export default function SongViewerContainerSSR({
     setBottomBarHeight,
     onToggleToolsBar: () =>
       setBottomBarHeight((prev) => (prev > 0 ? 0 : getDefaultToolsBarHeight())),
+    folders: isInLibrary ? folders : [],
+    currentFolderId,
+    onFolderChange: isInLibrary ? handleFolderChange : undefined,
   };
 
   return (

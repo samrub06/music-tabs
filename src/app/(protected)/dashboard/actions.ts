@@ -113,6 +113,7 @@ export async function updateSongFolderAction(id: string, folderId?: string) {
   await repo.updateSongFolder(id, folderId)
   revalidatePath('/songs')
   revalidatePath('/search')
+  revalidatePath(`/song/${id}`)
 }
 
 export async function deleteSongsAction(ids: string[]) {

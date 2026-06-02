@@ -133,10 +133,10 @@ export default function SongHeader({
               </div>
             )}
             <Button
-              variant="outline"
+              variant="default"
               onClick={onNextSong}
               disabled={!canNextSong}
-              className="h-10 shrink-0 gap-1.5 px-4 min-w-[5.25rem]"
+              className="h-10 shrink-0 gap-1.5 px-4 min-w-[5.25rem] shadow-sm"
               aria-label={t('songHeader.nextSong')}
             >
               <span className="text-sm font-medium">{t('songHeader.next')}</span>

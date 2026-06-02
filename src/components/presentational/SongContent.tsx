@@ -13,7 +13,8 @@ import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
 import ChordDiagram from '../ChordDiagram';
 import { ChordBox } from 'vexchords';
-import type { Chord } from '@/types';
+import type { Chord, Folder } from '@/types';
+import FolderDropdown from '@/components/FolderDropdown';
 import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
 import { generateAllKeys } from '@/utils/chords';
 import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
@@ -87,6 +88,9 @@ interface SongContentProps {
   librarySongs?: LibrarySongRef[];
   nextSong?: NextSongRef | null;
   onPlayNext?: () => void;
+  folders?: Folder[];
+  currentFolderId?: string;
+  onFolderChange?: (folderId: string | undefined) => Promise<void>;
 }
 
 export default function SongContent({
@@ -123,6 +127,9 @@ export default function SongContent({
   librarySongs = [],
   nextSong = null,
   onPlayNext,
+  folders = [],
+  currentFolderId,
+  onFolderChange,
 }: SongContentProps) {
   const { t } = useLanguage();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -230,15 +237,15 @@ export default function SongContent({
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <SongThumbnail
-                songImageUrl={transposedSong?.songImageUrl}
-                artistImageUrl={transposedSong?.artistImageUrl}
-                alt={transposedSong?.title || ''}
-                size="lg"
-              />
-              <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
+            <SongThumbnail
+              songImageUrl={transposedSong?.songImageUrl}
+              artistImageUrl={transposedSong?.artistImageUrl}
+              alt={transposedSong?.title || ''}
+              size="lg"
+              className="shrink-0"
+            />
+            <div className="min-w-0 flex-1">
               <h2
                 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
                 dir={/[\u0590-\u05FF]/.test(transposedSong?.title || '') ? 'rtl' : 'ltr'}
@@ -254,69 +261,67 @@ export default function SongContent({
                   {transposedSong.author}
                 </Link>
               )}
-              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {onToggleEdit && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onToggleEdit}
-                  className="min-h-[44px] h-11 gap-1.5 rounded-xl px-3 text-sm font-medium"
-                  aria-label={t('songHeader.edit')}
-                >
-                  <PencilSquareIcon className="h-5 w-5" />
-                  <span>{t('songHeader.edit')}</span>
-                </Button>
-              )}
-              {isInLibrary && (
-                <div
-                  className="inline-flex h-11 min-h-[44px] items-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
-                  title={t('library.inYourLibrary')}
-                >
-                  <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
-                  <span className="hidden text-xs font-medium sm:inline">
-                    {t('library.inYourLibrary')}
-                  </span>
-                </div>
-              )}
-              <button
+            {onToggleEdit && (
+              <Button
                 type="button"
-                onClick={() => {
-                  if (!isInLibrary) {
-                    onAddToLibrary?.();
-                    return;
-                  }
-                  onToggleFavorite?.();
-                }}
-                disabled={
-                  isTogglingFavorite ||
-                  (!isInLibrary && !onAddToLibrary) ||
-                  (isInLibrary && !onToggleFavorite)
-                }
-                className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
-                aria-label={
-                  isInLibrary
-                    ? isLiked
-                      ? t('library.removeFromFavorites')
-                      : t('library.addToFavorites')
-                    : t('library.addToLibrary')
-                }
-                title={
-                  isInLibrary
-                    ? isLiked
-                      ? t('library.removeFromFavorites')
-                      : t('library.addToFavorites')
-                    : t('library.addToLibrary')
-                }
+                variant="outline"
+                onClick={onToggleEdit}
+                className="h-11 min-h-[44px] shrink-0 gap-1.5 rounded-xl px-3 text-sm font-medium"
+                aria-label={t('songHeader.edit')}
               >
-                {isLiked ? (
-                  <HeartSolidIcon className="h-6 w-6" />
-                ) : (
-                  <HeartIcon className="h-6 w-6" />
-                )}
-              </button>
-            </div>
+                <PencilSquareIcon className="h-5 w-5" />
+                <span className="hidden sm:inline">{t('songHeader.edit')}</span>
+              </Button>
+            )}
+            {isInLibrary && (
+              <div
+                className="inline-flex h-11 min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
+                title={t('library.inYourLibrary')}
+              >
+                <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
+                <span className="hidden text-xs font-medium sm:inline">
+                  {t('library.inYourLibrary')}
+                </span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isInLibrary) {
+                  onAddToLibrary?.();
+                  return;
+                }
+                onToggleFavorite?.();
+              }}
+              disabled={
+                isTogglingFavorite ||
+                (!isInLibrary && !onAddToLibrary) ||
+                (isInLibrary && !onToggleFavorite)
+              }
+              className="ms-auto inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
+              aria-label={
+                isInLibrary
+                  ? isLiked
+                    ? t('library.removeFromFavorites')
+                    : t('library.addToFavorites')
+                  : t('library.addToLibrary')
+              }
+              title={
+                isInLibrary
+                  ? isLiked
+                    ? t('library.removeFromFavorites')
+                    : t('library.addToFavorites')
+                  : t('library.addToLibrary')
+              }
+            >
+              {isLiked ? (
+                <HeartSolidIcon className="h-6 w-6" />
+              ) : (
+                <HeartIcon className="h-6 w-6" />
+              )}
+            </button>
           </div>
 
           {/* Chord Diagrams Section - accordion */}
@@ -452,6 +457,19 @@ export default function SongContent({
                   </div>
                 )}
                 </div>
+
+                {isAuthenticated && onFolderChange && (
+                  <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {t('songs.folder')}
+                    </span>
+                    <FolderDropdown
+                      currentFolderId={currentFolderId}
+                      folders={folders}
+                      onFolderChange={onFolderChange}
+                    />
+                  </div>
+                )}
 
                 {bpm && (
                   <p className="text-sm font-medium text-blue-600">{bpm} BPM</p>
