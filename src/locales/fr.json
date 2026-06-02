@@ -160,7 +160,10 @@
     "emptyDescNoResults": "Essayez avec d'autres mots-clés",
     "emptyDescNoSongs": "Commencez par ajouter votre première chanson",
     "viewAllSongs": "Voir toutes les chansons",
-    "confirmDeleteSong": "Êtes-vous sûr de vouloir supprimer cette chanson ?"
+    "confirmDeleteSong": "Êtes-vous sûr de vouloir supprimer cette chanson ?",
+    "addFromArtistPrompt": "Voulez-vous ajouter d'autres chansons de {artist} ?",
+    "addSongs": "Ajouter des chansons",
+    "searchMoreFromArtist": "Chercher plus de chansons de {artist}"
   },
   "songForm": {
     "addSong": "Ajouter une chanson",

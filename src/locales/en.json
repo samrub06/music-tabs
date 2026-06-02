@@ -162,7 +162,10 @@
     "emptyDescNoResults": "Try different keywords",
     "emptyDescNoSongs": "Start by adding your first song",
     "viewAllSongs": "View all songs",
-    "confirmDeleteSong": "Are you sure you want to delete this song?"
+    "confirmDeleteSong": "Are you sure you want to delete this song?",
+    "addFromArtistPrompt": "Want to add more songs from {artist}?",
+    "addSongs": "Add songs",
+    "searchMoreFromArtist": "Search more songs from {artist}"
   },
   "songForm": {
     "addSong": "Add Song",

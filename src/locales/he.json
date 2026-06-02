@@ -162,7 +162,10 @@
     "emptyDescNoResults": "נסה מילות חיפוש אחרות",
     "emptyDescNoSongs": "התחל בהוספת השיר הראשון שלך",
     "viewAllSongs": "הצג את כל השירים",
-    "confirmDeleteSong": "האם אתה בטוח שברצונך למחוק את השיר הזה?"
+    "confirmDeleteSong": "האם אתה בטוח שברצונך למחוק את השיר הזה?",
+    "addFromArtistPrompt": "רוצה להוסיף עוד שירים של {artist}?",
+    "addSongs": "הוסף שירים",
+    "searchMoreFromArtist": "חפש עוד שירים של {artist}"
   },
   "songForm": {
     "addSong": "הוסף שיר",

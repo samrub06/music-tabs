@@ -17,7 +17,6 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
-import AddSongForm from '@/components/AddSongForm'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -73,7 +72,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   
   // Filter state
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [isAddSongOpen, setIsAddSongOpen] = useState(false)
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
@@ -90,6 +88,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+
+  const goToAddSong = (opts?: { query?: string; autoSearch?: boolean }) => {
+    const params = new URLSearchParams()
+    if (opts?.query) {
+      params.set('q', opts.query)
+      if (opts.autoSearch) params.set('autoSearch', '1')
+    }
+    const folderId = selectedFolder || searchParams?.get('folder') || undefined
+    if (folderId) params.set('folderId', folderId)
+    const qs = params.toString()
+    router.push(`/add-song${qs ? `?${qs}` : ''}`)
+  }
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -389,12 +399,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div
-        className={cn(
-          'flex flex-1 flex-col min-h-0 overflow-hidden p-3 sm:p-6',
-          isAddSongOpen && 'overflow-hidden'
-        )}
-      >
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-3 sm:p-6">
         <div
           className={cn(
             'relative shrink-0 space-y-4 pb-4',
@@ -472,7 +477,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
           </button>
           <button
-            onClick={() => setIsAddSongOpen(true)}
+            type="button"
+            onClick={() => goToAddSong()}
             className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center"
             aria-label={t('navigation.addSong')}
           >
@@ -556,10 +562,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         <div
           ref={scrollContainerRef}
           data-main-scroll
-          className={cn(
-            'relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain',
-            isAddSongOpen && 'overflow-hidden'
-          )}
+          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
         {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' ? (
@@ -587,11 +590,33 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 onToggleSelectMode={toggleSelectMode}
               />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              {searchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    goToAddSong({ query: searchQuery.trim(), autoSearch: true })
+                  }
+                  className="mt-3 w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}
+                </button>
+              )}
             </>
           ) : (
             <>
               <SongGallery songs={sortedSongs} hasUser={true} />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              {searchQuery.trim() && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    goToAddSong({ query: searchQuery.trim(), autoSearch: true })
+                  }
+                  className="mt-3 w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}
+                </button>
+              )}
             </>
           )
         ) : (
@@ -818,15 +843,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </SheetFooter>
         </SheetContent>
       </Sheet>
-
-      <AddSongForm
-        isOpen={isAddSongOpen}
-        onClose={() => setIsAddSongOpen(false)}
-        folders={folders}
-        defaultFolderId={selectedFolder}
-        redirectAfterAdd={false}
-        onSuccess={() => router.refresh()}
-      />
 
     </DndContext>
   )

@@ -22,21 +22,27 @@ import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import type { Folder, NewSongData } from '@/types'
 import {
+  ChevronLeftIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   SparklesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface AddSongFormProps {
-  isOpen: boolean
+  variant?: 'dialog' | 'page'
+  /** Required when variant is "dialog" (default) */
+  isOpen?: boolean
   onClose: () => void
   folders?: Folder[]
   defaultFolderId?: string
   redirectAfterAdd?: boolean
   onSuccess?: () => void
+  /** Prefill search field and run search on open / page load */
+  initialSearchQuery?: string
+  autoSearchOnOpen?: boolean
 }
 
 interface SearchResult {
@@ -66,13 +72,17 @@ const AI_SUGGESTION_KEYS = [
 ] as const
 
 export default function AddSongForm({
-  isOpen,
+  variant = 'dialog',
+  isOpen = false,
   onClose,
   folders = [],
   defaultFolderId,
   redirectAfterAdd = true,
   onSuccess,
+  initialSearchQuery,
+  autoSearchOnOpen = false,
 }: AddSongFormProps) {
+  const isActive = variant === 'page' || isOpen
   const { t } = useLanguage()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<AddSongTab>('search')
@@ -83,7 +93,9 @@ export default function AddSongForm({
     folderId: '',
   })
   const [isSearching, setIsSearching] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(
+    () => initialSearchQuery?.trim() ?? ''
+  )
   const [aiQuery, setAiQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [showSearchResults, setShowSearchResults] = useState(false)
@@ -94,7 +106,6 @@ export default function AddSongForm({
   const [isSaving, setIsSaving] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
-
   const tabs: { id: AddSongTab; label: string; icon: typeof MagnifyingGlassIcon }[] = [
     { id: 'search', label: t('songForm.tabSearch'), icon: MagnifyingGlassIcon },
     { id: 'ai', label: t('songForm.tabAI'), icon: SparklesIcon },
@@ -102,22 +113,22 @@ export default function AddSongForm({
   ]
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isActive) return
     if (defaultFolderId) {
       setFormData((prev) => ({ ...prev, folderId: defaultFolderId }))
     }
     const focusTimer = window.setTimeout(() => {
       if (activeTab === 'ai') {
         aiTextareaRef.current?.focus({ preventScroll: true })
-      } else if (activeTab === 'search') {
+      } else if (activeTab === 'search' && !autoSearchOnOpen) {
         searchInputRef.current?.focus({ preventScroll: true })
       }
     }, 150)
     return () => window.clearTimeout(focusTimer)
-  }, [isOpen, defaultFolderId, activeTab])
+  }, [isActive, defaultFolderId, activeTab, autoSearchOnOpen])
 
   useEffect(() => {
-    if (!isOpen) return
+    if (variant !== 'dialog' || !isOpen) return
 
     const html = document.documentElement
     const prevHtmlOverflow = html.style.overflow
@@ -140,7 +151,7 @@ export default function AddSongForm({
         ;(el as HTMLElement).style.overflow = previousOverflows[index] ?? ''
       })
     }
-  }, [isOpen])
+  }, [isOpen, variant])
 
   function normalizeNewSongData(d: NewSongData): NewSongData {
     return {
@@ -276,45 +287,76 @@ export default function AddSongForm({
     }
   }
 
+  const performSearch = useCallback(
+    async (queryOverride?: string) => {
+      const q = (queryOverride ?? searchQuery).trim()
+      if (!q) {
+        setMessage({ type: 'error', text: t('search.enterTitleOrArtist') })
+        return
+      }
+
+      const source = isHebrew(q) ? 'tab4u' : 'ultimate-guitar'
+
+      setIsSearching(true)
+      setSearchResults([])
+      setShowSearchResults(false)
+      setMessage(null)
+
+      try {
+        const response = await fetch(
+          `/api/songs/search?q=${encodeURIComponent(q)}&source=${source}`
+        )
+        const data = await response.json()
+
+        if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
+          setSearchResults(data.results)
+          setShowSearchResults(true)
+        } else {
+          setMessage({
+            type: 'error',
+            text:
+              data.error ||
+              (data.blocked
+                ? t('search.ugBlocked')
+                : t('search.noResultsFor').replace('{query}', q)),
+          })
+        }
+      } catch (error) {
+        console.error('Error searching:', error)
+        setMessage({ type: 'error', text: t('search.searchError') })
+      } finally {
+        setIsSearching(false)
+      }
+    },
+    [searchQuery, t]
+  )
+
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setMessage({ type: 'error', text: t('search.enterTitleOrArtist') })
-      return
-    }
+    await performSearch()
+  }
 
-    const source = isHebrew(searchQuery) ? 'tab4u' : 'ultimate-guitar'
+  const performSearchRef = useRef(performSearch)
+  performSearchRef.current = performSearch
 
-    setIsSearching(true)
-    setSearchResults([])
+  useEffect(() => {
+    if (!isActive || !autoSearchOnOpen || !initialSearchQuery?.trim()) return
+
+    const q = initialSearchQuery.trim()
+    let cancelled = false
+
+    setActiveTab('search')
+    setSearchQuery(q)
     setShowSearchResults(false)
     setMessage(null)
 
-    try {
-      const response = await fetch(
-        `/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${source}`
-      )
-      const data = await response.json()
+    queueMicrotask(() => {
+      if (!cancelled) void performSearchRef.current(q)
+    })
 
-      if (response.ok && Array.isArray(data.results) && data.results.length > 0) {
-        setSearchResults(data.results)
-        setShowSearchResults(true)
-      } else {
-        setMessage({
-          type: 'error',
-          text:
-            data.error ||
-            (data.blocked
-              ? t('search.ugBlocked')
-              : t('search.noResultsFor').replace('{query}', searchQuery)),
-        })
-      }
-    } catch (error) {
-      console.error('Error searching:', error)
-      setMessage({ type: 'error', text: t('search.searchError') })
-    } finally {
-      setIsSearching(false)
+    return () => {
+      cancelled = true
     }
-  }
+  }, [isActive, autoSearchOnOpen, initialSearchQuery])
 
   const handleAISearch = async (queryOverride?: string) => {
     const query = (queryOverride ?? aiQuery).trim()
@@ -408,56 +450,45 @@ export default function AddSongForm({
     </>
   )
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        className={cn(
-          'z-[100] flex flex-col gap-0 overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-lg',
-          'max-lg:fixed max-lg:inset-x-4 max-lg:top-[max(0.75rem,env(safe-area-inset-top,0px))]',
-          'max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-lg:left-4 max-lg:right-4',
-          'max-lg:h-auto max-lg:w-auto max-lg:max-h-none max-lg:max-w-none',
-          'max-lg:translate-x-0 max-lg:translate-y-0',
-          'sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:right-auto sm:inset-x-auto',
-          'sm:h-auto sm:w-[calc(100%-2rem)] sm:max-w-xl sm:max-h-[min(88dvh,680px)]',
-          'sm:translate-x-[-50%] sm:translate-y-[-50%]'
-        )}
-      >
-        <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left">
-          <DialogTitle>{t('songForm.addSong')}</DialogTitle>
-        </DialogHeader>
+  const tabsRow = (
+    <div className="shrink-0 px-4 pb-3 pt-3">
+      <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => {
+              setActiveTab(id)
+              setMessage(null)
+            }}
+            className={cn(
+              'flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs font-medium transition-all duration-200 sm:px-3 sm:text-sm',
+              activeTab === id
+                ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                : 'text-muted-foreground hover:text-foreground',
+              id === 'ai' && activeTab === id && 'text-purple-700 dark:text-purple-400'
+            )}
+          >
+            <Icon
+              className={cn(
+                'h-4 w-4 shrink-0',
+                id === 'ai' && (activeTab === id ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500/80')
+              )}
+            />
+            <span className="truncate">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
-        <div className="shrink-0 px-4 pb-3 pt-3">
-          <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
-            {tabs.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  setActiveTab(id)
-                  setMessage(null)
-                }}
-                className={cn(
-                  'flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs font-medium transition-all duration-200 sm:px-3 sm:text-sm',
-                  activeTab === id
-                    ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                    : 'text-muted-foreground hover:text-foreground',
-                  id === 'ai' && activeTab === id && 'text-purple-700 dark:text-purple-400'
-                )}
-              >
-                <Icon
-                  className={cn(
-                    'h-4 w-4 shrink-0',
-                    id === 'ai' && (activeTab === id ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500/80')
-                  )}
-                />
-                <span className="truncate">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-6">
+  const formBody = (
+    <div
+      className={cn(
+        'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4',
+        variant === 'page' ? 'pb-[calc(1rem+env(safe-area-inset-bottom))]' : 'pb-6'
+      )}
+    >
           {message && (
             <div
               className={cn(
@@ -659,16 +690,64 @@ export default function AddSongForm({
               </div>
             </form>
           )}
-        </div>
+    </div>
+  )
 
-        {isSaving && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="flex items-center gap-3 rounded-xl bg-background px-4 py-3 shadow-sm">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-sm text-muted-foreground">{t('search.addingSong')}</span>
-            </div>
-          </div>
+  const savingOverlay = isSaving ? (
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex items-center gap-3 rounded-xl bg-background px-4 py-3 shadow-sm">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <span className="text-sm text-muted-foreground">{t('search.addingSong')}</span>
+      </div>
+    </div>
+  ) : null
+
+  if (variant === 'page') {
+    return (
+      <div className="relative flex min-h-0 flex-1 flex-col w-full max-w-xl mx-auto">
+        <header className="flex shrink-0 items-center gap-2 px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={t('common.back')}
+          >
+            <ChevronLeftIcon className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-semibold text-foreground sm:text-xl">{t('songForm.addSong')}</h1>
+        </header>
+        {tabsRow}
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {formBody}
+          {savingOverlay}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className={cn(
+          'z-[100] flex flex-col gap-0 overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-lg',
+          'max-lg:fixed max-lg:inset-x-4 max-lg:top-[max(0.75rem,env(safe-area-inset-top,0px))]',
+          'max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-lg:left-4 max-lg:right-4',
+          'max-lg:h-auto max-lg:w-auto max-lg:max-h-none max-lg:max-w-none',
+          'max-lg:translate-x-0 max-lg:translate-y-0',
+          'sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:right-auto sm:inset-x-auto',
+          'sm:h-auto sm:w-[calc(100%-2rem)] sm:max-w-xl sm:max-h-[min(88dvh,680px)]',
+          'sm:translate-x-[-50%] sm:translate-y-[-50%]'
         )}
+      >
+        <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left">
+          <DialogTitle>{t('songForm.addSong')}</DialogTitle>
+        </DialogHeader>
+        {tabsRow}
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          {formBody}
+          {savingOverlay}
+        </div>
       </DialogContent>
     </Dialog>
   )
