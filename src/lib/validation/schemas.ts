@@ -48,6 +48,10 @@ export const createPlaylistSchema = z.object({
   name: z.string().min(1, 'Name is required')
 })
 
+export const toggleSongFavoriteSchema = z.object({
+  songId: z.string().uuid(),
+})
+
 export type CreateFolderInput = z.infer<typeof createFolderSchema>
 export type UpdateFolderInput = z.infer<typeof updateFolderSchema>
 export type CreateSongInput = z.infer<typeof createSongSchema>

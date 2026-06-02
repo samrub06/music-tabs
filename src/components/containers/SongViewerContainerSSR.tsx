@@ -16,7 +16,7 @@ import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
-import { recordSongViewAction } from '@/app/song/[id]/actions';
+import { recordSongViewAction, toggleSongFavoriteAction } from '@/app/song/[id]/actions';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface SongViewerContainerSSRProps {
@@ -60,7 +60,26 @@ export default function SongViewerContainerSSR({
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set());
   const [chordNameToIdMap, setChordNameToIdMap] = useState<Map<string, string>>(new Map());
   const [chords, setChords] = useState<Chord[]>([]);
-  
+  const [isLiked, setIsLiked] = useState(song.isLiked ?? false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+
+  useEffect(() => {
+    setIsLiked(song.isLiked ?? false);
+  }, [song.id, song.isLiked]);
+
+  const handleToggleFavorite = async () => {
+    if (!isInLibrary) return;
+    setIsTogglingFavorite(true);
+    try {
+      const { isLiked: next } = await toggleSongFavoriteAction(song.id);
+      setIsLiked(next);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
+
   // Load hasUsedNext from sessionStorage on mount and sync current song index
   // Also check for playlist context and apply automatic transposition
   useEffect(() => {
@@ -419,7 +438,10 @@ export default function SongViewerContainerSSR({
     chordNameToIdMap,
     chords,
     isInLibrary,
+    isLiked,
     onAddToLibrary,
+    onToggleFavorite: handleToggleFavorite,
+    isTogglingFavorite,
     onFontSizeChange: setFontSize,
     bottomBarHeight,
     setBottomBarHeight,

@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import {
   ArrowLeftIcon,
   MinusIcon,
+  PlusIcon,
   PauseIcon,
   PlayIcon,
   MusicalNoteIcon,

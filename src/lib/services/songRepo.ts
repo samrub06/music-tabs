@@ -70,11 +70,12 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
     genre: dbSong.genre || undefined,
     tabId: dbSong.tab_id || undefined,
     sourceUrl: dbSong.source_url || undefined,
+    isLiked: dbSong.is_liked ?? false,
   } as Song
 }
 
 const LIGHTWEIGHT_LIST_COLUMNS =
-  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url'
+  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, is_liked'
 
 export const songRepo = (client: SupabaseClient<Database>) => ({
   async createSong(songData: NewSongData): Promise<Song> {
@@ -289,6 +290,42 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }
 
     return mapDbSongToDomain(data)
+  },
+
+  async toggleSongLike(id: string): Promise<boolean> {
+    const {
+      data: { user },
+    } = await client.auth.getUser()
+    if (!user) {
+      throw new Error('User must be authenticated to favorite songs')
+    }
+
+    const { data: current, error: fetchError } = await (client
+      .from('songs') as any)
+      .select('is_liked')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (fetchError || !current) {
+      throw fetchError ?? new Error('Song not found')
+    }
+
+    const nextLiked = !(current as { is_liked: boolean }).is_liked
+
+    const { error: updateError } = await (client.from('songs') as any)
+      .update({
+        is_liked: nextLiked,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (updateError) {
+      throw updateError
+    }
+
+    return nextLiked
   },
 
   async updateSongFolder(id: string, folderId?: string): Promise<Song> {

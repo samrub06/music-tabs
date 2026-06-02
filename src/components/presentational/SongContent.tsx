@@ -65,7 +65,10 @@ interface SongContentProps {
   onFontSizeChange?: (value: number) => void;
   onToggleEdit?: () => void;
   isInLibrary?: boolean;
+  isLiked?: boolean;
   onAddToLibrary?: () => void;
+  onToggleFavorite?: () => void;
+  isTogglingFavorite?: boolean;
   selectedInstrument?: 'piano' | 'guitar';
   onSetSelectedInstrument?: (instrument: 'piano' | 'guitar') => void;
   transposeValue?: number;
@@ -95,7 +98,10 @@ export default function SongContent({
   onFontSizeChange,
   onToggleEdit,
   isInLibrary = false,
+  isLiked = false,
   onAddToLibrary,
+  onToggleFavorite,
+  isTogglingFavorite = false,
   selectedInstrument = 'piano',
   onSetSelectedInstrument,
   transposeValue = 0,
@@ -254,14 +260,34 @@ export default function SongContent({
               <button
                 type="button"
                 onClick={() => {
-                  if (!isInLibrary && onAddToLibrary) onAddToLibrary();
+                  if (!isInLibrary) {
+                    onAddToLibrary?.();
+                    return;
+                  }
+                  onToggleFavorite?.();
                 }}
-                disabled={isInLibrary || !onAddToLibrary}
+                disabled={
+                  isTogglingFavorite ||
+                  (!isInLibrary && !onAddToLibrary) ||
+                  (isInLibrary && !onToggleFavorite)
+                }
                 className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
-                aria-label={isInLibrary ? 'Favorite' : 'Add to favorites'}
-                title={isInLibrary ? 'Favorite' : 'Add to favorites'}
+                aria-label={
+                  isInLibrary
+                    ? isLiked
+                      ? t('library.removeFromFavorites')
+                      : t('library.addToFavorites')
+                    : t('library.addToLibrary')
+                }
+                title={
+                  isInLibrary
+                    ? isLiked
+                      ? t('library.removeFromFavorites')
+                      : t('library.addToFavorites')
+                    : t('library.addToLibrary')
+                }
               >
-                {isInLibrary ? (
+                {isLiked ? (
                   <HeartSolidIcon className="h-6 w-6" />
                 ) : (
                   <HeartIcon className="h-6 w-6" />
@@ -298,23 +324,25 @@ export default function SongContent({
                 />
 
                 <div className="flex items-center gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:pb-0.5 sm:flex-wrap sm:gap-2">
+                {/* Fixed height so expand/collapse does not shift sibling controls */}
+                <div className="flex h-10 shrink-0 items-center sm:h-11">
                 <div
                   onClick={() => {
                     if (!showTransposeControls) setShowTransposeControls(true);
                   }}
                   className={cn(
-                    'shrink-0 overflow-hidden border border-border/80 bg-muted/40 text-foreground',
-                    'transition-all duration-300 ease-out',
+                    'flex h-full items-center overflow-hidden border border-border/80 bg-muted/40 text-foreground',
+                    'transition-[width,border-radius,padding] duration-300 ease-out',
                     showTransposeControls
-                      ? 'rounded-lg px-1 py-1 sm:rounded-xl sm:px-2 sm:py-2'
-                      : 'cursor-pointer rounded-full px-3 py-1.5 hover:bg-muted/70 sm:px-4 sm:py-3'
+                      ? 'rounded-lg px-1 sm:rounded-xl sm:px-2'
+                      : 'cursor-pointer rounded-full px-3 hover:bg-muted/70 sm:px-4'
                   )}
                 >
                   {!showTransposeControls ? (
-                    <div className="text-xs font-medium text-center sm:text-sm">Transpose</div>
+                    <div className="text-xs font-medium whitespace-nowrap sm:text-sm">Transpose</div>
                   ) : (
                     <div
-                      className="flex flex-nowrap items-center gap-1"
+                      className="flex h-full flex-nowrap items-center gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
                     <select
@@ -364,6 +392,7 @@ export default function SongContent({
                     </button>
                   </div>
                 )}
+                </div>
                 </div>
 
                 {!hasOnlyEasyChords && onToggleEasyChordMode && (

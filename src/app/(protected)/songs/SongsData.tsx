@@ -18,6 +18,7 @@ async function SongsDataLoader({
   initialSortOrder,
   easyChord,
   capoFilter,
+  likedOnly,
 }: {
   page: number
   limit: number
@@ -28,10 +29,11 @@ async function SongsDataLoader({
   initialSortOrder?: 'asc' | 'desc'
   easyChord?: boolean
   capoFilter?: 'any' | 'with' | 'without'
+  likedOnly?: boolean
 }) {
   const supabase = await createSafeServerClient()
   const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
-  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q, orderBy, easyChord, capoFilter)
+  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q, orderBy, easyChord, capoFilter, likedOnly)
   return { songs, total }
 }
 
@@ -98,7 +100,7 @@ function PlaylistsSkeleton() {
 export default async function SongsData({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string; easyChord?: string; capo?: string }>
+  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string; easyChord?: string; capo?: string; filter?: string }>
 }) {
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
@@ -113,6 +115,7 @@ export default async function SongsData({
   const easyChord = params?.easyChord === '1' || params?.easyChord === 'true'
   const capoParam = params?.capo as string | undefined
   const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'
+  const likedOnly = params?.filter === 'liked'
 
   return (
     <Suspense fallback={<SongsSkeleton />}>
@@ -127,6 +130,7 @@ export default async function SongsData({
         initialSortOrder={initialSortOrder}
         easyChord={easyChord}
         capoFilter={capoFilter}
+        likedOnly={likedOnly}
       />
     </Suspense>
   )
@@ -143,6 +147,7 @@ async function SongsDataWrapper({
   initialSortOrder,
   easyChord,
   capoFilter,
+  likedOnly,
 }: {
   page: number
   limit: number
@@ -154,10 +159,11 @@ async function SongsDataWrapper({
   initialSortOrder?: 'asc' | 'desc'
   easyChord?: boolean
   capoFilter?: 'any' | 'with' | 'without'
+  likedOnly?: boolean
 }) {
   // Stream all data in parallel with Suspense
   const [songsData, foldersData, playlistsData] = await Promise.all([
-    SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder, easyChord, capoFilter }),
+    SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder, easyChord, capoFilter, likedOnly }),
     FoldersDataLoader(),
     PlaylistsDataLoader(),
   ])
@@ -178,6 +184,7 @@ async function SongsDataWrapper({
       initialSortOrder={initialSortOrder}
       initialEasyChord={easyChord}
       initialCapoFilter={capoFilter}
+      likedOnly={likedOnly}
     />
   )
 }

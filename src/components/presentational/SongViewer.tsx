@@ -62,7 +62,10 @@ interface SongViewerProps {
   chordNameToIdMap?: Map<string, string>;
   chords?: Chord[];
   isInLibrary?: boolean;
+  isLiked?: boolean;
   onAddToLibrary?: () => void;
+  onToggleFavorite?: () => void;
+  isTogglingFavorite?: boolean;
   onFontSizeChange?: (value: number) => void;
   bottomBarHeight?: number;
   setBottomBarHeight?: (height: number) => void;
@@ -117,7 +120,10 @@ export default function SongViewer({
     chordNameToIdMap = new Map(),
     chords = [],
     isInLibrary,
+    isLiked,
     onAddToLibrary,
+    onToggleFavorite,
+    isTogglingFavorite,
     onFontSizeChange,
     bottomBarHeight = 0,
     setBottomBarHeight,
@@ -181,7 +187,10 @@ export default function SongViewer({
               onFontSizeChange={onFontSizeChange}
               onToggleEdit={onToggleEdit}
               isInLibrary={isInLibrary}
+              isLiked={isLiked}
               onAddToLibrary={onAddToLibrary}
+              onToggleFavorite={onToggleFavorite}
+              isTogglingFavorite={isTogglingFavorite}
               selectedInstrument={selectedInstrument}
               onSetSelectedInstrument={onSetSelectedInstrument}
               transposeValue={transposeValue}

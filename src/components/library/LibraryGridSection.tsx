@@ -3,6 +3,7 @@
 import { HeartIcon, SparklesIcon } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/context/LanguageContext'
 import type { ReactNode } from 'react'
 
 export interface PublicPlaylistItem {
@@ -42,9 +43,10 @@ function GridCard({ href, compact = false, children, footer }: GridCardProps) {
 }
 
 export default function LibraryGridSection({ publicPlaylists, showLikedCard = true }: LibraryGridSectionProps) {
+  const { t } = useLanguage()
   const likedFooter = (
     <>
-      <div className="font-bold text-white text-xs sm:text-sm truncate">Titres likés</div>
+      <div className="font-bold text-white text-xs sm:text-sm truncate">{t('library.likedSongs')}</div>
     </>
   )
 

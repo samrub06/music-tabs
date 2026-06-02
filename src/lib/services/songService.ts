@@ -14,7 +14,8 @@ export const songService = {
     q?: string,
     orderBy?: 'created_at' | 'updated_at' | 'view_count',
     easyChord?: boolean,
-    capoFilter?: 'any' | 'with' | 'without'
+    capoFilter?: 'any' | 'with' | 'without',
+    likedOnly?: boolean
   ): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
@@ -24,7 +25,7 @@ export const songService = {
     
     let baseQuery = client
       .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, all_chords, tab_id, genre, bpm', { count: 'exact' });
+      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, all_chords, tab_id, genre, bpm, is_liked', { count: 'exact' });
     
     // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
     if (!user) {
@@ -49,6 +50,10 @@ export const songService = {
       baseQuery = baseQuery.not('capo', 'is', null).gt('capo', 0);
     } else if (capoFilter === 'without') {
       baseQuery = baseQuery.or('capo.is.null,capo.eq.0');
+    }
+
+    if (likedOnly === true) {
+      baseQuery = baseQuery.eq('is_liked', true);
     }
 
     // Pour popular : ne garder que les chansons avec view_count > 0
@@ -86,7 +91,8 @@ export const songService = {
       lastChord: song.last_chord,
       tabId: song.tab_id,
       genre: song.genre,
-      bpm: song.bpm
+      bpm: song.bpm,
+      isLiked: song.is_liked ?? false,
     })) || [];
     
     return { songs: mappedSongs, total: count || 0 };
@@ -127,7 +133,8 @@ export const songService = {
       sourceSite: data.source_site,
       tabId: data.tab_id,
       genre: data.genre,
-      bpm: data.bpm
+      bpm: data.bpm,
+      isLiked: data.is_liked ?? false,
     };
   },
 

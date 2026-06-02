@@ -4,7 +4,7 @@ import { createActionServerClient } from '@/lib/supabase/server'
 import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { songRepo } from '@/lib/services/songRepo'
 import { songService } from '@/lib/services/songService'
-import { updateSongSchema } from '@/lib/validation/schemas'
+import { toggleSongFavoriteSchema, updateSongSchema } from '@/lib/validation/schemas'
 import type { SongEditData } from '@/types'
 import { revalidatePath } from 'next/cache'
 
@@ -64,6 +64,19 @@ export async function viewSongAction(songId: string) {
   } catch (error) {
     console.error('Error awarding XP for song view:', error)
   }
+}
+
+export async function toggleSongFavoriteAction(songId: string) {
+  const { songId: validatedId } = toggleSongFavoriteSchema.parse({ songId })
+  const supabase = await createActionServerClient()
+  const repo = songRepo(supabase)
+  const isLiked = await repo.toggleSongLike(validatedId)
+
+  revalidatePath('/songs')
+  revalidatePath('/search')
+  revalidatePath(`/song/${validatedId}`)
+
+  return { isLiked }
 }
 
 export async function updateSongAction(id: string, updates: SongEditData) {

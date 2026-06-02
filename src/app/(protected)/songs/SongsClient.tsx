@@ -40,9 +40,10 @@ interface SongsClientProps {
   initialSortOrder?: 'asc' | 'desc'
   initialEasyChord?: boolean
   initialCapoFilter?: CapoFilter
+  likedOnly?: boolean
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any' }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false }: SongsClientProps) {
   const { t } = useLanguage()
   
   const sortFieldLabels: Record<SortField, string> = {
@@ -406,6 +407,11 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             isInputFocused && 'z-30'
           )}
         >
+        {likedOnly && (
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {t('library.likedSongs')}
+          </h1>
+        )}
         <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
           <div
             className={cn(
