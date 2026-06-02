@@ -144,68 +144,69 @@ export default function ToolsBottomBar({
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-5 space-y-3.5">
-        {/* First card: row Key · Transpose + Accords faciles (above), then Taille du texte (below) */}
+        {/* First card: row Text size + Easy chords, then Key · Transpose */}
         <div className={cardClass}>
           <div className="flex flex-wrap gap-3 items-end">
-            {(song.firstChord || song.key) && (
-              <div className="flex-1 min-w-[180px]">
-                <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
-                <div className="flex gap-2 items-center">
-                  <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
-                    <SelectTrigger className="flex-1 h-10 rounded-xl border border-amber-200/80 dark:border-amber-700/50 bg-background/50 focus:ring-amber-500/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableKeys.map((key) => (
-                        <SelectItem key={key} value={key}>{key}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 overflow-hidden shrink-0">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))} disabled={transposeValue <= -11}>
-                      <MinusIcon className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-semibold tabular-nums min-w-[2.25rem] text-center text-amber-700 dark:text-amber-400">{transposeValue > 0 ? `+${transposeValue}` : transposeValue}</span>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))} disabled={transposeValue >= 11}>
-                      <PlusIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+            <div className="flex-1 min-w-[160px]">
+              <p className={labelClass}>{t('songHeader.fontSize')}</p>
+              <div className="flex items-center justify-center gap-3">
+                <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10} className="h-9 w-9 rounded-xl shrink-0">
+                  <MinusIcon className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium tabular-nums min-w-[2.5rem] text-center">{fontSize}</span>
+                <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24} className="h-9 w-9 rounded-xl shrink-0">
+                  <PlusIcon className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={onResetFontSize} className="h-9 w-9 rounded-xl shrink-0">
+                  <EyeIcon className="h-4 w-4" />
+                </Button>
               </div>
-            )}
+            </div>
             {!hasOnlyEasyChords && (
-              <div className={song.firstChord || song.key ? 'flex-shrink-0' : 'w-full'}>
-                <button type="button" onClick={onToggleEasyChordMode} className={`rounded-xl py-2.5 text-sm font-medium transition-all min-h-[2.5rem] ${song.firstChord || song.key ? 'px-4' : 'w-full'} ${easyChordMode ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+              <div className="flex-shrink-0 min-w-[150px]">
+                <p className={labelClass}>{t('songHeader.easyChords')}</p>
+                <button type="button" onClick={onToggleEasyChordMode} className={`w-full rounded-xl py-2.5 text-sm font-medium transition-all min-h-[2.5rem] ${easyChordMode ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
                   {t('songHeader.easyChords')}
                 </button>
               </div>
             )}
           </div>
-          <p className={`${labelClass} mt-3`}>{t('songHeader.fontSize')}</p>
-          <div className="flex items-center justify-center gap-3">
-            <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10} className="h-9 w-9 rounded-xl shrink-0">
-              <MinusIcon className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium tabular-nums min-w-[2.5rem] text-center">{fontSize}</span>
-            <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24} className="h-9 w-9 rounded-xl shrink-0">
-              <PlusIcon className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onResetFontSize} className="h-9 w-9 rounded-xl shrink-0">
-              <EyeIcon className="h-4 w-4" />
-            </Button>
-          </div>
+          {(song.firstChord || song.key) && (
+            <div className="mt-3">
+              <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
+              <div className="flex gap-2 items-center">
+                <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
+                  <SelectTrigger className="flex-1 h-10 rounded-xl border border-amber-200/80 dark:border-amber-700/50 bg-background/50 focus:ring-amber-500/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableKeys.map((key) => (
+                      <SelectItem key={key} value={key}>{key}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 overflow-hidden shrink-0">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))} disabled={transposeValue <= -11}>
+                    <MinusIcon className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-semibold tabular-nums min-w-[2.25rem] text-center text-amber-700 dark:text-amber-400">{transposeValue > 0 ? `+${transposeValue}` : transposeValue}</span>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))} disabled={transposeValue >= 11}>
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <div className={cardClass}>
-          <p className={labelClass}>{t('songHeader.capo')}</p>
-          {song.capo !== undefined && song.capo !== null ? (
+        {song.capo !== undefined && song.capo !== null && (
+          <div className={cardClass}>
+            <p className={labelClass}>{t('songHeader.capo')}</p>
             <div className={segmentClass}>
               <button type="button" onClick={() => onToggleCapo(true)} className={segmentOptionClass(useCapo)}>Capo {song.capo}</button>
               <button type="button" onClick={() => onToggleCapo(false)} className={segmentOptionClass(!useCapo)}>{t('songHeader.noCapo')}</button>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground py-1">{t('songHeader.noCapo')}</p>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className={cardClass}>
           <p className={labelClass}>{t('songHeader.instrument')}</p>

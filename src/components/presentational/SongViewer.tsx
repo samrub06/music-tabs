@@ -181,6 +181,9 @@ export default function SongViewer({
               chordNameToIdMap={chordNameToIdMap}
               chords={chords}
               onFontSizeChange={onFontSizeChange}
+              onToggleEdit={onToggleEdit}
+              isInLibrary={isInLibrary}
+              onAddToLibrary={onAddToLibrary}
             />
           </div>
 

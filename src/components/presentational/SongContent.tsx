@@ -1,6 +1,7 @@
 'use client';
 
-import { MusicalNoteIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { MusicalNoteIcon, PencilSquareIcon, HeartIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
@@ -35,6 +36,9 @@ interface SongContentProps {
   chordNameToIdMap?: Map<string, string>;
   chords?: Chord[];
   onFontSizeChange?: (value: number) => void;
+  onToggleEdit?: () => void;
+  isInLibrary?: boolean;
+  onAddToLibrary?: () => void;
 }
 
 export default function SongContent({
@@ -56,6 +60,9 @@ export default function SongContent({
   chordNameToIdMap = new Map(),
   chords = [],
   onFontSizeChange,
+  onToggleEdit,
+  isInLibrary = false,
+  onAddToLibrary,
 }: SongContentProps) {
   const { t } = useLanguage();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -147,6 +154,50 @@ export default function SongContent({
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-1" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-white px-3 py-2 dark:bg-gray-900/60">
+            <div className="min-w-0">
+              <h2
+                className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
+                dir={/[\u0590-\u05FF]/.test(transposedSong?.title || '') ? 'rtl' : 'ltr'}
+              >
+                {transposedSong?.title || ''}
+              </h2>
+              {transposedSong?.author && (
+                <p
+                  className="truncate text-xs text-muted-foreground"
+                  dir={/[\u0590-\u05FF]/.test(transposedSong.author) ? 'rtl' : 'ltr'}
+                >
+                  {transposedSong.author}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {onToggleEdit && (
+                <button
+                  type="button"
+                  onClick={onToggleEdit}
+                  className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-xs font-medium text-primary hover:bg-primary/10"
+                  aria-label={t('songHeader.edit')}
+                >
+                  <PencilSquareIcon className="h-4 w-4" />
+                  {t('songHeader.edit')}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isInLibrary && onAddToLibrary) onAddToLibrary();
+                }}
+                disabled={isInLibrary || !onAddToLibrary}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-500 hover:bg-red-500/10 disabled:opacity-70"
+                aria-label={isInLibrary ? 'Favorite' : 'Add to favorites'}
+                title={isInLibrary ? 'Favorite' : 'Add to favorites'}
+              >
+                {isInLibrary ? <HeartSolidIcon className="h-4 w-4" /> : <HeartIcon className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
           {/* Chord Diagrams Section - accordion */}
           <Collapsible
             open={chordSectionOpen}
