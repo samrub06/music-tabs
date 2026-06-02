@@ -154,8 +154,6 @@ export default function SongViewer({
         canPrevSong={!!canPrevSong}
         canNextSong={!!canNextSong}
         nextSongInfo={nextSongInfo}
-        isInLibrary={isInLibrary}
-        onAddToLibrary={onAddToLibrary}
         onToggleToolsBar={onToggleToolsBar}
       />
 

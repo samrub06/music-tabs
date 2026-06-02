@@ -1,7 +1,13 @@
 'use client';
 
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { MusicalNoteIcon, PencilSquareIcon, HeartIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  MusicalNoteIcon,
+  PencilSquareIcon,
+  HeartIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
@@ -233,6 +239,17 @@ export default function SongContent({
                   <PencilSquareIcon className="h-5 w-5" />
                   <span>{t('songHeader.edit')}</span>
                 </Button>
+              )}
+              {isInLibrary && (
+                <div
+                  className="inline-flex h-11 min-h-[44px] items-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
+                  title={t('library.inYourLibrary')}
+                >
+                  <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
+                  <span className="hidden text-xs font-medium sm:inline">
+                    {t('library.inYourLibrary')}
+                  </span>
+                </div>
               )}
               <button
                 type="button"

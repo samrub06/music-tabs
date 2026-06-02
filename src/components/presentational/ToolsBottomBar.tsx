@@ -9,8 +9,10 @@ import {
   PlusIcon,
   TrashIcon,
   XMarkIcon,
+  LinkIcon,
+  CheckIcon,
 } from '@heroicons/react/24/outline';
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { generateAllKeys } from '@/utils/chords';
 import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { Button } from '@/components/ui/button';
@@ -68,6 +70,30 @@ export default function ToolsBottomBar({
   onDelete,
 }: ToolsBottomBarProps) {
   const { t } = useLanguage();
+  const [linkCopied, setLinkCopied] = useState(false);
+  const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyFeedbackTimerRef.current) clearTimeout(copyFeedbackTimerRef.current);
+    };
+  }, []);
+
+  const handleShareLink = useCallback(async () => {
+    const url =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/song/${song.id}`
+        : `/song/${song.id}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      if (copyFeedbackTimerRef.current) clearTimeout(copyFeedbackTimerRef.current);
+      copyFeedbackTimerRef.current = setTimeout(() => setLinkCopied(false), 2500);
+    } catch (error) {
+      console.error('Failed to copy song link:', error);
+    }
+  }, [song.id]);
 
   const getBaseChord = () => song.firstChord || song.key || 'C';
   const getAvailableKeys = () => generateAllKeys(getBaseChord());
@@ -219,6 +245,33 @@ export default function ToolsBottomBar({
             </button>
           </div>
         </div>
+        <div className={cardClass}>
+          <p className={labelClass}>{t('songHeader.shareLink')}</p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleShareLink}
+            className={`h-10 w-full rounded-xl font-medium transition-colors ${
+              linkCopied
+                ? 'border-green-600/40 bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:border-green-400/40 dark:text-green-400'
+                : ''
+            }`}
+            aria-live="polite"
+          >
+            {linkCopied ? (
+              <>
+                <CheckIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                {t('songHeader.linkCopied')}
+              </>
+            ) : (
+              <>
+                <LinkIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                {t('songHeader.shareLink')}
+              </>
+            )}
+          </Button>
+        </div>
+
         <div className="flex gap-2.5 pt-0.5">
           <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
             <PencilIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.edit')}

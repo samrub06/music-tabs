@@ -7,10 +7,8 @@ import {
   MinusIcon,
   PauseIcon,
   PlayIcon,
-  PlusIcon,
   MusicalNoteIcon,
   ArrowRightIcon,
-  CheckIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import React from 'react';
@@ -31,8 +29,6 @@ interface SongHeaderProps {
   canPrevSong?: boolean;
   canNextSong?: boolean;
   nextSongInfo?: { title: string; author?: string } | null;
-  isInLibrary?: boolean;
-  onAddToLibrary?: () => void;
   onToggleToolsBar?: () => void;
 }
 
@@ -48,8 +44,6 @@ export default function SongHeader({
   canPrevSong,
   canNextSong,
   nextSongInfo,
-  isInLibrary,
-  onAddToLibrary,
   onToggleToolsBar,
 }: SongHeaderProps) {
   const { t } = useLanguage();
@@ -137,16 +131,6 @@ export default function SongHeader({
               <ArrowRightIcon className="h-5 w-5" />
             </Button>
           </div>
-        )}
-        {isInLibrary && (
-          <div className="flex-shrink-0 p-2 text-green-600 dark:text-green-400" title="Dans la bibliothèque">
-            <CheckIcon className="h-5 w-5" />
-          </div>
-        )}
-        {!isInLibrary && onAddToLibrary && (
-          <Button variant="ghost" size="icon" className="flex-shrink-0 h-10 w-10" onClick={onAddToLibrary} aria-label="Ajouter à la bibliothèque" title="Ajouter à la bibliothèque">
-            <PlusIcon className="h-5 w-5" />
-          </Button>
         )}
       </div>
     </div>

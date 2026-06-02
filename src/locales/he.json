@@ -507,7 +507,9 @@
     "instrument": "כלי נגינה",
     "piano": "פסנתר",
     "guitar": "גיטרה",
-    "edit": "ערוך"
+    "edit": "ערוך",
+    "shareLink": "שתף קישור",
+    "linkCopied": "הקישור הועתק!"
   },
   "songContent": {
     "saving": "שומר...",
