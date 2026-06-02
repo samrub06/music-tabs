@@ -59,7 +59,7 @@ function getTopArtistFromUserLibrary(
   }
 
   let top: { count: number; songId: string; displayName: string } | null = null
-  for (const entry of byArtist.values()) {
+  for (const entry of Array.from(byArtist.values())) {
     if (!top || entry.count > top.count) {
       top = entry
     }

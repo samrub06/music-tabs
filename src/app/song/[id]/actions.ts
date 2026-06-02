@@ -3,6 +3,7 @@
 import { createActionServerClient } from '@/lib/supabase/server'
 import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { songRepo } from '@/lib/services/songRepo'
+import { songService } from '@/lib/services/songService'
 import { updateSongSchema } from '@/lib/validation/schemas'
 import type { SongEditData } from '@/types'
 import { revalidatePath } from 'next/cache'
@@ -12,9 +13,9 @@ export async function recordSongViewAction(songId: string) {
   const supabase = await createActionServerClient()
 
   // 1. Increment view count and update updated_at (RPC updates both)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC args inferred as undefined by client types
-  const { error } = await (supabase as any).rpc('increment_view_count', { song_id: songId })
-  if (error) {
+  try {
+    await songService.incrementViewCount(songId, supabase)
+  } catch (error) {
     console.error('Error incrementing view count:', error)
   }
 

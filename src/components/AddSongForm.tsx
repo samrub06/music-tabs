@@ -22,7 +22,6 @@ import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import type { Folder, NewSongData } from '@/types'
 import {
-  ChevronLeftIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   SparklesIcon,
@@ -410,48 +409,61 @@ export default function AddSongForm({
   const renderSearchResults = () => (
     <>
       {isSearching && (
-        <div className="flex items-center justify-center gap-2 rounded-xl bg-muted/40 px-3 py-8">
+        <div className="flex items-center justify-center gap-2 py-10">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span className="text-sm text-muted-foreground">{t('songForm.loading')}</span>
         </div>
       )}
 
       {!isSearching && showSearchResults && searchResults.length > 0 && (
-        <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl bg-muted/30 p-2 sm:max-h-64">
-          <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">
+        <div
+          className={cn(
+            'overflow-y-auto',
+            variant === 'page' ? 'min-h-0 flex-1' : 'max-h-56 sm:max-h-64'
+          )}
+        >
+          <p className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('songForm.searchResults')} ({searchResults.length})
           </p>
-          {searchResults.map((result, index) => (
-            <button
-              key={`${result.url}-${index}`}
-              type="button"
-              disabled={isSearching || isSaving}
-              className="w-full rounded-lg p-3 text-left transition-colors hover:bg-muted/60 disabled:opacity-50"
-              onClick={() => handleFetchFromUrl(result.url, result)}
-            >
-              <div className="text-sm font-medium text-foreground">{result.title}</div>
-              <div className="mt-1 flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-muted-foreground">{result.author}</span>
-                <div className="flex shrink-0 items-center gap-1">
-                  {result.rating != null && (
-                    <span className="text-xs text-amber-600 dark:text-amber-400">
-                      ⭐ {result.rating.toFixed(1)}
-                    </span>
-                  )}
-                  {result.difficulty && (
-                    <span className="text-xs text-muted-foreground">{result.difficulty}</span>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
+          <ul className="divide-y divide-border/80">
+            {searchResults.map((result, index) => (
+              <li key={`${result.url}-${index}`}>
+                <button
+                  type="button"
+                  disabled={isSearching || isSaving}
+                  className="w-full py-3.5 text-left transition-opacity hover:opacity-80 active:opacity-70 disabled:opacity-50"
+                  onClick={() => handleFetchFromUrl(result.url, result)}
+                >
+                  <div className="text-[15px] font-medium leading-snug text-foreground">
+                    {result.title}
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-3">
+                    <span className="truncate text-sm text-muted-foreground">{result.author}</span>
+                    <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                      {result.rating != null && (
+                        <span className="text-amber-600 dark:text-amber-400">
+                          ⭐ {result.rating.toFixed(1)}
+                        </span>
+                      )}
+                      {result.difficulty && <span>{result.difficulty}</span>}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </>
   )
 
   const tabsRow = (
-    <div className="shrink-0 px-4 pb-3 pt-3">
+    <div
+      className={cn(
+        'shrink-0 px-4 pb-3',
+        variant === 'page' ? 'pt-1' : 'pt-3'
+      )}
+    >
       <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
@@ -485,8 +497,10 @@ export default function AddSongForm({
   const formBody = (
     <div
       className={cn(
-        'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4',
-        variant === 'page' ? 'pb-[calc(1rem+env(safe-area-inset-bottom))]' : 'pb-6'
+        'min-h-0 flex-1 overscroll-y-contain px-4 py-4',
+        variant === 'page'
+          ? 'flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom))]'
+          : 'overflow-y-auto pb-6'
       )}
     >
           {message && (
@@ -514,7 +528,12 @@ export default function AddSongForm({
           )}
 
           {activeTab === 'search' && (
-            <div className="space-y-3">
+            <div
+              className={cn(
+                'space-y-3',
+                variant === 'page' && showSearchResults && 'flex min-h-0 flex-1 flex-col'
+              )}
+            >
               <div className="relative">
                 <MagnifyingGlassIcon
                   className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
@@ -705,17 +724,6 @@ export default function AddSongForm({
   if (variant === 'page') {
     return (
       <div className="relative flex min-h-0 flex-1 flex-col w-full max-w-xl mx-auto">
-        <header className="flex shrink-0 items-center gap-2 px-3 pb-1 pt-3 sm:px-4 sm:pt-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={t('common.back')}
-          >
-            <ChevronLeftIcon className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-semibold text-foreground sm:text-xl">{t('songForm.addSong')}</h1>
-        </header>
         {tabsRow}
         <div className="relative flex min-h-0 flex-1 flex-col">
           {formBody}

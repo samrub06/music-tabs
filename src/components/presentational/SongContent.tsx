@@ -130,6 +130,9 @@ export default function SongContent({
     };
   }, [contentRef]);
 
+  const [chordSectionOpen, setChordSectionOpen] = useState(true);
+  const [showTransposeControls, setShowTransposeControls] = useState(false);
+
   if (isEditing) {
     return (
       <div className="flex-1 flex flex-col p-4">
@@ -172,8 +175,6 @@ export default function SongContent({
     }
   };
 
-  const [chordSectionOpen, setChordSectionOpen] = useState(true);
-  const [showTransposeControls, setShowTransposeControls] = useState(false);
   const hasOnlyEasyChords = songHasOnlyEasyChords(transposedSong?.allChords);
   const baseChord = transposedSong?.firstChord || transposedSong?.key || 'C';
   const availableKeys = generateAllKeys(baseChord);

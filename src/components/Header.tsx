@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  ChevronLeft,
   LogOut,
   Menu,
   Moon,
@@ -117,6 +118,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const headerHidden = scrollChrome?.headerHidden ?? false
 
   const isSongPage = pathname.includes('/song/')
+  const isAddSongPage = pathname === '/add-song'
   const hideHeaderOnScroll =
     pathname === '/songs' || pathname === '/search' || pathname.startsWith('/search/')
   const showMenuButton = !isSongPage
@@ -159,10 +161,24 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
           </Button>
         )}
 
-        {pageTitle && (
-          <h1 className="truncate text-base font-semibold text-foreground lg:hidden">
-            {pageTitle}
-          </h1>
+        {isAddSongPage ? (
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex min-w-0 items-center gap-0.5 text-foreground -ml-1 py-1 pr-2 rounded-lg hover:opacity-80 active:opacity-70 transition-opacity"
+            aria-label={t('common.back')}
+          >
+            <ChevronLeft className="h-6 w-6 shrink-0" aria-hidden />
+            <h1 className="truncate text-base font-semibold">
+              {t('navigation.addSong')}
+            </h1>
+          </button>
+        ) : (
+          pageTitle && (
+            <h1 className="truncate text-base font-semibold text-foreground lg:hidden">
+              {pageTitle}
+            </h1>
+          )
         )}
       </div>
 
@@ -172,7 +188,8 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         onClick={() => router.push('/search')}
         className={cn(
           'absolute left-1/2 -translate-x-1/2 gap-1.5 px-2 hover:bg-transparent sm:gap-2 sm:px-3',
-          usesAppSidebar && 'lg:hidden'
+          usesAppSidebar && 'lg:hidden',
+          isAddSongPage && 'hidden'
         )}
         aria-label={t('common.backToHome')}
       >
