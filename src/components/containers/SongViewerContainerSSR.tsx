@@ -5,6 +5,7 @@ import { transposeStructuredSong, renderStructuredSong } from '@/utils/structure
 import { useRouter } from 'next/navigation';
 import React, { useRef, useEffect, useState } from 'react';
 import SongViewer from '../presentational/SongViewer';
+import { getDefaultToolsBarHeight } from '../presentational/ToolsBottomBar';
 import { useSongEditor } from '@/lib/hooks/useSongEditor';
 import { useAutoScroll } from '@/lib/hooks/useAutoScroll';
 import { useChordDiagram } from '@/lib/hooks/useChordDiagram';
@@ -157,7 +158,6 @@ export default function SongViewerContainerSSR({
   
   const { fontSize, setFontSize, increaseFontSize, decreaseFontSize, resetFontSize } = useFontSize();
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
-  const DEFAULT_TOOLS_BAR_HEIGHT = 200;
   
   // Refs
   const contentRef = useRef<HTMLDivElement>(null);
@@ -445,7 +445,8 @@ export default function SongViewerContainerSSR({
     onFontSizeChange: setFontSize,
     bottomBarHeight,
     setBottomBarHeight,
-    onToggleToolsBar: () => setBottomBarHeight((prev) => (prev > 0 ? 0 : DEFAULT_TOOLS_BAR_HEIGHT)),
+    onToggleToolsBar: () =>
+      setBottomBarHeight((prev) => (prev > 0 ? 0 : getDefaultToolsBarHeight())),
   };
 
   return (

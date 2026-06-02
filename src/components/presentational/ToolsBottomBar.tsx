@@ -26,7 +26,13 @@ import {
 import { Piano, Guitar } from 'lucide-react';
 
 const BAR_MIN_HEIGHT = 48;
-const BAR_MAX_HEIGHT_PERCENT = 60;
+const BAR_MAX_HEIGHT_PERCENT = 65;
+
+/** Default open height — tall enough for share link + edit/delete at the bottom */
+export function getDefaultToolsBarHeight(): number {
+  if (typeof window === 'undefined') return 420;
+  return Math.round(Math.min(560, Math.max(400, window.innerHeight * 0.58)));
+}
 
 interface ToolsBottomBarProps {
   song: Song;
@@ -169,7 +175,7 @@ export default function ToolsBottomBar({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-5 space-y-3.5">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-6 safe-area-inset-bottom space-y-3.5">
         {/* First card: row Text size + Easy chords, then Key · Transpose */}
         <div className={cardClass}>
           <div className="flex flex-wrap gap-3 items-end">

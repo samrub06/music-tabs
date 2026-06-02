@@ -8,7 +8,6 @@ import {
   HeartIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { useAddSongModal } from '@/context/AddSongModalContext';
 import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
@@ -27,6 +26,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
 const segmentOptionClass = (active: boolean) =>
@@ -110,7 +116,6 @@ export default function SongContent({
   onToggleEasyChordMode,
 }: SongContentProps) {
   const { t } = useLanguage();
-  const { navigateToAddSongPage } = useAddSongModal();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
   const lastPinchTime = useRef(0);
   const onFontSizeChangeRef = useRef(onFontSizeChange);
@@ -225,19 +230,13 @@ export default function SongContent({
                 {transposedSong?.title || ''}
               </h2>
               {transposedSong?.author && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigateToAddSongPage({
-                      query: transposedSong.author,
-                      autoSearch: true,
-                    })
-                  }
+                <Link
+                  href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
                   className="mt-0.5 block max-w-full truncate text-left text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
                   dir={/[\u0590-\u05FF]/.test(transposedSong.author) ? 'rtl' : 'ltr'}
                 >
                   {transposedSong.author}
-                </button>
+                </Link>
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -352,17 +351,18 @@ export default function SongContent({
                       className="flex h-full flex-nowrap items-center gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                    <select
-                      value={currentKey}
-                      onChange={(e) => handleKeySelect(e.target.value)}
-                      className="h-8 w-11 shrink-0 rounded-lg border border-amber-200/80 bg-background/50 px-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 sm:h-11 sm:w-[4.5rem] sm:rounded-xl sm:px-2 sm:text-sm"
-                    >
-                      {availableKeys.map((key) => (
-                        <option key={key} value={key}>
-                          {key}
-                        </option>
-                      ))}
-                    </select>
+                    <Select value={currentKey} onValueChange={handleKeySelect}>
+                      <SelectTrigger className="h-8 w-11 shrink-0 gap-0 rounded-lg border border-amber-200/80 bg-background/50 px-1 text-xs font-medium shadow-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 [&>svg]:h-3 [&>svg]:w-3 sm:h-11 sm:w-[4.5rem] sm:gap-1 sm:rounded-xl sm:px-2 sm:text-sm sm:[&>svg]:h-4 sm:[&>svg]:w-4">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableKeys.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-border/80 bg-muted/40 sm:rounded-xl">
                       <button
                         type="button"

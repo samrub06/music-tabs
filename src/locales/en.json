@@ -524,7 +524,9 @@
     "instrument": "Instrument",
     "piano": "Piano",
     "guitar": "Guitar",
-    "edit": "Edit"
+    "edit": "Edit",
+    "shareLink": "Share link",
+    "linkCopied": "Link copied!"
   },
   "songContent": {
     "saving": "Saving...",

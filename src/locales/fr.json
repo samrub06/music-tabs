@@ -522,7 +522,9 @@
     "instrument": "Instrument",
     "piano": "Piano",
     "guitar": "Guitare",
-    "edit": "Éditer"
+    "edit": "Éditer",
+    "shareLink": "Partager le lien",
+    "linkCopied": "Lien copié !"
   },
   "songContent": {
     "saving": "Sauvegarde...",
