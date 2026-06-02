@@ -208,7 +208,7 @@ export default function SongTableRow({
                 e.stopPropagation()
                 onSelect(e.target.checked)
               }}
-              className="h-5 w-5 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
+              className="-ml-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:ml-0 sm:h-4 sm:w-4"
             />
           </div>
         )}

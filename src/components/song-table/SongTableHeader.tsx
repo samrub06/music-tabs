@@ -108,70 +108,67 @@ function BulkActions({
   onCreatePlaylist?: () => void
   t: (key: string) => string
 }) {
-  const countLabel =
-    selectedCount === 1
-      ? `1 ${t('songs.songCount')} ${t('songs.selected')}`
-      : `${selectedCount} ${t('songs.songCountPlural')} ${t('songs.selected')}`
-
   return (
-    <div className="space-y-3">
-      <p className="text-sm font-medium text-primary">{countLabel}</p>
-      <div className="flex flex-wrap gap-2">
-        {onMoveToFolder && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onMoveToFolder}
-            className="min-h-10 gap-1.5"
-          >
-            <FolderIcon className="h-4 w-4" />
-            {t('songs.moveToFolder')}
-          </Button>
-        )}
-        {onCreatePlaylist && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onCreatePlaylist}
-            className="min-h-10 gap-1.5"
-          >
-            <SparklesIcon className="h-4 w-4" />
-            {t('songs.createPlaylist')}
-          </Button>
-        )}
+    <div className="flex items-center gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {onMoveToFolder && (
         <Button
           type="button"
-          variant="destructive"
+          variant="outline"
           size="sm"
-          onClick={onDeleteSelected}
-          className="min-h-10 gap-1.5"
+          onClick={onMoveToFolder}
+          className="h-9 shrink-0 gap-1.5 whitespace-nowrap px-2.5"
         >
-          <TrashIcon className="h-4 w-4" />
-          {t('songs.deleteSelected')}
+          <FolderIcon className="h-4 w-4 shrink-0" />
+          {t('songs.moveToFolder')}
         </Button>
-        {showDeleteAll && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onDeleteAll}
-            className="min-h-10 border-destructive/40 text-destructive hover:bg-destructive/10"
-          >
-            {t('songs.deleteAll')}
-          </Button>
-        )}
+      )}
+      {onCreatePlaylist && (
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="sm"
-          onClick={onCancelSelection}
-          className="min-h-10"
+          onClick={onCreatePlaylist}
+          className="h-9 shrink-0 gap-1.5 whitespace-nowrap px-2.5"
         >
-          {t('songs.clearSelection')}
+          <SparklesIcon className="h-4 w-4 shrink-0" />
+          {t('songs.createPlaylist')}
         </Button>
-      </div>
+      )}
+      <Button
+        type="button"
+        variant="destructive"
+        size="sm"
+        onClick={onDeleteSelected}
+        className="h-9 w-9 shrink-0 p-0 sm:w-auto sm:gap-1.5 sm:px-2.5"
+        aria-label={t('songs.deleteSelected')}
+        title={t('songs.deleteSelected')}
+      >
+        <TrashIcon className="h-4 w-4 shrink-0" />
+        <span className="hidden sm:inline">{t('songs.deleteSelected')}</span>
+      </Button>
+      {showDeleteAll && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onDeleteAll}
+          className="h-9 w-9 shrink-0 border-destructive/40 p-0 text-destructive hover:bg-destructive/10 sm:w-auto sm:px-2.5"
+          aria-label={t('songs.deleteAll')}
+          title={t('songs.deleteAll')}
+        >
+          <TrashIcon className="h-4 w-4 shrink-0 sm:hidden" />
+          <span className="hidden sm:inline">{t('songs.deleteAll')}</span>
+        </Button>
+      )}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onCancelSelection}
+        className="h-9 shrink-0 whitespace-nowrap px-2.5"
+      >
+        {t('songs.clearSelection')}
+      </Button>
     </div>
   )
 }

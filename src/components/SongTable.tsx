@@ -2,8 +2,16 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import { Song, Folder, Playlist } from '@/types';
-import { TrashIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import EditSongForm from './EditSongForm';
 import SongTableHeader from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
@@ -327,13 +335,46 @@ export default function SongTable({
     }
   }, [isSelectMode]);
 
-  const showBulkBar = hasUser && (isSelectMode || selectedSongs.size > 0);
-
   return (
     <div>
-      {showBulkBar && (
-        <div className="sticky top-0 z-20 border-b border-border bg-muted/60 px-4 py-3 backdrop-blur-md sm:px-6">
-          <SongTableHeader
+      {hasUser && isSelectMode && sortedSongs.length > 0 && (
+        <div className="border-b border-border">
+          <div className="flex items-center justify-between gap-3 px-4 py-2 sm:gap-3 sm:py-2.5">
+            <label
+              htmlFor="select-all-songs"
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 sm:gap-3"
+              dir="ltr"
+            >
+              <span className="w-4 shrink-0 sm:hidden" aria-hidden />
+              <input
+                id="select-all-songs"
+                type="checkbox"
+                checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                className="-ms-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:ms-0 sm:h-4 sm:w-4"
+              />
+              <span
+                className="h-8 w-8 shrink-0 sm:h-10 sm:w-10"
+                aria-hidden
+              />
+              <span className="text-sm font-medium text-foreground">{t('songs.all')}</span>
+            </label>
+            {selectedSongs.size > 0 ? (
+              <span className="shrink-0 text-sm font-medium text-primary whitespace-nowrap">
+                {selectedSongs.size === 1
+                  ? `1 ${t('songs.songCount')} ${t('songs.selected')}`
+                  : `${selectedSongs.size} ${t('songs.songCountPlural')} ${t('songs.selected')}`}
+              </span>
+            ) : (
+              <span className="shrink-0 text-sm text-muted-foreground">
+                {t('songs.selectSongsHint')}
+              </span>
+            )}
+          </div>
+
+          {selectedSongs.size > 0 && (
+            <div className="border-t border-border px-4 py-2">
+              <SongTableHeader
             sortedSongsCount={sortedSongs.length}
             selectedCount={selectedSongs.size}
             currentFolder={currentFolder}
@@ -343,29 +384,15 @@ export default function SongTable({
             onCancelSelection={() => setSelectedSongs(new Set())}
             onDeleteSelected={() => handleBulkDelete('selected')}
             onDeleteAll={() => handleBulkDelete('all')}
-            onMoveToFolder={
-              selectedSongs.size > 0 ? () => setShowMoveModal(true) : undefined
-            }
-            onCreatePlaylist={
-              selectedSongs.size > 0 ? () => setShowPlaylistModal(true) : undefined
-            }
+            onMoveToFolder={() => setShowMoveModal(true)}
+            onCreatePlaylist={() => setShowPlaylistModal(true)}
             isSelectMode={isSelectMode}
             onToggleSelectMode={externalOnToggleSelectMode || (() => {})}
             onExitSelectMode={externalOnToggleSelectMode}
             t={t}
-          />
-        </div>
-      )}
-
-      {hasUser && isSelectMode && sortedSongs.length > 0 && (
-        <div className="flex items-center border-b border-border px-4 py-2 sm:px-6">
-          <input
-            type="checkbox"
-            checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
-            onChange={(e) => handleSelectAll(e.target.checked)}
-            className="h-5 w-5 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
-            aria-label={t('songs.selected')}
-          />
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -404,43 +431,43 @@ export default function SongTable({
         onUpdate={onUpdateSong || (async () => {})}
       />
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border border-gray-300 dark:border-gray-700 w-96 max-w-[90vw] shadow-lg rounded-md bg-white dark:bg-gray-800">
-            <div className="mt-3 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30">
-                <TrashIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mt-4">
-                {deleteType === 'all' ? t('songs.confirmDeleteAll') : t('songs.confirmDeleteSelected')}
-              </h3>
-              <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {deleteType === 'all' 
-                    ? t('songs.confirmDeleteAllMessage')
-                    : t('songs.confirmDeleteSelectedMessage').replace('{count}', selectedSongs.size.toString())
-                  }
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-4">
-                <button
-                  onClick={cancelBulkDelete}
-                  className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-lg shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-[52px] sm:min-h-0"
-                >
-                  {t('songs.cancel')}
-                </button>
-                <button
-                  onClick={confirmBulkDelete}
-                  className="px-6 py-3 sm:px-4 sm:py-2 bg-red-600 text-white text-base font-medium rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[52px] sm:min-h-0"
-                >
-                  {t('songs.delete')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showDeleteConfirm}
+        onOpenChange={(open) => {
+          if (!open) cancelBulkDelete();
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {deleteType === 'all'
+                ? t('songs.confirmDeleteAll')
+                : t('songs.confirmDeleteSelected')}
+            </DialogTitle>
+            <DialogDescription>
+              {deleteType === 'all'
+                ? t('songs.confirmDeleteAllMessage')
+                : t('songs.confirmDeleteSelectedMessage').replace(
+                    '{count}',
+                    String(selectedSongs.size)
+                  )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={cancelBulkDelete} className="min-h-11 sm:min-h-9">
+              {t('songs.cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void confirmBulkDelete()}
+              className="min-h-11 sm:min-h-9"
+            >
+              {t('songs.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Move to Folder Modal */}
       <MoveToFolderModal
