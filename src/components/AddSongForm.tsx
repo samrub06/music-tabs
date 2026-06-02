@@ -416,12 +416,7 @@ export default function AddSongForm({
       )}
 
       {!isSearching && showSearchResults && searchResults.length > 0 && (
-        <div
-          className={cn(
-            'overflow-y-auto',
-            variant === 'page' ? 'min-h-0 flex-1' : 'max-h-56 sm:max-h-64'
-          )}
-        >
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-scrollbar">
           <p className="pb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('songForm.searchResults')} ({searchResults.length})
           </p>
@@ -494,13 +489,18 @@ export default function AddSongForm({
     </div>
   )
 
+  const searchResultsScrollInList =
+    activeTab === 'search' && showSearchResults && searchResults.length > 0
+
   const formBody = (
     <div
       className={cn(
         'min-h-0 flex-1 overscroll-y-contain px-4 py-4',
-        variant === 'page'
-          ? 'flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom))]'
-          : 'overflow-y-auto pb-6'
+        'flex flex-col pb-6',
+        variant === 'page' && 'pb-[calc(1rem+env(safe-area-inset-bottom))]',
+        searchResultsScrollInList
+          ? 'overflow-hidden'
+          : 'overflow-y-auto overflow-scrollbar'
       )}
     >
           {message && (
@@ -531,7 +531,9 @@ export default function AddSongForm({
             <div
               className={cn(
                 'space-y-3',
-                variant === 'page' && showSearchResults && 'flex min-h-0 flex-1 flex-col'
+                showSearchResults &&
+                  searchResults.length > 0 &&
+                  'flex min-h-0 flex-1 flex-col'
               )}
             >
               <div className="relative">
@@ -737,16 +739,7 @@ export default function AddSongForm({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className={cn(
-          'z-[100] flex flex-col gap-0 overflow-hidden rounded-2xl border-0 bg-background p-0 shadow-lg',
-          'max-lg:fixed max-lg:inset-x-4 max-lg:top-[max(0.75rem,env(safe-area-inset-top,0px))]',
-          'max-lg:bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] max-lg:left-4 max-lg:right-4',
-          'max-lg:h-auto max-lg:w-auto max-lg:max-h-none max-lg:max-w-none',
-          'max-lg:translate-x-0 max-lg:translate-y-0',
-          'sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:right-auto sm:inset-x-auto',
-          'sm:h-auto sm:w-[calc(100%-2rem)] sm:max-w-xl sm:max-h-[min(88dvh,680px)]',
-          'sm:translate-x-[-50%] sm:translate-y-[-50%]'
-        )}
+        className="flex max-h-[min(88dvh,680px)] w-[calc(100%-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl"
       >
         <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left">
           <DialogTitle>{t('songForm.addSong')}</DialogTitle>

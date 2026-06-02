@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useAddSongModal } from '@/context/AddSongModalContext'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
@@ -59,6 +60,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     createdAt: t('songs.createdAt')
   }
   const router = useRouter()
+  const { openAddSongModal, navigateToAddSongPage } = useAddSongModal()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -90,16 +92,13 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
 
-  const goToAddSong = (opts?: { query?: string; autoSearch?: boolean }) => {
-    const params = new URLSearchParams()
-    if (opts?.query) {
-      params.set('q', opts.query)
-      if (opts.autoSearch) params.set('autoSearch', '1')
-    }
+  const openAddSongPageForArtist = (query: string) => {
     const folderId = selectedFolder || searchParams?.get('folder') || undefined
-    if (folderId) params.set('folderId', folderId)
-    const qs = params.toString()
-    router.push(`/add-song${qs ? `?${qs}` : ''}`)
+    navigateToAddSongPage({
+      query,
+      autoSearch: true,
+      folderId,
+    })
   }
 
   // Load recent searches from localStorage on mount
@@ -484,7 +483,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </button>
           <button
             type="button"
-            onClick={() => goToAddSong()}
+            onClick={() => openAddSongModal()}
             className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center"
             aria-label={t('navigation.addSong')}
           >
@@ -599,9 +598,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               {searchQuery.trim() && (
                 <button
                   type="button"
-                  onClick={() =>
-                    goToAddSong({ query: searchQuery.trim(), autoSearch: true })
-                  }
+                  onClick={() => openAddSongPageForArtist(searchQuery.trim())}
                   className="mt-3 w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}
@@ -615,9 +612,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               {searchQuery.trim() && (
                 <button
                   type="button"
-                  onClick={() =>
-                    goToAddSong({ query: searchQuery.trim(), autoSearch: true })
-                  }
+                  onClick={() => openAddSongPageForArtist(searchQuery.trim())}
                   className="mt-3 w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}

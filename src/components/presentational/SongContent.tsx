@@ -6,8 +6,10 @@ import {
   MusicalNoteIcon,
   PencilSquareIcon,
   HeartIcon,
+  PlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { useAddSongModal } from '@/context/AddSongModalContext';
 import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
@@ -20,7 +22,6 @@ import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Piano, Guitar } from 'lucide-react';
-
 import Link from 'next/link';
 import {
   Collapsible,
@@ -110,6 +111,7 @@ export default function SongContent({
   onToggleEasyChordMode,
 }: SongContentProps) {
   const { t } = useLanguage();
+  const { openAddSongModal, navigateToAddSongPage } = useAddSongModal();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
   const lastPinchTime = useRef(0);
   const onFontSizeChangeRef = useRef(onFontSizeChange);
@@ -224,16 +226,34 @@ export default function SongContent({
                 {transposedSong?.title || ''}
               </h2>
               {transposedSong?.author && (
-                <Link
-                  href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
-                  className="mt-0.5 block truncate text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigateToAddSongPage({
+                      query: transposedSong.author,
+                      autoSearch: true,
+                    })
+                  }
+                  className="mt-0.5 block max-w-full truncate text-left text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
                   dir={/[\u0590-\u05FF]/.test(transposedSong.author) ? 'rtl' : 'ltr'}
                 >
                   {transposedSong.author}
-                </Link>
+                </button>
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {isAuthenticated && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => openAddSongModal()}
+                  className="min-h-[44px] h-11 w-11 min-w-[44px] rounded-xl p-0"
+                  aria-label={t('navigation.addSong')}
+                  title={t('navigation.addSong')}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                </Button>
+              )}
               {onToggleEdit && (
                 <Button
                   type="button"

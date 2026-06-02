@@ -119,6 +119,26 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .overflow-scrollbar {
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
+
+  .overflow-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .overflow-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: hsl(var(--muted-foreground) / 0.35);
+  }
+
+  .overflow-scrollbar::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
 }
 
 @layer base {
