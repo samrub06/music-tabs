@@ -137,13 +137,13 @@ export default function SongViewer({
 }: SongViewerProps) {
   if (!song) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
+      <div className="flex flex-1 items-center justify-center bg-background">
         <div className="text-center">
-          <MusicalNoteIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <MusicalNoteIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-2 text-sm font-medium text-foreground">
             Aucune chanson sélectionnée
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             Choisissez une chanson dans la liste pour la visualiser.
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function SongViewer({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-screen md:min-h-0 bg-white overflow-hidden">
+    <div className="flex flex-col h-full min-h-screen md:min-h-0 bg-background overflow-hidden">
       {/* Header */}
       <SongHeader
         song={song}

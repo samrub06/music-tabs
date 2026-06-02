@@ -81,7 +81,7 @@ export default function BottomNavigation() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-black/[0.06] dark:border-white/[0.08] lg:hidden safe-area-inset-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 lg:hidden safe-area-inset-bottom">
         <div className="flex items-stretch h-16 px-0.5">
           {navItems.map((item) => {
             const IconComponent = item.isActive ? item.iconSolid : item.icon;
@@ -92,8 +92,8 @@ export default function BottomNavigation() {
                 prefetch={true}
                 className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
                   item.isActive
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <IconComponent className="h-5 w-5 flex-shrink-0" />
@@ -109,8 +109,8 @@ export default function BottomNavigation() {
             onClick={() => setIsMoreMenuOpen((open) => !open)}
             className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
               isMoreActive || isMoreMenuOpen
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
             aria-label={t('navigation.more')}
           >

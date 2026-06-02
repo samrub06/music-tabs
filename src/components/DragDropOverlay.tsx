@@ -27,13 +27,13 @@ function DroppableFolderButton({
       className={`
         flex items-center justify-center px-2 py-1.5 rounded-md border transition-all flex-shrink-0
         ${isOver
-          ? 'bg-blue-200 border-blue-500 border-dashed scale-105 shadow-md'
-          : 'bg-white border-blue-300 hover:bg-blue-50'
+          ? 'scale-105 border-primary border-dashed bg-primary/20 shadow-md'
+          : 'border-border bg-muted hover:bg-muted/80'
         }
       `}
     >
-      <FolderIcon className="h-3 w-3 mr-1.5 text-blue-600 flex-shrink-0" />
-      <span className="text-xs font-medium text-gray-900 truncate max-w-[80px]">
+      <FolderIcon className="mr-1.5 h-3 w-3 shrink-0 text-primary" />
+      <span className="max-w-[80px] truncate text-xs font-medium text-foreground">
         {folderName}
       </span>
     </div>
@@ -44,9 +44,9 @@ export default function DragDropOverlay({ folders, isDragging }: DragDropOverlay
   if (!isDragging) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[45] bg-white border-t-2 border-blue-500 shadow-2xl lg:hidden animate-in slide-in-from-bottom-5">
+    <div className="fixed bottom-0 left-0 right-0 z-[45] border-t-2 border-primary bg-background shadow-2xl lg:hidden animate-in slide-in-from-bottom-5">
       <div className="px-2 py-2 max-h-[35vh] overflow-y-auto">
-        <div className="text-[10px] font-semibold text-gray-600 mb-1.5 uppercase tracking-wide px-1">
+        <div className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
           Déposer dans un dossier :
         </div>
         <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 px-1">

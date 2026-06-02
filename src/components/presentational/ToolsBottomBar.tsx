@@ -145,7 +145,8 @@ export default function ToolsBottomBar({
   const currentKey = getCurrentKey();
   const availableKeys = getAvailableKeys();
 
-  const cardClass = 'rounded-2xl bg-white/70 dark:bg-white/[0.06] backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] p-3.5';
+  const cardClass =
+    'rounded-2xl border border-border bg-card/80 p-3.5 backdrop-blur-md dark:bg-card/50';
   const labelClass = 'text-[11px] font-medium text-muted-foreground mb-2.5';
   const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
   const segmentOptionClass = (active: boolean) =>
@@ -153,7 +154,7 @@ export default function ToolsBottomBar({
 
   return (
     <div
-      className="flex flex-col flex-shrink-0 overflow-hidden rounded-t-[1.75rem] border border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background/95 dark:bg-background/98 backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
+      className="flex flex-shrink-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-border bg-background backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
       style={{ height: `${height}px` }}
     >
       <div

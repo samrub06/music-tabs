@@ -2,19 +2,9 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import { Song, Folder, Playlist } from '@/types';
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  MusicalNoteIcon,
-  PlayIcon,
-  TrashIcon,
-  XMarkIcon,
-  ArrowsUpDownIcon
-} from '@heroicons/react/24/outline';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useMemo, useState } from 'react';
 import EditSongForm from './EditSongForm';
-import FolderDropdown from './FolderDropdown';
-import ColumnConfig from './ColumnConfig';
 import SongTableHeader from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
 import SongTableEmptyState from './song-table/SongTableEmptyState';
@@ -94,8 +84,6 @@ export default function SongTable({
       return prev;
     });
   }, []);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
   // Filter songs based on search query and folder/playlist
   const filteredSongs = useMemo(() => {
     let filtered = songs;
@@ -190,39 +178,6 @@ export default function SongTable({
       return 0;
     });
   }, [filteredSongs, sortField, sortDirection]);
-
-  const handleSort = (field: SortField) => {
-    if (onSortChange) {
-      // Use external sort handler
-      if (sortField === field) {
-        onSortChange(field, sortDirection === 'asc' ? 'desc' : 'asc');
-      } else {
-        onSortChange(field, 'asc');
-      }
-    } else {
-      // Use internal sort state
-      if (sortField === field) {
-        setInternalSortDirection(internalSortDirection === 'asc' ? 'desc' : 'asc');
-      } else {
-        setInternalSortField(field);
-        setInternalSortDirection('asc');
-      }
-    }
-  };
-
-  const handleToggleColumn = (column: string) => {
-    // Prevent hiding 'title' column as it's required
-    if (column === 'title') {
-      return;
-    }
-    setVisibleColumns(prev => {
-      if (prev.includes(column)) {
-        return prev.filter(col => col !== column);
-      } else {
-        return [...prev, column];
-      }
-    });
-  };
 
   const getFolderName = (folderId: string | null | undefined) => {
     if (!folderId) return t('songs.unorganized');
@@ -331,41 +286,10 @@ export default function SongTable({
     }
   }, [isSelectMode]);
 
-  const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
-    <button
-      onClick={() => handleSort(field)}
-      className="flex items-center space-x-1 text-left font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
-    >
-      <span>{children}</span>
-      {sortField === field && (
-        sortDirection === 'asc' ? 
-          <ChevronUpIcon className="h-4 w-4" /> : 
-          <ChevronDownIcon className="h-4 w-4" />
-      )}
-    </button>
-  );
-
-  // Options de tri pour mobile
-  const sortOptions = [
-    { field: 'title' as SortField, label: t('songs.title'), icon: '📝' },
-    { field: 'author' as SortField, label: t('songs.artist'), icon: '👤' },
-    { field: 'key' as SortField, label: t('songs.key'), icon: '🎵' },
-    { field: 'rating' as SortField, label: t('songs.rating'), icon: '⭐' },
-    { field: 'reviews' as SortField, label: t('songs.reviews'), icon: '👥' },
-    { field: 'difficulty' as SortField, label: t('songs.difficulty'), icon: '🎸' },
-    { field: 'version' as SortField, label: t('songs.version'), icon: '🔢' },
-    { field: 'viewCount' as SortField, label: t('songs.viewCount'), icon: '👁️' },
-    { field: 'updatedAt' as SortField, label: t('songs.modified'), icon: '📅' },
-  ];
-
-  // Don't show empty state if we have songs but they're just filtered out
-  const showEmptyState = songs.length === 0;
-
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
-      {/* Show bulk actions when songs are selected */}
+    <div>
       {selectedSongs.size > 0 && (
-        <div className="px-2 sm:px-6 py-2 sm:py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div className="border-b border-border bg-muted/40 px-4 py-3 sm:px-6">
           <SongTableHeader
             sortedSongsCount={sortedSongs.length}
             selectedCount={selectedSongs.size}
@@ -384,103 +308,44 @@ export default function SongTable({
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.08)]">
-            <tr>
-              {/* Checkbox column - Only show if user is logged in and select mode is active */}
-              {hasUser && isSelectMode && (
-                <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12 sm:w-12">
-                  <input
-                    type="checkbox"
-                    checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="h-5 w-5 sm:h-4 sm:w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                  />
-                </th>
-              )}
-              {visibleColumns.includes('title') && (
-                <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="title">{t('songs.title')}</SortButton>
-                </th>
-              )}
-              {visibleColumns.includes('author') && (
-                <th className="hidden sm:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="author">{t('songs.artist')}</SortButton>
-                </th>
-              )}
-              {visibleColumns.includes('key') && (
-                <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="key">🎵 {t('songs.key')}</SortButton>
-                </th>
-              )}
-              {visibleColumns.includes('rating') && (
-                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="rating">⭐ {t('songs.rating')}</SortButton>
-                </th>
-              )}
-              {visibleColumns.includes('reviews') && (
-                <th className="hidden xl:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="reviews">👥 {t('songs.reviews')}</SortButton>
-                </th>
-              )}
-              {visibleColumns.includes('difficulty') && (
-                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="difficulty">🎸 {t('songs.difficulty')}</SortButton>
-                </th>
-              )}
-               {visibleColumns.includes('version') && (
-                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                   <SortButton field="version">🔢 {t('songs.version')}</SortButton>
-                 </th>
-               )}
-               {visibleColumns.includes('viewCount') && (
-                 <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                   <SortButton field="viewCount">👁️ {t('songs.viewCount')}</SortButton>
-                 </th>
-               )}
-              {visibleColumns.includes('folder') && (
-                <th className="hidden md:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('songs.folder')}
-                </th>
-              )}
-              {visibleColumns.includes('updatedAt') && (
-                <th className="hidden lg:table-cell px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <SortButton field="updatedAt">{t('songs.modified')}</SortButton>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedSongs.length === 0 ? (
-              <SongTableEmptyState
-                currentFolder={currentFolder}
-                searchQuery={searchQuery}
-                getFolderName={getFolderName}
-                onResetFilters={() => onCurrentFolderChange?.(null)}
-                visibleColumnsCount={visibleColumns.length}
-                hasUser={hasUser}
-              />
-            ) : (
-              sortedSongs.map((song) => (
-                <SongTableRow
-                  key={song.id}
-                  song={song}
-                  songs={sortedSongs}
-                  folders={folders}
-                  visibleColumns={visibleColumns}
-                  isSelected={selectedSongs.has(song.id)}
-                  onSelect={(checked) => handleSelectSong(song.id, checked)}
-                  onFolderChange={handleFolderChange}
-                  hasUser={hasUser}
-                  isSelectMode={isSelectMode}
-                  t={t}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {hasUser && isSelectMode && sortedSongs.length > 0 && (
+        <div className="flex items-center border-b border-border px-4 py-2 sm:px-6">
+          <input
+            type="checkbox"
+            checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            className="h-5 w-5 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:h-4 sm:w-4"
+            aria-label={t('songs.selected')}
+          />
+        </div>
+      )}
+
+      <ul className="divide-y divide-border">
+        {sortedSongs.length === 0 ? (
+          <SongTableEmptyState
+            currentFolder={currentFolder}
+            searchQuery={searchQuery}
+            getFolderName={getFolderName}
+            onResetFilters={() => onCurrentFolderChange?.(null)}
+          />
+        ) : (
+          sortedSongs.map((song) => (
+            <SongTableRow
+              key={song.id}
+              song={song}
+              songs={sortedSongs}
+              folders={folders}
+              visibleColumns={visibleColumns}
+              isSelected={selectedSongs.has(song.id)}
+              onSelect={(checked) => handleSelectSong(song.id, checked)}
+              onFolderChange={handleFolderChange}
+              hasUser={hasUser}
+              isSelectMode={isSelectMode}
+              t={t}
+            />
+          ))
+        )}
+      </ul>
 
       {/* Edit Song Modal */}
       <EditSongForm 
