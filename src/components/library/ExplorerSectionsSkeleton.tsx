@@ -31,13 +31,33 @@ function LibraryGridSkeleton() {
   )
 }
 
+function VerticalListSkeleton() {
+  return (
+    <div className="mb-6">
+      <div className="mb-3 h-6 w-44 animate-pulse rounded bg-muted" />
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="flex items-center gap-2.5 border-b border-border/40 py-2 last:border-0"
+        >
+          <div className="h-10 w-10 shrink-0 animate-pulse rounded-md bg-muted" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ExplorerSectionsSkeleton() {
   return (
     <div className="w-full">
       <LibraryGridSkeleton />
+      <VerticalListSkeleton />
       <FeaturedSongSkeleton />
-      <HorizontalSliderSkeleton />
-      <HorizontalSliderSkeleton />
+      <VerticalListSkeleton />
       <HorizontalSliderSkeleton />
     </div>
   )

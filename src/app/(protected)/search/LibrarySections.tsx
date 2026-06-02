@@ -44,8 +44,8 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         publicPlaylists={publicPlaylists}
         showLikedCard={!!userId}
       />
+      <RecentSongsSection songs={recentSongs} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
-      <RecentSongsSection songs={recentSongs} userId={userId} />
       {userId && forYouData?.topArtist && forYouData.artistSongs.length > 0 && (
         <ForYouArtistSection
           artistName={forYouData.topArtist}
