@@ -436,18 +436,11 @@ export default function SearchClient({
                 : 'min-h-[3.5rem] border-border focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary'
             )}
           >
-            <div
-              className={cn(
-                'absolute left-0 pl-4 pointer-events-none text-muted-foreground transition-all duration-300',
-                isAIMode ? 'top-4' : 'inset-y-0 flex items-center'
-              )}
-            >
-              {isAIMode ? (
-                <SparklesIcon className="h-5 w-5 text-primary" />
-              ) : (
-                <MagnifyingGlassIcon className="h-5 w-5" />
-              )}
-            </div>
+            {isAIMode && (
+              <div className="pointer-events-none absolute left-0 top-4 pl-4 text-primary transition-all duration-300">
+                <SparklesIcon className="h-5 w-5" />
+              </div>
+            )}
 
             {isAIMode ? (
               <textarea
@@ -471,7 +464,7 @@ export default function SearchClient({
                 onKeyDown={handleKeyDown}
                 placeholder={t('search.searchPlaceholder')}
                 className={cn(
-                  'block w-full h-14 pl-12 py-4 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-5 transition-all duration-300',
+                  'block h-14 w-full border-0 bg-transparent py-4 pl-4 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none',
                   searchQuery ? 'pr-48 sm:pr-56' : 'pr-44 sm:pr-52'
                 )}
               />

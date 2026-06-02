@@ -25,14 +25,14 @@ import {
 const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
 const segmentOptionClass = (active: boolean) =>
   cn(
-    'flex-1 rounded-full px-4 py-3 min-h-[44px] text-sm font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px]',
+    'flex-1 rounded-full px-2.5 py-1.5 min-h-9 min-w-9 text-xs font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-sm',
     active
       ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
       : 'text-muted-foreground hover:text-foreground'
   );
 const toolPillClass = (active: boolean) =>
   cn(
-    'rounded-full px-4 py-3 min-h-[44px] text-sm font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px]',
+    'shrink-0 whitespace-nowrap rounded-full px-2.5 py-1.5 min-h-9 text-xs font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-sm',
     active
       ? 'bg-primary text-primary-foreground shadow-sm'
       : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -280,27 +280,30 @@ export default function SongContent({
                   chords={chords}
                 />
 
-                <div className="flex flex-wrap items-center gap-2.5 sm:gap-2">
+                <div className="flex items-center gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:pb-0.5 sm:flex-wrap sm:gap-2">
                 <div
                   onClick={() => {
                     if (!showTransposeControls) setShowTransposeControls(true);
                   }}
                   className={cn(
-                    'overflow-hidden border border-border/80 bg-muted/40 text-foreground',
+                    'shrink-0 overflow-hidden border border-border/80 bg-muted/40 text-foreground',
                     'transition-all duration-300 ease-out',
                     showTransposeControls
-                      ? 'w-auto max-w-full rounded-xl px-2 py-2'
-                      : 'w-[7.5rem] rounded-full px-4 py-3 cursor-pointer hover:bg-muted/70'
+                      ? 'rounded-lg px-1 py-1 sm:rounded-xl sm:px-2 sm:py-2'
+                      : 'cursor-pointer rounded-full px-3 py-1.5 hover:bg-muted/70 sm:px-4 sm:py-3'
                   )}
                 >
                   {!showTransposeControls ? (
-                    <div className="text-sm font-medium text-center">Transpose</div>
+                    <div className="text-xs font-medium text-center sm:text-sm">Transpose</div>
                   ) : (
-                    <div className="flex w-full flex-wrap items-center gap-2">
+                    <div
+                      className="flex flex-nowrap items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                     <select
                       value={currentKey}
                       onChange={(e) => handleKeySelect(e.target.value)}
-                      className="h-11 w-[4.5rem] rounded-xl border border-amber-200/80 bg-background/50 px-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50"
+                      className="h-8 w-11 shrink-0 rounded-lg border border-amber-200/80 bg-background/50 px-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 sm:h-11 sm:w-[4.5rem] sm:rounded-xl sm:px-2 sm:text-sm"
                     >
                       {availableKeys.map((key) => (
                         <option key={key} value={key}>
@@ -308,22 +311,22 @@ export default function SongContent({
                         </option>
                       ))}
                     </select>
-                    <div className="flex items-center shrink-0 overflow-hidden rounded-xl border border-border/80 bg-muted/40">
+                    <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-border/80 bg-muted/40 sm:rounded-xl">
                       <button
                         type="button"
-                        className="flex h-10 w-9 items-center justify-center text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+                        className="flex h-8 w-7 items-center justify-center text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9"
                         onClick={() => onSetTransposeValue?.(Math.max(-11, transposeValue - 1))}
                         disabled={transposeValue <= -11}
                         aria-label="-"
                       >
                         −
                       </button>
-                      <span className="min-w-[2.4rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+                      <span className="min-w-[1.75rem] text-center text-xs font-semibold tabular-nums text-amber-700 dark:text-amber-400 sm:min-w-[2.4rem] sm:text-sm">
                         {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
                       </span>
                       <button
                         type="button"
-                        className="flex h-10 w-9 items-center justify-center text-foreground transition-colors hover:bg-muted disabled:opacity-40"
+                        className="flex h-8 w-7 items-center justify-center text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9"
                         onClick={() => onSetTransposeValue?.(Math.min(11, transposeValue + 1))}
                         disabled={transposeValue >= 11}
                         aria-label="+"
@@ -337,10 +340,10 @@ export default function SongContent({
                         e.stopPropagation();
                         setShowTransposeControls(false);
                       }}
-                      className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600 sm:h-11 sm:w-11 sm:rounded-xl"
                       aria-label={t('common.close')}
                     >
-                      <XMarkIcon className="h-5 w-5" />
+                      <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </div>
                 )}
@@ -361,20 +364,20 @@ export default function SongContent({
                     <button
                       type="button"
                       onClick={() => onSetSelectedInstrument('piano')}
-                      className={cn(segmentOptionClass(selectedInstrument === 'piano'), 'px-3 min-w-[44px]')}
+                      className={segmentOptionClass(selectedInstrument === 'piano')}
                       aria-label={t('songHeader.piano')}
                       title={t('songHeader.piano')}
                     >
-                      <Piano className="h-4 w-4" />
+                      <Piano className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => onSetSelectedInstrument('guitar')}
-                      className={cn(segmentOptionClass(selectedInstrument === 'guitar'), 'px-3 min-w-[44px]')}
+                      className={segmentOptionClass(selectedInstrument === 'guitar')}
                       aria-label={t('songHeader.guitar')}
                       title={t('songHeader.guitar')}
                     >
-                      <Guitar className="h-4 w-4" />
+                      <Guitar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </button>
                   </div>
                 )}

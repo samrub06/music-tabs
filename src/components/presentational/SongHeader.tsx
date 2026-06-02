@@ -15,12 +15,6 @@ import {
 } from '@heroicons/react/24/outline';
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface SongHeaderProps {
   song: Song;
@@ -62,7 +56,7 @@ export default function SongHeader({
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
-      {/* Single row: back, cover+title, auto-scroll, tools, prev/next, saved or add */}
+      {/* Single row: back, cover, auto-scroll, tools, prev/next, saved or add */}
       <div className="flex items-center justify-between gap-2 p-2 sm:p-3 md:p-4 w-full min-w-0">
         <Button
           variant="ghost"
@@ -74,57 +68,22 @@ export default function SongHeader({
           <ArrowLeftIcon className="h-5 w-5" />
         </Button>
 
-        {/* Cover + title: from sm = inline; below sm = cover only, title/subtitle in dropdown on click */}
-        <div className="flex items-center gap-2 min-w-0 flex-1 sm:max-w-[50%]">
-          {/* Below sm: cover only, click opens dropdown with title + subtitle + library */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className="sm:hidden flex items-center outline-none rounded-lg focus:ring-2 focus:ring-ring focus:ring-offset-2 flex-shrink-0">
-                {song.songImageUrl ? (
-                  <img src={song.songImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                    <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-[200px] p-3 sm:hidden">
-              <p className="font-semibold text-sm break-words" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</p>
-              {song.author && (
-                <p className="text-xs text-muted-foreground mt-0.5 break-words" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>{song.author}</p>
-              )}
-              <div className="mt-2 pt-2 border-t border-border">
-                {isInLibrary ? (
-                  <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
-                    <CheckIcon className="h-4 w-4 flex-shrink-0" />
-                    <span>Dans la bibliothèque</span>
-                  </div>
-                ) : onAddToLibrary ? (
-                  <DropdownMenuItem onClick={onAddToLibrary} className="cursor-pointer">
-                    <PlusIcon className="h-4 w-4 mr-2" />
-                    Ajouter à la bibliothèque
-                  </DropdownMenuItem>
-                ) : null}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {/* From sm: cover + title + subtitle always visible */}
-          <div className="hidden sm:flex items-center gap-2 min-w-0 flex-1">
-            {song.songImageUrl ? (
-              <img src={song.songImageUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-            ) : (
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <h1 className="text-sm font-bold truncate" dir={/[\u0590-\u05FF]/.test(song.title) ? 'rtl' : 'ltr'}>{song.title}</h1>
-              {song.author && (
-                <p className="text-xs text-muted-foreground truncate" dir={/[\u0590-\u05FF]/.test(song.author) ? 'rtl' : 'ltr'}>{song.author}</p>
-              )}
+        <div className="flex min-w-0 flex-1 items-center">
+          {song.songImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={song.songImageUrl}
+              alt=""
+              className="h-10 w-10 shrink-0 rounded-lg object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted"
+              aria-hidden
+            >
+              <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
             </div>
-          </div>
+          )}
         </div>
 
         {/* Capo: show in header on all breakpoints (including mobile), same height as other buttons (h-10) */}
@@ -179,14 +138,13 @@ export default function SongHeader({
             </Button>
           </div>
         )}
-        {/* From sm: saved or add to library icon in header */}
         {isInLibrary && (
-          <div className="hidden sm:flex flex-shrink-0 p-2 text-green-600 dark:text-green-400" title="Dans la bibliothèque">
+          <div className="flex-shrink-0 p-2 text-green-600 dark:text-green-400" title="Dans la bibliothèque">
             <CheckIcon className="h-5 w-5" />
           </div>
         )}
         {!isInLibrary && onAddToLibrary && (
-          <Button variant="ghost" size="icon" className="hidden sm:flex flex-shrink-0 h-10 w-10" onClick={onAddToLibrary} aria-label="Ajouter à la bibliothèque" title="Ajouter à la bibliothèque">
+          <Button variant="ghost" size="icon" className="flex-shrink-0 h-10 w-10" onClick={onAddToLibrary} aria-label="Ajouter à la bibliothèque" title="Ajouter à la bibliothèque">
             <PlusIcon className="h-5 w-5" />
           </Button>
         )}

@@ -120,7 +120,10 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const isSongPage = pathname.includes('/song/')
   const isAddSongPage = pathname === '/add-song'
   const hideHeaderOnScroll =
-    pathname === '/songs' || pathname === '/search' || pathname.startsWith('/search/')
+    pathname === '/songs' ||
+    pathname === '/search' ||
+    pathname.startsWith('/search/') ||
+    isSongPage
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
   const currentLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
