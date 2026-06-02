@@ -2,178 +2,109 @@
 
 import { Folder } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
-import { ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
-import React, { useRef, useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { FolderIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const UNORGANIZED_VALUE = '__unorganized__';
 
 interface FolderDropdownProps {
   currentFolderId?: string;
   folders: Folder[];
   onFolderChange: (folderId: string | undefined) => Promise<void>;
   disabled?: boolean;
+  /** Larger tap target and text on mobile (song page, etc.) */
+  size?: 'compact' | 'comfortable';
 }
 
-export default function FolderDropdown({ 
-  currentFolderId, 
-  folders, 
-  onFolderChange, 
-  disabled = false 
+const triggerSizeClasses = {
+  compact:
+    'h-auto min-h-0 w-auto max-w-[10rem] gap-1.5 px-2.5 py-0.5 text-xs [&_svg]:h-3 [&_svg]:w-3',
+  comfortable:
+    'h-auto min-h-[44px] w-auto max-w-[min(14rem,75vw)] gap-2 px-4 py-2.5 text-sm [&_svg]:h-5 [&_svg]:w-5 sm:min-h-0 sm:max-w-[10rem] sm:gap-1.5 sm:px-2.5 sm:py-0.5 sm:text-xs sm:[&_svg]:h-3 sm:[&_svg]:w-3',
+} as const;
+
+export default function FolderDropdown({
+  currentFolderId,
+  folders,
+  onFolderChange,
+  disabled = false,
+  size = 'compact',
 }: FolderDropdownProps) {
   const { t } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
-  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0, width: 0 });
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [mounted, setMounted] = useState(false);
 
-  // Mount effect
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const selectValue = currentFolderId ?? UNORGANIZED_VALUE;
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
-          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen]);
-
-  const getCurrentFolderName = () => {
-    if (!currentFolderId) return t('songs.unorganized');
-    const folder = folders.find(f => f.id === currentFolderId);
-    return folder ? folder.name : t('songs.unknownFolder');
-  };
-
-  const handleFolderSelect = async (folderId: string | undefined) => {
+  const handleValueChange = (value: string) => {
     if (disabled || isLoading) return;
-    
+
+    const folderId = value === UNORGANIZED_VALUE ? undefined : value;
+    if (folderId === currentFolderId || (folderId === undefined && !currentFolderId)) {
+      return;
+    }
+
     setIsLoading(true);
-    try {
-      await onFolderChange(folderId);
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Error changing folder:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    void onFolderChange(folderId)
+      .catch((error) => {
+        console.error('Error changing folder:', error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
-
-  const calculateDropdownPosition = () => {
-    if (!buttonRef.current) return;
-    
-    const buttonRect = buttonRef.current.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const dropdownHeight = 200; // Estimation de la hauteur du dropdown
-    
-    // Stocker la position du bouton
-    setButtonPosition({
-      top: buttonRect.top,
-      left: buttonRect.left,
-      width: buttonRect.width
-    });
-    
-    // Si le dropdown déborderait en bas, on le positionne en haut
-    if (buttonRect.bottom + dropdownHeight > viewportHeight - 20) {
-      setDropdownPosition('top');
-    } else {
-      setDropdownPosition('bottom');
-    }
-  };
-
-  const handleToggle = () => {
-    if (disabled) return;
-    
-    if (!isOpen) {
-      calculateDropdownPosition();
-    }
-    setIsOpen(!isOpen);
-  };
-
-  const dropdownContent = isOpen && !disabled && mounted && (
-    <div
-      ref={dropdownRef}
-      className="fixed rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999] max-h-[300px] overflow-y-auto min-w-fit max-w-xs"
-      style={{
-        top: dropdownPosition === 'bottom' 
-          ? `${buttonPosition.top + 32}px` 
-          : `${buttonPosition.top - 200}px`,
-        left: `${buttonPosition.left}px`,
-        width: 'auto'
-      }}
-    >
-      <div className="py-1">
-        <button
-          onClick={() => handleFolderSelect(undefined)}
-          className={`
-            w-full text-left px-4 py-2 text-sm flex items-center space-x-2
-            ${!currentFolderId
-              ? 'bg-blue-50 text-blue-700'
-              : 'text-gray-700 hover:bg-gray-100'
-            }
-          `}
-        >
-          <FolderIcon className="h-4 w-4" />
-          <span>{t('songs.unorganized')}</span>
-        </button>
-        
-        {folders.map((folder) => (
-          <button
-            key={folder.id}
-            onClick={() => handleFolderSelect(folder.id)}
-            className={`
-              w-full text-left px-4 py-2 text-sm flex items-center space-x-2
-              ${currentFolderId === folder.id
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-gray-700 hover:bg-gray-100'
-              }
-            `}
-          >
-            <FolderIcon className="h-4 w-4" />
-            <span className="truncate">{folder.name}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
-    <>
-      <button
-        ref={buttonRef}
-        onClick={handleToggle}
+    <div
+      className="min-w-0"
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <Select
+        value={selectValue}
+        onValueChange={handleValueChange}
         disabled={disabled || isLoading}
-        className={`
-          inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200
-          ${disabled || isLoading 
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-            : isOpen 
-              ? 'bg-blue-100 text-blue-800 ring-2 ring-blue-200' 
-              : 'bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-blue-700 hover:ring-1 hover:ring-blue-200'
-          }
-        `}
       >
-        <FolderIcon className="h-3 w-3 mr-1.5 flex-shrink-0" />
-        <span className="truncate max-w-[100px]">
-          {isLoading ? '...' : getCurrentFolderName()}
-        </span>
-        {!disabled && !isLoading && (
-          <ChevronDownIcon className={`h-3 w-3 ml-1.5 flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-        )}
-      </button>
-
-      {mounted && createPortal(dropdownContent, document.body)}
-    </>
+        <SelectTrigger
+          className={cn(
+            'rounded-full border-0 bg-muted font-medium text-foreground shadow-none',
+            'hover:bg-primary/10 hover:text-primary focus:ring-1 focus:ring-primary/25',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            triggerSizeClasses[size]
+          )}
+          aria-label={t('songs.folder')}
+        >
+          <FolderIcon className="shrink-0 opacity-80" aria-hidden />
+          <SelectValue placeholder={isLoading ? '...' : t('songs.unorganized')} />
+        </SelectTrigger>
+        <SelectContent
+          position="popper"
+          className="max-h-[min(16rem,var(--radix-select-content-available-height))]"
+        >
+          <SelectItem
+            value={UNORGANIZED_VALUE}
+            className="py-2.5 pl-8 text-sm sm:py-1.5"
+          >
+            {t('songs.unorganized')}
+          </SelectItem>
+          {folders.map((folder) => (
+            <SelectItem
+              key={folder.id}
+              value={folder.id}
+              className="py-2.5 pl-8 text-sm sm:py-1.5"
+            >
+              {folder.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

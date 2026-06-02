@@ -1,14 +1,20 @@
 'use client'
 
 import { Folder } from '@/types'
-import { FolderIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
+import { FolderIcon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
+import { useLanguage } from '@/context/LanguageContext'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 interface MoveToFolderModalProps {
   isOpen: boolean
   onClose: () => void
   folders: Folder[]
   onMove: (folderId: string | undefined) => Promise<void>
+  onCreateFolderAndMove?: (folderName: string) => Promise<void>
   songCount: number
 }
 
@@ -17,96 +23,177 @@ export default function MoveToFolderModal({
   onClose,
   folders,
   onMove,
-  songCount
+  onCreateFolderAndMove,
+  songCount,
 }: MoveToFolderModalProps) {
+  const { t } = useLanguage()
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>(undefined)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [tab, setTab] = useState<'existing' | 'new'>('existing')
   const [isMoving, setIsMoving] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedFolderId(undefined)
+      setNewFolderName('')
+      setTab('existing')
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
-  const handleMove = async () => {
+  const handleMoveExisting = async () => {
     setIsMoving(true)
     try {
       await onMove(selectedFolderId)
       onClose()
-      setSelectedFolderId(undefined)
     } catch (error) {
       console.error('Error moving songs:', error)
-      // Error will be handled by parent component
+    } finally {
+      setIsMoving(false)
+    }
+  }
+
+  const handleCreateAndMove = async () => {
+    const trimmed = newFolderName.trim()
+    if (!trimmed || !onCreateFolderAndMove || isMoving) return
+    setIsMoving(true)
+    try {
+      await onCreateFolderAndMove(trimmed)
+      onClose()
+    } catch (error) {
+      console.error('Error creating folder:', error)
     } finally {
       setIsMoving(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 max-w-[90vw] shadow-lg rounded-md bg-white">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            Déplacer {songCount} {songCount === 1 ? 'chanson' : 'chansons'}
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+      <div
+        className="flex max-h-[85vh] w-full max-w-md flex-col rounded-t-2xl border border-border bg-background shadow-lg sm:rounded-2xl"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-border p-5">
+          <h3 className="text-lg font-semibold text-foreground">
+            {t('songs.moveSongsTitle').replace('{count}', String(songCount))}
           </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
             disabled={isMoving}
+            className="rounded-full p-2 text-muted-foreground hover:bg-muted"
+            aria-label={t('songs.cancel')}
           >
-            <XMarkIcon className="h-6 w-6" />
+            <XMarkIcon className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-3">
-            Sélectionnez un dossier de destination :
-          </p>
-          
-          <div className="space-y-1 max-h-[200px] overflow-y-auto">
+        {onCreateFolderAndMove && (
+          <div className="flex gap-1 border-b border-border p-2">
             <button
-              onClick={() => setSelectedFolderId(undefined)}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-left ${
-                selectedFolderId === undefined
-                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                  : 'text-gray-700 hover:bg-gray-100 border border-transparent'
-              }`}
+              type="button"
+              onClick={() => setTab('existing')}
+              className={cn(
+                'flex-1 rounded-lg py-2 text-sm font-medium transition-colors',
+                tab === 'existing'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
             >
-              <FolderIcon className="h-4 w-4 mr-3" />
-              Sans dossier
+              {t('songs.existingFolder')}
             </button>
-            
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => setSelectedFolderId(folder.id)}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-left ${
-                  selectedFolderId === folder.id
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
-                    : 'text-gray-700 hover:bg-gray-100 border border-transparent'
-                }`}
-              >
-                <FolderIcon className="h-4 w-4 mr-3" />
-                <span className="truncate">{folder.name}</span>
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => setTab('new')}
+              className={cn(
+                'flex-1 rounded-lg py-2 text-sm font-medium transition-colors',
+                tab === 'new'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              {t('songs.newFolder')}
+            </button>
           </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto p-5">
+          {tab === 'existing' || !onCreateFolderAndMove ? (
+            <>
+              <p className="mb-3 text-sm text-muted-foreground">{t('songs.selectDestinationFolder')}</p>
+              <div className="max-h-[220px] space-y-1 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFolderId(undefined)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors',
+                    selectedFolderId === undefined
+                      ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
+                      : 'hover:bg-muted'
+                  )}
+                >
+                  <FolderIcon className="h-5 w-5 shrink-0" />
+                  {t('songs.unorganized')}
+                </button>
+                {folders.map((folder) => (
+                  <button
+                    key={folder.id}
+                    type="button"
+                    onClick={() => setSelectedFolderId(folder.id)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors',
+                      selectedFolderId === folder.id
+                        ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
+                        : 'hover:bg-muted'
+                    )}
+                  >
+                    <FolderIcon className="h-5 w-5 shrink-0" />
+                    <span className="truncate">{folder.name}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{t('songs.newFolderDescription')}</p>
+              <div className="space-y-2">
+                <Label htmlFor="new-folder-name">{t('songs.folderName')}</Label>
+                <Input
+                  id="new-folder-name"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder={t('songs.folderNamePlaceholder')}
+                  className="h-11 rounded-xl"
+                  disabled={isMoving}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6">
-          <button
-            onClick={onClose}
-            disabled={isMoving}
-            className="px-6 py-3 sm:px-4 sm:py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-lg shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 min-h-[52px] sm:min-h-0 disabled:opacity-50"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleMove}
-            disabled={isMoving}
-            className="px-6 py-3 sm:px-4 sm:py-2 bg-blue-600 text-white text-base font-medium rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[52px] sm:min-h-0 disabled:opacity-50"
-          >
-            {isMoving ? 'Déplacement...' : 'Déplacer'}
-          </button>
+        <div className="flex flex-col-reverse gap-2 border-t border-border p-5 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isMoving} className="min-h-11">
+            {t('songs.cancel')}
+          </Button>
+          {tab === 'existing' || !onCreateFolderAndMove ? (
+            <Button type="button" onClick={() => void handleMoveExisting()} disabled={isMoving} className="min-h-11">
+              {isMoving ? t('songs.moving') : t('songs.move')}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => void handleCreateAndMove()}
+              disabled={isMoving || !newFolderName.trim()}
+              className="min-h-11 gap-1.5"
+            >
+              <PlusIcon className="h-4 w-4" />
+              {isMoving ? t('songs.moving') : t('songs.createAndMove')}
+            </Button>
+          )}
         </div>
       </div>
     </div>
   )
 }
-

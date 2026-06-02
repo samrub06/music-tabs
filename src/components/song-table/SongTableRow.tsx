@@ -71,6 +71,11 @@ export default function SongTableRow({
   const handleSongClick = () => {
     if (isDragging) return
 
+    if (isSelectMode && hasUser) {
+      onSelect(!isSelected)
+      return
+    }
+
     if (typeof window !== 'undefined') {
       const songList = songs.map((s) => s.id)
       const currentIndex = songs.findIndex((s) => s.id === song.id)
@@ -237,7 +242,7 @@ export default function SongTableRow({
           )}
         </div>
 
-        {visibleColumns.includes('folder') && (
+        {visibleColumns.includes('folder') && !isSelectMode && (
           <div className="hidden shrink-0 sm:block" onClick={(e) => e.stopPropagation()}>
             <FolderDropdown
               currentFolderId={song.folderId}

@@ -162,6 +162,8 @@ export async function addFolderAction(name: string) {
   }
   
   revalidatePath('/folders')
+  revalidatePath('/songs')
+  return created
 }
 
 export async function renameFolderAction(id: string, name: string) {

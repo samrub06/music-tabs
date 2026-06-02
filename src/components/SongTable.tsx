@@ -9,7 +9,11 @@ import SongTableHeader from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
 import SongTableEmptyState from './song-table/SongTableEmptyState';
 import MoveToFolderModal from './MoveToFolderModal';
+import CreatePlaylistModal from './CreatePlaylistModal';
 import Snackbar from './Snackbar';
+import { addFolderAction } from '@/app/(protected)/dashboard/actions';
+import { createPlaylistWithSongsAction } from '@/app/(protected)/ai-playlist/actions';
+import { useRouter } from 'next/navigation';
 
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt' | 'key' | 'rating' | 'reviews' | 'difficulty' | 'version' | 'viewCount';
 type SortDirection = 'asc' | 'desc';
@@ -69,7 +73,9 @@ export default function SongTable({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const router = useRouter();
   const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'viewCount', 'folder']);
   
   // Use external select mode if provided, otherwise default to false
@@ -201,6 +207,41 @@ export default function SongTable({
     }
   };
 
+  const handleBulkCreateFolderAndMove = async (folderName: string) => {
+    try {
+      const created = await addFolderAction(folderName);
+      const songIds = Array.from(selectedSongs);
+      await Promise.all(songIds.map((songId) => onFolderChange(songId, created.id)));
+      const message =
+        songIds.length === 1
+          ? `1 ${t('songs.songMoved')} ${t('songs.inFolder')} ${created.name}`
+          : t('songs.songsMoved').replace('{count}', String(songIds.length)) +
+            ` ${t('songs.inFolder')} ${created.name}`;
+      setSuccessMessage(message);
+      setSelectedSongs(new Set());
+      router.refresh();
+    } catch (error) {
+      console.error('Error creating folder and moving songs:', error);
+      alert(t('songs.moveError'));
+      throw error;
+    }
+  };
+
+  const handleBulkCreatePlaylist = async (name: string) => {
+    const songIds = Array.from(selectedSongs);
+    if (songIds.length === 0) return;
+    try {
+      const playlist = await createPlaylistWithSongsAction(name, '', songIds);
+      setSuccessMessage(t('songs.playlistCreated'));
+      setSelectedSongs(new Set());
+      router.push(`/playlist/${playlist.id}`);
+    } catch (error) {
+      console.error('Error creating playlist:', error);
+      alert(t('songs.playlistCreateError'));
+      throw error;
+    }
+  };
+
   // Handle bulk move to folder
   const handleBulkMove = async (folderId: string | undefined) => {
     try {
@@ -286,10 +327,12 @@ export default function SongTable({
     }
   }, [isSelectMode]);
 
+  const showBulkBar = hasUser && (isSelectMode || selectedSongs.size > 0);
+
   return (
     <div>
-      {selectedSongs.size > 0 && (
-        <div className="border-b border-border bg-muted/40 px-4 py-3 sm:px-6">
+      {showBulkBar && (
+        <div className="sticky top-0 z-20 border-b border-border bg-muted/60 px-4 py-3 backdrop-blur-md sm:px-6">
           <SongTableHeader
             sortedSongsCount={sortedSongs.length}
             selectedCount={selectedSongs.size}
@@ -300,9 +343,15 @@ export default function SongTable({
             onCancelSelection={() => setSelectedSongs(new Set())}
             onDeleteSelected={() => handleBulkDelete('selected')}
             onDeleteAll={() => handleBulkDelete('all')}
-            onMoveToFolder={selectedSongs.size > 0 ? () => setShowMoveModal(true) : undefined}
+            onMoveToFolder={
+              selectedSongs.size > 0 ? () => setShowMoveModal(true) : undefined
+            }
+            onCreatePlaylist={
+              selectedSongs.size > 0 ? () => setShowPlaylistModal(true) : undefined
+            }
             isSelectMode={isSelectMode}
             onToggleSelectMode={externalOnToggleSelectMode || (() => {})}
+            onExitSelectMode={externalOnToggleSelectMode}
             t={t}
           />
         </div>
@@ -399,7 +448,15 @@ export default function SongTable({
         onClose={() => setShowMoveModal(false)}
         folders={folders}
         onMove={handleBulkMove}
+        onCreateFolderAndMove={handleBulkCreateFolderAndMove}
         songCount={selectedSongs.size}
+      />
+
+      <CreatePlaylistModal
+        isOpen={showPlaylistModal}
+        onClose={() => setShowPlaylistModal(false)}
+        songCount={selectedSongs.size}
+        onCreate={handleBulkCreatePlaylist}
       />
 
       {/* Success Snackbar */}

@@ -5,6 +5,7 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
 
 const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
 const MAX_RECENT_SEARCHES = 10
@@ -534,6 +535,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </div>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 shrink-0 lg:ml-auto">
+            {view === 'table' && (
+              <SelectModeToggleButton
+                isSelectMode={isSelectMode}
+                onToggle={toggleSelectMode}
+                t={t}
+                className="mr-0.5"
+              />
+            )}
             <button
               type="button"
               className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${

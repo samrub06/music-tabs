@@ -459,14 +459,12 @@ export default function SongContent({
                 </div>
 
                 {isAuthenticated && onFolderChange && (
-                  <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {t('songs.folder')}
-                    </span>
+                  <div className="border-t border-border/60 pt-2.5">
                     <FolderDropdown
                       currentFolderId={currentFolderId}
                       folders={folders}
                       onFolderChange={onFolderChange}
+                      size="comfortable"
                     />
                   </div>
                 )}
