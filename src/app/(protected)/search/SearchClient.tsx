@@ -250,6 +250,13 @@ export default function SearchClient({
     performSearch(q)
   }, [searchParams, performSearch])
 
+  const resizeAiTextarea = useCallback(() => {
+    const el = aiTextareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }, [])
+
   // Handle search input change — reset search session when cleared so recents & library show again
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
@@ -259,7 +266,14 @@ export default function SearchClient({
       setHasSearched(false)
       setMessage(null)
     }
+    if (isAIMode) {
+      requestAnimationFrame(resizeAiTextarea)
+    }
   }
+
+  useEffect(() => {
+    if (isAIMode) resizeAiTextarea()
+  }, [isAIMode, searchQuery, resizeAiTextarea])
 
   const handleSubmitSearch = () => {
     const q = searchQuery.trim()
@@ -432,132 +446,131 @@ export default function SearchClient({
             className={cn(
               'relative rounded-xl border bg-card transition-all duration-300 ease-in-out',
               isAIMode
-                ? 'min-h-[8.5rem] border-primary/40 ring-2 ring-primary/15 shadow-sm'
+                ? 'border-primary/40 ring-2 ring-primary/15 shadow-sm'
                 : 'min-h-[3.5rem] border-border focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary'
             )}
           >
-            {isAIMode && (
-              <div className="pointer-events-none absolute left-0 top-4 pl-4 text-primary transition-all duration-300">
-                <SparklesIcon className="h-5 w-5" />
-              </div>
-            )}
-
             {isAIMode ? (
-              <textarea
-                ref={aiTextareaRef}
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t('search.aiPlaceholder')}
-                rows={3}
-                className={cn(
-                  'block w-full min-h-[8.5rem] pl-12 pt-4 pb-3 border-0 bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-base leading-relaxed resize-none transition-all duration-300',
-                  searchQuery ? 'pr-44 sm:pr-52' : 'pr-40 sm:pr-48'
-                )}
-              />
-            ) : (
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t('search.searchPlaceholder')}
-                className={cn(
-                  'block h-14 w-full border-0 bg-transparent py-4 pl-4 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none',
-                  !showAIModeToggle
-                    ? queryTrimmed
-                      ? 'pr-20 sm:pr-24'
-                      : 'pr-12 sm:pr-14'
-                    : searchQuery
-                      ? 'pr-48 sm:pr-56'
-                      : 'pr-44 sm:pr-52'
-                )}
-              />
-            )}
-
-            <div
-              className={cn(
-                'absolute right-0 flex items-center gap-1 pr-2 sm:pr-3',
-                isAIMode ? 'top-3' : 'inset-y-0'
-              )}
-            >
-              {!isAIMode && (
-                <button
-                  type="button"
-                  onClick={handleSubmitSearch}
-                  disabled={!queryTrimmed || isSearching}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
-                  aria-label={t('common.search')}
-                >
-                  {isSearching ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  ) : (
-                    <MagnifyingGlassIcon className="h-5 w-5" />
-                  )}
-                </button>
-              )}
-              {isAIMode && (
-                <button
-                  type="button"
-                  onClick={handleSubmitSearch}
-                  disabled={!queryTrimmed || isSearching}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
-                  aria-label={t('search.askWithAI')}
-                >
-                  {isSearching ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  ) : (
-                    <SparklesIcon className="h-5 w-5" />
-                  )}
-                </button>
-              )}
-              {showAIModeToggle && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setIsAIMode((prev) => !prev)
-                  }}
-                  className={cn(
-                    'flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors',
-                    isAIMode
-                      ? 'text-primary hover:bg-primary/10'
-                      : 'text-purple-600 hover:bg-purple-500/10 dark:text-purple-400'
-                  )}
-                  aria-label={
-                    isAIMode ? t('search.backToNormalSearch') : t('search.enableAIStyleSearch')
-                  }
-                  aria-pressed={isAIMode}
-                  type="button"
-                >
-                  {isAIMode ? (
-                    <>
-                      <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-primary" />
-                      <span className="text-xs font-medium whitespace-nowrap text-primary">
+              <div className="flex min-h-[3.5rem] items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3 sm:py-2.5">
+                <SparklesIcon
+                  className="h-5 w-5 shrink-0 text-primary"
+                  aria-hidden
+                />
+                <textarea
+                  ref={aiTextareaRef}
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t('search.aiPlaceholder')}
+                  rows={1}
+                  className="min-h-[1.5rem] max-h-[7.5rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-1 text-base leading-snug text-foreground placeholder:text-muted-foreground focus:outline-none sm:leading-normal"
+                />
+                <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+                  <button
+                    type="button"
+                    onClick={handleSubmitSearch}
+                    disabled={!queryTrimmed || isSearching}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                    aria-label={t('search.askWithAI')}
+                  >
+                    {isSearching ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    ) : (
+                      <SparklesIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                  {showAIModeToggle && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setIsAIMode(false)
+                      }}
+                      className="flex min-h-9 max-w-[7.5rem] shrink-0 items-center gap-1 rounded-lg px-1.5 py-1 text-primary transition-colors hover:bg-primary/10 sm:max-w-none sm:gap-1.5 sm:px-2 sm:py-1.5"
+                      aria-label={t('search.backToNormalSearch')}
+                      type="button"
+                    >
+                      <MagnifyingGlassIcon className="h-4 w-4 shrink-0" />
+                      <span className="truncate text-xs font-medium sm:whitespace-nowrap">
                         {t('search.backToNormalSearch')}
                       </span>
-                    </>
-                  ) : (
-                    <>
-                      <SparklesIcon className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-                      <span className="text-xs font-medium whitespace-nowrap text-purple-600 dark:text-purple-400">
+                    </button>
+                  )}
+                  {searchQuery && !isSearching && (
+                    <button
+                      onClick={handleClearSearch}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      type="button"
+                      aria-label={t('common.clear')}
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={t('search.searchPlaceholder')}
+                  className={cn(
+                    'block h-14 w-full border-0 bg-transparent py-4 pl-4 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none',
+                    !showAIModeToggle
+                      ? queryTrimmed
+                        ? 'pr-20 sm:pr-24'
+                        : 'pr-12 sm:pr-14'
+                      : searchQuery
+                        ? 'pr-48 sm:pr-56'
+                        : 'pr-44 sm:pr-52'
+                  )}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2 sm:pr-3">
+                  <button
+                    type="button"
+                    onClick={handleSubmitSearch}
+                    disabled={!queryTrimmed || isSearching}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                    aria-label={t('common.search')}
+                  >
+                    {isSearching ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    ) : (
+                      <MagnifyingGlassIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                  {showAIModeToggle && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setIsAIMode(true)
+                      }}
+                      className="flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-purple-600 transition-colors hover:bg-purple-500/10 dark:text-purple-400"
+                      aria-label={t('search.enableAIStyleSearch')}
+                      aria-pressed={false}
+                      type="button"
+                    >
+                      <SparklesIcon className="h-4 w-4 shrink-0" />
+                      <span className="hidden text-xs font-medium whitespace-nowrap sm:inline">
                         {t('search.askWithAI')}
                       </span>
-                    </>
+                    </button>
                   )}
-                </button>
-              )}
-              {searchQuery && !isSearching && (
-                <button
-                  onClick={handleClearSearch}
-                  className="flex items-center text-muted-foreground hover:text-foreground p-1"
-                  type="button"
-                  aria-label={t('common.clear')}
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              )}
-            </div>
+                  {searchQuery && !isSearching && (
+                    <button
+                      onClick={handleClearSearch}
+                      className="flex items-center p-1 text-muted-foreground hover:text-foreground"
+                      type="button"
+                      aria-label={t('common.clear')}
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {showAISuggestions && (
