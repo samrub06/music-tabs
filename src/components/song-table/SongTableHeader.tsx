@@ -1,13 +1,20 @@
 'use client'
 
 import {
-  CheckIcon,
+  EllipsisHorizontalIcon,
   FolderIcon,
   TrashIcon,
   XMarkIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
 interface SongTableHeaderProps {
@@ -89,8 +96,7 @@ export default function SongTableHeader({
   )
 }
 
-function BulkActions({
-  selectedCount,
+export function SongBulkActions({
   showDeleteAll,
   onCancelSelection,
   onDeleteSelected,
@@ -99,7 +105,6 @@ function BulkActions({
   onCreatePlaylist,
   t,
 }: {
-  selectedCount: number
   showDeleteAll: boolean
   onCancelSelection: () => void
   onDeleteSelected: () => void
@@ -109,68 +114,72 @@ function BulkActions({
   t: (key: string) => string
 }) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex shrink-0 items-center gap-2">
       {onMoveToFolder && (
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="icon"
           onClick={onMoveToFolder}
-          className="h-9 shrink-0 gap-1.5 whitespace-nowrap px-2.5"
+          className="h-8 w-8"
+          aria-label={t('songs.moveToFolder')}
+          title={t('songs.moveToFolder')}
         >
-          <FolderIcon className="h-4 w-4 shrink-0" />
-          {t('songs.moveToFolder')}
-        </Button>
-      )}
-      {onCreatePlaylist && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onCreatePlaylist}
-          className="h-9 shrink-0 gap-1.5 whitespace-nowrap px-2.5"
-        >
-          <SparklesIcon className="h-4 w-4 shrink-0" />
-          {t('songs.createPlaylist')}
+          <FolderIcon className="h-4 w-4" />
         </Button>
       )}
       <Button
         type="button"
         variant="destructive"
-        size="sm"
+        size="icon"
         onClick={onDeleteSelected}
-        className="h-9 w-9 shrink-0 p-0 sm:w-auto sm:gap-1.5 sm:px-2.5"
+        className="h-8 w-8"
         aria-label={t('songs.deleteSelected')}
         title={t('songs.deleteSelected')}
       >
-        <TrashIcon className="h-4 w-4 shrink-0" />
-        <span className="hidden sm:inline">{t('songs.deleteSelected')}</span>
+        <TrashIcon className="h-4 w-4" />
       </Button>
-      {showDeleteAll && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onDeleteAll}
-          className="h-9 w-9 shrink-0 border-destructive/40 p-0 text-destructive hover:bg-destructive/10 sm:w-auto sm:px-2.5"
-          aria-label={t('songs.deleteAll')}
-          title={t('songs.deleteAll')}
-        >
-          <TrashIcon className="h-4 w-4 shrink-0 sm:hidden" />
-          <span className="hidden sm:inline">{t('songs.deleteAll')}</span>
-        </Button>
-      )}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={onCancelSelection}
-        className="h-9 shrink-0 whitespace-nowrap px-2.5"
-      >
-        {t('songs.clearSelection')}
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            aria-label={t('songs.moreActions')}
+          >
+            <EllipsisHorizontalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          {onCreatePlaylist && (
+            <DropdownMenuItem onClick={onCreatePlaylist}>
+              <SparklesIcon className="h-4 w-4" />
+              {t('songs.createPlaylist')}
+            </DropdownMenuItem>
+          )}
+          {showDeleteAll && (
+            <DropdownMenuItem
+              onClick={onDeleteAll}
+              className="text-destructive focus:text-destructive"
+            >
+              <TrashIcon className="h-4 w-4" />
+              {t('songs.deleteAll')}
+            </DropdownMenuItem>
+          )}
+          {(onCreatePlaylist || showDeleteAll) && <DropdownMenuSeparator />}
+          <DropdownMenuItem onClick={onCancelSelection}>
+            {t('songs.clearSelection')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
+}
+
+function BulkActions(props: Parameters<typeof SongBulkActions>[0] & { selectedCount: number }) {
+  const { selectedCount: _selectedCount, ...rest } = props
+  return <SongBulkActions {...rest} />
 }
 
 function SongCountDisplay({
@@ -221,18 +230,22 @@ export function SelectModeToggleButton({
       type="button"
       onClick={onToggle}
       className={cn(
-        'inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all',
+        'flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
         isSelectMode
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+          : 'text-muted-foreground hover:text-foreground',
         className
       )}
       aria-pressed={isSelectMode}
+      title={isSelectMode ? t('songs.exitSelectMode') : t('songs.select')}
     >
       {isSelectMode ? (
-        <CheckIcon className="h-4 w-4" />
+        <XMarkIcon className="h-4 w-4 shrink-0" aria-hidden />
       ) : (
-        <span className="flex h-4 w-4 items-center justify-center rounded border-2 border-current" />
+        <span
+          className="flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 border-current"
+          aria-hidden
+        />
       )}
       <span>{isSelectMode ? t('songs.selectModeOn') : t('songs.select')}</span>
     </button>

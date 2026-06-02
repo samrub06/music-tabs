@@ -1,6 +1,12 @@
 import type { Folder, NewSongData, Song, SongEditData } from '@/types';
 import { parseTextToStructuredSong } from '@/utils/songParser';
 import { extractAllChords } from '@/utils/structuredSong';
+import {
+  applySongListFilters,
+  fetchAllSongIdsFromQuery,
+  tabToOrderBy,
+  type SongListFilterParams,
+} from '@/lib/services/songListFilters';
 
 // Service pour les chansons
 export const songService = {
@@ -15,7 +21,8 @@ export const songService = {
     orderBy?: 'created_at' | 'updated_at' | 'view_count',
     easyChord?: boolean,
     capoFilter?: 'any' | 'with' | 'without',
-    likedOnly?: boolean
+    likedOnly?: boolean,
+    folderId?: string
   ): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
@@ -54,6 +61,12 @@ export const songService = {
 
     if (likedOnly === true) {
       baseQuery = baseQuery.eq('is_liked', true);
+    }
+
+    if (folderId === 'unorganized') {
+      baseQuery = baseQuery.is('folder_id', null);
+    } else if (folderId) {
+      baseQuery = baseQuery.eq('folder_id', folderId);
     }
 
     // Pour popular : ne garder que les chansons avec view_count > 0
@@ -96,6 +109,21 @@ export const songService = {
     })) || [];
     
     return { songs: mappedSongs, total: count || 0 };
+  },
+
+  async getAllSongIds(
+    clientSupabase: any,
+    params: SongListFilterParams
+  ): Promise<string[]> {
+    const client = clientSupabase;
+    if (!client) {
+      throw new Error('Supabase client is required');
+    }
+    const {
+      data: { user },
+    } = await client.auth.getUser();
+    const { baseQuery, orderColumn } = applySongListFilters(client, user, params);
+    return fetchAllSongIdsFromQuery(baseQuery, orderColumn);
   },
 
   // Récupérer une chanson par ID

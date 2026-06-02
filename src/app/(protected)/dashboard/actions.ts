@@ -12,7 +12,7 @@ import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
 import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
-import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema } from '@/lib/validation/schemas'
+import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
 
 export async function addSongAction(payload: NewSongData) {
   const validatedPayload = createSongSchema.parse(payload)
@@ -114,6 +114,26 @@ export async function updateSongFolderAction(id: string, folderId?: string) {
   revalidatePath('/songs')
   revalidatePath('/search')
   revalidatePath(`/song/${id}`)
+}
+
+export async function getSelectableSongIdsAction(payload: unknown): Promise<string[]> {
+  const filters = selectableSongIdsSchema.parse(payload)
+
+  if (filters.scopeFolderId) {
+    const supabase = await createActionServerClient()
+    const repo = songRepo(supabase)
+    return repo.getAllSongIdsByFolder(filters.scopeFolderId, filters.q)
+  }
+
+  const supabase = await createActionServerClient()
+  return songService.getAllSongIds(supabase, {
+    q: filters.q,
+    tab: filters.tab,
+    easyChord: filters.easyChord,
+    capoFilter: filters.capoFilter,
+    likedOnly: filters.likedOnly,
+    folderId: filters.folderId,
+  })
 }
 
 export async function deleteSongsAction(ids: string[]) {

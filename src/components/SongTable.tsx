@@ -2,7 +2,9 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import { Song, Folder, Playlist } from '@/types';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getSelectableSongIdsAction } from '@/app/(protected)/dashboard/actions';
+import type { SelectableSongIdsInput } from '@/lib/validation/schemas';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import EditSongForm from './EditSongForm';
-import SongTableHeader from './song-table/SongTableHeader';
+import { SongBulkActions } from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
 import SongTableEmptyState from './song-table/SongTableEmptyState';
 import MoveToFolderModal from './MoveToFolderModal';
@@ -46,6 +48,8 @@ interface SongTableProps {
   // Select mode props
   isSelectMode?: boolean;
   onToggleSelectMode?: () => void;
+  totalMatchingCount?: number;
+  selectionFilters?: SelectableSongIdsInput;
 }
 
 export default function SongTable({
@@ -65,7 +69,9 @@ export default function SongTable({
   sortDirection: externalSortDirection,
   onSortChange,
   isSelectMode: externalIsSelectMode,
-  onToggleSelectMode: externalOnToggleSelectMode
+  onToggleSelectMode: externalOnToggleSelectMode,
+  totalMatchingCount,
+  selectionFilters,
 }: SongTableProps) {
   const { t } = useLanguage();
   
@@ -78,6 +84,8 @@ export default function SongTable({
   const [showEditForm, setShowEditForm] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
+  const [isSelectingAll, setIsSelectingAll] = useState(false);
+  const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
@@ -289,13 +297,38 @@ export default function SongTable({
     setSelectedSongs(newSelectedSongs);
   };
 
-  // Handle select all
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allSongIds = new Set(sortedSongs.map(song => song.id));
-      setSelectedSongs(allSongIds);
-    } else {
+  const matchTotal = totalMatchingCount ?? sortedSongs.length;
+  const allMatchingSelected =
+    matchTotal > 0 && selectedSongs.size >= matchTotal;
+  const someMatchingSelected =
+    selectedSongs.size > 0 && selectedSongs.size < matchTotal;
+
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      selectAllCheckboxRef.current.indeterminate = someMatchingSelected;
+    }
+  }, [someMatchingSelected]);
+
+  const handleSelectAll = async (checked: boolean) => {
+    if (!checked) {
       setSelectedSongs(new Set());
+      return;
+    }
+
+    if (!selectionFilters || matchTotal <= sortedSongs.length) {
+      setSelectedSongs(new Set(sortedSongs.map((song) => song.id)));
+      return;
+    }
+
+    setIsSelectingAll(true);
+    try {
+      const ids = await getSelectableSongIdsAction(selectionFilters);
+      setSelectedSongs(new Set(ids));
+    } catch (error) {
+      console.error('Error selecting all songs:', error);
+      alert(t('songs.selectAllError'));
+    } finally {
+      setIsSelectingAll(false);
     }
   };
 
@@ -347,11 +380,13 @@ export default function SongTable({
             >
               <span className="w-4 shrink-0 sm:hidden" aria-hidden />
               <input
+                ref={selectAllCheckboxRef}
                 id="select-all-songs"
                 type="checkbox"
-                checked={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
-                onChange={(e) => handleSelectAll(e.target.checked)}
-                className="-ms-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 sm:ms-0 sm:h-4 sm:w-4"
+                checked={allMatchingSelected}
+                disabled={isSelectingAll}
+                onChange={(e) => void handleSelectAll(e.target.checked)}
+                className="-ms-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 sm:ms-0 sm:h-4 sm:w-4"
               />
               <span
                 className="h-8 w-8 shrink-0 sm:h-10 sm:w-10"
@@ -360,39 +395,28 @@ export default function SongTable({
               <span className="text-sm font-medium text-foreground">{t('songs.all')}</span>
             </label>
             {selectedSongs.size > 0 ? (
-              <span className="shrink-0 text-sm font-medium text-primary whitespace-nowrap">
-                {selectedSongs.size === 1
-                  ? `1 ${t('songs.songCount')} ${t('songs.selected')}`
-                  : `${selectedSongs.size} ${t('songs.songCountPlural')} ${t('songs.selected')}`}
-              </span>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-xs font-medium text-primary whitespace-nowrap sm:text-sm">
+                  {selectedSongs.size === 1
+                    ? `1 ${t('songs.songCount')} ${t('songs.selected')}`
+                    : `${selectedSongs.size} ${t('songs.songCountPlural')} ${t('songs.selected')}`}
+                </span>
+                <SongBulkActions
+                  showDeleteAll={false}
+                  onCancelSelection={() => setSelectedSongs(new Set())}
+                  onDeleteSelected={() => handleBulkDelete('selected')}
+                  onDeleteAll={() => handleBulkDelete('all')}
+                  onMoveToFolder={() => setShowMoveModal(true)}
+                  onCreatePlaylist={() => setShowPlaylistModal(true)}
+                  t={t}
+                />
+              </div>
             ) : (
               <span className="shrink-0 text-sm text-muted-foreground">
                 {t('songs.selectSongsHint')}
               </span>
             )}
           </div>
-
-          {selectedSongs.size > 0 && (
-            <div className="border-t border-border px-4 py-2">
-              <SongTableHeader
-            sortedSongsCount={sortedSongs.length}
-            selectedCount={selectedSongs.size}
-            currentFolder={currentFolder}
-            searchQuery={searchQuery}
-            getFolderName={getFolderName}
-            showDeleteAll={selectedSongs.size === sortedSongs.length && sortedSongs.length > 0}
-            onCancelSelection={() => setSelectedSongs(new Set())}
-            onDeleteSelected={() => handleBulkDelete('selected')}
-            onDeleteAll={() => handleBulkDelete('all')}
-            onMoveToFolder={() => setShowMoveModal(true)}
-            onCreatePlaylist={() => setShowPlaylistModal(true)}
-            isSelectMode={isSelectMode}
-            onToggleSelectMode={externalOnToggleSelectMode || (() => {})}
-            onExitSelectMode={externalOnToggleSelectMode}
-            t={t}
-              />
-            </div>
-          )}
         </div>
       )}
 

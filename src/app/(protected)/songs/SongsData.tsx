@@ -33,7 +33,18 @@ async function SongsDataLoader({
 }) {
   const supabase = await createSafeServerClient()
   const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
-  const { songs, total } = await songService.getAllSongs(supabase, page, limit, q, orderBy, easyChord, capoFilter, likedOnly)
+  const folderId = initialFolder === 'unorganized' ? 'unorganized' : initialFolder
+  const { songs, total } = await songService.getAllSongs(
+    supabase,
+    page,
+    limit,
+    q,
+    orderBy,
+    easyChord,
+    capoFilter,
+    likedOnly,
+    folderId
+  )
   return { songs, total }
 }
 

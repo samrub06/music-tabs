@@ -4,6 +4,7 @@ import type { Database } from '@/types/db'
 import { parseTextToStructuredSong } from '@/utils/songParser'
 import { structuredSongToText } from '@/utils/structuredToText'
 import { extractAllChords } from '@/utils/structuredSong'
+import { fetchAllSongIdsFromQuery } from '@/lib/services/songListFilters'
 
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
@@ -688,6 +689,23 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       songs: (data || []).map(mapDbSongToList),
       total: count || 0
     }
+  },
+
+  async getAllSongIdsByFolder(folderId: string, q?: string): Promise<string[]> {
+    const { data: { user } } = await client.auth.getUser()
+    if (!user) return []
+
+    let baseQuery = (client.from('songs') as any)
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('folder_id', folderId)
+
+    if (q?.trim()) {
+      const query = q.trim()
+      baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+    }
+
+    return fetchAllSongIdsFromQuery(baseQuery, 'created_at')
   },
 
   // Lightweight method for playlist generation (no sections/content needed)

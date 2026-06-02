@@ -52,6 +52,18 @@ export const toggleSongFavoriteSchema = z.object({
   songId: z.string().uuid(),
 })
 
+export const selectableSongIdsSchema = z.object({
+  q: z.string().optional(),
+  tab: z.enum(['all', 'recent', 'popular']).optional(),
+  easyChord: z.boolean().optional(),
+  capoFilter: z.enum(['any', 'with', 'without']).optional(),
+  likedOnly: z.boolean().optional(),
+  folderId: z.union([z.string().uuid(), z.literal('unorganized')]).optional(),
+  scopeFolderId: z.string().uuid().optional(),
+})
+
+export type SelectableSongIdsInput = z.infer<typeof selectableSongIdsSchema>
+
 export type CreateFolderInput = z.infer<typeof createFolderSchema>
 export type UpdateFolderInput = z.infer<typeof updateFolderSchema>
 export type CreateSongInput = z.infer<typeof createSongSchema>

@@ -352,8 +352,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   }
 
   const toggleSelectMode = () => {
-    setIsSelectMode(prev => !prev)
+    setIsSelectMode((prev) => !prev)
   }
+
+  useEffect(() => {
+    if (view !== 'table') {
+      setIsSelectMode(false)
+    }
+  }, [view])
 
   const handleClearSearch = () => {
     setLocalSearchValue('')
@@ -535,7 +541,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </div>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 shrink-0 lg:ml-auto">
-            {view === 'table' && (
+            {(view === 'table' || isSelectMode) && (
               <SelectModeToggleButton
                 isSelectMode={isSelectMode}
                 onToggle={toggleSelectMode}
@@ -602,6 +608,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 onSortChange={handleSortChange}
                 isSelectMode={isSelectMode}
                 onToggleSelectMode={toggleSelectMode}
+                totalMatchingCount={total}
+                selectionFilters={{
+                  q: searchQuery.trim() || undefined,
+                  tab: activeTab,
+                  easyChord: filterEasyChord || undefined,
+                  capoFilter: filterCapo,
+                  likedOnly: likedOnly || undefined,
+                  folderId:
+                    currentFolder === 'unorganized'
+                      ? 'unorganized'
+                      : currentFolder || undefined,
+                }}
               />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
               {searchQuery.trim() && (
