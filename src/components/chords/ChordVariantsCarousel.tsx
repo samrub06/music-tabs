@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 
 export interface ChordVariantsCarouselProps {
   variants: ChordVariant[];
+  /** Chord letter shown on diagram in compact mode (e.g. G, C) */
+  chordSymbol?: string;
   /** Modal-style: diagram + counter only; full: includes label, description, thumbnails */
   variant?: 'compact' | 'full';
   /** Reset to first diagram when carousel mounts (e.g. modal open) */
@@ -17,6 +19,7 @@ export interface ChordVariantsCarouselProps {
 
 export function ChordVariantsCarousel({
   variants,
+  chordSymbol = 'G',
   variant = 'full',
   resetKey,
   className,
@@ -36,7 +39,7 @@ export function ChordVariantsCarousel({
   if (!current) return null;
 
   const displayChord = isCompact
-    ? { ...current.chord, name: 'G' }
+    ? { ...current.chord, name: chordSymbol }
     : current.chord;
 
   return (

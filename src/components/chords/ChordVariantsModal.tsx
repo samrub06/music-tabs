@@ -31,6 +31,7 @@ export function ChordVariantsModal({
         <div className="flex flex-col items-center px-4 pb-6 pt-4">
           <ChordVariantsCarousel
             variants={group.variants}
+            chordSymbol={group.symbol}
             variant="compact"
             resetKey={open}
           />

@@ -19,6 +19,8 @@ export interface ChordVariant {
 
 export interface ChordVariantGroup {
   id: string;
+  /** Short label on grid card and diagram (e.g. G, C) */
+  symbol: string;
   title: string;
   intro: string;
   variants: ChordVariant[];

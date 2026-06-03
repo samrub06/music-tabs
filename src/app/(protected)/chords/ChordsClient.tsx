@@ -17,9 +17,13 @@ import {
 import { cn } from '@/lib/utils';
 import chordVariantsFr from '@/data/chordVariants';
 import { ChordVariantsModal } from '@/components/chords/ChordVariantsModal';
-import { GMajorChordCard } from '@/components/chords/GMajorChordCard';
+import { VariantChordCard } from '@/components/chords/VariantChordCard';
+import type { ChordVariantGroup } from '@/types/chordVariants';
 
 const DB_OPEN_G_MAJOR_NAME = 'G Major';
+const DB_OPEN_C_MAJOR_NAME = 'C Major';
+
+const HIDDEN_DB_CHORD_NAMES = new Set([DB_OPEN_G_MAJOR_NAME, DB_OPEN_C_MAJOR_NAME]);
 
 interface ChordsClientProps {
   initialChords: Chord[];
@@ -62,7 +66,7 @@ export default function ChordsClient({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
-  const [gVariantsModalOpen, setGVariantsModalOpen] = useState(false);
+  const [openVariantGroupId, setOpenVariantGroupId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -273,25 +277,41 @@ export default function ChordsClient({
     }
   };
 
-  const gMajorGroup = chordVariantsFr[0];
+  const gMajorGroup = chordVariantsFr.find((g) => g.id === 'g-major')!;
+  const cMajorGroup = chordVariantsFr.find((g) => g.id === 'c-major')!;
+
+  const openVariantGroup: ChordVariantGroup | null =
+    openVariantGroupId != null
+      ? chordVariantsFr.find((g) => g.id === openVariantGroupId) ?? null
+      : null;
+
+  const matchesChordSearch = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return (keys: string[]) => {
+      if (!q) return true;
+      return keys.some(
+        (k) =>
+          q === k ||
+          q.startsWith(`${k} `) ||
+          q.includes(k) ||
+          k.includes(q)
+      );
+    };
+  }, [searchQuery]);
 
   const showGMajorCard = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      const matchesG =
-        q === 'g' ||
-        q.startsWith('g ') ||
-        q.includes('g major') ||
-        q.includes('sol') ||
-        'g major'.includes(q) ||
-        'sol majeur'.includes(q);
-      if (!matchesG) return false;
-    }
-    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') {
-      return false;
-    }
+    if (!matchesChordSearch(['g', 'g major', 'sol', 'sol majeur'])) return false;
+    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') return false;
     return true;
-  }, [searchQuery, difficultyFilter]);
+  }, [matchesChordSearch, difficultyFilter]);
+
+  const showCMajorCard = useMemo(() => {
+    if (!matchesChordSearch(['c', 'c major', 'do', 'do majeur'])) return false;
+    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') return false;
+    return true;
+  }, [matchesChordSearch, difficultyFilter]);
+
+  const showVariantCards = showGMajorCard || showCMajorCard;
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -397,19 +417,27 @@ export default function ChordsClient({
           </div>
         </div>
 
-        {filteredSections.length === 0 && !showGMajorCard ? (
+        {filteredSections.length === 0 && !showVariantCards ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">{t('chords.noResults')}</p>
           </div>
         ) : (
           <>
-            {showGMajorCard && (
+            {showVariantCards && (
               <div className="mb-12">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                  <GMajorChordCard
-                    group={gMajorGroup}
-                    onClick={() => setGVariantsModalOpen(true)}
-                  />
+                  {showGMajorCard && (
+                    <VariantChordCard
+                      group={gMajorGroup}
+                      onClick={() => setOpenVariantGroupId('g-major')}
+                    />
+                  )}
+                  {showCMajorCard && (
+                    <VariantChordCard
+                      group={cMajorGroup}
+                      onClick={() => setOpenVariantGroupId('c-major')}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -417,7 +445,7 @@ export default function ChordsClient({
             <div key={sectionIndex} className="mb-12">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {section.chords
-                  .filter((chord) => chord.name !== DB_OPEN_G_MAJOR_NAME)
+                  .filter((chord) => !HIDDEN_DB_CHORD_NAMES.has(chord.name))
                   .map((chord) => {
                   const isKnown = isChordKnown(chord);
                   return (
@@ -470,11 +498,15 @@ export default function ChordsClient({
           </>
         )}
 
-        <ChordVariantsModal
-          group={gMajorGroup}
-          open={gVariantsModalOpen}
-          onOpenChange={setGVariantsModalOpen}
-        />
+        {openVariantGroup && (
+          <ChordVariantsModal
+            group={openVariantGroup}
+            open
+            onOpenChange={(open) => {
+              if (!open) setOpenVariantGroupId(null);
+            }}
+          />
+        )}
       </div>
       </div>
     </div>

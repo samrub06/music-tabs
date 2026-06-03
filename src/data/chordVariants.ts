@@ -279,9 +279,12 @@ const gMajorVariants = [
 
 const TOTAL = gMajorVariants.length;
 
+import { cMajorVariantGroup } from './cMajorVariants';
+
 const chordVariantsFr = [
   {
     id: 'g-major',
+    symbol: 'G',
     title: 'Sol majeur (G) — toutes les positions',
     intro:
       `Les ${TOTAL} façons de jouer un Sol majeur, comme dans votre application. `
@@ -293,6 +296,7 @@ const chordVariantsFr = [
     })),
     showCarousel: true,
   },
+  cMajorVariantGroup,
 ];
 
 export default chordVariantsFr as ChordVariantGroup[];
