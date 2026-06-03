@@ -18,6 +18,8 @@ interface VexChordDiagramProps {
 
 export function VexChordDiagram({ chord, options = DEFAULT_OPTS }: VexChordDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const width = options.width ?? DEFAULT_OPTS.width ?? 130;
+  const height = options.height ?? DEFAULT_OPTS.height ?? 150;
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -33,5 +35,11 @@ export function VexChordDiagram({ chord, options = DEFAULT_OPTS }: VexChordDiagr
     };
   }, [chord, options]);
 
-  return <div className="h-[150px] w-[130px] shrink-0" ref={containerRef} />;
+  return (
+    <div
+      className="shrink-0 overflow-hidden"
+      style={{ width, height }}
+      ref={containerRef}
+    />
+  );
 }

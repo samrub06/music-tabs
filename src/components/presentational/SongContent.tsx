@@ -11,8 +11,12 @@ import {
 import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
-import ChordDiagram from '../ChordDiagram';
 import { ChordBox } from 'vexchords';
+import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
+import {
+  CHORD_PREVIEW_DIAGRAM_OPTS,
+} from '@/components/chords/chordCardDimensions';
+import { getChordVariantGroup } from '@/utils/chordVariantLookup';
 import type { Chord, Folder } from '@/types';
 import FolderDropdown from '@/components/FolderDropdown';
 import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
@@ -1110,103 +1114,98 @@ function ChordDiagramsGrid({
       return !isKnown; // Only keep chords that are NOT known
     });
   }, [allChords, chordNameToIdMap, knownChordIds]);
+
+  const dbOnlyChords = useMemo(
+    () =>
+      unknownChords.filter(
+        (songChordName: string) => getChordVariantGroup(songChordName) == null
+      ),
+    [unknownChords]
+  );
   
-  // Render chord diagrams using ChordBox (similar to ChordsClient)
-  // Only render unknown chords
-  // NOTE: This hook must be called before any early returns
+  // DB fallback diagrams (variant groups use VexChordDiagram in JSX)
   useEffect(() => {
-    if (chords.length === 0 || unknownChords.length === 0) return;
+    if (chords.length === 0 || dbOnlyChords.length === 0) return;
     
-    // Use a small timeout to ensure DOM is ready
     const timer = setTimeout(() => {
-      unknownChords.forEach((songChordName: string) => {
+      dbOnlyChords.forEach((songChordName: string) => {
         const dbChord = findChordInDatabase(songChordName, chords);
-        if (!dbChord) return; // Skip if chord not found in database
+        if (!dbChord) return;
         
         const container = chordRefs.current.get(songChordName);
         if (!container) return;
         
-        // Clear container
         container.innerHTML = '';
+        chordBoxesRef.current.delete(songChordName);
         
-        // Remove old ChordBox instance if it exists
-        if (chordBoxesRef.current.has(songChordName)) {
-          chordBoxesRef.current.delete(songChordName);
-        }
+        const chordBox = new ChordBox(container, CHORD_PREVIEW_DIAGRAM_OPTS);
         
-        // Create new ChordBox instance with smaller dimensions for grid display
-        const chordBox = new ChordBox(container, {
-          width: 100,
-          height: 120,
-          defaultColor: '#444',
-          showTuning: true
-        });
-        
-        // Store the ChordBox instance
         chordBoxesRef.current.set(songChordName, chordBox);
-        
-        // Draw the chord
         chordBox.draw({
           chord: dbChord.chordData.chord,
           position: dbChord.chordData.position,
           barres: dbChord.chordData.barres,
-          tuning: dbChord.tuning
+          tuning: dbChord.tuning,
         });
       });
     }, 0);
     
-    // Cleanup function
     return () => {
       clearTimeout(timer);
     };
-  }, [unknownChords, chords]);
+  }, [dbOnlyChords, chords]);
   
   return (
     <div>
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-4">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-3">
         {unknownChords.map((songChordName: string) => {
-          const dbChord = findChordInDatabase(songChordName, chords);
-          const hasDiagram = dbChord !== null;
-          
+          const variantGroup = getChordVariantGroup(songChordName);
+          const previewVariant = variantGroup?.variants[0];
+          const dbChord =
+            variantGroup == null ? findChordInDatabase(songChordName, chords) : null;
+          const hasDiagram = previewVariant != null || dbChord != null;
+
+          if (!hasDiagram) {
+            return (
+              <button
+                key={songChordName}
+                type="button"
+                onClick={() => onChordClick(songChordName)}
+                className="flex min-h-[9.75rem] w-[5.75rem] shrink-0 flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-2 shadow-sm hover:border-blue-400 hover:shadow-md sm:w-full"
+              >
+                <span
+                  className="text-center font-bold text-gray-900"
+                  style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
+                  title={songChordName}
+                >
+                  {songChordName}
+                </span>
+              </button>
+            );
+          }
+
+          const previewDiagram = previewVariant
+            ? {
+                ...previewVariant.chord,
+                name: variantGroup!.symbol,
+              }
+            : null;
+
           return (
-            <button
+            <ChordPreviewCard
               key={songChordName}
+              chordLabel={songChordName}
+              diagram={previewDiagram}
+              diagramContainerRef={
+                previewDiagram
+                  ? undefined
+                  : (el) => {
+                      if (el) chordRefs.current.set(songChordName, el);
+                    }
+              }
               onClick={() => onChordClick(songChordName)}
-              className="group relative flex flex-col items-center p-1.5 sm:p-3 rounded-lg hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-shrink-0 w-24 sm:w-auto md:w-full bg-white border-2 border-gray-200 hover:border-blue-400"
-            >
-              {hasDiagram ? (
-                <>
-                  {/* Chord diagram container */}
-                  <div
-                    ref={(el) => {
-                      if (el) {
-                        chordRefs.current.set(songChordName, el);
-                      }
-                    }}
-                    className="mb-2"
-                  />
-                  {/* Chord name */}
-                  <div 
-                    className="text-xs font-semibold text-center w-full text-gray-900 group-hover:text-blue-600"
-                    style={{ fontSize: `${Math.min(fontSize - 2, 12)}px` }}
-                    title={songChordName}
-                  >
-                    {songChordName}
-                  </div>
-                </>
-              ) : (
-                /* Fallback: text-only if chord not in database */
-                <div className="text-center w-full">
-                  <div 
-                    className="font-bold w-full text-center text-gray-900 group-hover:text-blue-600"
-                    style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
-                    title={songChordName}
-                  >
-                    {songChordName}
-                  </div>
-                </div>
-              )}
-            </button>
+              className="sm:w-full"
+            />
           );
         })}
       </div>
