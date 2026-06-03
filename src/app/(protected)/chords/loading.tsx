@@ -1,6 +1,7 @@
 export default function ChordsLoading() {
   return (
-    <div className="p-3 sm:p-6 overflow-y-auto">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <div className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6">
       {/* Header Skeleton */}
       <div className="mb-6">
         <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
@@ -14,6 +15,7 @@ export default function ChordsLoading() {
             <div className="h-5 bg-gray-200 rounded w-3/4 mx-auto animate-pulse"></div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   )

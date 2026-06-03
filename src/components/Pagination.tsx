@@ -4,6 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface PaginationProps {
   page: number
@@ -119,16 +120,17 @@ export default function Pagination({ page, limit, total, showAllLimit, className
       )}
 
       {showAllVisible && (
-        <button
+        <Button
           type="button"
+          variant="outline"
           className={cn(
-            'mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl text-sm font-medium text-primary transition-colors hover:bg-primary/10 active:bg-primary/15',
+            'mt-3 min-h-[44px] w-full',
             totalPages <= 1 && 'mt-0'
           )}
           onClick={handleShowAll}
         >
           {t('common.showAll')}
-        </button>
+        </Button>
       )}
     </nav>
   )

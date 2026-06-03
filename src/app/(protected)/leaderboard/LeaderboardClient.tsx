@@ -30,7 +30,12 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
   }, [initialLeaderboard, searchQuery])
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+    <div className="container mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6">
         <h1 className="hidden lg:block text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           {t('leaderboard.title')}
@@ -65,6 +70,8 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
         entries={filteredLeaderboard}
         currentUserId={currentUserId}
       />
+    </div>
+      </div>
     </div>
   )
 }

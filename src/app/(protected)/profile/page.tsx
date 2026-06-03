@@ -22,12 +22,17 @@ export default async function ProfilePage() {
   ])
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <ProfileClient 
-          initialProfile={profile}
-          initialStats={stats}
-        />
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+        <div className="mx-auto max-w-4xl px-4 py-8">
+          <ProfileClient
+            initialProfile={profile}
+            initialStats={stats}
+          />
+        </div>
       </div>
     </div>
   )

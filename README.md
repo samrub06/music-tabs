@@ -22,6 +22,13 @@ Une application moderne de gestion de partitions et tablatures musicales constru
 - **Piano** : Visualisation des touches avec plusieurs voicings
 - **Guitare** : Diagrammes de frettes avec positions des doigts
 - **Commutation facile** : Basculez entre piano et guitare d'un clic
+- **Page `/chords`** : carrousel des 27 positions de Sol majeur (données statiques [vexchords](https://www.npmjs.com/package/vexchords))
+
+#### Ajouter d'autres groupes de variantes (ex. C majeur)
+
+1. Copier le modèle dans [`src/data/chordVariants.ts`](src/data/chordVariants.ts) : tableau de variantes + entrée dans `chordVariantsFr` (`id`, `title`, `intro`, `showCarousel`).
+2. Types dans [`src/types/chordVariants.ts`](src/types/chordVariants.ts). Pas de `build()` au runtime : diagrammes en objets statiques (pré-calculer avec vexchords si besoin).
+3. Afficher un autre [`ChordVariantsSection`](src/components/chords/ChordVariantsSection.tsx) dans [`ChordsClient.tsx`](src/app/(protected)/chords/ChordsClient.tsx) (ou une page dédiée). Aucune migration Supabase requise.
 
 ### 📱 Design Responsive
 - **Mobile-first** : Interface adaptée aux smartphones et tablettes

@@ -15,6 +15,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import chordVariantsFr from '@/data/chordVariants';
+import { ChordVariantsModal } from '@/components/chords/ChordVariantsModal';
+import { GMajorChordCard } from '@/components/chords/GMajorChordCard';
+
+const DB_OPEN_G_MAJOR_NAME = 'G Major';
 
 interface ChordsClientProps {
   initialChords: Chord[];
@@ -57,6 +62,7 @@ export default function ChordsClient({
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
+  const [gVariantsModalOpen, setGVariantsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -267,9 +273,33 @@ export default function ChordsClient({
     }
   };
 
+  const gMajorGroup = chordVariantsFr[0];
+
+  const showGMajorCard = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      const matchesG =
+        q === 'g' ||
+        q.startsWith('g ') ||
+        q.includes('g major') ||
+        q.includes('sol') ||
+        'g major'.includes(q) ||
+        'sol majeur'.includes(q);
+      if (!matchesG) return false;
+    }
+    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') {
+      return false;
+    }
+    return true;
+  }, [searchQuery, difficultyFilter]);
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 space-y-3">
           {/* Search with chord name autocomplete */}
           <div className="relative">
@@ -367,15 +397,28 @@ export default function ChordsClient({
           </div>
         </div>
 
-        {filteredSections.length === 0 ? (
+        {filteredSections.length === 0 && !showGMajorCard ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">{t('chords.noResults')}</p>
           </div>
         ) : (
-          filteredSections.map((section, sectionIndex) => (
+          <>
+            {showGMajorCard && (
+              <div className="mb-12">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  <GMajorChordCard
+                    group={gMajorGroup}
+                    onClick={() => setGVariantsModalOpen(true)}
+                  />
+                </div>
+              </div>
+            )}
+          {filteredSections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="mb-12">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {section.chords.map((chord) => {
+                {section.chords
+                  .filter((chord) => chord.name !== DB_OPEN_G_MAJOR_NAME)
+                  .map((chord) => {
                   const isKnown = isChordKnown(chord);
                   return (
                     <div
@@ -423,8 +466,16 @@ export default function ChordsClient({
                 })}
               </div>
             </div>
-          ))
+          ))}
+          </>
         )}
+
+        <ChordVariantsModal
+          group={gMajorGroup}
+          open={gVariantsModalOpen}
+          onOpenChange={setGVariantsModalOpen}
+        />
+      </div>
       </div>
     </div>
   );

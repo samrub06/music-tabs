@@ -22,9 +22,14 @@ declare module 'vexchords' {
     labelWeight?: string;
   }
 
+  export type ChordFingeringTuple =
+    | [number, number | 'x' | 0]
+    | [number, number | 'x' | 0, string | number];
+
   export interface ChordDrawData {
-    chord: [number, number | 'x' | 0][];
+    chord: ChordFingeringTuple[];
     position?: number;
+    positionText?: number;
     barres?: { fromString: number; toString: number; fret: number }[];
     tuning?: string[];
   }

@@ -49,8 +49,12 @@ export default function LibrarySpotifyClient({
   }, [userId, router])
 
   return (
-    <div className="p-4 sm:p-6 lg:px-6 lg:py-8 overflow-y-auto min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:px-6 lg:py-8"
+      >
+      <div className="mx-auto max-w-7xl lg:mx-0 lg:max-w-none">
         {/* Section 1: Grille de 8 cards */}
         <LibraryGridSection
           publicPlaylists={publicPlaylists}
@@ -85,6 +89,7 @@ export default function LibrarySpotifyClient({
             addingId={cloningId}
           />
         )}
+      </div>
       </div>
     </div>
   )

@@ -95,7 +95,11 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
   }, [view, songs, userId, cloningId, handleAddToLibrary])
 
   return (
-    <div className="p-3 sm:p-6 overflow-y-auto">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6"
+      >
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-row flex-wrap items-center justify-between gap-3 sm:gap-4">       
           
@@ -152,6 +156,7 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
       </div>
       {content}
       <Pagination page={page} limit={limit} total={total} />
+      </div>
     </div>
   )
 }

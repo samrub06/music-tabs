@@ -341,7 +341,12 @@ export default function AIPlaylistClient({ folders }: AIPlaylistClientProps) {
   const addedCount = processedSongs.filter(s => s.addedSongId).length
 
   return (
-    <div className="max-w-6xl mx-auto p-3 sm:p-4 lg:p-6">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+    <div className="mx-auto max-w-6xl p-3 sm:p-4 lg:p-6">
       {/* Header avec icône - Mobile optimisé */}
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-2">
@@ -624,6 +629,8 @@ export default function AIPlaylistClient({ folders }: AIPlaylistClientProps) {
           </div>
         </div>
       )}
+    </div>
+      </div>
     </div>
   )
 }

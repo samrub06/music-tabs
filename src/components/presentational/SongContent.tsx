@@ -18,6 +18,7 @@ import FolderDropdown from '@/components/FolderDropdown';
 import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
 import { generateAllKeys } from '@/utils/chords';
 import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
+import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Piano, Guitar } from 'lucide-react';
@@ -262,66 +263,80 @@ export default function SongContent({
                 </Link>
               )}
             </div>
-            {onToggleEdit && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onToggleEdit}
-                className="h-11 min-h-[44px] shrink-0 gap-1.5 rounded-xl px-3 text-sm font-medium"
-                aria-label={t('songHeader.edit')}
-              >
-                <PencilSquareIcon className="h-5 w-5" />
-                <span className="hidden sm:inline">{t('songHeader.edit')}</span>
-              </Button>
-            )}
-            {isInLibrary && (
-              <div
-                className="inline-flex h-11 min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
-                title={t('library.inYourLibrary')}
-              >
-                <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
-                <span className="hidden text-xs font-medium sm:inline">
-                  {t('library.inYourLibrary')}
-                </span>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {onToggleEdit && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onToggleEdit}
+                    className="h-11 min-h-[44px] shrink-0 gap-1.5 rounded-xl px-3 text-sm font-medium"
+                    aria-label={t('songHeader.edit')}
+                  >
+                    <PencilSquareIcon className="h-5 w-5" />
+                    <span className="hidden sm:inline">{t('songHeader.edit')}</span>
+                  </Button>
+                )}
+                {isInLibrary && (
+                  <div
+                    className="inline-flex h-11 min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
+                    title={t('library.inYourLibrary')}
+                  >
+                    <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
+                    <span className="hidden text-xs font-medium sm:inline">
+                      {t('library.inYourLibrary')}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isInLibrary) {
+                      onAddToLibrary?.();
+                      return;
+                    }
+                    onToggleFavorite?.();
+                  }}
+                  disabled={
+                    isTogglingFavorite ||
+                    (!isInLibrary && !onAddToLibrary) ||
+                    (isInLibrary && !onToggleFavorite)
+                  }
+                  className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
+                  aria-label={
+                    isInLibrary
+                      ? isLiked
+                        ? t('library.removeFromFavorites')
+                        : t('library.addToFavorites')
+                      : t('library.addToLibrary')
+                  }
+                  title={
+                    isInLibrary
+                      ? isLiked
+                        ? t('library.removeFromFavorites')
+                        : t('library.addToFavorites')
+                      : t('library.addToLibrary')
+                  }
+                >
+                  {isLiked ? (
+                    <HeartSolidIcon className="h-6 w-6" />
+                  ) : (
+                    <HeartIcon className="h-6 w-6" />
+                  )}
+                </button>
               </div>
-            )}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isInLibrary) {
-                  onAddToLibrary?.();
-                  return;
-                }
-                onToggleFavorite?.();
-              }}
-              disabled={
-                isTogglingFavorite ||
-                (!isInLibrary && !onAddToLibrary) ||
-                (isInLibrary && !onToggleFavorite)
-              }
-              className="ms-auto inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
-              aria-label={
-                isInLibrary
-                  ? isLiked
-                    ? t('library.removeFromFavorites')
-                    : t('library.addToFavorites')
-                  : t('library.addToLibrary')
-              }
-              title={
-                isInLibrary
-                  ? isLiked
-                    ? t('library.removeFromFavorites')
-                    : t('library.addToFavorites')
-                  : t('library.addToLibrary')
-              }
-            >
-              {isLiked ? (
-                <HeartSolidIcon className="h-6 w-6" />
-              ) : (
-                <HeartIcon className="h-6 w-6" />
+              {isAuthenticated && onFolderChange && (
+                <div className="flex w-full justify-end">
+                  <FolderDropdown
+                    currentFolderId={currentFolderId}
+                    folders={folders}
+                    onFolderChange={onFolderChange}
+                    size="comfortable"
+                  />
+                </div>
               )}
-            </button>
+            </div>
           </div>
 
           {/* Chord Diagrams Section - accordion */}
@@ -353,7 +368,7 @@ export default function SongContent({
 
                 <div className="flex items-center gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:pb-0.5 sm:flex-wrap sm:gap-2">
                 {/* Fixed height so expand/collapse does not shift sibling controls */}
-                <div className="flex h-10 shrink-0 items-center sm:h-11">
+                <div className="flex h-12 shrink-0 items-center sm:h-11">
                 <div
                   onClick={() => {
                     if (!showTransposeControls) setShowTransposeControls(true);
@@ -362,19 +377,19 @@ export default function SongContent({
                     'flex h-full items-center overflow-hidden border border-border/80 bg-muted/40 text-foreground',
                     'transition-[width,border-radius,padding] duration-300 ease-out',
                     showTransposeControls
-                      ? 'rounded-lg px-1 sm:rounded-xl sm:px-2'
-                      : 'cursor-pointer rounded-full px-3 hover:bg-muted/70 sm:px-4'
+                      ? 'rounded-xl px-2 sm:px-2'
+                      : 'cursor-pointer rounded-full px-4 hover:bg-muted/70 sm:px-4'
                   )}
                 >
                   {!showTransposeControls ? (
-                    <div className="text-xs font-medium whitespace-nowrap sm:text-sm">Transpose</div>
+                    <div className="text-sm font-medium whitespace-nowrap sm:text-sm">Transpose</div>
                   ) : (
                     <div
-                      className="flex h-full flex-nowrap items-center gap-1"
+                      className="flex h-full flex-nowrap items-center gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                     <Select value={currentKey} onValueChange={handleKeySelect}>
-                      <SelectTrigger className="h-8 w-11 shrink-0 gap-0 rounded-lg border border-amber-200/80 bg-background/50 px-1 text-xs font-medium shadow-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 [&>svg]:h-3 [&>svg]:w-3 sm:h-11 sm:w-[4.5rem] sm:gap-1 sm:rounded-xl sm:px-2 sm:text-sm sm:[&>svg]:h-4 sm:[&>svg]:w-4">
+                      <SelectTrigger className="h-10 w-[3.75rem] shrink-0 gap-0.5 rounded-xl border border-amber-200/80 bg-background/50 px-2 text-sm font-medium shadow-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 [&>svg]:h-4 [&>svg]:w-4 sm:h-11 sm:w-[4.5rem] sm:gap-1 sm:px-2 sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -385,22 +400,22 @@ export default function SongContent({
                         ))}
                       </SelectContent>
                     </Select>
-                    <div className="flex shrink-0 items-center overflow-hidden rounded-lg border border-border/80 bg-muted/40 sm:rounded-xl">
+                    <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40 sm:rounded-xl">
                       <button
                         type="button"
-                        className="flex h-8 w-7 items-center justify-center text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9"
+                        className="flex h-10 w-10 items-center justify-center text-base text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9 sm:text-sm"
                         onClick={() => onSetTransposeValue?.(Math.max(-11, transposeValue - 1))}
                         disabled={transposeValue <= -11}
                         aria-label="-"
                       >
                         −
                       </button>
-                      <span className="min-w-[1.75rem] text-center text-xs font-semibold tabular-nums text-amber-700 dark:text-amber-400 sm:min-w-[2.4rem] sm:text-sm">
+                      <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400 sm:min-w-[2.4rem] sm:text-sm">
                         {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
                       </span>
                       <button
                         type="button"
-                        className="flex h-8 w-7 items-center justify-center text-sm text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9"
+                        className="flex h-10 w-10 items-center justify-center text-base text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9 sm:text-sm"
                         onClick={() => onSetTransposeValue?.(Math.min(11, transposeValue + 1))}
                         disabled={transposeValue >= 11}
                         aria-label="+"
@@ -414,10 +429,10 @@ export default function SongContent({
                         e.stopPropagation();
                         setShowTransposeControls(false);
                       }}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600 sm:h-11 sm:w-11 sm:rounded-xl"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600 sm:h-11 sm:w-11"
                       aria-label={t('common.close')}
                     >
-                      <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <XMarkIcon className="h-5 w-5 sm:h-5 sm:w-5" />
                     </button>
                   </div>
                 )}
@@ -457,17 +472,6 @@ export default function SongContent({
                   </div>
                 )}
                 </div>
-
-                {isAuthenticated && onFolderChange && (
-                  <div className="border-t border-border/60 pt-2.5">
-                    <FolderDropdown
-                      currentFolderId={currentFolderId}
-                      folders={folders}
-                      onFolderChange={onFolderChange}
-                      size="comfortable"
-                    />
-                  </div>
-                )}
 
                 {bpm && (
                   <p className="text-sm font-medium text-blue-600">{bpm} BPM</p>
@@ -729,16 +733,17 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full font-bold text-gray-800 dark:text-gray-200 py-2.5 px-3 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation"
+                dir="ltr"
+                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-gray-100 px-3 py-2.5 text-right font-medium text-gray-700 hover:bg-gray-200/90 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 style={{
-                  fontSize: `${optimalFontSize + 4}px`,
+                  fontSize: `${Math.min(optimalFontSize + 2, 16)}px`,
                   fontFamily: 'system-ui, -apple-system, sans-serif',
                   wordBreak: 'break-word',
                   overflowWrap: 'break-word',
                   maxWidth: '100%',
                 }}
               >
-                [{section.name}]
+                {formatSectionDisplayName(section.name)}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>

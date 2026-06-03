@@ -2,7 +2,8 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import { Song, Folder, Playlist } from '@/types';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
 import { getSelectableSongIdsAction } from '@/app/(protected)/dashboard/actions';
 import type { SelectableSongIdsInput } from '@/lib/validation/schemas';
 import {
@@ -85,7 +86,6 @@ export default function SongTable({
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
   const [isSelectingAll, setIsSelectingAll] = useState(false);
-  const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
@@ -303,12 +303,6 @@ export default function SongTable({
   const someMatchingSelected =
     selectedSongs.size > 0 && selectedSongs.size < matchTotal;
 
-  useEffect(() => {
-    if (selectAllCheckboxRef.current) {
-      selectAllCheckboxRef.current.indeterminate = someMatchingSelected;
-    }
-  }, [someMatchingSelected]);
-
   const handleSelectAll = async (checked: boolean) => {
     if (!checked) {
       setSelectedSongs(new Set());
@@ -373,27 +367,23 @@ export default function SongTable({
       {hasUser && isSelectMode && sortedSongs.length > 0 && (
         <div className="border-b border-border">
           <div className="flex items-center justify-between gap-3 px-4 py-2 sm:gap-3 sm:py-2.5">
-            <label
-              htmlFor="select-all-songs"
-              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 sm:gap-3"
-              dir="ltr"
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isSelectingAll}
+              aria-pressed={allMatchingSelected}
+              onClick={() =>
+                void handleSelectAll(allMatchingSelected ? false : true)
+              }
+              className={cn(
+                'h-8 shrink-0',
+                allMatchingSelected && 'border-primary bg-primary/5',
+                someMatchingSelected && !allMatchingSelected && 'border-primary/60'
+              )}
             >
-              <span className="w-4 shrink-0 sm:hidden" aria-hidden />
-              <input
-                ref={selectAllCheckboxRef}
-                id="select-all-songs"
-                type="checkbox"
-                checked={allMatchingSelected}
-                disabled={isSelectingAll}
-                onChange={(e) => void handleSelectAll(e.target.checked)}
-                className="-ms-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 sm:ms-0 sm:h-4 sm:w-4"
-              />
-              <span
-                className="h-8 w-8 shrink-0 sm:h-10 sm:w-10"
-                aria-hidden
-              />
-              <span className="text-sm font-medium text-foreground">{t('songs.all')}</span>
-            </label>
+              {t('songs.all')}
+            </Button>
             {selectedSongs.size > 0 ? (
               <div className="flex shrink-0 items-center gap-3">
                 <span className="text-xs font-medium text-primary whitespace-nowrap sm:text-sm">

@@ -32,8 +32,12 @@ export default function RecentSearchesClient() {
   }
 
   return (
-    <div className="p-4 pt-6 sm:p-6 lg:px-0 lg:py-8 overflow-y-auto min-h-screen bg-background pb-24 lg:pb-10">
-      <div className="max-w-7xl mx-auto lg:max-w-none lg:mx-0">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
+      <div
+        data-main-scroll
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pt-6 pb-24 sm:p-6 lg:px-0 lg:py-8 lg:pb-10"
+      >
+      <div className="mx-auto max-w-7xl lg:mx-0 lg:max-w-none">
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3 min-w-0">
             <Button asChild variant="ghost" size="icon" className="shrink-0 rounded-lg">
@@ -67,6 +71,7 @@ export default function RecentSearchesClient() {
             </Button>
           </div>
         )}
+      </div>
       </div>
     </div>
   )
