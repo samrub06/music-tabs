@@ -20,10 +20,43 @@ import { ChordVariantsModal } from '@/components/chords/ChordVariantsModal';
 import { VariantChordCard } from '@/components/chords/VariantChordCard';
 import type { ChordVariantGroup } from '@/types/chordVariants';
 
-const DB_OPEN_G_MAJOR_NAME = 'G Major';
-const DB_OPEN_C_MAJOR_NAME = 'C Major';
+/** Static variant carousel groups shown as grid cards (replaces duplicate DB open shapes). */
+const VARIANT_GROUP_UI: Array<{
+  id: string;
+  searchKeys: string[];
+  hideDbNames: string[];
+}> = [
+  { id: 'g-major', searchKeys: ['g', 'g major', 'sol', 'sol majeur'], hideDbNames: ['G Major'] },
+  { id: 'c-major', searchKeys: ['c', 'c major', 'do', 'do majeur'], hideDbNames: ['C Major'] },
+  {
+    id: 'em-minor',
+    searchKeys: ['em', 'e minor', 'e min', 'mi mineur', 'mi min'],
+    hideDbNames: ['E Minor'],
+  },
+  { id: 'd-major', searchKeys: ['d', 'd major', 'ré', 're majeur'], hideDbNames: ['D Major'] },
+  {
+    id: 'am-minor',
+    searchKeys: ['am', 'a minor', 'a min', 'la mineur', 'la min'],
+    hideDbNames: ['A Minor'],
+  },
+  { id: 'b-major', searchKeys: ['b', 'b major', 'si', 'si majeur'], hideDbNames: ['B Major'] },
+  {
+    id: 'd-fsharp',
+    searchKeys: ['d/f#', 'd/f', 'ré fa', 're fa'],
+    hideDbNames: [],
+  },
+  {
+    id: 'fmaj7',
+    searchKeys: ['fmaj7', 'f maj7', 'fa maj7', 'f major 7'],
+    hideDbNames: [],
+  },
+  { id: 'fm-minor', searchKeys: ['fm', 'f minor', 'f min', 'fa mineur'], hideDbNames: ['F Minor'] },
+  { id: 'bdim', searchKeys: ['bdim', 'b dim', 'si dim'], hideDbNames: [] },
+];
 
-const HIDDEN_DB_CHORD_NAMES = new Set([DB_OPEN_G_MAJOR_NAME, DB_OPEN_C_MAJOR_NAME]);
+const HIDDEN_DB_CHORD_NAMES = new Set(
+  VARIANT_GROUP_UI.flatMap((g) => g.hideDbNames)
+);
 
 interface ChordsClientProps {
   initialChords: Chord[];
@@ -277,9 +310,6 @@ export default function ChordsClient({
     }
   };
 
-  const gMajorGroup = chordVariantsFr.find((g) => g.id === 'g-major')!;
-  const cMajorGroup = chordVariantsFr.find((g) => g.id === 'c-major')!;
-
   const openVariantGroup: ChordVariantGroup | null =
     openVariantGroupId != null
       ? chordVariantsFr.find((g) => g.id === openVariantGroupId) ?? null
@@ -299,19 +329,14 @@ export default function ChordsClient({
     };
   }, [searchQuery]);
 
-  const showGMajorCard = useMemo(() => {
-    if (!matchesChordSearch(['g', 'g major', 'sol', 'sol majeur'])) return false;
-    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') return false;
-    return true;
+  const visibleVariantGroups = useMemo(() => {
+    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') return [];
+    return VARIANT_GROUP_UI.filter((cfg) => matchesChordSearch(cfg.searchKeys))
+      .map((cfg) => chordVariantsFr.find((g) => g.id === cfg.id))
+      .filter((g): g is ChordVariantGroup => g != null);
   }, [matchesChordSearch, difficultyFilter]);
 
-  const showCMajorCard = useMemo(() => {
-    if (!matchesChordSearch(['c', 'c major', 'do', 'do majeur'])) return false;
-    if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') return false;
-    return true;
-  }, [matchesChordSearch, difficultyFilter]);
-
-  const showVariantCards = showGMajorCard || showCMajorCard;
+  const showVariantCards = visibleVariantGroups.length > 0;
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
@@ -426,18 +451,13 @@ export default function ChordsClient({
             {showVariantCards && (
               <div className="mb-12">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                  {showGMajorCard && (
+                  {visibleVariantGroups.map((group) => (
                     <VariantChordCard
-                      group={gMajorGroup}
-                      onClick={() => setOpenVariantGroupId('g-major')}
+                      key={group.id}
+                      group={group}
+                      onClick={() => setOpenVariantGroupId(group.id)}
                     />
-                  )}
-                  {showCMajorCard && (
-                    <VariantChordCard
-                      group={cMajorGroup}
-                      onClick={() => setOpenVariantGroupId('c-major')}
-                    />
-                  )}
+                  ))}
                 </div>
               </div>
             )}

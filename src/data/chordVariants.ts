@@ -279,7 +279,15 @@ const gMajorVariants = [
 
 const TOTAL = gMajorVariants.length;
 
+import { amMinorVariantGroup } from './amMinorVariants';
+import { bDimVariantGroup } from './bDimVariants';
+import { bMajorVariantGroup } from './bMajorVariants';
 import { cMajorVariantGroup } from './cMajorVariants';
+import { dFSharpVariantGroup } from './dFSharpVariants';
+import { dMajorVariantGroup } from './dMajorVariants';
+import { emMinorVariantGroup } from './emMinorVariants';
+import { fMaj7VariantGroup } from './fMaj7Variants';
+import { fmMinorVariantGroup } from './fmMinorVariants';
 
 const chordVariantsFr = [
   {
@@ -297,6 +305,14 @@ const chordVariantsFr = [
     showCarousel: true,
   },
   cMajorVariantGroup,
+  emMinorVariantGroup,
+  dMajorVariantGroup,
+  amMinorVariantGroup,
+  bMajorVariantGroup,
+  dFSharpVariantGroup,
+  fMaj7VariantGroup,
+  fmMinorVariantGroup,
+  bDimVariantGroup,
 ];
 
 export default chordVariantsFr as ChordVariantGroup[];

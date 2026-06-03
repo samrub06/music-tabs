@@ -26,7 +26,7 @@ Une application moderne de gestion de partitions et tablatures musicales constru
 
 #### Ajouter d'autres groupes de variantes (ex. C majeur)
 
-1. Copier le modèle G dans [`src/data/chordVariants.ts`](src/data/chordVariants.ts) ou C dans [`src/data/cMajorVariants.ts`](src/data/cMajorVariants.ts), puis ajouter le groupe à `chordVariantsFr` (`id`, `symbol`, `title`, `intro`, `showCarousel`).
+1. Copier un fichier existant (`gMajor` dans [`chordVariants.ts`](src/data/chordVariants.ts), ou `cMajorVariants`, `emMinorVariants`, `dMajorVariants`, etc.), puis exporter le groupe et l’ajouter à `chordVariantsFr`. Enregistrer aussi `id`, `searchKeys` et `hideDbNames` dans `VARIANT_GROUP_UI` de [`ChordsClient.tsx`](src/app/(protected)/chords/ChordsClient.tsx).
 2. Types dans [`src/types/chordVariants.ts`](src/types/chordVariants.ts). Pas de `build()` au runtime : diagrammes en objets statiques (pré-calculer avec vexchords si besoin).
 3. Afficher un autre [`ChordVariantsSection`](src/components/chords/ChordVariantsSection.tsx) dans [`ChordsClient.tsx`](src/app/(protected)/chords/ChordsClient.tsx) (ou une page dédiée). Aucune migration Supabase requise.
 
