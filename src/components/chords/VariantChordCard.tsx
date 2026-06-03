@@ -1,17 +1,24 @@
 'use client';
 
 import { ChordPreviewCard } from './ChordPreviewCard';
+import type { ChordInstrument } from './InstrumentToggle';
 import type { ChordVariantGroup } from '@/types/chordVariants';
 import { cn } from '@/lib/utils';
 
 interface VariantChordCardProps {
   group: ChordVariantGroup;
+  instrument?: ChordInstrument;
   onClick: () => void;
   className?: string;
 }
 
 /** Grid card — opens the variants modal on click */
-export function VariantChordCard({ group, onClick, className }: VariantChordCardProps) {
+export function VariantChordCard({
+  group,
+  instrument = 'guitar',
+  onClick,
+  className,
+}: VariantChordCardProps) {
   const preview = group.variants[0]?.chord;
   if (!preview) return null;
 
@@ -20,13 +27,16 @@ export function VariantChordCard({ group, onClick, className }: VariantChordCard
   return (
     <ChordPreviewCard
       chordLabel={group.symbol}
-      diagram={previewChord}
+      instrument={instrument}
+      diagram={instrument === 'guitar' ? previewChord : null}
       onClick={onClick}
-      className={cn('w-full sm:w-full', className)}
+      className={cn(className)}
       footer={
-        <span className="mt-1 inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
-          {group.variants.length} positions
-        </span>
+        instrument === 'guitar' ? (
+          <span className="mt-1 inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
+            {group.variants.length} positions
+          </span>
+        ) : undefined
       }
     />
   );

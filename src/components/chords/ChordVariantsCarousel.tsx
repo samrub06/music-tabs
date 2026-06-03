@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { VexChordDiagram } from './VexChordDiagram';
+import { CHORD_MODAL_DIAGRAM_OPTS } from './chordCardDimensions';
 import type { ChordVariant } from '@/types/chordVariants';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +18,8 @@ export interface ChordVariantsCarouselProps {
   className?: string;
 }
 
+const SWIPE_THRESHOLD_PX = 40;
+
 export function ChordVariantsCarousel({
   variants,
   chordSymbol = 'G',
@@ -25,6 +28,7 @@ export function ChordVariantsCarousel({
   className,
 }: ChordVariantsCarouselProps) {
   const [index, setIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
   const total = variants.length;
   const current = variants[index];
   const isCompact = variant === 'compact';
@@ -36,6 +40,23 @@ export function ChordVariantsCarousel({
   const goPrev = () => setIndex((i) => (i - 1 + total) % total);
   const goNext = () => setIndex((i) => (i + 1) % total);
 
+  const handleTouchStart = (event: React.TouchEvent) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    if (touchStartX.current == null) return;
+    const endX = event.changedTouches[0]?.clientX;
+    if (endX == null) return;
+
+    const deltaX = endX - touchStartX.current;
+    touchStartX.current = null;
+
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return;
+    if (deltaX > 0) goPrev();
+    else goNext();
+  };
+
   if (!current) return null;
 
   const displayChord = isCompact
@@ -43,35 +64,50 @@ export function ChordVariantsCarousel({
     : current.chord;
 
   return (
-    <div className={cn('flex flex-col items-center', className)}>
+    <div
+      className={cn(
+        'flex w-full flex-col',
+        isCompact ? 'items-start' : 'items-center',
+        className
+      )}
+    >
       {isCompact ? (
-        <div className="flex w-full flex-col items-center gap-4 py-2">
-          <VexChordDiagram chord={displayChord} />
+        <div className="flex w-full flex-col items-start gap-2 pb-2 pt-0">
           <nav
-            className="flex w-full max-w-xs items-center justify-between gap-6 px-2"
+            className="flex w-full items-center gap-0.5"
             aria-label="Navigation des diagrammes"
           >
             <button
               type="button"
               onClick={goPrev}
               aria-label="Diagramme précédent"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-12 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:w-12"
             >
-              <ChevronLeftIcon className="h-6 w-6" />
+              <ChevronLeftIcon className="h-8 w-8" />
             </button>
-            <span className="text-sm text-muted-foreground">
-              {index + 1} sur {total}
-            </span>
+            <div
+              className="flex min-w-0 flex-1 touch-pan-y items-center justify-center"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <VexChordDiagram chord={displayChord} options={CHORD_MODAL_DIAGRAM_OPTS} />
+            </div>
             <button
               type="button"
               onClick={goNext}
               aria-label="Diagramme suivant"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-12 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:w-12"
             >
-              <ChevronRightIcon className="h-6 w-6" />
+              <ChevronRightIcon className="h-8 w-8" />
             </button>
           </nav>
-          <p className="max-w-sm px-2 text-center text-xs leading-relaxed text-muted-foreground">
+          <p className="w-full text-center text-sm font-medium text-muted-foreground">
+            {index + 1} sur {total}
+          </p>
+          <p
+            className="line-clamp-2 min-h-[2.5rem] w-full px-2 text-center text-xs leading-5 text-muted-foreground"
+            title={current.description}
+          >
             {current.description}
           </p>
         </div>

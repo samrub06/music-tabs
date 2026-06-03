@@ -16,9 +16,17 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import chordVariantsFr from '@/data/chordVariants';
+import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
 import { ChordVariantsModal } from '@/components/chords/ChordVariantsModal';
+import {
+  InstrumentToggle,
+  type ChordInstrument,
+} from '@/components/chords/InstrumentToggle';
 import { VariantChordCard } from '@/components/chords/VariantChordCard';
+import { CHORD_PREVIEW_DIAGRAM_OPTS } from '@/components/chords/chordCardDimensions';
 import type { ChordVariantGroup } from '@/types/chordVariants';
+const CHORDS_GRID_CLASS =
+  'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
 
 /** Static variant carousel groups shown as grid cards (replaces duplicate DB open shapes). */
 const VARIANT_GROUP_UI: Array<{
@@ -131,10 +139,31 @@ export default function ChordsClient({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [openVariantGroupId, setOpenVariantGroupId] = useState<string | null>(null);
+  const [instrument, setInstrument] = useState<ChordInstrument>('guitar');
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const chordBoxesRef = useRef<Map<string, ChordBox>>(new Map());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CHORDS_INSTRUMENT_STORAGE_KEY);
+      if (stored === 'piano' || stored === 'guitar') {
+        setInstrument(stored);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const handleInstrumentChange = (value: ChordInstrument) => {
+    setInstrument(value);
+    try {
+      localStorage.setItem(CHORDS_INSTRUMENT_STORAGE_KEY, value);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const chordNameSuggestions = useMemo(() => {
     const q = localSearchValue.trim().toLowerCase();
@@ -252,7 +281,7 @@ export default function ChordsClient({
   };
 
   useEffect(() => {
-    // Render all chords after sections are set
+    if (instrument !== 'guitar') return;
     if (filteredSections.length === 0) return;
 
     // Collect all visible chord IDs
@@ -287,12 +316,7 @@ export default function ChordsClient({
             }
             
             // Create new ChordBox instance
-            const chordBox = new ChordBox(container, {
-              width: 130,
-              height: 150,
-              defaultColor: '#444',
-              showTuning: true
-            });
+            const chordBox = new ChordBox(container, CHORD_PREVIEW_DIAGRAM_OPTS);
 
             // Store the ChordBox instance
             chordBoxesRef.current.set(chordId, chordBox);
@@ -313,7 +337,7 @@ export default function ChordsClient({
     return () => {
       clearTimeout(timer);
     };
-  }, [filteredSections]);
+  }, [filteredSections, instrument]);
 
   const getDifficultyBadgeColor = (difficulty: string | null | undefined) => {
     switch (difficulty) {
@@ -440,13 +464,13 @@ export default function ChordsClient({
             )}
           </div>
 
-          {/* Status + difficulty — shadcn selects below search */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Status + difficulty + instrument — one row */}
+          <div className="flex gap-2 sm:gap-3">
             <Select
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as StatusFilter)}
             >
-              <SelectTrigger className="h-11 w-full rounded-xl border-border bg-card text-sm">
+              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-xl border-border bg-card text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -460,7 +484,7 @@ export default function ChordsClient({
               value={difficultyFilter}
               onValueChange={(v) => setDifficultyFilter(v as DifficultyFilter)}
             >
-              <SelectTrigger className="h-11 w-full rounded-xl border-border bg-card text-sm">
+              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-xl border-border bg-card text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -470,6 +494,12 @@ export default function ChordsClient({
                 <SelectItem value="advanced">{t('chords.difficultyAdvanced')}</SelectItem>
               </SelectContent>
             </Select>
+
+            <InstrumentToggle
+              value={instrument}
+              onChange={handleInstrumentChange}
+              compact
+            />
           </div>
         </div>
 
@@ -481,11 +511,12 @@ export default function ChordsClient({
           <>
             {showVariantCards && (
               <div className="mb-12">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className={CHORDS_GRID_CLASS}>
                   {visibleVariantGroups.map((group) => (
                     <VariantChordCard
                       key={group.id}
                       group={group}
+                      instrument={instrument}
                       onClick={() => setOpenVariantGroupId(group.id)}
                     />
                   ))}
@@ -494,7 +525,7 @@ export default function ChordsClient({
             )}
           {filteredSections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="mb-12">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className={CHORDS_GRID_CLASS}>
                 {section.chords
                   .filter((chord) => !HIDDEN_DB_CHORD_NAMES.has(chord.name))
                   .map((chord) => {
@@ -502,17 +533,18 @@ export default function ChordsClient({
                   return (
                     <div
                       key={chord.id}
-                      className={`relative flex flex-col items-center p-3 bg-white rounded-lg shadow-sm border transition-shadow ${
-                        isKnown 
-                          ? 'border-green-300 bg-green-50' 
-                          : 'border-gray-200 hover:shadow-md'
-                      }`}
+                      className={cn(
+                        'relative flex w-full flex-col',
+                        isKnown
+                          ? 'rounded-lg border border-green-300 bg-green-50'
+                          : ''
+                      )}
                     >
-                      {/* Known Toggle Button */}
                       <button
+                        type="button"
                         onClick={() => handleToggleKnown(chord.id)}
                         disabled={isPending}
-                        className="absolute top-2 left-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 z-10"
+                        className="absolute top-2 left-2 z-10 rounded-full p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50"
                         aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
                         title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
                       >
@@ -523,23 +555,32 @@ export default function ChordsClient({
                         )}
                       </button>
 
-                      <div
-                        ref={(el) => {
-                          if (el) {
-                            chordRefs.current.set(chord.id, el);
-                          }
-                        }}
-                        className="mb-2"
+                      <ChordPreviewCard
+                        chordLabel={chord.name}
+                        instrument={instrument}
+                        diagramContainerRef={
+                          instrument === 'guitar'
+                            ? (el) => {
+                                if (el) chordRefs.current.set(chord.id, el);
+                              }
+                            : undefined
+                        }
+                        className={cn(
+                          isKnown && 'border-green-300 bg-green-50'
+                        )}
+                        footer={
+                          chord.difficulty ? (
+                            <span
+                              className={cn(
+                                'mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+                                getDifficultyBadgeColor(chord.difficulty)
+                              )}
+                            >
+                              {getDifficultyLabel(chord.difficulty)}
+                            </span>
+                          ) : undefined
+                        }
                       />
-                      <div className="text-sm font-medium text-gray-700 text-center mb-1">
-                        {chord.name}
-                      </div>
-                      {/* Difficulty Badge */}
-                      {chord.difficulty && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getDifficultyBadgeColor(chord.difficulty)}`}>
-                          {getDifficultyLabel(chord.difficulty)}
-                        </span>
-                      )}
                     </div>
                   );
                 })}
@@ -552,6 +593,7 @@ export default function ChordsClient({
         {openVariantGroup && (
           <ChordVariantsModal
             group={openVariantGroup}
+            instrument={instrument}
             open
             onOpenChange={(open) => {
               if (!open) setOpenVariantGroupId(null);

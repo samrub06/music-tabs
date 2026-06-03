@@ -26,6 +26,8 @@ Une application moderne de gestion de partitions et tablatures musicales constru
 
 #### Ajouter d'autres groupes de variantes (ex. C majeur)
 
+**Piano diagrams:** SVG files live in [`public/piano-chords/`](public/piano-chords/) (e.g. `G.svg`, `Am` → add `Em.svg`). Mapping in [`src/utils/pianoChordAssets.ts`](src/utils/pianoChordAssets.ts).
+
 1. Copier un fichier existant (`gMajor` dans [`chordVariants.ts`](src/data/chordVariants.ts), ou `cMajorVariants`, `emMinorVariants`, `dMajorVariants`, etc.), puis exporter le groupe et l’ajouter à `chordVariantsFr`. Enregistrer aussi `id`, `searchKeys` et `hideDbNames` dans `VARIANT_GROUP_UI` de [`ChordsClient.tsx`](src/app/(protected)/chords/ChordsClient.tsx).
 2. Types dans [`src/types/chordVariants.ts`](src/types/chordVariants.ts). Pas de `build()` au runtime : diagrammes en objets statiques (pré-calculer avec vexchords si besoin).
 3. Afficher un autre [`ChordVariantsSection`](src/components/chords/ChordVariantsSection.tsx) dans [`ChordsClient.tsx`](src/app/(protected)/chords/ChordsClient.tsx) (ou une page dédiée). Aucune migration Supabase requise.

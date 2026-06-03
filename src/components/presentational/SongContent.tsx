@@ -12,11 +12,15 @@ import { useLanguage } from '@/context/LanguageContext';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
 import { ChordBox } from 'vexchords';
-import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
 import {
+  CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS,
   CHORD_PREVIEW_DIAGRAM_OPTS,
+  CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS,
 } from '@/components/chords/chordCardDimensions';
+import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
 import { getChordVariantGroup } from '@/utils/chordVariantLookup';
+import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
+import type { ChordInstrument } from '@/components/chords/InstrumentToggle';
 import type { Chord, Folder } from '@/types';
 import FolderDropdown from '@/components/FolderDropdown';
 import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
@@ -365,6 +369,7 @@ export default function SongContent({
                   song={transposedSong}
                   onChordClick={onChordClick}
                   fontSize={fontSize}
+                  selectedInstrument={selectedInstrument}
                   knownChordIds={knownChordIds}
                   chordNameToIdMap={chordNameToIdMap}
                   chords={chords}
@@ -1044,6 +1049,7 @@ interface ChordDiagramsGridProps {
   song: any;
   onChordClick: (chord: string) => void;
   fontSize: number;
+  selectedInstrument?: ChordInstrument;
   knownChordIds?: Set<string>;
   chordNameToIdMap?: Map<string, string>;
   chords?: Chord[]; // Full chord objects from database
@@ -1096,6 +1102,7 @@ function ChordDiagramsGrid({
   song, 
   onChordClick, 
   fontSize,
+  selectedInstrument = 'guitar',
   knownChordIds = new Set(),
   chordNameToIdMap = new Map(),
   chords = []
@@ -1122,9 +1129,12 @@ function ChordDiagramsGrid({
       ),
     [unknownChords]
   );
+
+  const useGuitarDiagrams = selectedInstrument !== 'piano';
   
   // DB fallback diagrams (variant groups use VexChordDiagram in JSX)
   useEffect(() => {
+    if (!useGuitarDiagrams) return;
     if (chords.length === 0 || dbOnlyChords.length === 0) return;
     
     const timer = setTimeout(() => {
@@ -1153,7 +1163,7 @@ function ChordDiagramsGrid({
     return () => {
       clearTimeout(timer);
     };
-  }, [dbOnlyChords, chords]);
+  }, [dbOnlyChords, chords, useGuitarDiagrams]);
   
   return (
     <div>
@@ -1163,7 +1173,12 @@ function ChordDiagramsGrid({
           const previewVariant = variantGroup?.variants[0];
           const dbChord =
             variantGroup == null ? findChordInDatabase(songChordName, chords) : null;
-          const hasDiagram = previewVariant != null || dbChord != null;
+          const hasPianoDiagram =
+            selectedInstrument === 'piano' && hasPianoChordDiagram(songChordName);
+          const hasDiagram =
+            hasPianoDiagram ||
+            (selectedInstrument !== 'piano' &&
+              (previewVariant != null || dbChord != null));
 
           if (!hasDiagram) {
             return (
@@ -1171,7 +1186,10 @@ function ChordDiagramsGrid({
                 key={songChordName}
                 type="button"
                 onClick={() => onChordClick(songChordName)}
-                className="flex min-h-[9.75rem] w-[5.75rem] shrink-0 flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-2 shadow-sm hover:border-blue-400 hover:shadow-md sm:w-full"
+                className={cn(
+                  'flex min-h-[9.75rem] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-2 shadow-sm hover:border-blue-400 hover:shadow-md sm:w-full',
+                  CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS
+                )}
               >
                 <span
                   className="text-center font-bold text-gray-900"
@@ -1184,27 +1202,35 @@ function ChordDiagramsGrid({
             );
           }
 
-          const previewDiagram = previewVariant
-            ? {
-                ...previewVariant.chord,
-                name: variantGroup!.symbol,
-              }
-            : null;
+          const useGuitarDiagrams = selectedInstrument !== 'piano';
+          const previewDiagram =
+            useGuitarDiagrams && previewVariant
+              ? {
+                  ...previewVariant.chord,
+                  name: variantGroup!.symbol,
+                }
+              : null;
 
           return (
             <ChordPreviewCard
               key={songChordName}
               chordLabel={songChordName}
+              instrument={selectedInstrument}
               diagram={previewDiagram}
               diagramContainerRef={
-                previewDiagram
-                  ? undefined
-                  : (el) => {
+                useGuitarDiagrams && !previewDiagram
+                  ? (el) => {
                       if (el) chordRefs.current.set(songChordName, el);
                     }
+                  : undefined
               }
               onClick={() => onChordClick(songChordName)}
-              className="sm:w-full"
+              className={cn(
+                'sm:w-full',
+                selectedInstrument === 'piano'
+                  ? CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS
+                  : CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS
+              )}
             />
           );
         })}

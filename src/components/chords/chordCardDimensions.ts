@@ -11,5 +11,14 @@ export const CHORD_PREVIEW_DIAGRAM_OPTS: ChordBoxOptions = {
 export const CHORD_PREVIEW_DIAGRAM_WIDTH = CHORD_PREVIEW_DIAGRAM_OPTS.width as number;
 export const CHORD_PREVIEW_DIAGRAM_HEIGHT = CHORD_PREVIEW_DIAGRAM_OPTS.height as number;
 
-/** Tailwind width class aligned with diagram width + card padding */
-export const CHORD_PREVIEW_CARD_WIDTH_CLASS = 'w-[5.75rem]';
+/** Guitar diagram in chord variant modals */
+export const CHORD_MODAL_DIAGRAM_OPTS: ChordBoxOptions = {
+  width: 172,
+  height: 200,
+  defaultColor: '#444',
+  showTuning: true,
+};
+
+/** Fixed width for horizontal scroll rows (song viewer). Grid layouts use w-full. */
+export const CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS = 'w-[8rem] shrink-0';
+export const CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS = 'w-[11rem] shrink-0';

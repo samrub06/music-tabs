@@ -507,7 +507,9 @@
     "difficultyBeginner": "Débutant",
     "difficultyIntermediate": "Intermédiaire",
     "difficultyAdvanced": "Avancé",
-    "noResults": "Aucun accord ne correspond à vos filtres"
+    "noResults": "Aucun accord ne correspond à vos filtres",
+    "instrument": "Instrument",
+    "noPianoDiagram": "Pas de diagramme piano pour cet accord"
   },
   "aiPlaylist": {
     "title": "Générer une playlist avec AI",

@@ -509,7 +509,9 @@
     "difficultyBeginner": "מתחיל",
     "difficultyIntermediate": "בינוני",
     "difficultyAdvanced": "מתקדם",
-    "noResults": "לא נמצאו אקורדים התואמים למסננים"
+    "noResults": "לא נמצאו אקורדים התואמים למסננים",
+    "instrument": "כלי נגינה",
+    "noPianoDiagram": "אין דיאגרמת פסנתר לאקורד זה"
   },
   "aiPlaylist": {
     "title": "צור פלייליסט עם AI",
