@@ -52,6 +52,37 @@ const VARIANT_GROUP_UI: Array<{
   },
   { id: 'fm-minor', searchKeys: ['fm', 'f minor', 'f min', 'fa mineur'], hideDbNames: ['F Minor'] },
   { id: 'bdim', searchKeys: ['bdim', 'b dim', 'si dim'], hideDbNames: [] },
+  {
+    id: 'bb-major',
+    searchKeys: ['bb', 'bb major', 'si bémol', 'sib', 'si bemol'],
+    hideDbNames: ['Bb Major'],
+  },
+  {
+    id: 'cm-minor',
+    searchKeys: ['cm', 'c minor', 'c min', 'do mineur', 'do min'],
+    hideDbNames: [],
+  },
+  {
+    id: 'cadd9',
+    searchKeys: ['cadd9', 'c add9', 'do add9', 'c add 9'],
+    hideDbNames: [],
+  },
+  { id: 'd4', searchKeys: ['d4', 'dsus4', 'ré 4', 're 4', 'd sus4'], hideDbNames: [] },
+  {
+    id: 'em7',
+    searchKeys: ['em7', 'e minor 7', 'e min 7', 'mi mineur 7', 'mi min 7'],
+    hideDbNames: ['Em7'],
+  },
+  {
+    id: 'f-major',
+    searchKeys: ['f', 'f major', 'fa majeur', 'fa maj'],
+    hideDbNames: ['F Major'],
+  },
+  {
+    id: 'gm-minor',
+    searchKeys: ['gm', 'g minor', 'g min', 'sol mineur', 'sol min'],
+    hideDbNames: [],
+  },
 ];
 
 const HIDDEN_DB_CHORD_NAMES = new Set(

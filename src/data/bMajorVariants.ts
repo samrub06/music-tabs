@@ -4,7 +4,7 @@ function bVariant(name: string, diagram: Omit<VexChordDiagramData, 'name'>): Vex
   return { ...diagram, name: `B — ${name}` };
 }
 
-/** Positions capturées depuis les captures (2 / 16 dans l’app source). */
+/** Ordre carousel source : 1 → 2 (sur 16 dans l’app). */
 const bMajorVariants = [
   {
     id: 'b-01',
@@ -35,7 +35,7 @@ export const bMajorVariantGroup: ChordVariantGroup = {
   symbol: 'B',
   title: 'Si majeur (B) — positions',
   intro:
-    `${B_TOTAL} positions de Si majeur (extrait des variantes de l’app source). `
+    `${B_TOTAL} premières positions de Si majeur (n° 1 et 2 sur 16 dans l’app source). `
     + 'Formes barrées A (2e case) et E (7e case).',
   variants: bMajorVariants.map((v, i) => ({
     ...v,

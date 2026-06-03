@@ -282,12 +282,19 @@ const TOTAL = gMajorVariants.length;
 import { amMinorVariantGroup } from './amMinorVariants';
 import { bDimVariantGroup } from './bDimVariants';
 import { bMajorVariantGroup } from './bMajorVariants';
+import { bbMajorVariantGroup } from './bbMajorVariants';
+import { cadd9VariantGroup } from './cadd9Variants';
 import { cMajorVariantGroup } from './cMajorVariants';
+import { cmMinorVariantGroup } from './cmMinorVariants';
+import { d4VariantGroup } from './d4Variants';
 import { dFSharpVariantGroup } from './dFSharpVariants';
 import { dMajorVariantGroup } from './dMajorVariants';
+import { em7VariantGroup } from './em7Variants';
 import { emMinorVariantGroup } from './emMinorVariants';
+import { fMajorVariantGroup } from './fMajorVariants';
 import { fMaj7VariantGroup } from './fMaj7Variants';
 import { fmMinorVariantGroup } from './fmMinorVariants';
+import { gmMinorVariantGroup } from './gmMinorVariants';
 
 const chordVariantsFr = [
   {
@@ -313,6 +320,13 @@ const chordVariantsFr = [
   fMaj7VariantGroup,
   fmMinorVariantGroup,
   bDimVariantGroup,
+  bbMajorVariantGroup,
+  cmMinorVariantGroup,
+  cadd9VariantGroup,
+  d4VariantGroup,
+  em7VariantGroup,
+  fMajorVariantGroup,
+  gmMinorVariantGroup,
 ];
 
 export default chordVariantsFr as ChordVariantGroup[];
