@@ -33,15 +33,15 @@ export function ChordVariantsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto border-border bg-card p-0 sm:max-w-md">
-        <DialogHeader className="px-4 pb-0 pt-4 text-start">
-          <DialogTitle className="text-xl font-bold text-foreground">
+        <DialogHeader className="flex min-h-14 flex-row items-center justify-center space-y-0 px-12 py-0">
+          <DialogTitle className="text-center text-xl font-bold leading-none text-foreground">
             {group.symbol}
           </DialogTitle>
           <DialogDescription className="sr-only">{group.intro}</DialogDescription>
         </DialogHeader>
         <div className="flex w-full flex-col items-start px-4 pb-6 pt-2">
           {showPiano ? (
-            <PianoChordDiagram chordSymbol={group.symbol} size="modal" className="self-center" />
+            <PianoChordDiagram chordSymbol={group.symbol} size="modal" className="w-full" />
           ) : instrument === 'piano' ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
               {t('chords.noPianoDiagram')}

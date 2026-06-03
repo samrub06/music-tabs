@@ -18,7 +18,60 @@ export interface ChordVariantsCarouselProps {
   className?: string;
 }
 
-const SWIPE_THRESHOLD_PX = 40;
+const SWIPE_THRESHOLD_PX = 32;
+
+type SlideDirection = 'next' | 'prev';
+
+function slideEnterClass(direction: SlideDirection, size: 'sm' | 'md') {
+  return cn(
+    'animate-in fade-in duration-200 motion-reduce:animate-none',
+    direction === 'next'
+      ? size === 'md'
+        ? 'slide-in-from-right-8'
+        : 'slide-in-from-right-4'
+      : size === 'md'
+        ? 'slide-in-from-left-8'
+        : 'slide-in-from-left-4'
+  );
+}
+
+function useHorizontalSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  const reset = () => {
+    touchStart.current = null;
+  };
+
+  const handleTouchStart = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStart.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    const start = touchStart.current;
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    reset();
+    if (!touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return;
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+    if (deltaX > 0) onSwipeRight();
+    else onSwipeLeft();
+  };
+
+  return {
+    onTouchStart: handleTouchStart,
+    onTouchEnd: handleTouchEnd,
+    onTouchCancel: reset,
+  };
+}
 
 export function ChordVariantsCarousel({
   variants,
@@ -28,34 +81,25 @@ export function ChordVariantsCarousel({
   className,
 }: ChordVariantsCarouselProps) {
   const [index, setIndex] = useState(0);
-  const touchStartX = useRef<number | null>(null);
+  const [slideDirection, setSlideDirection] = useState<SlideDirection>('next');
   const total = variants.length;
   const current = variants[index];
   const isCompact = variant === 'compact';
 
   useEffect(() => {
     setIndex(0);
+    setSlideDirection('next');
   }, [resetKey]);
 
-  const goPrev = () => setIndex((i) => (i - 1 + total) % total);
-  const goNext = () => setIndex((i) => (i + 1) % total);
-
-  const handleTouchStart = (event: React.TouchEvent) => {
-    touchStartX.current = event.touches[0]?.clientX ?? null;
+  const goPrev = () => {
+    setSlideDirection('prev');
+    setIndex((i) => (i - 1 + total) % total);
   };
-
-  const handleTouchEnd = (event: React.TouchEvent) => {
-    if (touchStartX.current == null) return;
-    const endX = event.changedTouches[0]?.clientX;
-    if (endX == null) return;
-
-    const deltaX = endX - touchStartX.current;
-    touchStartX.current = null;
-
-    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return;
-    if (deltaX > 0) goPrev();
-    else goNext();
+  const goNext = () => {
+    setSlideDirection('next');
+    setIndex((i) => (i + 1) % total);
   };
+  const swipeHandlers = useHorizontalSwipe(goNext, goPrev);
 
   if (!current) return null;
 
@@ -74,8 +118,9 @@ export function ChordVariantsCarousel({
       {isCompact ? (
         <div className="flex w-full flex-col items-start gap-2 pb-2 pt-0">
           <nav
-            className="flex w-full items-center gap-0.5"
+            className="flex w-full touch-pan-y select-none items-center gap-0.5"
             aria-label="Navigation des diagrammes"
+            {...swipeHandlers}
           >
             <button
               type="button"
@@ -85,12 +130,16 @@ export function ChordVariantsCarousel({
             >
               <ChevronLeftIcon className="h-8 w-8" />
             </button>
-            <div
-              className="flex min-w-0 flex-1 touch-pan-y items-center justify-center"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-            >
-              <VexChordDiagram chord={displayChord} options={CHORD_MODAL_DIAGRAM_OPTS} />
+            <div className="relative min-h-[12.5rem] min-w-0 flex-1 overflow-hidden py-2">
+              <div
+                key={index}
+                className={cn(
+                  'flex items-center justify-center',
+                  slideEnterClass(slideDirection, 'md')
+                )}
+              >
+                <VexChordDiagram chord={displayChord} options={CHORD_MODAL_DIAGRAM_OPTS} />
+              </div>
             </div>
             <button
               type="button"
@@ -105,7 +154,11 @@ export function ChordVariantsCarousel({
             {index + 1} sur {total}
           </p>
           <p
-            className="line-clamp-2 min-h-[2.5rem] w-full px-2 text-center text-xs leading-5 text-muted-foreground"
+            key={`desc-${index}`}
+            className={cn(
+              'line-clamp-2 min-h-[2.5rem] w-full px-2 text-center text-xs leading-5 text-muted-foreground',
+              slideEnterClass(slideDirection, 'sm')
+            )}
             title={current.description}
           >
             {current.description}

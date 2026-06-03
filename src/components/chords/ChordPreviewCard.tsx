@@ -6,6 +6,8 @@ import {
   CHORD_PREVIEW_DIAGRAM_HEIGHT,
   CHORD_PREVIEW_DIAGRAM_OPTS,
   CHORD_PREVIEW_DIAGRAM_WIDTH,
+  CHORD_PREVIEW_PIANO_ASPECT_CLASS,
+  CHORD_PREVIEW_PIANO_CARD_CLASS,
 } from './chordCardDimensions';
 import type { ChordInstrument } from './InstrumentToggle';
 import { PianoChordDiagram } from './PianoChordDiagram';
@@ -25,7 +27,8 @@ interface ChordPreviewCardProps {
 }
 
 /**
- * Portrait chord cell: diagram on top, label at bottom (matches song “Accords utilisés” layout).
+ * Guitar: portrait cell with fretboard on top, label below.
+ * Piano: wide rectangular cell matching 1900×800 keyboard SVGs.
  */
 export function ChordPreviewCard({
   chordLabel,
@@ -46,8 +49,8 @@ export function ChordPreviewCard({
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex w-full min-w-0 flex-col items-center rounded-lg border border-gray-200 bg-white',
-        'min-h-[9.75rem]',
+        'flex min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white',
+        showPiano ? cn(CHORD_PREVIEW_PIANO_CARD_CLASS, 'items-stretch') : 'min-h-[11rem] w-full items-center',
         'shadow-sm transition-shadow dark:border-gray-700 dark:bg-gray-800',
         onClick &&
           'hover:border-blue-400 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
@@ -57,12 +60,14 @@ export function ChordPreviewCard({
     >
       <div
         className={cn(
-          'flex w-full flex-1 items-center justify-center px-1',
-          showPiano ? 'pt-1' : 'pt-2'
+          'flex w-full min-h-0 items-center justify-center',
+          showPiano
+            ? cn(CHORD_PREVIEW_PIANO_ASPECT_CLASS, 'shrink-0 px-0.5 pt-1')
+            : 'flex-1 px-1 pt-2'
         )}
       >
         {showPiano ? (
-          <PianoChordDiagram chordSymbol={chordLabel} />
+          <PianoChordDiagram chordSymbol={chordLabel} size="card" />
         ) : diagram ? (
           <VexChordDiagram chord={diagram} options={CHORD_PREVIEW_DIAGRAM_OPTS} />
         ) : hasDiagram ? (
@@ -76,8 +81,20 @@ export function ChordPreviewCard({
           />
         ) : null}
       </div>
-      <div className="w-full px-1 pb-2.5 pt-0.5 text-center">
-        <div className="text-sm font-bold text-gray-900 dark:text-gray-100">{chordLabel}</div>
+      <div
+        className={cn(
+          'w-full shrink-0 text-center',
+          showPiano ? 'px-1 pb-1 pt-0' : 'px-1 pb-2.5 pt-0.5'
+        )}
+      >
+        <div
+          className={cn(
+            'font-bold text-gray-900 dark:text-gray-100',
+            showPiano ? 'text-xs' : 'text-sm'
+          )}
+        >
+          {chordLabel}
+        </div>
         {footer}
       </div>
     </Comp>

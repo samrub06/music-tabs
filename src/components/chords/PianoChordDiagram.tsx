@@ -19,15 +19,16 @@ export function PianoChordDiagram({
   if (!src) return null;
 
   return (
-    <div className={cn('w-full overflow-hidden leading-none', className)}>
-      <img
-        src={src}
-        alt={`${chordSymbol} — piano`}
-        className={cn(
-          'block w-full',
-          size === 'card' ? '-mt-[14%] -mb-[20%]' : '-mt-[10%] -mb-[14%]'
-        )}
-      />
-    </div>
+    <img
+      src={src}
+      alt={`${chordSymbol} — piano`}
+      className={cn(
+        'block max-w-full',
+        size === 'card'
+          ? 'h-full w-full object-contain object-center'
+          : 'h-auto w-full px-1',
+        className
+      )}
+    />
   );
 }

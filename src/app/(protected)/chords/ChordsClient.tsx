@@ -25,8 +25,13 @@ import {
 import { VariantChordCard } from '@/components/chords/VariantChordCard';
 import { CHORD_PREVIEW_DIAGRAM_OPTS } from '@/components/chords/chordCardDimensions';
 import type { ChordVariantGroup } from '@/types/chordVariants';
+const CHORDS_INSTRUMENT_STORAGE_KEY = 'chords-instrument';
+
 const CHORDS_GRID_CLASS =
-  'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
+  'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+
+const CHORDS_PIANO_GRID_CLASS =
+  'grid grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3';
 
 /** Static variant carousel groups shown as grid cards (replaces duplicate DB open shapes). */
 const VARIANT_GROUP_UI: Array<{
@@ -511,7 +516,7 @@ export default function ChordsClient({
           <>
             {showVariantCards && (
               <div className="mb-12">
-                <div className={CHORDS_GRID_CLASS}>
+                <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
                   {visibleVariantGroups.map((group) => (
                     <VariantChordCard
                       key={group.id}
@@ -525,7 +530,7 @@ export default function ChordsClient({
             )}
           {filteredSections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="mb-12">
-              <div className={CHORDS_GRID_CLASS}>
+              <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
                 {section.chords
                   .filter((chord) => !HIDDEN_DB_CHORD_NAMES.has(chord.name))
                   .map((chord) => {
