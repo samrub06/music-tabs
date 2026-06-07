@@ -34,7 +34,7 @@ export default function ForYouArtistSection({
   const handleAddToLibrary = useCallback(
     async (song: ForYouArtistSong) => {
       if (!userId) {
-        router.push('/login?next=/search')
+        router.push('/login?next=/')
         return
       }
 

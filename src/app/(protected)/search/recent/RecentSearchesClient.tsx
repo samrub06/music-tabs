@@ -23,7 +23,7 @@ export default function RecentSearchesClient() {
   }, [])
 
   const handleItemClick = (item: RecentSearchItem) => {
-    router.push(`/search?q=${encodeURIComponent(item.query)}`)
+    router.push(`/?q=${encodeURIComponent(item.query)}`)
   }
 
   const handleClearAll = () => {
@@ -41,7 +41,7 @@ export default function RecentSearchesClient() {
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3 min-w-0">
             <Button asChild variant="ghost" size="icon" className="shrink-0 rounded-lg">
-              <Link href="/search" aria-label={t('common.back')}>
+              <Link href="/" aria-label={t('common.back')}>
                 <ArrowLeftIcon className="h-5 w-5" />
               </Link>
             </Button>
@@ -67,7 +67,7 @@ export default function RecentSearchesClient() {
           <div className="text-center py-16 rounded-2xl bg-card border border-border">
             <p className="text-muted-foreground mb-4">{t('search.noRecentSearches')}</p>
             <Button asChild>
-              <Link href="/search">{t('search.startSearching')}</Link>
+              <Link href="/">{t('search.startSearching')}</Link>
             </Button>
           </div>
         )}

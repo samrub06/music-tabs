@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/sidebar'
 
 const MAIN_NAV = [
-  { href: '/search', labelKey: 'navigation.search', icon: Search, match: (p: string) => p === '/search' || p.startsWith('/search/') },
+  { href: '/', labelKey: 'navigation.search', icon: Search, match: (p: string) => p === '/' || p === '/search' || p.startsWith('/search/') },
   { href: '/songs', labelKey: 'navigation.songs', icon: Library, match: (p: string) => p === '/songs' || p.startsWith('/songs/') },
   { href: '/playlists', labelKey: 'navigation.playlists', icon: Sparkles, match: (p: string) => p === '/playlists' || p.startsWith('/playlists/') || p.startsWith('/playlist/') },
 ] as const
@@ -50,7 +50,7 @@ export function AppSidebar() {
               asChild
               className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
             >
-              <Link href="/search">
+              <Link href="/">
                 <span className="text-xl leading-none group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-full group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center">
                   🌶️
                 </span>

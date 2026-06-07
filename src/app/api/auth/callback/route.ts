@@ -8,12 +8,12 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get('code')
   
   // Default to search if no next param provided
-  let next = searchParams.get('next') ?? '/search'
+  let next = searchParams.get('next') ?? '/'
 
   // Basic sanitization to prevent open redirects
   // Ensure it starts with / and is not a protocol-relative URL (//)
   if (!next.startsWith('/') || next.startsWith('//')) {
-    next = '/search'
+    next = '/'
   }
 
   if (code) {

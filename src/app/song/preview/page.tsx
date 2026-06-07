@@ -11,7 +11,7 @@ export default async function SongPreviewPage({
   const { url, searchResult } = params
 
   if (!url) {
-    redirect('/search')
+    redirect('/')
   }
 
   const supabase = await createSafeServerClient()

@@ -24,7 +24,7 @@ export const CURATED_PLAYLIST_SECTION_ORDER: CuratedPlaylistSection[] = [
   'difficulty',
 ]
 
-/** Prefilled public playlists shown on the explorer (/search) page. */
+/** Prefilled public playlists shown on the explorer home page (/). */
 export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
   {
     slug: 'rock',

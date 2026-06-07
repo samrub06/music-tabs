@@ -28,13 +28,42 @@ const MORE_PATHS = ['/leaderboard', '/profile', '/ai-playlist'];
 
 export default function BottomNavigation() {
   const pathname = usePathname();
-  const { user } = useAuthContext();
+  const { user, signInWithGoogle } = useAuthContext();
   const { t } = useLanguage();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const { folders } = useFoldersContext();
 
+  const isHome =
+    pathname === '/' || pathname === '/search' || pathname.startsWith('/search/')
+
   if (!user) {
-    return null;
+    if (!isHome) return null
+
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 lg:hidden safe-area-inset-bottom">
+        <div className="flex items-stretch h-16 px-2 gap-2">
+          <Link
+            href="/"
+            className="flex flex-col items-center justify-center flex-1 min-w-0 rounded-lg text-primary"
+          >
+            <MagnifyingGlassIconSolid className="h-5 w-5 flex-shrink-0" />
+            <span className="text-[10px] sm:text-xs mt-0.5 font-semibold truncate w-full text-center">
+              {t('navigation.search')}
+            </span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => signInWithGoogle()}
+            className="flex flex-col items-center justify-center flex-1 min-w-0 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <MusicalNoteIcon className="h-5 w-5 flex-shrink-0" />
+            <span className="text-[10px] sm:text-xs mt-0.5 font-medium truncate w-full text-center">
+              {t('auth.signIn')}
+            </span>
+          </button>
+        </div>
+      </nav>
+    )
   }
 
   const isMoreActive = MORE_PATHS.some(
@@ -43,11 +72,11 @@ export default function BottomNavigation() {
 
   const navItems = [
     {
-      href: '/search',
+      href: '/',
       label: t('navigation.search'),
       icon: MagnifyingGlassIcon,
       iconSolid: MagnifyingGlassIconSolid,
-      isActive: pathname === '/search' || pathname.startsWith('/search/'),
+      isActive: pathname === '/' || pathname === '/search' || pathname.startsWith('/search/'),
     },
     {
       href: '/songs',

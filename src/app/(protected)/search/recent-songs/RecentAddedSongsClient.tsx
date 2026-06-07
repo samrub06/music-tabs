@@ -152,7 +152,7 @@ export default function RecentAddedSongsClient({ songs, userId }: RecentAddedSon
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3 min-w-0">
             <Button asChild variant="ghost" size="icon" className="shrink-0 rounded-lg">
-              <Link href="/search" aria-label={t('common.back')}>
+              <Link href="/" aria-label={t('common.back')}>
                 <ArrowLeftIcon className="h-5 w-5" />
               </Link>
             </Button>

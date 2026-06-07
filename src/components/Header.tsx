@@ -126,6 +126,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
     isAddSongPage || isCreatePlaylistPage || pageHeaderOverride !== null
   const hideHeaderOnScroll =
     pathname === '/songs' ||
+    pathname === '/' ||
     pathname === '/search' ||
     pathname.startsWith('/search/') ||
     pathname === '/playlists' ||
@@ -166,7 +167,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
 
         {!user && (
           <Button variant="ghost" size="icon" className="md:hidden" asChild>
-            <Link href="/search" aria-label={t('navigation.search')}>
+            <Link href="/" aria-label={t('navigation.search')}>
               <Search className="h-5 w-5" />
             </Link>
           </Button>
@@ -207,7 +208,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
       <Button
         type="button"
         variant="ghost"
-        onClick={() => router.push('/search')}
+        onClick={() => router.push('/')}
         className={cn(
           'absolute left-1/2 -translate-x-1/2 gap-1.5 px-2 hover:bg-transparent sm:gap-2 sm:px-3',
           usesAppSidebar && 'lg:hidden',

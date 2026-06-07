@@ -362,7 +362,7 @@ export default function SearchClient({
   // Handle add song
   const handleAddSong = async (result: SearchResult, index: number) => {
     if (!userId) {
-      router.push('/login?next=/search')
+      router.push('/login?next=/')
       return
     }
 

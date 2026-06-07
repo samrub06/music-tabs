@@ -17,7 +17,11 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage()
   const pathname = usePathname()
   const router = useRouter()
-  const isPublicRoute = pathname === '/search' || pathname.startsWith('/search/') || pathname.startsWith('/library/')
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname === '/search' ||
+    pathname.startsWith('/search/') ||
+    pathname.startsWith('/library/')
 
   useEffect(() => {
     if (authLoading) return
@@ -37,7 +41,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const getPageTitle = (path: string): string | undefined => {
     if (path.startsWith('/song/')) return undefined
     if (path.startsWith('/library/')) return t('navigation.library')
-    if (path === '/search') return t('navigation.search')
+    if (path === '/' || path === '/search') return t('navigation.search')
     if (path.startsWith('/search/')) return undefined
     if (path === '/songs') return t('navigation.songs')
     if (path.startsWith('/songs/')) return undefined

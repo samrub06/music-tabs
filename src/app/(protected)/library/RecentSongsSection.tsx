@@ -27,7 +27,7 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
   const handleAddToLibrary = useCallback(
     async (song: ForYouArtistSong) => {
       if (!userId) {
-        router.push('/login?next=/search')
+        router.push('/login?next=/')
         return
       }
 

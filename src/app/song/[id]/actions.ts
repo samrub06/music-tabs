@@ -95,7 +95,7 @@ export async function toggleSongFavoriteAction(songId: string) {
   const isLiked = await repo.toggleSongLike(validatedId)
 
   revalidatePath('/songs')
-  revalidatePath('/search')
+  revalidatePath('/')
   revalidatePath(`/song/${validatedId}`)
 
   return { isLiked }
@@ -123,7 +123,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
   }
   
   revalidatePath('/songs')
-  revalidatePath('/search')
+  revalidatePath('/')
   revalidatePath(`/song/${id}`)
   return updated
 }
@@ -133,6 +133,6 @@ export async function deleteSongAction(id: string) {
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
   revalidatePath('/songs')
-  revalidatePath('/search')
+  revalidatePath('/')
   revalidatePath(`/song/${id}`)
 }

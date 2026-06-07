@@ -26,7 +26,7 @@ export default function HorizontalSliderWrapper({
 
   const handleAddToLibrary = useCallback(async (song: Song) => {
     if (!userId) {
-      router.push('/login?next=/search')
+      router.push('/login?next=/')
       return
     }
 
