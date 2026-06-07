@@ -646,7 +646,7 @@ export default function SearchClient({
               </div>
             ) : hasSearchResults ? (
           <>
-            <div className="flex items-center gap-2.5 border-b border-border px-3 py-2.5 sm:px-4 w-fit min-h-[2rem] overflow-visible">
+            <div className="flex items-center gap-2.5 px-3 py-2.5 sm:px-4 w-fit min-h-[2rem] overflow-visible">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0">
                 <MusicalNoteIcon className="w-4 h-4" />
               </div>
@@ -724,12 +724,12 @@ export default function SearchClient({
                       )}
                     </div>
 
-                    {/* Actions icône compactes */}
-                    <div className="flex-shrink-0 flex items-center gap-1 border-l border-border/60 pl-2 sm:pl-2.5" onClick={(e) => e.stopPropagation()}>
+                    {/* Actions — larger touch targets on mobile */}
+                    <div className="flex-shrink-0 flex items-center gap-1.5 border-l border-border/60 pl-2.5 sm:gap-1 sm:pl-2.5" onClick={(e) => e.stopPropagation()}>
                       {existingSongId ? (
-                        <Button asChild size="icon" className="rounded-lg h-8 w-8" aria-label={t('search.viewSong')}>
+                        <Button asChild size="icon" className="rounded-lg h-11 w-12 sm:h-8 sm:w-8" aria-label={t('search.viewSong')}>
                           <Link href={`/song/${existingSongId}`}>
-                            <PlayIcon className="h-3.5 w-3.5" />
+                            <PlayIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                           </Link>
                         </Button>
                       ) : (
@@ -737,31 +737,31 @@ export default function SearchClient({
                           <Button
                             size="icon"
                             variant="default"
-                            className="rounded-lg h-8 w-8"
+                            className="rounded-lg h-11 w-12 sm:h-8 sm:w-8"
                             onClick={() => handleViewSong(result)}
                             disabled={isViewing}
                             aria-label={t('search.viewSong')}
                             title={t('search.viewSong')}
                           >
                             {isViewing ? (
-                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-current border-t-transparent" />
+                              <div className="animate-spin rounded-full h-4 w-4 sm:h-3.5 sm:w-3.5 border-2 border-current border-t-transparent" />
                             ) : (
-                              <PlayIcon className="h-3.5 w-3.5" />
+                              <PlayIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                             )}
                           </Button>
                           <Button
                             size="icon"
                             variant="secondary"
-                            className="rounded-lg h-8 w-8"
+                            className="rounded-lg h-11 w-11 sm:h-8 sm:w-8"
                             onClick={() => handleAddSong(result, index)}
                             disabled={isAdding || !userId}
                             aria-label={t('common.create')}
                             title={t('common.create')}
                           >
                             {isAdding ? (
-                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-current border-t-transparent" />
+                              <div className="animate-spin rounded-full h-4 w-4 sm:h-3.5 sm:w-3.5 border-2 border-current border-t-transparent" />
                             ) : (
-                              <PlusIcon className="h-3.5 w-3.5" />
+                              <PlusIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                             )}
                           </Button>
                         </>

@@ -94,7 +94,7 @@ export default function ForYouArtistSection({
                   {song.inUserLibrary ? (
                     <Link
                       href={href}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                      className="inline-flex h-11 w-12 items-center justify-center rounded-full text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
                       aria-label={t('search.viewSong')}
                     >
                       <PlayIcon className="h-5 w-5" aria-hidden />
