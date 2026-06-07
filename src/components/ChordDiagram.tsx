@@ -4,6 +4,7 @@ import { InstrumentType } from '@/types';
 import { GUITAR_SHAPES, generatePianoVoicing } from '@/utils/chords';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 // Removed react-piano - using custom piano component
 
 interface ChordDiagramProps {
@@ -22,6 +23,7 @@ export default function ChordDiagram({ chord, instrument, fontSize = 14 }: Chord
 
 // Multiple guitar chord positions with SVG
 function GuitarDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: number }) {
+  const { t } = useLanguage();
   const [currentPosition, setCurrentPosition] = useState(0);
 
   // Generate multiple chord positions
@@ -59,7 +61,7 @@ function GuitarDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: num
       <div className="p-2 bg-white rounded border border-gray-200 shadow-sm">
         <div className="text-center">
           <h4 className="text-sm font-bold text-gray-800 mb-1">{chord}</h4>
-          <p className="text-xs text-gray-500 mt-1">Accord non reconnu</p>
+          <p className="text-xs text-gray-500 mt-1">{t('chordDiagram.UNKNOWN_CHORD')}</p>
         </div>
       </div>
     );
@@ -116,7 +118,7 @@ function GuitarDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: num
               className="text-gray-600" 
               style={{ fontSize: `${Math.min(fontSize, 12)}px` }}
             >
-              4 positions
+              {t('chordDiagram.POSITIONS_COUNT')}
             </p>
           </div>
         </div>
@@ -364,6 +366,7 @@ function GuitarDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: num
 }
 
 function PianoDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: number }) {
+  const { t } = useLanguage();
   const voicings = generatePianoVoicing(chord);
   
   if (voicings.length === 0) {
@@ -377,8 +380,8 @@ function PianoDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: numb
         >
           {chord}
         </h4>
-          <p className="text-sm text-blue-700">🎹 Piano</p>
-          <p className="text-sm text-blue-500 mt-2">Accord non reconnu</p>
+          <p className="text-sm text-blue-700">{t('chordDiagram.PIANO_LABEL')}</p>
+          <p className="text-sm text-blue-500 mt-2">{t('chordDiagram.UNKNOWN_CHORD')}</p>
         </div>
       </div>
     );
@@ -443,7 +446,7 @@ function PianoDiagram({ chord, fontSize = 14 }: { chord: string; fontSize?: numb
         >
           {chord} {getChordQuality(chord)}
         </h4>
-        <p className="text-sm text-blue-700 mt-2">🎹 Piano</p>
+        <p className="text-sm text-blue-700 mt-2">{t('chordDiagram.PIANO_LABEL')}</p>
       </div>
       
       <div className="space-y-2">

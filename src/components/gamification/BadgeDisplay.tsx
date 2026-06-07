@@ -3,6 +3,7 @@
 import type { UserBadge } from '@/types'
 import { TrophyIcon, StarIcon } from '@heroicons/react/24/solid'
 import { getBadgeDefinitions } from '@/utils/gamification'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface BadgeDisplayProps {
   badges: UserBadge[]
@@ -11,6 +12,7 @@ interface BadgeDisplayProps {
 }
 
 export default function BadgeDisplay({ badges, showLocked = false, className = '' }: BadgeDisplayProps) {
+  const { t } = useLanguage()
   const earnedBadgeKeys = new Set(badges.map(b => b.badgeKey))
   
   // Get all badge definitions to show locked ones
@@ -24,7 +26,7 @@ export default function BadgeDisplay({ badges, showLocked = false, className = '
   if (allBadges.length === 0) {
     return (
       <div className={`text-center py-8 text-gray-500 dark:text-gray-400 ${className}`}>
-        <p>No badges yet. Keep playing to earn badges!</p>
+        <p>{t('gamification.NO_BADGES')}</p>
       </div>
     )
   }

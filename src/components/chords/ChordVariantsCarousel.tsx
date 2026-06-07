@@ -6,6 +6,7 @@ import { VexChordDiagram } from './VexChordDiagram';
 import { CHORD_MODAL_DIAGRAM_OPTS } from './chordCardDimensions';
 import type { ChordVariant } from '@/types/chordVariants';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface ChordVariantsCarouselProps {
   variants: ChordVariant[];
@@ -80,6 +81,7 @@ export function ChordVariantsCarousel({
   resetKey,
   className,
 }: ChordVariantsCarouselProps) {
+  const { t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<SlideDirection>('next');
   const total = variants.length;
@@ -151,7 +153,7 @@ export function ChordVariantsCarousel({
             </button>
           </nav>
           <p className="w-full text-center text-sm font-medium text-muted-foreground">
-            {index + 1} sur {total}
+            {t('chordCarousel.PAGE_COUNTER').replace('{current}', String(index + 1)).replace('{total}', String(total))}
           </p>
           <p
             key={`desc-${index}`}
@@ -188,7 +190,7 @@ export function ChordVariantsCarousel({
               ‹
             </button>
             <span className="text-sm font-medium text-muted-foreground">
-              {index + 1} sur {total}
+              {t('chordCarousel.PAGE_COUNTER').replace('{current}', String(index + 1)).replace('{total}', String(total))}
             </span>
             <button
               type="button"
@@ -201,7 +203,7 @@ export function ChordVariantsCarousel({
           </nav>
           {total > 12 && (
             <p className="text-xs text-muted-foreground">
-              Numéros 1–{total} — faites défiler pour tout voir
+              {t('chordCarousel.SCROLL_HINT').replace('{total}', String(total))}
             </p>
           )}
           <div className="flex w-full gap-1.5 overflow-x-auto pb-1">

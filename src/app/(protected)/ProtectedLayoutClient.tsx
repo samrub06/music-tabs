@@ -71,10 +71,14 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         {user && <AppSidebar />}
         <SidebarInset className="flex flex-col overflow-hidden">
           <Header pageTitle={pageTitle} />
-          <div className="flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden pb-16 lg:pb-0">
+          <div
+            className={`flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden ${
+              user ? 'pb-16 lg:pb-0' : ''
+            }`}
+          >
             {children}
           </div>
-          <BottomNavigation />
+          {user && <BottomNavigation />}
         </SidebarInset>
       </div>
     </SidebarProvider>

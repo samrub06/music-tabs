@@ -84,15 +84,15 @@ export default function SongHeader({
         {/* Capo: show in header on all breakpoints (including mobile), same height as other buttons (h-10) */}
         {song.capo !== undefined && song.capo !== null && (
           <span className="flex-shrink-0 flex items-center h-10 text-xs font-medium text-muted-foreground bg-muted/60 dark:bg-muted/40 px-2.5 rounded-md" title={t('songHeader.capo')}>
-            Capo {song.capo}
+            {t('songHeader.CAPO_WITH_VALUE').replace('{capo}', String(song.capo))}
           </span>
         )}
 
         {/* Auto-scroll: from md show label "Auto scroll" + play + speed, +/- when playing */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className="hidden md:inline text-xs text-muted-foreground whitespace-nowrap">Auto scroll</span>
+          <span className="hidden md:inline text-xs text-muted-foreground whitespace-nowrap">{t('songHeader.AUTO_SCROLL_LABEL')}</span>
           <div className="flex items-center gap-0.5 border rounded-md px-1 py-0.5">
-            <Button variant={autoScroll.isActive ? 'default' : 'ghost'} size="icon" className="h-9 w-9" onClick={onToggleAutoScroll} title={autoScroll.isActive ? 'Arrêter' : 'Démarrer'}>
+            <Button variant={autoScroll.isActive ? 'default' : 'ghost'} size="icon" className="h-9 w-9" onClick={onToggleAutoScroll} title={autoScroll.isActive ? t('songHeader.STOP_AUTO_SCROLL') : t('songHeader.START_AUTO_SCROLL')}>
               {autoScroll.isActive ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
             </Button>
             <span className="text-xs font-medium min-w-[2rem] text-center">{autoScroll.speed.toFixed(1)}x</span>
@@ -111,9 +111,9 @@ export default function SongHeader({
 
         {/* Tools: icon only below md, icon + "Outils" from md */}
         {onToggleToolsBar && (
-          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10 md:h-9 md:gap-1.5 md:px-3 md:w-auto md:min-w-0" onClick={() => onToggleToolsBar()} aria-label="Outils" title="Outils">
+          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10 md:h-9 md:gap-1.5 md:px-3 md:w-auto md:min-w-0" onClick={() => onToggleToolsBar()} aria-label={t('songHeader.TOOLS_LABEL')} title={t('songHeader.TOOLS_LABEL')}>
             <Cog6ToothIcon className="h-5 w-5 md:h-4 md:w-4" />
-            <span className="hidden md:inline text-sm">Outils</span>
+            <span className="hidden md:inline text-sm">{t('songHeader.TOOLS_LABEL')}</span>
           </Button>
         )}
 

@@ -132,7 +132,7 @@ export default function PublicPlaylistDetailClient({
               {t('playlistView.noSongsInPlaylist')}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Cette playlist est vide.
+              {t('playlistView.EMPTY_PLAYLIST_DESCRIPTION')}
             </p>
           </div>
         ) : (

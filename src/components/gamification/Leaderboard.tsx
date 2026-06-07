@@ -15,7 +15,7 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
   if (entries.length === 0) {
     return (
       <div className={`text-center py-8 text-gray-500 dark:text-gray-400 ${className}`}>
-        <p>No users on the leaderboard yet. Be the first!</p>
+        <p>{t('gamification.EMPTY_LEADERBOARD')}</p>
       </div>
     )
   }
@@ -72,17 +72,17 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
 
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {entry.fullName || entry.email || 'Unknown User'}
+                {entry.fullName || entry.email || t('gamification.UNKNOWN_USER')}
                 {isCurrentUser && (
-                  <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>
+                  <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">{t('gamification.YOU_BADGE')}</span>
                 )}
               </p>
               <div className="flex items-center gap-4 mt-1 flex-wrap">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Level {entry.currentLevel}
+                  {t('gamification.LEVEL_WITH_NUMBER').replace('{level}', String(entry.currentLevel))}
                 </span>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {entry.totalXp.toLocaleString()} XP
+                  {entry.totalXp.toLocaleString()} {t('gamification.XP')}
                 </span>
                 {entry.currentStreak > 0 && (
                   <span className="text-sm text-orange-600 dark:text-orange-400">

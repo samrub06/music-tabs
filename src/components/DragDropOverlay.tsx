@@ -3,6 +3,7 @@
 import { Folder } from '@/types'
 import { useDroppable } from '@dnd-kit/core'
 import { FolderIcon } from '@heroicons/react/24/outline'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface DragDropOverlayProps {
   folders: Folder[]
@@ -41,16 +42,17 @@ function DroppableFolderButton({
 }
 
 export default function DragDropOverlay({ folders, isDragging }: DragDropOverlayProps) {
+  const { t } = useLanguage()
   if (!isDragging) return null
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[45] border-t-2 border-primary bg-background shadow-2xl lg:hidden animate-in slide-in-from-bottom-5">
       <div className="px-2 py-2 max-h-[35vh] overflow-y-auto">
         <div className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Déposer dans un dossier :
+          {t('dragDrop.DROP_INTO_FOLDER')}
         </div>
         <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 px-1">
-          <DroppableFolderButton folderId={null} folderName="Sans dossier" />
+          <DroppableFolderButton folderId={null} folderName={t('dragDrop.NO_FOLDER')} />
           {folders.map((folder) => (
             <DroppableFolderButton
               key={folder.id}

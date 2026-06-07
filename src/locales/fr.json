@@ -29,6 +29,8 @@
     "lightMode": "Mode clair",
     "darkMode": "Mode sombre",
     "importUltimateGuitar": "Importer Ultimate Guitar",
+    "view": "Voir",
+    "play": "Lire",
     "showAll": "Voir tout",
     "previous": "Précédent",
     "next": "Suivant",
@@ -48,7 +50,8 @@
     "chords": "Accords",
     "profile": "Profil",
     "leaderboard": "Classement",
-    "more": "Plus"
+    "more": "Plus",
+    "MENU": "Menu"
   },
   "moreMenu": {
     "foldersDescription": "Organiser vos chansons",
@@ -264,6 +267,7 @@
     "recentlyAdded": "Dernières chansons ajoutées",
     "mostPlayed": "Chansons les plus écoutées",
     "selectedForYou": "Sélectionné pour vous",
+    "DISCOVER_THIS_SONG": "Découvrez cette chanson",
     "forYouArtist": "Plus de {artist}",
     "inYourLibrary": "Dans votre bibliothèque",
     "notInYourLibrary": "Pas dans votre bibliothèque",
@@ -282,7 +286,8 @@
     "playlistSongCount": "Playlist · {count} chansons",
     "listView": "Liste",
     "gridView": "Grille",
-    "noRecentlyAdded": "Aucune chanson ajoutée récemment."
+    "noRecentlyAdded": "Aucune chanson ajoutée récemment.",
+    "SEARCH_PLACEHOLDER": "Rechercher un titre ou un artiste..."
   },
   "auth": {
     "signIn": "Se connecter",
@@ -396,6 +401,7 @@
     "compatibility": "Compatibilité :",
     "transition": "Transition :",
     "noSongsInPlaylist": "Aucune chanson dans la playlist",
+    "EMPTY_PLAYLIST_DESCRIPTION": "Cette playlist est vide.",
     "addSongsToPlaylist": "Ajoutez des chansons à cette playlist",
     "playlistName": "Nom de la playlist",
     "playlistNamePlaceholder": "Nom de la playlist",
@@ -416,6 +422,7 @@
     "ugBlocked": "Ultimate Guitar bloque les requêtes depuis le serveur. Contactez l'administrateur ou réessayez plus tard.",
     "ugProxyBlocked": "Proxy actif mais Ultimate Guitar bloque encore (Cloudflare). Utilisez un proxy résidentiel Webshare, pas le plan datacenter gratuit.",
     "invalidData": "Données de chanson invalides.",
+    "VIEW_ERROR": "Erreur lors de l'affichage de la chanson",
     "addSuccess": "Chanson ajoutée avec succès !",
     "addError": "Impossible de récupérer la chanson.",
     "enterTitleOrArtist": "Entrez un titre de chanson ou un nom d'artiste",
@@ -572,11 +579,93 @@
     "guitar": "Guitare",
     "edit": "Éditer",
     "shareLink": "Partager le lien",
-    "linkCopied": "Lien copié !"
+    "linkCopied": "Lien copié !",
+    "AUTO_SCROLL_LABEL": "Défilement auto",
+    "STOP_AUTO_SCROLL": "Arrêter",
+    "START_AUTO_SCROLL": "Démarrer",
+    "TOOLS_LABEL": "Outils",
+    "CAPO_WITH_VALUE": "Capo {capo}"
   },
   "songContent": {
     "saving": "Sauvegarde...",
-    "save": "Sauvegarder"
+    "save": "Sauvegarder",
+    "CHORDS_USED_TITLE": "Accords utilisés",
+    "TRANSPOSE_LABEL": "Transposer",
+    "BPM_LABEL": "{bpm} BPM",
+    "FULL_SONG_HIDDEN_TITLE": "Chanson complète masquée",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque."
+  },
+  "explore": {
+    "TRENDING_TITLE": "Tendances 📈",
+    "SEARCH_PLACEHOLDER": "Rechercher un titre ou un artiste...",
+    "GALLERY_VIEW": "Galerie",
+    "TABLE_VIEW": "Tableau",
+    "GENRES_SECTION": "Genres",
+    "LEVELS_SECTION": "Niveaux",
+    "DECADES_SECTION": "Décennies",
+    "ALL_FILTER": "Tous",
+    "ALL_DECADES_FILTER": "Toutes"
+  },
+  "learningPath": {
+    "TITLE": "Votre progression d'apprentissage",
+    "OVERALL_PROGRESS": "Progression globale",
+    "KNOWN_CHORDS_COUNT": "{known} accords connus sur {total} au total",
+    "BEGINNER": "Débutant",
+    "INTERMEDIATE": "Intermédiaire",
+    "ADVANCED": "Avancé",
+    "NEXT_CHORDS_TITLE": "Prochains accords à apprendre"
+  },
+  "songPreview": {
+    "LOADING": "Chargement de la chanson...",
+    "FETCH_ERROR": "Impossible de récupérer la chanson.",
+    "FETCH_ERROR_GENERIC": "Erreur lors de la récupération de la chanson.",
+    "NOT_FOUND": "Chanson non trouvée",
+    "BACK_TO_SEARCH": "Retour à l'explorateur",
+    "BANNER_MESSAGE": "Mode aperçu — Cette chanson n'est pas dans votre bibliothèque",
+    "ADDING": "Ajout...",
+    "ADD_TO_LIBRARY": "Ajouter à la bibliothèque",
+    "ADD_ERROR": "Erreur lors de l'ajout à la bibliothèque."
+  },
+  "dragDrop": {
+    "DROP_INTO_FOLDER": "Déposer dans un dossier :",
+    "NO_FOLDER": "Sans dossier"
+  },
+  "columnConfig": {
+    "COLUMNS_BUTTON": "Colonnes",
+    "SHOW_COLUMNS_TITLE": "Afficher les colonnes",
+    "RESET": "Réinitialiser"
+  },
+  "chordCarousel": {
+    "PAGE_COUNTER": "{current} sur {total}",
+    "SCROLL_HINT": "Numéros 1–{total} — faites défiler pour tout voir"
+  },
+  "chordDiagram": {
+    "UNKNOWN_CHORD": "Accord non reconnu",
+    "POSITIONS_COUNT": "4 positions",
+    "PIANO_LABEL": "🎹 Piano"
+  },
+  "gamification": {
+    "LOADING_STATS": "Chargement des stats...",
+    "YOUR_PROGRESS": "Votre progression",
+    "TOTAL_XP": "XP total",
+    "SONGS_CREATED": "Chansons créées",
+    "SONGS_VIEWED": "Chansons consultées",
+    "LEVEL_UP": "🎉 Niveau supérieur ! 🎉",
+    "LEVEL": "Niveau",
+    "XP": "XP",
+    "LEVEL_WITH_NUMBER": "Niveau {level}",
+    "XP_PROGRESS": "{current} / {next} XP",
+    "STREAK_DAYS": "{count} jour(s)",
+    "NO_BADGES": "Pas encore de badges. Continuez à jouer pour en gagner !",
+    "EMPTY_LEADERBOARD": "Aucun joueur au classement pour l'instant. Soyez le premier !",
+    "UNKNOWN_USER": "Utilisateur inconnu",
+    "YOU_BADGE": "(Vous)"
+  },
+  "songForm": {
+    "TITLE_PLACEHOLDER": "ex : Ma chanson préférée",
+    "ARTIST_PLACEHOLDER": "ex : Mon Artiste",
+    "CONTENT_LABEL": "Contenu (accords + paroles) *",
+    "CONTENT_PLACEHOLDER": "Collez ou saisissez les accords et paroles ici..."
   },
   "songEnd": {
     "continueListening": "Continuer à écouter",

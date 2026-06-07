@@ -66,13 +66,11 @@ export function useAuth() {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (next: string = '/') => {
     try {
-      // Determine the base URL dynamically
-      // When running on localhost, window.location.origin will be http://localhost:3000
-      // When in production, it will be your production URL
-      // Defaults to / if no next param is provided (see callback route)
-      const redirectUrl = `${window.location.origin}/api/auth/callback`;
+      const safeNext =
+        next.startsWith('/') && !next.startsWith('//') ? next : '/'
+      const redirectUrl = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(safeNext)}`;
       
       console.log('Initiating Google Sign-In with redirect URL:', redirectUrl);
 

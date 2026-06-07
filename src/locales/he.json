@@ -50,7 +50,8 @@
     "chords": "אקורדים",
     "profile": "פרופיל",
     "leaderboard": "לוח תוצאות",
-    "more": "עוד"
+    "more": "עוד",
+    "MENU": "תפריט"
   },
   "moreMenu": {
     "foldersDescription": "ארגן את השירים שלך",
@@ -266,6 +267,7 @@
     "recentlyAdded": "שירים שנוספו לאחרונה",
     "mostPlayed": "השירים המושמעים ביותר",
     "selectedForYou": "נבחר עבורך",
+    "DISCOVER_THIS_SONG": "גלו את השיר הזה",
     "forYouArtist": "עוד מ-{artist}",
     "inYourLibrary": "בספרייה שלך",
     "notInYourLibrary": "לא בספרייה שלך",
@@ -284,7 +286,8 @@
     "playlistSongCount": "פלייליסט · {count} שירים",
     "listView": "רשימה",
     "gridView": "רשת",
-    "noRecentlyAdded": "אין שירים שנוספו לאחרונה."
+    "noRecentlyAdded": "אין שירים שנוספו לאחרונה.",
+    "SEARCH_PLACEHOLDER": "חפש כותרת או אמן..."
   },
   "auth": {
     "signIn": "התחבר",
@@ -398,6 +401,7 @@
     "compatibility": "תאימות:",
     "transition": "מעבר:",
     "noSongsInPlaylist": "אין שירים בפלייליסט",
+    "EMPTY_PLAYLIST_DESCRIPTION": "הפלייליסט הזה ריק.",
     "addSongsToPlaylist": "הוסף שירים לפלייליסט זה",
     "playlistName": "שם הפלייליסט",
     "playlistNamePlaceholder": "שם הפלייליסט",
@@ -418,6 +422,7 @@
     "ugBlocked": "Ultimate Guitar חוסם בקשות מהשרת. פנה למנהל המערכת או נסה שוב מאוחר יותר.",
     "ugProxyBlocked": "ה-proxy פעיל אך Ultimate Guitar עדיין חוסם (Cloudflare). השתמש ב-Webshare Rotating Residential, לא בתוכנית datacenter החינמית.",
     "invalidData": "נתוני שיר לא תקינים.",
+    "VIEW_ERROR": "שגיאה בהצגת השיר",
     "addSuccess": "שיר נוסף בהצלחה!",
     "addError": "שגיאה בהוספת השיר.",
     "enterTitleOrArtist": "הכנס כותרת שיר או שם אמן",
@@ -574,11 +579,93 @@
     "guitar": "גיטרה",
     "edit": "ערוך",
     "shareLink": "שתף קישור",
-    "linkCopied": "הקישור הועתק!"
+    "linkCopied": "הקישור הועתק!",
+    "AUTO_SCROLL_LABEL": "גלילה אוטומטית",
+    "STOP_AUTO_SCROLL": "עצור",
+    "START_AUTO_SCROLL": "התחל",
+    "TOOLS_LABEL": "כלים",
+    "CAPO_WITH_VALUE": "קאפו {capo}"
   },
   "songContent": {
     "saving": "שומר...",
-    "save": "שמור"
+    "save": "שמור",
+    "CHORDS_USED_TITLE": "אקורדים בשימוש",
+    "TRANSPOSE_LABEL": "העבר טון",
+    "BPM_LABEL": "{bpm} BPM",
+    "FULL_SONG_HIDDEN_TITLE": "השיר המלא מוסתר",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "התחבר כדי לגשת לכל השיר ולהוסיף אותו לספרייה שלך."
+  },
+  "explore": {
+    "TRENDING_TITLE": "טרנדים 📈",
+    "SEARCH_PLACEHOLDER": "חפש כותרת או אמן...",
+    "GALLERY_VIEW": "גלריה",
+    "TABLE_VIEW": "טבלה",
+    "GENRES_SECTION": "ז'אנרים",
+    "LEVELS_SECTION": "רמות",
+    "DECADES_SECTION": "עשורים",
+    "ALL_FILTER": "הכל",
+    "ALL_DECADES_FILTER": "הכל"
+  },
+  "learningPath": {
+    "TITLE": "ההתקדמות שלך בלמידה",
+    "OVERALL_PROGRESS": "התקדמות כללית",
+    "KNOWN_CHORDS_COUNT": "{known} אקורדים ידועים מתוך {total} בסך הכל",
+    "BEGINNER": "מתחיל",
+    "INTERMEDIATE": "בינוני",
+    "ADVANCED": "מתקדם",
+    "NEXT_CHORDS_TITLE": "האקורדים הבאים ללמידה"
+  },
+  "songPreview": {
+    "LOADING": "טוען שיר...",
+    "FETCH_ERROR": "לא ניתן לאחזר את השיר.",
+    "FETCH_ERROR_GENERIC": "שגיאה באחזור השיר.",
+    "NOT_FOUND": "השיר לא נמצא",
+    "BACK_TO_SEARCH": "חזרה לחיפוש",
+    "BANNER_MESSAGE": "מצב תצוגה מקדימה — השיר הזה לא בספרייה שלך",
+    "ADDING": "מוסיף...",
+    "ADD_TO_LIBRARY": "הוסף לספרייה",
+    "ADD_ERROR": "שגיאה בהוספת השיר לספרייה."
+  },
+  "dragDrop": {
+    "DROP_INTO_FOLDER": "שחרר בתיקייה:",
+    "NO_FOLDER": "ללא תיקייה"
+  },
+  "columnConfig": {
+    "COLUMNS_BUTTON": "עמודות",
+    "SHOW_COLUMNS_TITLE": "הצג עמודות",
+    "RESET": "איפוס"
+  },
+  "chordCarousel": {
+    "PAGE_COUNTER": "{current} מתוך {total}",
+    "SCROLL_HINT": "מספרים 1–{total} — גלול כדי לראות הכל"
+  },
+  "chordDiagram": {
+    "UNKNOWN_CHORD": "אקורד לא מזוהה",
+    "POSITIONS_COUNT": "4 מיקומים",
+    "PIANO_LABEL": "🎹 פסנתר"
+  },
+  "gamification": {
+    "LOADING_STATS": "טוען סטטיסטיקות...",
+    "YOUR_PROGRESS": "ההתקדמות שלך",
+    "TOTAL_XP": "XP כולל",
+    "SONGS_CREATED": "שירים שנוצרו",
+    "SONGS_VIEWED": "שירים שנצפו",
+    "LEVEL_UP": "🎉 עלית רמה! 🎉",
+    "LEVEL": "רמה",
+    "XP": "XP",
+    "LEVEL_WITH_NUMBER": "רמה {level}",
+    "XP_PROGRESS": "{current} / {next} XP",
+    "STREAK_DAYS": "{count} יום/ימים",
+    "NO_BADGES": "עדיין אין תגים. המשך לנגן כדי לזכות בתגים!",
+    "EMPTY_LEADERBOARD": "אין משתמשים בלוח התוצאות עדיין. היה הראשון!",
+    "UNKNOWN_USER": "משתמש לא ידוע",
+    "YOU_BADGE": "(את/ה)"
+  },
+  "songForm": {
+    "TITLE_PLACEHOLDER": "לדוגמה: השיר האהוב עלי",
+    "ARTIST_PLACEHOLDER": "לדוגמה: האמן שלי",
+    "CONTENT_LABEL": "תוכן (אקורדים + מילים) *",
+    "CONTENT_PLACEHOLDER": "הדבק או הקלד אקורדים ומילים כאן..."
   },
   "songEnd": {
     "continueListening": "המשך להאזין",

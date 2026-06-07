@@ -7,6 +7,7 @@ import {
   EyeSlashIcon,
   ChevronDownIcon 
 } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ColumnConfigProps {
   visibleColumns: string[];
@@ -14,19 +15,20 @@ interface ColumnConfigProps {
 }
 
 const COLUMN_DEFINITIONS = [
-  { key: 'title', label: 'Titre', icon: '📝', defaultVisible: true },
-  { key: 'author', label: 'Artiste', icon: '👤', defaultVisible: true },
-  { key: 'key', label: 'Tonalité', icon: '🎵', defaultVisible: true },
-  { key: 'rating', label: 'Note', icon: '⭐', defaultVisible: true },
-  { key: 'reviews', label: 'Avis', icon: '👥', defaultVisible: false },
-  { key: 'difficulty', label: 'Difficulté', icon: '🎸', defaultVisible: false },
-  { key: 'version', label: 'Version', icon: '🔢', defaultVisible: false },
-  { key: 'viewCount', label: 'Vues', icon: '👁️', defaultVisible: true },
-  { key: 'folder', label: 'Dossier', icon: '📁', defaultVisible: true },
-  { key: 'updatedAt', label: 'Modifié', icon: '📅', defaultVisible: false },
+  { key: 'title', labelKey: 'songs.title', icon: '📝', defaultVisible: true },
+  { key: 'author', labelKey: 'songs.artist', icon: '👤', defaultVisible: true },
+  { key: 'key', labelKey: 'songs.key', icon: '🎵', defaultVisible: true },
+  { key: 'rating', labelKey: 'songs.rating', icon: '⭐', defaultVisible: true },
+  { key: 'reviews', labelKey: 'songs.reviews', icon: '👥', defaultVisible: false },
+  { key: 'difficulty', labelKey: 'songs.difficulty', icon: '🎸', defaultVisible: false },
+  { key: 'version', labelKey: 'songs.version', icon: '🔢', defaultVisible: false },
+  { key: 'viewCount', labelKey: 'songs.viewCount', icon: '👁️', defaultVisible: true },
+  { key: 'folder', labelKey: 'songs.folder', icon: '📁', defaultVisible: true },
+  { key: 'updatedAt', labelKey: 'songs.modified', icon: '📅', defaultVisible: false },
 ];
 
 export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnConfigProps) {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -58,7 +60,7 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
         className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
         <Cog6ToothIcon className="h-4 w-4" />
-        <span>Colonnes</span>
+        <span>{t('columnConfig.COLUMNS_BUTTON')}</span>
         <ChevronDownIcon className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -76,7 +78,7 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
             className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-[101]"
           >
             <div className="p-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Afficher les colonnes</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">{t('columnConfig.SHOW_COLUMNS_TITLE')}</h3>
               
               <div className="space-y-2">
                 {COLUMN_DEFINITIONS.map((column) => {
@@ -99,7 +101,7 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:cursor-not-allowed"
                       />
                       <span className="text-lg">{column.icon}</span>
-                      <span className="text-sm text-gray-700 flex-1">{column.label}</span>
+                      <span className="text-sm text-gray-700 flex-1">{t(column.labelKey)}</span>
                       {isVisible ? (
                         <EyeIcon className="h-4 w-4 text-green-600" />
                       ) : (
@@ -130,7 +132,7 @@ export default function ColumnConfig({ visibleColumns, onToggleColumn }: ColumnC
                   }}
                   className="text-xs text-blue-600 hover:text-blue-800"
                 >
-                  Réinitialiser
+                  {t('columnConfig.RESET')}
                 </button>
               </div>
             </div>

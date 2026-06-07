@@ -319,8 +319,8 @@ export default function SearchClient({
     result?: SearchResult
   ): NewSongData => {
     return {
-      title: (scraped.title || result?.title || 'Unknown title').trim(),
-      author: (scraped.author || result?.author || 'Unknown artist').trim(),
+      title: (scraped.title || result?.title || t('songs.unknownTitle')).trim(),
+      author: (scraped.author || result?.author || t('songs.unknownArtist')).trim(),
       content: scraped.content || '',
       reviews: (result?.reviews ?? scraped.reviews) || 0,
       capo: scraped.capo,
@@ -352,7 +352,7 @@ export default function SearchClient({
       router.push(`/song/preview?url=${url}&searchResult=${searchResultParam}`)
     } catch (error) {
       console.error('Error viewing song:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Error viewing song'
+      const errorMessage = error instanceof Error ? error.message : t('search.VIEW_ERROR')
       setMessage({ type: 'error', text: errorMessage })
     } finally {
       setViewingSongId(null)
@@ -380,7 +380,7 @@ export default function SearchClient({
         const payload = buildNewSongDataFromScrape(data.song, result)
         
         if (!payload.title.trim() || !payload.content.trim()) {
-          setMessage({ type: 'error', text: 'Données de chanson invalides.' })
+          setMessage({ type: 'error', text: t('search.invalidData') })
           return
         }
 

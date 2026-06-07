@@ -50,7 +50,8 @@
     "chords": "Chords",
     "profile": "Profile",
     "leaderboard": "Leaderboard",
-    "more": "More"
+    "more": "More",
+    "MENU": "Menu"
   },
   "moreMenu": {
     "foldersDescription": "Organize your songs",
@@ -266,6 +267,7 @@
     "recentlyAdded": "Recently added songs",
     "mostPlayed": "Most played songs",
     "selectedForYou": "Selected for you",
+    "DISCOVER_THIS_SONG": "Discover this song",
     "forYouArtist": "More from {artist}",
     "inYourLibrary": "In your library",
     "notInYourLibrary": "Not in your library",
@@ -284,7 +286,8 @@
     "playlistSongCount": "Playlist · {count} songs",
     "listView": "List",
     "gridView": "Grid",
-    "noRecentlyAdded": "No recently added songs."
+    "noRecentlyAdded": "No recently added songs.",
+    "SEARCH_PLACEHOLDER": "Search title or author..."
   },
   "auth": {
     "signIn": "Sign In",
@@ -398,6 +401,7 @@
     "compatibility": "Compatibility:",
     "transition": "Transition:",
     "noSongsInPlaylist": "No songs in playlist",
+    "EMPTY_PLAYLIST_DESCRIPTION": "This playlist is empty.",
     "addSongsToPlaylist": "Add songs to this playlist",
     "playlistName": "Playlist name",
     "playlistNamePlaceholder": "Playlist name",
@@ -418,6 +422,7 @@
     "ugBlocked": "Ultimate Guitar is blocking server requests. Contact the administrator or try again later.",
     "ugProxyBlocked": "Proxy is active but Ultimate Guitar still blocks the request (Cloudflare). Use Webshare Rotating Residential, not the free datacenter plan.",
     "invalidData": "Invalid song data.",
+    "VIEW_ERROR": "Error viewing song",
     "addSuccess": "Song added successfully!",
     "addError": "Error adding song.",
     "enterTitleOrArtist": "Enter a song title or artist name",
@@ -574,11 +579,93 @@
     "guitar": "Guitar",
     "edit": "Edit",
     "shareLink": "Share link",
-    "linkCopied": "Link copied!"
+    "linkCopied": "Link copied!",
+    "AUTO_SCROLL_LABEL": "Auto scroll",
+    "STOP_AUTO_SCROLL": "Stop",
+    "START_AUTO_SCROLL": "Start",
+    "TOOLS_LABEL": "Tools",
+    "CAPO_WITH_VALUE": "Capo {capo}"
   },
   "songContent": {
     "saving": "Saving...",
-    "save": "Save"
+    "save": "Save",
+    "CHORDS_USED_TITLE": "Chords used",
+    "TRANSPOSE_LABEL": "Transpose",
+    "BPM_LABEL": "{bpm} BPM",
+    "FULL_SONG_HIDDEN_TITLE": "Full song hidden",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "Sign in to access the full song and add it to your library."
+  },
+  "explore": {
+    "TRENDING_TITLE": "Trending 📈",
+    "SEARCH_PLACEHOLDER": "Search title or author...",
+    "GALLERY_VIEW": "Gallery",
+    "TABLE_VIEW": "Table",
+    "GENRES_SECTION": "Genres",
+    "LEVELS_SECTION": "Levels",
+    "DECADES_SECTION": "Decades",
+    "ALL_FILTER": "All",
+    "ALL_DECADES_FILTER": "All"
+  },
+  "learningPath": {
+    "TITLE": "Your Learning Progress",
+    "OVERALL_PROGRESS": "Overall Progress",
+    "KNOWN_CHORDS_COUNT": "{known} chords known out of {total} total",
+    "BEGINNER": "Beginner",
+    "INTERMEDIATE": "Intermediate",
+    "ADVANCED": "Advanced",
+    "NEXT_CHORDS_TITLE": "Next Chords to Learn"
+  },
+  "songPreview": {
+    "LOADING": "Loading song...",
+    "FETCH_ERROR": "Unable to retrieve the song.",
+    "FETCH_ERROR_GENERIC": "Error retrieving the song.",
+    "NOT_FOUND": "Song not found",
+    "BACK_TO_SEARCH": "Back to Search",
+    "BANNER_MESSAGE": "Preview mode — This song is not in your library",
+    "ADDING": "Adding...",
+    "ADD_TO_LIBRARY": "Add to Library",
+    "ADD_ERROR": "Error adding song to library."
+  },
+  "dragDrop": {
+    "DROP_INTO_FOLDER": "Drop into folder:",
+    "NO_FOLDER": "No folder"
+  },
+  "columnConfig": {
+    "COLUMNS_BUTTON": "Columns",
+    "SHOW_COLUMNS_TITLE": "Show columns",
+    "RESET": "Reset"
+  },
+  "chordCarousel": {
+    "PAGE_COUNTER": "{current} of {total}",
+    "SCROLL_HINT": "Numbers 1–{total} — scroll to see all"
+  },
+  "chordDiagram": {
+    "UNKNOWN_CHORD": "Chord not recognized",
+    "POSITIONS_COUNT": "4 positions",
+    "PIANO_LABEL": "🎹 Piano"
+  },
+  "gamification": {
+    "LOADING_STATS": "Loading stats...",
+    "YOUR_PROGRESS": "Your Progress",
+    "TOTAL_XP": "Total XP",
+    "SONGS_CREATED": "Songs Created",
+    "SONGS_VIEWED": "Songs Viewed",
+    "LEVEL_UP": "🎉 Level Up! 🎉",
+    "LEVEL": "Level",
+    "XP": "XP",
+    "LEVEL_WITH_NUMBER": "Level {level}",
+    "XP_PROGRESS": "{current} / {next} XP",
+    "STREAK_DAYS": "{count} day(s)",
+    "NO_BADGES": "No badges yet. Keep playing to earn badges!",
+    "EMPTY_LEADERBOARD": "No users on the leaderboard yet. Be the first!",
+    "UNKNOWN_USER": "Unknown User",
+    "YOU_BADGE": "(You)"
+  },
+  "songForm": {
+    "TITLE_PLACEHOLDER": "e.g.: My favorite song",
+    "ARTIST_PLACEHOLDER": "e.g.: My Artist",
+    "CONTENT_LABEL": "Content (chords + lyrics) *",
+    "CONTENT_PLACEHOLDER": "Paste or type chords and lyrics here..."
   },
   "songEnd": {
     "continueListening": "Keep playing",

@@ -8,6 +8,7 @@ import Pagination from '@/components/Pagination'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { XMarkIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface LibraryClientProps {
   songs: Song[]
@@ -20,6 +21,7 @@ interface LibraryClientProps {
 }
 
 export default function LibraryClient({ songs, total, page, limit, initialView = 'gallery', initialQuery = '', userId }: LibraryClientProps) {
+  const { t } = useLanguage()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
@@ -116,7 +118,7 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
                     setQuery((e.target as HTMLInputElement).value)
                   }
                 }}
-                placeholder="Search title or author..."
+                placeholder={t('library.SEARCH_PLACEHOLDER')}
                 className="block w-full px-3 py-1.5 sm:py-2 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               {localSearchValue && (
@@ -139,14 +141,14 @@ export default function LibraryClient({ songs, total, page, limit, initialView =
               <button
                 className={`px-2 sm:px-3 py-1.5 text-sm flex items-center justify-center ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                 onClick={() => setView('gallery')}
-                title="Gallery View"
+                title={t('songs.galleryView')}
               >
                 <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 className={`px-2 sm:px-3 py-1.5 text-sm flex items-center justify-center border-l ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                 onClick={() => setView('table')}
-                title="Table View"
+                title={t('songs.tableView')}
               >
                 <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>

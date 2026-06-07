@@ -6,6 +6,7 @@ import { MusicalNoteIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface SongGalleryProps {
   songs: Song[]
@@ -24,7 +25,8 @@ function DraggableSongCard({
   showAddButton, 
   onAddClick, 
   addingId,
-  hasUser 
+  hasUser,
+  t,
 }: { 
   song: Song
   songs: Song[]
@@ -34,6 +36,7 @@ function DraggableSongCard({
   onAddClick?: (song: Song) => void
   addingId?: string | null
   hasUser?: boolean
+  t: (key: string) => string
 }) {
   const {
     attributes,
@@ -130,9 +133,9 @@ function DraggableSongCard({
             onClick={() => onAddClick(song)}
             disabled={addingId === song.id}
             className="m-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
-            title="Ajouter à ma bibliothèque"
+            title={t('library.addToLibrary')}
           >
-            {addingId === song.id ? 'Ajout...' : 'Ajouter'}
+            {addingId === song.id ? t('library.adding') : t('library.addToLibrary')}
           </button>
         )}
       </div>
@@ -142,6 +145,7 @@ function DraggableSongCard({
 export default function SongGallery({ songs, showAddButton, onAddClick, addingId, hasUser = false }: SongGalleryProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { t } = useLanguage()
 
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
@@ -156,6 +160,7 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
           onAddClick={onAddClick}
           addingId={addingId}
           hasUser={hasUser}
+          t={t}
         />
       ))}
     </div>

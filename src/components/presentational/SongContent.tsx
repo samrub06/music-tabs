@@ -31,6 +31,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Piano, Guitar } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useAuthContext } from '@/context/AuthContext';
 import {
   Collapsible,
   CollapsibleContent,
@@ -140,6 +142,8 @@ export default function SongContent({
   onFolderChange,
 }: SongContentProps) {
   const { t } = useLanguage();
+  const pathname = usePathname();
+  const { signInWithGoogle } = useAuthContext();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
   const lastPinchTime = useRef(0);
   const onFontSizeChangeRef = useRef(onFontSizeChange);
@@ -366,7 +370,7 @@ export default function SongContent({
                 className="w-full font-semibold text-gray-900 dark:text-gray-100 py-3 px-4 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px]"
               >
                 <MusicalNoteIcon className="w-5 h-5 mr-2 shrink-0" />
-                Accords utilisés
+                {t('songContent.CHORDS_USED_TITLE')}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -397,7 +401,7 @@ export default function SongContent({
                   )}
                 >
                   {!showTransposeControls ? (
-                    <div className="text-sm font-medium whitespace-nowrap sm:text-sm">Transpose</div>
+                    <div className="text-sm font-medium whitespace-nowrap sm:text-sm">{t('songContent.TRANSPOSE_LABEL')}</div>
                   ) : (
                     <div
                       className="flex h-full flex-nowrap items-center gap-2"
@@ -489,7 +493,9 @@ export default function SongContent({
                 </div>
 
                 {bpm && (
-                  <p className="text-sm font-medium text-blue-600">{bpm} BPM</p>
+                  <p className="text-sm font-medium text-blue-600">
+                    {t('songContent.BPM_LABEL').replace('{bpm}', String(bpm))}
+                  </p>
                 )}
               </div>
             </CollapsibleContent>
@@ -519,24 +525,19 @@ export default function SongContent({
         <div className="absolute inset-x-0 bottom-0 h-2/3 z-20 flex flex-col items-center justify-end pb-12 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent backdrop-blur-[1px]">
           <div className="bg-white/90 backdrop-blur-md p-6 rounded-xl shadow-xl border border-gray-200 max-w-sm mx-4 text-center transform translate-y-2">
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Chanson complète masquée
+              {t('songContent.FULL_SONG_HIDDEN_TITLE')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Connectez-vous pour accéder à l&apos;intégralité de la chanson et l&apos;ajouter à votre bibliothèque.
+              {t('songContent.FULL_SONG_HIDDEN_DESCRIPTION')}
             </p>
             <div className="flex flex-col gap-3">
-              <Link
-                href="/login?next=/"
-                className="w-full inline-flex items-center justify-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
+              <Button
+                type="button"
+                onClick={() => signInWithGoogle(pathname)}
+                className="w-full h-11 text-sm font-semibold"
               >
-                Se connecter
-              </Link>
-              <Link
-                href="/register?next=/"
-                className="w-full inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                Créer un compte
-              </Link>
+                {t('auth.signInWithGoogle')}
+              </Button>
             </div>
           </div>
         </div>

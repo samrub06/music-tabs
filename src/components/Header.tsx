@@ -312,8 +312,13 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="outline" size="sm" onClick={signInWithGoogle} className="gap-2">
-              <GoogleIcon className="h-4 w-4 shrink-0" />
+            <Button
+              variant="outline"
+              onClick={() => signInWithGoogle(pathname)}
+              className="h-11 min-h-[44px] gap-2 px-3.5 text-sm font-semibold sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs sm:font-medium"
+            >
+              <GoogleIcon className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
+              <span className="inline sm:hidden">{t('auth.signIn')}</span>
               <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
             </Button>
           )

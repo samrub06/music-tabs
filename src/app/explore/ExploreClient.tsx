@@ -11,6 +11,7 @@ import Pagination from '@/components/Pagination'
 import SongTable from '@/components/SongTable'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { EXPLORE_DECADES, EXPLORE_DIFFICULTIES, EXPLORE_GENRES } from '@/data/exploreCategories'
+import { useLanguage } from '@/context/LanguageContext'
 
 interface ExploreClientProps {
   songs: Song[]
@@ -23,6 +24,7 @@ interface ExploreClientProps {
 }
 
 export default function ExploreClient({ songs, total, page, limit, initialView = 'gallery', initialQuery = '', userId }: ExploreClientProps) {
+  const { t } = useLanguage()
   const [cloningId, setCloningId] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -69,7 +71,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
     <div className="p-3 sm:p-6 overflow-y-auto">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Tendances 📈
+          {t('explore.TRENDING_TITLE')}
         </h1>
         <div className="flex items-center gap-2">
           <input
@@ -84,12 +86,12 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
                 router.push(`${pathname}?${params.toString()}`)
               }
             }}
-            placeholder="Search title or author..."
+            placeholder={t('explore.SEARCH_PLACEHOLDER')}
             className="px-3 py-1.5 text-sm border rounded-md w-[200px] sm:w-[280px]"
           />
           <div className="inline-flex rounded-md shadow-sm border">
-            <a href="?view=gallery" className={`px-3 py-1.5 text-sm ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}>Gallery</a>
-            <a href="?view=table" className={`px-3 py-1.5 text-sm ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}>Table</a>
+            <a href="?view=gallery" className={`px-3 py-1.5 text-sm ${view === 'gallery' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}>{t('explore.GALLERY_VIEW')}</a>
+            <a href="?view=table" className={`px-3 py-1.5 text-sm ${view === 'table' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}>{t('explore.TABLE_VIEW')}</a>
           </div>
         </div>
       </div>
@@ -98,7 +100,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
       <div className="mb-6 space-y-4">
         {/* Genres */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Genres</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('explore.GENRES_SECTION')}</h3>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => updateFilter('genre', null)}
@@ -108,7 +110,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Tous
+              {t('explore.ALL_FILTER')}
             </button>
             {genres.map((genre) => (
               <button
@@ -128,7 +130,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
 
         {/* Niveaux */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Niveaux</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('explore.LEVELS_SECTION')}</h3>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => updateFilter('difficulty', null)}
@@ -138,7 +140,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Tous
+              {t('explore.ALL_FILTER')}
             </button>
             {difficulties.map((difficulty) => (
               <button
@@ -158,7 +160,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
 
         {/* Décennies */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">Décennies</h3>
+          <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('explore.DECADES_SECTION')}</h3>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => updateFilter('decade', null)}
@@ -168,7 +170,7 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
                   : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
               }`}
             >
-              Toutes
+              {t('explore.ALL_DECADES_FILTER')}
             </button>
             {decades.map((decade) => (
               <button

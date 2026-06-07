@@ -50,8 +50,8 @@ export default function SongPreviewClient({
           const scraped = data.song
           const searchResultData = searchResult || {}
 
-          const title = (scraped.title || searchResultData.title || 'Unknown title').trim()
-          const author = (scraped.author || searchResultData.author || 'Unknown artist').trim()
+          const title = (scraped.title || searchResultData.title || t('songs.unknownTitle')).trim()
+          const author = (scraped.author || searchResultData.author || t('songs.unknownArtist')).trim()
           const content = scraped.content || ''
 
           // Parse content to structured format with sections
@@ -88,11 +88,11 @@ export default function SongPreviewClient({
 
           setSong(songData)
         } else {
-          setError(data.error || 'Unable to retrieve the song.')
+          setError(data.error || t('songPreview.FETCH_ERROR'))
         }
       } catch (err) {
         console.error('Error fetching song:', err)
-        setError(err instanceof Error ? err.message : 'Error retrieving the song.')
+        setError(err instanceof Error ? err.message : t('songPreview.FETCH_ERROR_GENERIC'))
       } finally {
         setIsLoading(false)
       }
@@ -131,7 +131,7 @@ export default function SongPreviewClient({
       router.push(`/song/${newSong.id}`)
     } catch (err) {
       console.error('Error adding song:', err)
-      setError(err instanceof Error ? err.message : 'Error adding song to library.')
+      setError(err instanceof Error ? err.message : t('songPreview.ADD_ERROR'))
     } finally {
       setIsAdding(false)
     }
@@ -142,7 +142,7 @@ export default function SongPreviewClient({
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading song...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('songPreview.LOADING')}</p>
         </div>
       </div>
     )
@@ -152,13 +152,13 @@ export default function SongPreviewClient({
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <p className="text-red-600 dark:text-red-400 mb-4">{error || 'Song not found'}</p>
+          <p className="text-red-600 dark:text-red-400 mb-4">{error || t('songPreview.NOT_FOUND')}</p>
           <button
             onClick={() => router.push('/')}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <ArrowLeftIcon className="h-4 w-4" />
-            Back to Search
+            {t('songPreview.BACK_TO_SEARCH')}
           </button>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function SongPreviewClient({
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            Preview mode - This song is not in your library
+            {t('songPreview.BANNER_MESSAGE')}
           </p>
           {userId && (
             <button
@@ -182,10 +182,10 @@ export default function SongPreviewClient({
               {isAdding ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Adding...
+                  {t('songPreview.ADDING')}
                 </>
               ) : (
-                'Add to Library'
+                t('songPreview.ADD_TO_LIBRARY')
               )}
             </button>
           )}
