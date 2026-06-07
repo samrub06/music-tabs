@@ -29,7 +29,7 @@ const triggerSizeClasses = {
   compact:
     'h-auto min-h-0 w-auto max-w-[10rem] gap-1.5 px-2.5 py-0.5 text-xs [&_svg]:h-3 [&_svg]:w-3',
   comfortable:
-    'h-auto min-h-0 w-auto max-w-[min(12rem,70vw)] gap-1.5 px-2.5 py-1 text-xs [&_svg]:h-3.5 [&_svg]:w-3.5 sm:max-w-[10rem] sm:gap-1.5 sm:px-2.5 sm:py-0.5 sm:text-xs sm:[&_svg]:h-3 sm:[&_svg]:w-3',
+    'h-auto min-h-0 w-auto max-w-[min(12rem,70vw)] gap-1.5 px-2.5 py-1 text-xs [&_svg]:h-3.5 [&_svg]:w-3.5 sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs sm:[&_svg]:h-3.5 sm:[&_svg]:w-3.5',
 } as const;
 
 export default function FolderDropdown({

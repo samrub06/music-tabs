@@ -3,7 +3,8 @@
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, PlayIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { PlayIcon } from '@heroicons/react/24/solid'
 import { searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
@@ -725,30 +726,17 @@ export default function SearchClient({
                     </div>
 
                     {/* Actions — larger touch targets on mobile */}
-                    <div className="flex-shrink-0 flex items-center gap-1.5 border-l border-border/60 pl-2.5 sm:gap-1 sm:pl-2.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex-shrink-0 flex items-center gap-1.5 sm:gap-1" onClick={(e) => e.stopPropagation()}>
                       {existingSongId ? (
-                        <Button asChild size="icon" className="rounded-lg h-11 w-12 sm:h-8 sm:w-8" aria-label={t('search.viewSong')}>
-                          <Link href={`/song/${existingSongId}`}>
-                            <PlayIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                          </Link>
-                        </Button>
+                        <Link
+                          href={`/song/${existingSongId}`}
+                          className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                          aria-label={t('search.viewSong')}
+                        >
+                          <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
+                        </Link>
                       ) : (
                         <>
-                          <Button
-                            size="icon"
-                            variant="default"
-                            className="rounded-lg h-11 w-12 sm:h-8 sm:w-8"
-                            onClick={() => handleViewSong(result)}
-                            disabled={isViewing}
-                            aria-label={t('search.viewSong')}
-                            title={t('search.viewSong')}
-                          >
-                            {isViewing ? (
-                              <div className="animate-spin rounded-full h-4 w-4 sm:h-3.5 sm:w-3.5 border-2 border-current border-t-transparent" />
-                            ) : (
-                              <PlayIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                            )}
-                          </Button>
                           <Button
                             size="icon"
                             variant="secondary"
@@ -764,6 +752,20 @@ export default function SearchClient({
                               <PlusIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                             )}
                           </Button>
+                          <button
+                            type="button"
+                            className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 disabled:opacity-50 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                            onClick={() => handleViewSong(result)}
+                            disabled={isViewing}
+                            aria-label={t('search.viewSong')}
+                            title={t('search.viewSong')}
+                          >
+                            {isViewing ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent sm:h-3.5 sm:w-3.5" />
+                            ) : (
+                              <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
+                            )}
+                          </button>
                         </>
                       )}
                     </div>

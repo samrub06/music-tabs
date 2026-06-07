@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
-import { PlayIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
+import { PlayIcon } from '@heroicons/react/24/solid'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/context/LanguageContext'
@@ -102,18 +103,8 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
                 </div>
 
                 <div
-                  className="flex shrink-0 items-center gap-1.5 border-l border-border/60 pl-2.5 sm:gap-1 sm:pl-2.5"
+                  className="flex shrink-0 items-center gap-1.5 sm:gap-1"
                 >
-                  <Button
-                    asChild
-                    size="icon"
-                    className="rounded-lg h-11 w-12 sm:h-8 sm:w-8"
-                    aria-label={t('search.viewSong')}
-                  >
-                    <Link href={href}>
-                      <PlayIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                    </Link>
-                  </Button>
                   {!song.inUserLibrary && (
                     <Button
                       size="icon"
@@ -131,6 +122,13 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
                       )}
                     </Button>
                   )}
+                  <Link
+                    href={href}
+                    className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                    aria-label={t('search.viewSong')}
+                  >
+                    <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
+                  </Link>
                 </div>
               </div>
             </li>

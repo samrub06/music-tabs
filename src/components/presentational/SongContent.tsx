@@ -328,12 +328,13 @@ export default function SongContent({
                 </button>
               </div>
               {isAuthenticated && onFolderChange && (
-                <div className="hidden w-full justify-end sm:flex">
+                <div className="hidden w-full sm:flex">
                   <FolderDropdown
                     currentFolderId={currentFolderId}
                     folders={folders}
                     onFolderChange={onFolderChange}
                     size="comfortable"
+                    fullWidth
                   />
                 </div>
               )}

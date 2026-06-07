@@ -6,10 +6,10 @@ import { useCallback, useState } from 'react'
 import {
   ArrowLeftIcon,
   PlusIcon,
-  PlayIcon,
   Squares2X2Icon,
   ListBulletIcon,
 } from '@heroicons/react/24/outline'
+import { PlayIcon } from '@heroicons/react/24/solid'
 import { useLanguage } from '@/context/LanguageContext'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
@@ -49,12 +49,7 @@ function SongListItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps
         <p className="text-sm font-semibold text-foreground truncate">{song.title}</p>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{song.author}</p>
       </Link>
-      <div className="flex items-center gap-1 shrink-0 border-l border-border/60 pl-2 sm:pl-2.5">
-        <Button asChild size="icon" className="rounded-lg h-8 w-8" aria-label={t('search.viewSong')}>
-          <Link href={`/song/${song.id}`}>
-            <PlayIcon className="h-3.5 w-3.5" />
-          </Link>
-        </Button>
+      <div className="flex items-center gap-1 shrink-0">
         <Button
           size="icon"
           variant="secondary"
@@ -69,6 +64,13 @@ function SongListItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps
             <PlusIcon className="h-3.5 w-3.5" />
           )}
         </Button>
+        <Link
+          href={`/song/${song.id}`}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+          aria-label={t('search.viewSong')}
+        >
+          <PlayIcon className="h-5 w-5" aria-hidden />
+        </Link>
       </div>
     </div>
   )
