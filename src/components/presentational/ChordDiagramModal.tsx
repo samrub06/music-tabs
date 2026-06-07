@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import type { Chord } from '@/types';
 import ChordDiagram from '../ChordDiagram';
+import UnknownChordFallback from './UnknownChordFallback';
 import { ChordVariantsCarousel } from '@/components/chords/ChordVariantsCarousel';
 import { PianoChordDiagram } from '@/components/chords/PianoChordDiagram';
-import { getChordVariantGroup } from '@/utils/chordVariantLookup';
+import { getChordVariantGroup, hasChordDiagramForInstrument } from '@/utils/chordVariantLookup';
 import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
-import { useLanguage } from '@/context/LanguageContext';
+import { GUITAR_SHAPES } from '@/utils/chords';
+import { generatePianoVoicing } from '@/utils/chords';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ interface ChordDiagramModalProps {
   selectedInstrument: 'piano' | 'guitar';
   fontSize: number;
   onClose: () => void;
-  chords?: Chord[];
+  isAuthenticated?: boolean;
 }
 
 export default function ChordDiagramModal({
@@ -28,14 +29,26 @@ export default function ChordDiagramModal({
   selectedInstrument,
   fontSize,
   onClose,
+  isAuthenticated = true,
 }: ChordDiagramModalProps) {
-  const { t } = useLanguage();
   const variantGroup = useMemo(
     () => (selectedInstrument === 'guitar' ? getChordVariantGroup(selectedChord) : null),
     [selectedChord, selectedInstrument]
   );
   const showPianoSvg =
     selectedInstrument === 'piano' && hasPianoChordDiagram(selectedChord);
+  const hasDiagram = useMemo(
+    () => hasChordDiagramForInstrument(selectedChord, selectedInstrument),
+    [selectedChord, selectedInstrument]
+  );
+  const showLegacyGuitarDiagram =
+    selectedInstrument === 'guitar' &&
+    !variantGroup &&
+    !!GUITAR_SHAPES[selectedChord];
+  const showLegacyPianoDiagram =
+    selectedInstrument === 'piano' &&
+    !showPianoSvg &&
+    generatePianoVoicing(selectedChord).length > 0;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -45,8 +58,14 @@ export default function ChordDiagramModal({
             {selectedChord}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex w-full flex-col items-start p-2 pt-0">
-          {showPianoSvg ? (
+        <div className="flex w-full flex-col items-center p-2 pt-0">
+          {!hasDiagram ? (
+            <UnknownChordFallback
+              chordName={selectedChord}
+              instrument={selectedInstrument}
+              isAuthenticated={isAuthenticated}
+            />
+          ) : showPianoSvg ? (
             <div className="flex w-full flex-col items-start px-2 pb-4 pt-1">
               <PianoChordDiagram chordSymbol={selectedChord} size="modal" className="w-full" />
             </div>
@@ -59,13 +78,11 @@ export default function ChordDiagramModal({
                 resetKey={selectedChord}
               />
             </div>
-          ) : selectedInstrument === 'piano' ? (
-            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-              {t('chords.noPianoDiagram')}
-            </p>
-          ) : (
-            <ChordDiagram chord={selectedChord} instrument={selectedInstrument} fontSize={fontSize} />
-          )}
+          ) : showLegacyPianoDiagram || showLegacyGuitarDiagram ? (
+            <div className="flex w-full flex-col items-start px-2 pb-4 pt-1">
+              <ChordDiagram chord={selectedChord} instrument={selectedInstrument} fontSize={fontSize} />
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

@@ -225,7 +225,7 @@ export default function SongViewer({
               selectedInstrument={selectedInstrument}
               fontSize={fontSize}
               onClose={onCloseChordDiagram}
-              chords={chords}
+              isAuthenticated={isAuthenticated}
             />
           )}
         </div>

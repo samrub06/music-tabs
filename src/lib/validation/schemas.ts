@@ -36,6 +36,11 @@ export const createSongSchema = z.object({
   bpm: z.number().int().positive().optional()
 })
 
+export const requestChordSchema = z.object({
+  chordName: z.string().min(1, 'Chord name is required').max(32),
+  instrument: z.enum(['guitar', 'piano']),
+})
+
 export const updateSongSchema = createSongSchema.partial().extend({
   title: z.string().min(1, 'Title is required'),
   author: z.string().min(1, 'Author is required'),

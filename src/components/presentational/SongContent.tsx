@@ -37,7 +37,6 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
-import { SongThumbnail } from './SongThumbnail';
 import type { LibrarySongRef } from '@/utils/songSuggestions';
 import {
   Select,
@@ -246,14 +245,8 @@ export default function SongContent({
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
-            <SongThumbnail
-              songImageUrl={transposedSong?.songImageUrl}
-              artistImageUrl={transposedSong?.artistImageUrl}
-              alt={transposedSong?.title || ''}
-              size="lg"
-              className="shrink-0"
-            />
+          <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
+            <div className="flex items-start gap-2 sm:items-center">
             <div className="min-w-0 flex-1">
               <h2
                 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
@@ -335,7 +328,7 @@ export default function SongContent({
                 </button>
               </div>
               {isAuthenticated && onFolderChange && (
-                <div className="flex w-full justify-end">
+                <div className="hidden w-full justify-end sm:flex">
                   <FolderDropdown
                     currentFolderId={currentFolderId}
                     folders={folders}
@@ -345,6 +338,18 @@ export default function SongContent({
                 </div>
               )}
             </div>
+            </div>
+            {isAuthenticated && onFolderChange && (
+              <div className="w-full sm:hidden">
+                <FolderDropdown
+                  currentFolderId={currentFolderId}
+                  folders={folders}
+                  onFolderChange={onFolderChange}
+                  size="comfortable"
+                  fullWidth
+                />
+              </div>
+            )}
           </div>
 
           {/* Chord Diagrams Section - accordion */}

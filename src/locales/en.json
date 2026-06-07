@@ -511,7 +511,12 @@
     "difficultyAdvanced": "Advanced",
     "noResults": "No chords match your filters",
     "instrument": "Instrument",
-    "noPianoDiagram": "No piano diagram for this chord"
+    "noPianoDiagram": "No piano diagram for this chord",
+    "forgotChord": "Oops, we forgot it!",
+    "notifyToAdd": "Notify me when it's added",
+    "notifySending": "Sending…",
+    "notifyRequested": "Got it! We'll notify you",
+    "notifyError": "Could not send your request. Please try again."
   },
   "aiPlaylist": {
     "title": "Generate playlist with AI",

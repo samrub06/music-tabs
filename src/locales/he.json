@@ -511,7 +511,12 @@
     "difficultyAdvanced": "מתקדם",
     "noResults": "לא נמצאו אקורדים התואמים למסננים",
     "instrument": "כלי נגינה",
-    "noPianoDiagram": "אין דיאגרמת פסנתר לאקורד זה"
+    "noPianoDiagram": "אין דיאגרמת פסנתר לאקורד זה",
+    "forgotChord": "אופס, שכחנו את זה!",
+    "notifyToAdd": "הודע לי כשיוסף",
+    "notifySending": "שולח…",
+    "notifyRequested": "קיבלנו! נודיע לך",
+    "notifyError": "לא ניתן לשלוח את הבקשה. נסה שוב."
   },
   "aiPlaylist": {
     "title": "צור פלייליסט עם AI",

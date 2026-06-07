@@ -1,6 +1,8 @@
 import chordVariantsFr from '@/data/chordVariants';
-import { normalizeChordNameForComparison, parseChord } from '@/utils/chords';
+import { GUITAR_SHAPES, generatePianoVoicing, normalizeChordNameForComparison, parseChord } from '@/utils/chords';
+import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
 import type { ChordVariantGroup } from '@/types/chordVariants';
+import type { InstrumentType } from '@/types';
 
 /** Song symbols that map to a variant group id (beyond exact `group.symbol`). */
 const SYMBOL_ALIASES: Record<string, string> = {
@@ -55,4 +57,17 @@ export function getChordVariantGroup(songChord: string): ChordVariantGroup | nul
 
 export function hasChordVariantDiagrams(songChord: string): boolean {
   return getChordVariantGroup(songChord) != null;
+}
+
+export function hasChordDiagramForInstrument(
+  chord: string,
+  instrument: InstrumentType
+): boolean {
+  if (!chord?.trim()) return false;
+
+  if (instrument === 'piano') {
+    return hasPianoChordDiagram(chord) || generatePianoVoicing(chord).length > 0;
+  }
+
+  return hasChordVariantDiagrams(chord) || !!GUITAR_SHAPES[chord];
 }

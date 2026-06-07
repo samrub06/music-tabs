@@ -509,7 +509,12 @@
     "difficultyAdvanced": "Avancé",
     "noResults": "Aucun accord ne correspond à vos filtres",
     "instrument": "Instrument",
-    "noPianoDiagram": "Pas de diagramme piano pour cet accord"
+    "noPianoDiagram": "Pas de diagramme piano pour cet accord",
+    "forgotChord": "Oups, on l'a oublié !",
+    "notifyToAdd": "Me prévenir quand il sera ajouté",
+    "notifySending": "Envoi…",
+    "notifyRequested": "C'est noté ! On vous prévient",
+    "notifyError": "Impossible d'envoyer la demande. Réessayez."
   },
   "aiPlaylist": {
     "title": "Générer une playlist avec AI",
