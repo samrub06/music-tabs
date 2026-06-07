@@ -7,6 +7,27 @@ import { songService } from '@/lib/services/songService'
 import { toggleSongFavoriteSchema, updateSongSchema } from '@/lib/validation/schemas'
 import type { SongEditData } from '@/types'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
+import type { LibrarySongRef } from '@/utils/songSuggestions'
+
+/** Returns lightweight library song refs for end-of-song suggestions (client lazy load). */
+export async function getLibrarySongRefsAction(): Promise<LibrarySongRef[]> {
+  const supabase = await createActionServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return []
+  }
+
+  const songs = await songRepo(supabase).getAllSongsForPlaylist()
+  return songs.map((s) => ({
+    id: s.id,
+    title: s.title,
+    author: s.author,
+    genre: s.genre,
+    songImageUrl: s.songImageUrl,
+    artistImageUrl: s.artistImageUrl,
+  }))
+}
 
 /** Records a song view: increments view_count, updates updated_at, awards XP, and revalidates /songs */
 export async function recordSongViewAction(songId: string) {
@@ -36,9 +57,10 @@ export async function recordSongViewAction(songId: string) {
     }
   }
 
-  // 3. Revalidate pages so Recent tab shows fresh data when user navigates back
-  revalidatePath('/songs')
-  revalidatePath('/search')
+  // 3. Defer revalidation so navigation back to /songs is not blocked
+  after(() => {
+    revalidatePath('/songs')
+  })
 }
 
 /** @deprecated Use recordSongViewAction instead. Kept for backward compatibility. */

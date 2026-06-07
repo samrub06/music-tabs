@@ -12,7 +12,8 @@ const MAX_RECENT_SEARCHES = 10
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { Song, Folder, Playlist } from '@/types'
+import { Song, Playlist } from '@/types'
+import { useFoldersContext } from '@/context/FoldersContext'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAddSongModal } from '@/context/AddSongModalContext'
@@ -35,7 +36,6 @@ interface SongsClientProps {
   initialView?: 'gallery' | 'table'
   initialQuery?: string
   initialTab?: 'all' | 'recent' | 'popular'
-  folders: Folder[]
   playlists?: Playlist[]
   initialSongId?: string
   initialFolder?: string
@@ -45,8 +45,9 @@ interface SongsClientProps {
   likedOnly?: boolean
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', folders, playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false }: SongsClientProps) {
   const { t } = useLanguage()
+  const { folders } = useFoldersContext()
   
   const sortFieldLabels: Record<SortField, string> = {
     title: t('songs.title'),

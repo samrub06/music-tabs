@@ -17,7 +17,11 @@ import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
-import { recordSongViewAction, toggleSongFavoriteAction } from '@/app/song/[id]/actions';
+import {
+  getLibrarySongRefsAction,
+  recordSongViewAction,
+  toggleSongFavoriteAction,
+} from '@/app/song/[id]/actions';
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions';
 import { useLanguage } from '@/context/LanguageContext';
 import { useFoldersContext } from '@/context/FoldersContext';
@@ -31,7 +35,6 @@ interface SongViewerContainerSSRProps {
   isInLibrary?: boolean;
   onAddToLibrary?: () => void;
   initialInstrument?: 'piano' | 'guitar';
-  librarySongs?: LibrarySongRef[];
 }
 
 export default function SongViewerContainerSSR({ 
@@ -42,7 +45,6 @@ export default function SongViewerContainerSSR({
   isInLibrary = true,
   onAddToLibrary,
   initialInstrument,
-  librarySongs = [],
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
   const { t } = useLanguage();
@@ -74,6 +76,8 @@ export default function SongViewerContainerSSR({
   const [chords, setChords] = useState<Chord[]>([]);
   const [isLiked, setIsLiked] = useState(song.isLiked ?? false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const [librarySongs, setLibrarySongs] = useState<LibrarySongRef[]>([]);
+  const chordsLoadedRef = useRef(false);
   const { folders } = useFoldersContext();
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(
     song.folderId
@@ -86,6 +90,26 @@ export default function SongViewerContainerSSR({
   useEffect(() => {
     setCurrentFolderId(song.folderId);
   }, [song.id, song.folderId]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isInLibrary) {
+      setLibrarySongs([]);
+      return;
+    }
+
+    let cancelled = false;
+    getLibrarySongRefsAction()
+      .then((refs) => {
+        if (!cancelled) setLibrarySongs(refs);
+      })
+      .catch((error) => {
+        console.error('Failed to load library song refs:', error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, isInLibrary, song.id]);
 
   const handleFolderChange = async (folderId: string | undefined) => {
     if (!isInLibrary) return;
@@ -238,46 +262,61 @@ export default function SongViewerContainerSSR({
     return normalized;
   }
 
-  // Load all chords and create name -> ID mapping, then load user's known chords
   useEffect(() => {
+    chordsLoadedRef.current = false;
+    setChords([]);
+    setKnownChordIds(new Set());
+    setChordNameToIdMap(new Map());
+  }, [song.id]);
+
+  // Load chord catalog when easy-chord mode is enabled (authenticated users only)
+  useEffect(() => {
+    if (!easyChordMode || !isAuthenticated || chordsLoadedRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+
     const loadChords = async () => {
       try {
-        // Load all chords (works for both authenticated and non-authenticated users - chords are publicly readable)
         const allChords = await chordService.getAllChords(supabase);
-        setChords(allChords);
-        
-        if (isAuthenticated) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            // Create name -> ID mapping
-            const nameToIdMap = new Map<string, string>();
-            allChords.forEach(chord => {
-              const normalized = normalizeChordName(chord.name);
-              nameToIdMap.set(normalized, chord.id);
-            });
-            setChordNameToIdMap(nameToIdMap);
+        if (cancelled) return;
 
-            // Load user's known chord IDs
-            const knownChordIdsArray = await knownChordService.getKnownChordIds(user.id, supabase);
-            setKnownChordIds(new Set(knownChordIdsArray));
-          } else {
-            setKnownChordIds(new Set());
-            setChordNameToIdMap(new Map());
-          }
-        } else {
-          setKnownChordIds(new Set());
-          setChordNameToIdMap(new Map());
+        setChords(allChords);
+        chordsLoadedRef.current = true;
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (cancelled || !user) {
+          return;
+        }
+
+        const nameToIdMap = new Map<string, string>();
+        allChords.forEach((chord) => {
+          const normalized = normalizeChordName(chord.name);
+          nameToIdMap.set(normalized, chord.id);
+        });
+        setChordNameToIdMap(nameToIdMap);
+
+        const knownChordIdsArray = await knownChordService.getKnownChordIds(user.id, supabase);
+        if (!cancelled) {
+          setKnownChordIds(new Set(knownChordIdsArray));
         }
       } catch (error) {
         console.error('Error loading chords:', error);
-        setKnownChordIds(new Set());
-        setChordNameToIdMap(new Map());
-        setChords([]);
+        if (!cancelled) {
+          setKnownChordIds(new Set());
+          setChordNameToIdMap(new Map());
+          setChords([]);
+        }
       }
     };
 
     loadChords();
-  }, [isAuthenticated, song.id]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [easyChordMode, isAuthenticated, song.id]);
 
   // Auto-scroll functionality
   useAutoScroll({ 

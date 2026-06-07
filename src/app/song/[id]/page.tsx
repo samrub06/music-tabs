@@ -32,17 +32,6 @@ export default async function SongPage({
   const profile = user ? await profileRepo(supabase).getProfile(user.id) : null
   const initialInstrument = profile?.preferredInstrument === 'guitar' ? 'guitar' : 'piano'
 
-  const librarySongs = user
-    ? (await songRepoInstance.getAllSongsForPlaylist()).map((s) => ({
-        id: s.id,
-        title: s.title,
-        author: s.author,
-        genre: s.genre,
-        songImageUrl: s.songImageUrl,
-        artistImageUrl: s.artistImageUrl,
-      }))
-    : []
-
   return (
     <SongViewerContainerSSR 
       song={song} 
@@ -51,7 +40,6 @@ export default async function SongPage({
       isAuthenticated={!!user}
       isInLibrary={isInLibrary}
       initialInstrument={initialInstrument}
-      librarySongs={librarySongs}
     />
   )
 }

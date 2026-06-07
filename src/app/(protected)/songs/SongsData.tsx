@@ -1,10 +1,9 @@
 import { Suspense } from 'react'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { songService } from '@/lib/services/songService'
-import { folderRepo } from '@/lib/services/folderRepo'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import SongsClient from './SongsClient'
-import type { Folder, Playlist } from '@/types'
+import type { Playlist } from '@/types'
 
 type OrderByOption = 'created_at' | 'updated_at' | 'view_count'
 
@@ -48,21 +47,6 @@ async function SongsDataLoader({
   return { songs, total }
 }
 
-async function FoldersDataLoader(): Promise<Folder[]> {
-  const supabase = await createSafeServerClient()
-  // Use lightweight version - only load id, name, displayOrder
-  const foldersLightweight = await folderRepo(supabase).getAllFoldersLightweight()
-  // Map to full Folder type for compatibility
-  return foldersLightweight.map(f => ({
-    id: f.id,
-    name: f.name,
-    parentId: undefined,
-    displayOrder: f.displayOrder,
-    createdAt: new Date(), // Not critical for list view
-    updatedAt: new Date()
-  }))
-}
-
 async function PlaylistsDataLoader(): Promise<Playlist[]> {
   const supabase = await createSafeServerClient()
   // Use lightweight version - only load id, name, songCount, createdAt
@@ -96,18 +80,6 @@ function SongsSkeleton() {
   )
 }
 
-function FoldersSkeleton() {
-  return (
-    <div className="h-10 bg-gray-100 rounded w-48 animate-pulse"></div>
-  )
-}
-
-function PlaylistsSkeleton() {
-  return (
-    <div className="h-10 bg-gray-100 rounded w-32 animate-pulse"></div>
-  )
-}
-
 export default async function SongsData({
   searchParams,
 }: {
@@ -115,7 +87,7 @@ export default async function SongsData({
 }) {
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
-  const limit = Math.max(1, parseInt(params?.limit || '100', 10))
+  const limit = Math.max(1, parseInt(params?.limit || '50', 10))
   const q = params?.searchQuery || ''
   const tabParam = params?.tab as string | undefined
   const tab = (tabParam === 'recent' || tabParam === 'popular' ? tabParam : 'all') as 'all' | 'recent' | 'popular'
@@ -172,10 +144,8 @@ async function SongsDataWrapper({
   capoFilter?: 'any' | 'with' | 'without'
   likedOnly?: boolean
 }) {
-  // Stream all data in parallel with Suspense
-  const [songsData, foldersData, playlistsData] = await Promise.all([
+  const [songsData, playlistsData] = await Promise.all([
     SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder, easyChord, capoFilter, likedOnly }),
-    FoldersDataLoader(),
     PlaylistsDataLoader(),
   ])
 
@@ -188,7 +158,6 @@ async function SongsDataWrapper({
       initialView={view}
       initialQuery={q}
       initialTab={tab}
-      folders={foldersData}
       playlists={playlistsData}
       initialSongId={initialSongId}
       initialFolder={initialFolder}

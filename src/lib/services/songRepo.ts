@@ -72,11 +72,20 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
     tabId: dbSong.tab_id || undefined,
     sourceUrl: dbSong.source_url || undefined,
     isLiked: dbSong.is_liked ?? false,
+    difficulty: dbSong.difficulty || undefined,
+    decade: dbSong.decade || undefined,
+    capo: dbSong.capo ?? undefined,
   } as Song
 }
 
 const LIGHTWEIGHT_LIST_COLUMNS =
   'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, is_liked'
+
+const EXPLORE_LIST_COLUMNS =
+  `${LIGHTWEIGHT_LIST_COLUMNS}, difficulty, decade, capo, is_trending, is_public`
+
+const SONG_DETAIL_COLUMNS =
+  'id, user_id, title, author, folder_id, created_at, updated_at, capo, first_chord, last_chord, chord_progression, key, sounding_key, reviews, tab_id, version, version_description, rating, difficulty, artist_url, artist_image_url, song_image_url, source_url, source_site, view_count, format, sections, is_public, is_trending, genre, decade, bpm, all_chords, is_liked'
 
 export const songRepo = (client: SupabaseClient<Database>) => ({
   async createSong(songData: NewSongData): Promise<Song> {
@@ -201,7 +210,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getSong(id: string): Promise<Song | null> {
     const { data, error } = await client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .eq('id', id)
       .single()
 
@@ -431,7 +440,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const from = (page - 1) * limit
     const to = page * limit - 1
     let builder = (client.from('songs') as any)
-      .select('*', { count: 'exact' })
+      .select(EXPLORE_LIST_COLUMNS, { count: 'exact' })
       .or('is_trending.eq.true,is_public.eq.true')
       .order('created_at', { ascending: false })
     
@@ -453,7 +462,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const { data, error, count } = await builder.range(from, to)
 
     if (error) throw error
-    return { songs: (data || []).map(mapDbSongToDomain), total: count || 0 }
+    return { songs: (data || []).map(mapDbSongToList), total: count || 0 }
   },
 
   async searchSongs(query: string): Promise<Song[]> {
