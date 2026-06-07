@@ -122,21 +122,33 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
   },
 
   // Public playlists for Library (no auth required, RLS filters)
-  async getPublicPlaylistsLightweight(): Promise<Array<{ id: string; name: string; imageUrl?: string; songCount: number; createdAt: Date }>> {
+  async getPublicPlaylistsLightweight(): Promise<Array<{ id: string; name: string; imageUrl?: string; songCount: number; createdAt: Date; curatedSlug?: string; displayOrder: number }>> {
     const { data, error } = await client
       .from('playlists')
-      .select('id, name, image_url, song_ids, created_at')
+      .select('id, name, image_url, song_ids, created_at, curated_slug, display_order')
       .eq('is_public', true)
+      .not('curated_slug', 'is', null)
+      .order('display_order', { ascending: true })
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return ((data || []) as Array<{ id: string; name: string; image_url: string | null; song_ids: string[] | null; created_at: string }>).map(p => ({
+    return ((data || []) as Array<{
+      id: string
+      name: string
+      image_url: string | null
+      song_ids: string[] | null
+      created_at: string
+      curated_slug: string | null
+      display_order: number | null
+    }>).map(p => ({
       id: p.id,
       name: p.name,
       imageUrl: p.image_url || undefined,
       songCount: (p.song_ids as string[] || []).length,
-      createdAt: new Date(p.created_at)
+      createdAt: new Date(p.created_at),
+      curatedSlug: p.curated_slug || undefined,
+      displayOrder: p.display_order ?? 0,
     }))
   },
 

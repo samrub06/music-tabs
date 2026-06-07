@@ -10,6 +10,7 @@ import SongTableCompact from '@/components/SongTableCompact'
 import Pagination from '@/components/Pagination'
 import SongTable from '@/components/SongTable'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { EXPLORE_DECADES, EXPLORE_DIFFICULTIES, EXPLORE_GENRES } from '@/data/exploreCategories'
 
 interface ExploreClientProps {
   songs: Song[]
@@ -32,23 +33,9 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
   const currentDifficulty = searchParams?.get('difficulty') || null
   const currentDecade = searchParams?.get('decade') || null
 
-  const genres = [
-    { id: '4', name: 'Rock' },
-    { id: '14', name: 'Pop' },
-    { id: '666', name: 'Folk' },
-    { id: '45', name: 'World Music' },
-    { id: '1781', name: 'Reggae' },
-  ]
-
-  const difficulties = [
-    { id: '1', name: 'Absolute Beginner' },
-    { id: '2', name: 'Beginner' },
-  ]
-
-  const decades = [
-    { year: 2020, name: '2020s' },
-    { year: 2010, name: '2010s' },
-  ]
+  const genres = EXPLORE_GENRES
+  const difficulties = EXPLORE_DIFFICULTIES
+  const decades = EXPLORE_DECADES
 
   const updateFilter = (type: 'genre' | 'difficulty' | 'decade', value: string | number | null) => {
     const params = new URLSearchParams(searchParams?.toString() || '')

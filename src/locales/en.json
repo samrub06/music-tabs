@@ -277,6 +277,11 @@
     "viewInLibrary": "Open in library",
     "seeSong": "See song",
     "viewAll": "See all",
+    "curatedPlaylists": "Playlists to explore",
+    "curatedGenres": "Genres",
+    "curatedDecades": "Decades",
+    "curatedDifficulty": "Level",
+    "playlistSongCount": "Playlist · {count} songs",
     "listView": "List",
     "gridView": "Grid",
     "noRecentlyAdded": "No recently added songs."

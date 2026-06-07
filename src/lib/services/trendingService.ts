@@ -1,7 +1,15 @@
 import * as cheerio from 'cheerio';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/db';
+import {
+  buildUltimateGuitarExploreUrl,
+  EXPLORE_DECADES,
+  EXPLORE_DIFFICULTIES,
+  EXPLORE_GENRES,
+  type UltimateGuitarExploreFilter,
+} from '@/data/exploreCategories';
 import { delayBeforeUgRequest, getOrRefreshUgCookies, getUltimateGuitarFetchHeaders, scrapeSongFromUrl, ScrapedSong } from './scraperService';
+import { fetchUltimateGuitarHtml } from './ugFetch';
 import { songRepo } from './songRepo';
 
 export interface TrendingSong {
@@ -19,10 +27,103 @@ export interface TrendingSong {
   tabId?: number;
 }
 
-export interface ExploreFilter {
-  genre?: string;
-  difficulty?: string;
-  decade?: number;
+export type ExploreFilter = UltimateGuitarExploreFilter;
+
+type TrendingCatalogMetadata = {
+  genre?: string
+  difficulty?: string
+  decade?: number
+}
+
+async function upsertTrendingCatalogSong(
+  supabase: SupabaseClient<Database>,
+  song: TrendingSong,
+  metadata: TrendingCatalogMetadata = {}
+): Promise<'added' | 'updated' | 'error'> {
+  const repo = songRepo(supabase)
+  const existing = await repo.findExistingSystemCatalogSong({
+    tabId: song.tabId,
+    sourceUrl: song.url,
+    title: song.title,
+    author: song.artist,
+  })
+
+  const updateData: Record<string, unknown> = {
+    is_trending: true,
+    is_public: true,
+  }
+  if (metadata.genre) updateData.genre = metadata.genre
+  if (metadata.difficulty) updateData.difficulty = metadata.difficulty
+  if (metadata.decade) updateData.decade = metadata.decade
+  if (song.tabId != null) updateData.tab_id = String(song.tabId)
+  if (song.url) updateData.source_url = song.url
+
+  if (existing) {
+    await (supabase.from('songs') as any).update(updateData).eq('id', existing.id)
+    console.log(`Updated trending catalog song: ${song.title}`)
+    return 'updated'
+  }
+
+  console.log(`New trending song found: ${song.title}. Scraping...`)
+
+  const searchResult = {
+    title: song.title,
+    author: song.artist,
+    url: song.url,
+    source: 'Ultimate Guitar',
+    reviews: song.reviews,
+    version: song.version,
+    rating: song.rating,
+    difficulty: metadata.difficulty || song.difficulty,
+    artistUrl: song.artistUrl,
+    artistImageUrl: song.artistImageUrl,
+    songImageUrl: song.songImageUrl,
+    versionDescription: song.versionDescription,
+  }
+
+  const scrapedSong = await scrapeSongFromUrl(song.url, searchResult)
+  if (!scrapedSong) {
+    console.error(`Failed to scrape content for: ${song.title}`)
+    return 'error'
+  }
+
+  try {
+    await repo.createSystemSong(
+      {
+        title: scrapedSong.title,
+        author: scrapedSong.author,
+        content: scrapedSong.content,
+        rating: scrapedSong.rating,
+        difficulty: metadata.difficulty || scrapedSong.difficulty,
+        reviews: scrapedSong.reviews,
+        key: scrapedSong.key,
+        capo: scrapedSong.capo,
+        version: scrapedSong.version,
+        artistUrl: scrapedSong.artistUrl,
+        artistImageUrl: scrapedSong.artistImageUrl,
+        songImageUrl: scrapedSong.songImageUrl,
+        sourceUrl: scrapedSong.url,
+        sourceSite: 'Ultimate Guitar',
+        tabId:
+          song.tabId != null
+            ? String(song.tabId)
+            : scrapedSong.tabId != null
+              ? String(scrapedSong.tabId)
+              : undefined,
+      },
+      {
+        isTrending: true,
+        isPublic: true,
+        genre: metadata.genre,
+        decade: metadata.decade,
+      }
+    )
+    console.log(`Added new trending song: ${song.title}`)
+    return 'added'
+  } catch (insertError) {
+    console.error('Error inserting trending song:', insertError)
+    return 'error'
+  }
 }
 
 /**
@@ -35,24 +136,8 @@ export const trendingService = {
    */
   async fetchTrendingSongsFromUG(filter?: ExploreFilter): Promise<TrendingSong[]> {
     try {
-      // Construire l'URL avec les paramètres de filtre
-      const baseUrl = 'https://www.ultimate-guitar.com/explore?order=hitstotal_desc&type[]=Tabs';
-      const params = new URLSearchParams();
-      
-      if (filter?.genre) {
-        params.append('genres[]', filter.genre);
-      }
-      if (filter?.difficulty) {
-        params.append('difficulty[]', filter.difficulty);
-      }
-      if (filter?.decade) {
-        params.append('decade[]', String(filter.decade));
-      }
-      
-      const exploreUrl = params.toString() 
-        ? `${baseUrl}&${params.toString()}`
-        : baseUrl;
-      
+      const exploreUrl = buildUltimateGuitarExploreUrl(filter);
+
       console.log(`🔍 Fetching trending songs from: ${exploreUrl}`);
       await delayBeforeUgRequest();
       const cookies = await getOrRefreshUgCookies();
@@ -60,13 +145,13 @@ export const trendingService = {
         ...getUltimateGuitarFetchHeaders({ referer: 'https://www.ultimate-guitar.com/explore' }),
         ...(cookies && { Cookie: cookies }),
       };
-      const response = await fetch(exploreUrl, { headers });
+      const response = await fetchUltimateGuitarHtml(exploreUrl, { headers });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch trending songs: ${response.status}`);
+      if (!response.ok || response.blocked) {
+        throw new Error(`Failed to fetch trending songs: ${response.statusCode}`);
       }
 
-      const html = await response.text();
+      const html = response.body;
       const $ = cheerio.load(html);
 
       // Extraire les données JSON du store (comme dans scraperService)
@@ -169,91 +254,10 @@ export const trendingService = {
       // 3. Traiter chaque chanson
       for (const song of topSongs) {
         try {
-          // Vérifier si existe déjà (par titre/artiste)
-          const { data: existingSongs } = await (supabase
-            .from('songs') as any)
-            .select('id, is_trending, is_public')
-            .ilike('title', song.title)
-            .ilike('author', song.artist)
-            .limit(1);
-
-          if (existingSongs && existingSongs.length > 0) {
-            // Existe déjà : mettre à jour le flag trending
-            const existing = existingSongs[0];
-            await (supabase
-              .from('songs') as any)
-              .update({ is_trending: true, is_public: true } as any)
-              .eq('id', existing.id);
-            
-            stats.updated++;
-            console.log(`Updated trending flag for: ${song.title}`);
-          } else {
-            // N'existe pas : scraper et créer
-            console.log(`New trending song found: ${song.title}. Scraping...`);
-            
-            // Créer un SearchResult complet avec toutes les métadonnées extraites depuis la page Explore
-            // Cela garantit que scrapeUltimateGuitar() utilise d'abord ces données (priorité)
-            const searchResult = {
-              title: song.title,
-              author: song.artist,
-              url: song.url,
-              source: 'Ultimate Guitar',
-              reviews: song.reviews,
-              version: song.version,
-              rating: song.rating,
-              difficulty: song.difficulty,
-              artistUrl: song.artistUrl,
-              artistImageUrl: song.artistImageUrl,
-              songImageUrl: song.songImageUrl,
-              versionDescription: song.versionDescription,
-            };
-            
-            console.log(`🔍 Scraping with full metadata:`, {
-              title: searchResult.title,
-              hasRating: !!searchResult.rating,
-              hasReviews: !!searchResult.reviews,
-              hasDifficulty: !!searchResult.difficulty,
-              hasVersion: !!searchResult.version,
-              hasArtistUrl: !!searchResult.artistUrl,
-              hasArtistImage: !!searchResult.artistImageUrl,
-              hasSongImage: !!searchResult.songImageUrl,
-            });
-            
-            const scrapedSong = await scrapeSongFromUrl(song.url, searchResult);
-
-            if (scrapedSong) {
-              try {
-                await songRepo(supabase).createSystemSong({
-                  title: scrapedSong.title,
-                  author: scrapedSong.author,
-                  content: scrapedSong.content,
-                  rating: scrapedSong.rating,
-                  difficulty: scrapedSong.difficulty,
-                  reviews: scrapedSong.reviews,
-                  key: scrapedSong.key,
-                  capo: scrapedSong.capo,
-                  version: scrapedSong.version,
-                  artistUrl: scrapedSong.artistUrl,
-                  artistImageUrl: scrapedSong.artistImageUrl,
-                  songImageUrl: scrapedSong.songImageUrl,
-                  sourceUrl: scrapedSong.url,
-                  sourceSite: 'Ultimate Guitar',
-                }, {
-                  isTrending: true,
-                  isPublic: true
-                });
-                
-                stats.added++;
-                console.log(`Added new trending song: ${song.title}`);
-              } catch (insertError) {
-                console.error('Error inserting trending song:', insertError);
-                stats.errors++;
-              }
-            } else {
-              console.error(`Failed to scrape content for: ${song.title}`);
-              stats.errors++;
-            }
-          }
+          const result = await upsertTrendingCatalogSong(supabase, song)
+          if (result === 'added') stats.added++
+          else if (result === 'updated') stats.updated++
+          else stats.errors++
         } catch (itemError) {
           console.error(`Error processing item ${song.title}:`, itemError);
           stats.errors++;
@@ -279,24 +283,9 @@ export const trendingService = {
     const stats = { added: 0, updated: 0, errors: 0 };
     
     try {
-      // Définir les catégories
-      const genres = [
-        { id: '4', name: 'Rock' },
-        { id: '14', name: 'Pop' },
-        { id: '666', name: 'Folk' },
-        { id: '45', name: 'World Music' },
-        { id: '1781', name: 'Reggae' },
-      ];
-      
-      const difficulties = [
-        { id: '1', name: 'Absolute Beginner' },
-        { id: '2', name: 'Beginner' },
-      ];
-      
-      const decades = [
-        { year: 2020, name: '2020s' },
-        { year: 2010, name: '2010s' },
-      ];
+      const genres = EXPLORE_GENRES;
+      const difficulties = EXPLORE_DIFFICULTIES;
+      const decades = EXPLORE_DECADES;
 
       // Réinitialiser le flag is_trending pour toutes les chansons
       await (supabase
@@ -384,86 +373,10 @@ export const trendingService = {
       // Traiter chaque chanson
       for (const song of topSongs) {
         try {
-          // Vérifier si existe déjà (par titre/artiste)
-          const { data: existingSongs } = await (supabase
-            .from('songs') as any)
-            .select('id, is_trending, is_public')
-            .ilike('title', song.title)
-            .ilike('author', song.artist)
-            .limit(1);
-
-          if (existingSongs && existingSongs.length > 0) {
-            // Existe déjà : mettre à jour le flag trending et les métadonnées
-            const existing = existingSongs[0];
-            const updateData: any = { is_trending: true, is_public: true };
-            if (metadata.genre) updateData.genre = metadata.genre;
-            if (metadata.difficulty) updateData.difficulty = metadata.difficulty;
-            if (metadata.decade) updateData.decade = metadata.decade;
-            
-            await (supabase
-              .from('songs') as any)
-              .update(updateData)
-              .eq('id', existing.id);
-            
-            stats.updated++;
-            console.log(`Updated trending flag for: ${song.title}`);
-          } else {
-            // N'existe pas : scraper et créer
-            console.log(`New trending song found: ${song.title}. Scraping...`);
-            
-            // Créer un SearchResult complet avec toutes les métadonnées extraites
-            const searchResult = {
-              title: song.title,
-              author: song.artist,
-              url: song.url,
-              source: 'Ultimate Guitar',
-              reviews: song.reviews,
-              version: song.version,
-              rating: song.rating,
-              difficulty: metadata.difficulty || song.difficulty,
-              artistUrl: song.artistUrl,
-              artistImageUrl: song.artistImageUrl,
-              songImageUrl: song.songImageUrl,
-              versionDescription: song.versionDescription,
-            };
-            
-            const scrapedSong = await scrapeSongFromUrl(song.url, searchResult);
-
-            if (scrapedSong) {
-              try {
-                await songRepo(supabase).createSystemSong({
-                  title: scrapedSong.title,
-                  author: scrapedSong.author,
-                  content: scrapedSong.content,
-                  rating: scrapedSong.rating,
-                  difficulty: metadata.difficulty || scrapedSong.difficulty,
-                  reviews: scrapedSong.reviews,
-                  key: scrapedSong.key,
-                  capo: scrapedSong.capo,
-                  version: scrapedSong.version,
-                  artistUrl: scrapedSong.artistUrl,
-                  artistImageUrl: scrapedSong.artistImageUrl,
-                  songImageUrl: scrapedSong.songImageUrl,
-                  sourceUrl: scrapedSong.url,
-                  sourceSite: 'Ultimate Guitar',
-                }, {
-                  isTrending: true,
-                  isPublic: true,
-                  genre: metadata.genre,
-                  decade: metadata.decade,
-                });
-                
-                stats.added++;
-                console.log(`Added new trending song: ${song.title}`);
-              } catch (insertError) {
-                console.error('Error inserting trending song:', insertError);
-                stats.errors++;
-              }
-            } else {
-              console.error(`Failed to scrape content for: ${song.title}`);
-              stats.errors++;
-            }
-          }
+          const result = await upsertTrendingCatalogSong(supabase, song, metadata)
+          if (result === 'added') stats.added++
+          else if (result === 'updated') stats.updated++
+          else stats.errors++
         } catch (itemError) {
           console.error(`Error processing item ${song.title}:`, itemError);
           stats.errors++;

@@ -5,6 +5,7 @@ import { parseTextToStructuredSong } from '@/utils/songParser'
 import { structuredSongToText } from '@/utils/structuredToText'
 import { extractAllChords } from '@/utils/structuredSong'
 import { fetchAllSongIdsFromQuery } from '@/lib/services/songListFilters'
+import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
 
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
@@ -85,6 +86,44 @@ const EXPLORE_LIST_COLUMNS =
   `${LIGHTWEIGHT_LIST_COLUMNS}, difficulty, decade, capo, is_trending, is_public`
 
 export const songRepo = (client: SupabaseClient<Database>) => ({
+  async findExistingSystemCatalogSong(match: {
+    tabId?: number | string | null
+    sourceUrl?: string | null
+    title: string
+    author: string
+  }): Promise<{ id: string } | null> {
+    if (match.tabId != null && match.tabId !== '') {
+      const { data } = await (client.from('songs') as any)
+        .select('id')
+        .eq('tab_id', String(match.tabId))
+        .is('user_id', null)
+        .limit(1)
+        .maybeSingle()
+      if (data?.id) return { id: data.id }
+    }
+
+    const sourceUrl = match.sourceUrl?.trim()
+    if (sourceUrl) {
+      const { data } = await (client.from('songs') as any)
+        .select('id')
+        .eq('source_url', sourceUrl)
+        .is('user_id', null)
+        .limit(1)
+        .maybeSingle()
+      if (data?.id) return { id: data.id }
+    }
+
+    const { data: byTitle } = await (client.from('songs') as any)
+      .select('id')
+      .ilike('title', match.title.trim())
+      .ilike('author', match.author.trim())
+      .is('user_id', null)
+      .limit(1)
+      .maybeSingle()
+
+    return byTitle?.id ? { id: byTitle.id } : null
+  },
+
   async createSong(songData: NewSongData): Promise<Song> {
     const { data: { user } } = await client.auth.getUser()
 
@@ -418,6 +457,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .from('songs')
       .select('*')
       .eq('is_trending', true)
+      .is('user_id', null)
       .order('created_at', { ascending: false }) // Ou un autre critère de tri si dispo (ex: rating)
       .limit(24)
 
@@ -439,6 +479,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     let builder = (client.from('songs') as any)
       .select(EXPLORE_LIST_COLUMNS, { count: 'exact' })
       .or('is_trending.eq.true,is_public.eq.true')
+      .is('user_id', null)
       .order('created_at', { ascending: false })
     
     // Appliquer les filtres
@@ -519,6 +560,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .from('songs')
       .select(LIGHTWEIGHT_LIST_COLUMNS)
       .eq('is_trending', true)
+      .is('user_id', null)
       .order('created_at', { ascending: false })
       .limit(24)
 
@@ -531,11 +573,14 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .from('songs')
       .select(LIGHTWEIGHT_LIST_COLUMNS)
       .or('is_trending.eq.true,is_public.eq.true')
+      .is('user_id', null)
       .order('updated_at', { ascending: false })
-      .limit(limit)
+      .limit(limit * 2)
 
     if (error) throw error
-    return (data || []).map(mapDbSongToList)
+    return dedupeCatalogSongs(data || [])
+      .slice(0, limit)
+      .map(mapDbSongToList)
   },
 
   async getPopularSongsLightweight(limit: number = 15): Promise<Song[]> {
@@ -543,13 +588,16 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .from('songs')
       .select(LIGHTWEIGHT_LIST_COLUMNS)
       .or('is_trending.eq.true,is_public.eq.true')
+      .is('user_id', null)
       .not('view_count', 'is', null)
       .gt('view_count', 0)
       .order('view_count', { ascending: false })
-      .limit(limit)
+      .limit(limit * 2)
 
     if (error) throw error
-    return (data || []).map(mapDbSongToList)
+    return dedupeCatalogSongs(data || [])
+      .slice(0, limit)
+      .map(mapDbSongToList)
   },
 
   async getSongLightweightById(id: string): Promise<Song | null> {

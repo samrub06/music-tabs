@@ -277,6 +277,11 @@
     "viewInLibrary": "פתח בספרייה",
     "seeSong": "צפה בשיר",
     "viewAll": "הצג הכל",
+    "curatedPlaylists": "פלייליסטים לגלות",
+    "curatedGenres": "ז'אנרים",
+    "curatedDecades": "עשורים",
+    "curatedDifficulty": "רמה",
+    "playlistSongCount": "פלייליסט · {count} שירים",
     "listView": "רשימה",
     "gridView": "רשת",
     "noRecentlyAdded": "אין שירים שנוספו לאחרונה."

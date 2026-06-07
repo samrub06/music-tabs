@@ -9,7 +9,10 @@
     "build": "next build",
     "start": "next start",
     "start:debug": "NODE_OPTIONS='--inspect' next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:curated-playlists": "npx tsx scripts/seed-curated-playlists.ts",
+    "clean:catalog-duplicates": "npx tsx scripts/clean-duplicate-catalog-songs.ts",
+    "sync:explore-catalog": "NODE_ENV=development npx tsx scripts/sync-explore-catalog.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
