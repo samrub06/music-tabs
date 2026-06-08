@@ -34,7 +34,7 @@ async function fetchSongIdsForPlaylist(
     .or('is_public.eq.true,is_trending.eq.true')
     .is('user_id', null)
 
-  if (filter.type === 'genre') {
+  if (filter.type === 'genre' || filter.type === 'hebrewCatalog') {
     builder = builder.eq('genre', filter.value)
   } else if (filter.type === 'decade') {
     builder = builder.eq('decade', filter.value)
@@ -51,7 +51,7 @@ async function fetchSongIdsForPlaylist(
 
   if (error) {
     const column =
-      filter.type === 'genre'
+      filter.type === 'genre' || filter.type === 'hebrewCatalog'
         ? 'genre'
         : filter.type === 'decade'
           ? 'decade'
@@ -124,6 +124,7 @@ export const curatedPlaylistService = (client: SupabaseClient<Database>) => ({
     const results = []
 
     for (const definition of CURATED_PLAYLISTS) {
+      if (definition.seedMode === 'manual') continue
       const result = await this.upsertCuratedPlaylist(definition)
       results.push(result)
     }

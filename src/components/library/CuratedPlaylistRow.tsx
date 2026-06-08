@@ -43,10 +43,13 @@ const curatedGradientBySlug: Record<string, string> = {
   beginner: 'bg-gradient-to-br from-emerald-600 to-teal-700',
   intermediate: 'bg-gradient-to-br from-amber-500 to-orange-600',
   advanced: 'bg-gradient-to-br from-rose-600 to-red-800',
+  'chabad-nigunim': 'bg-gradient-to-br from-blue-700 to-indigo-900',
+  hassidic: 'bg-gradient-to-br from-amber-700 to-orange-900',
 }
 
 const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
   genre: 'library.curatedGenres',
+  jewish: 'library.curatedJewish',
   decade: 'library.curatedDecades',
   difficulty: 'library.curatedDifficulty',
 }

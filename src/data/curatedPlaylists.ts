@@ -1,10 +1,13 @@
+import { HEBREW_CATALOG_GENRES } from '@/data/hebrewPlaylists'
+
 export type CuratedPlaylistFilter =
   | { type: 'genre'; value: string }
   | { type: 'decade'; value: number }
   | { type: 'difficulty'; value: string }
   | { type: 'difficultyIn'; values: string[] }
+  | { type: 'hebrewCatalog'; value: string }
 
-export type CuratedPlaylistSection = 'genre' | 'decade' | 'difficulty'
+export type CuratedPlaylistSection = 'genre' | 'decade' | 'difficulty' | 'jewish'
 
 export interface CuratedPlaylistDefinition {
   slug: string
@@ -16,10 +19,16 @@ export interface CuratedPlaylistDefinition {
   /** Tailwind gradient stops for card when no cover image */
   gradientFrom: string
   gradientTo: string
+  /**
+   * manual = song order managed by seed:hebrew-playlists (Tab4U import).
+   * filter = rebuilt from DB filter on seed:curated-playlists.
+   */
+  seedMode?: 'filter' | 'manual'
 }
 
 export const CURATED_PLAYLIST_SECTION_ORDER: CuratedPlaylistSection[] = [
   'genre',
+  'jewish',
   'decade',
   'difficulty',
 ]
@@ -195,6 +204,28 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     filter: { type: 'genre', value: '85' },
     gradientFrom: 'from-pink-600',
     gradientTo: 'to-rose-700',
+  },
+  {
+    slug: 'chabad-nigunim',
+    name: 'Nigounim Habad',
+    description: 'ניגוני חב״ד — prières et mélodies Habad (Tab4U)',
+    section: 'jewish',
+    displayOrder: 1,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.chabad },
+    gradientFrom: 'from-blue-700',
+    gradientTo: 'to-indigo-900',
+    seedMode: 'manual',
+  },
+  {
+    slug: 'hassidic',
+    name: 'Hassidique',
+    description: 'חסידי — nigounim et chants hassidiques (Tab4U)',
+    section: 'jewish',
+    displayOrder: 2,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.hassidic },
+    gradientFrom: 'from-amber-700',
+    gradientTo: 'to-orange-900',
+    seedMode: 'manual',
   },
   {
     slug: '50s',

@@ -67,6 +67,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         publicPlaylists={publicPlaylists}
         showLikedCard={!!userId}
       />
+      <CuratedPlaylistRow section="jewish" publicPlaylists={publicPlaylists} />
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
