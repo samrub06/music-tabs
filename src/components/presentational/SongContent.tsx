@@ -534,7 +534,7 @@ export default function SongContent({
               <Button
                 type="button"
                 onClick={() => signInWithGoogle(pathname)}
-                className="w-full h-11 text-sm font-semibold"
+                className="w-full h-9 text-sm font-medium sm:h-10"
               >
                 {t('auth.signInWithGoogle')}
               </Button>

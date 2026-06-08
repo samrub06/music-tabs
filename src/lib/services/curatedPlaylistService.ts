@@ -80,7 +80,8 @@ export const curatedPlaylistService = (client: SupabaseClient<Database>) => ({
   async upsertCuratedPlaylist(definition: CuratedPlaylistDefinition) {
     const songs = await fetchSongIdsForPlaylist(client, definition.filter)
     const songIds = songs.map((s) => s.id)
-    const imageUrl = pickCoverImage(songs)
+    const imageUrl =
+      definition.section === 'difficulty' ? null : pickCoverImage(songs)
     const now = new Date().toISOString()
 
     const row = {

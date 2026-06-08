@@ -12,9 +12,38 @@ import {
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 import type { ReactNode } from 'react'
 
-const curatedGradientBySlug = Object.fromEntries(
-  CURATED_PLAYLISTS.map((p) => [p.slug, `bg-gradient-to-br ${p.gradientFrom} ${p.gradientTo}`])
-) as Record<string, string>
+/** Full class strings so Tailwind includes gradient utilities (no dynamic concat). */
+const curatedGradientBySlug: Record<string, string> = {
+  rock: 'bg-gradient-to-br from-red-600 to-orange-700',
+  pop: 'bg-gradient-to-br from-pink-500 to-purple-600',
+  metal: 'bg-gradient-to-br from-zinc-700 to-neutral-900',
+  folk: 'bg-gradient-to-br from-amber-600 to-yellow-700',
+  country: 'bg-gradient-to-br from-amber-700 to-orange-800',
+  soundtrack: 'bg-gradient-to-br from-violet-600 to-indigo-800',
+  'rnb-funk-soul': 'bg-gradient-to-br from-purple-600 to-fuchsia-800',
+  religious: 'bg-gradient-to-br from-sky-600 to-blue-800',
+  'hip-hop': 'bg-gradient-to-br from-stone-700 to-gray-900',
+  electronic: 'bg-gradient-to-br from-cyan-600 to-blue-700',
+  'world-music': 'bg-gradient-to-br from-teal-600 to-emerald-800',
+  classical: 'bg-gradient-to-br from-slate-600 to-slate-900',
+  jazz: 'bg-gradient-to-br from-blue-700 to-indigo-900',
+  reggae: 'bg-gradient-to-br from-green-600 to-emerald-800',
+  blues: 'bg-gradient-to-br from-blue-800 to-indigo-950',
+  comedy: 'bg-gradient-to-br from-yellow-500 to-amber-600',
+  disco: 'bg-gradient-to-br from-pink-600 to-rose-700',
+  '50s': 'bg-gradient-to-br from-amber-800 to-yellow-900',
+  '60s': 'bg-gradient-to-br from-orange-700 to-red-900',
+  '70s': 'bg-gradient-to-br from-rose-700 to-orange-900',
+  '80s': 'bg-gradient-to-br from-fuchsia-700 to-purple-900',
+  '90s': 'bg-gradient-to-br from-indigo-600 to-violet-700',
+  '2000s': 'bg-gradient-to-br from-sky-600 to-blue-800',
+  '2010s': 'bg-gradient-to-br from-cyan-600 to-teal-800',
+  '2020s': 'bg-gradient-to-br from-fuchsia-600 to-pink-700',
+  'absolute-beginner': 'bg-gradient-to-br from-lime-500 to-green-600',
+  beginner: 'bg-gradient-to-br from-emerald-600 to-teal-700',
+  intermediate: 'bg-gradient-to-br from-amber-500 to-orange-600',
+  advanced: 'bg-gradient-to-br from-rose-600 to-red-800',
+}
 
 const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
   genre: 'library.curatedGenres',
@@ -67,22 +96,24 @@ function buildPlaylistCard(item: PublicPlaylistItem, t: (key: string) => string)
     (item.curatedSlug && curatedGradientBySlug[item.curatedSlug]) ||
     'bg-gradient-to-br from-purple-500 to-pink-500'
 
-  const content = item.imageUrl ? (
-    <>
+  const gradientOnly =
+    !!item.curatedSlug && curatedPlaylistSectionBySlug[item.curatedSlug] === 'difficulty'
+
+  const content =
+    !gradientOnly && item.imageUrl ? (
       <div className="absolute inset-0">
         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
       </div>
-    </>
-  ) : (
-    <>
+    ) : (
       <div className={cn('absolute inset-0', gradientClass)}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <SparklesIcon className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
-        </div>
+        {!gradientOnly && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <SparklesIcon className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+          </div>
+        )}
       </div>
-    </>
-  )
+    )
 
   return { id: item.id, href: `/library/${item.id}`, content, footer }
 }
