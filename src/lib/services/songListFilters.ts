@@ -21,7 +21,6 @@ export function tabToOrderBy(tab: SongListTab = 'all'): 'created_at' | 'updated_
   return 'created_at'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function applySongListFilters(client: SupabaseClient<Database>, user: { id: string } | null, params: SongListFilterParams): any {
   let baseQuery = client.from('songs').select('id', { count: 'exact' })
 
@@ -69,7 +68,6 @@ export function applySongListFilters(client: SupabaseClient<Database>, user: { i
   return { baseQuery, orderColumn }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchAllSongIdsFromQuery(baseQuery: any, orderColumn: string): Promise<string[]> {
   const ids: string[] = []
   let offset = 0

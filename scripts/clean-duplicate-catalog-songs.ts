@@ -8,7 +8,7 @@ import {
   type CatalogSongRef,
 } from '../src/lib/utils/catalogSongDedup'
 import { structuredSongToText } from '../src/utils/structuredToText'
-import type { SongSection } from '../src/types'
+import type { Song, SongSection } from '../src/types'
 import type { Database } from '../src/types/db'
 
 dotenv.config({ path: '.env.local' })
@@ -67,7 +67,7 @@ async function promoteUserSongToSystem(
   donor: FullSongRow
 ): Promise<string> {
   const sections = (donor.sections || []) as SongSection[]
-  const content = structuredSongToText({ sections } as { sections: SongSection[] })
+  const content = structuredSongToText({ sections } as Song)
 
   const created = await songRepo(supabase).createSystemSong(
     {
@@ -131,7 +131,7 @@ async function run() {
     groups.set(key, group)
   }
 
-  const duplicateGroups = [...groups.values()].filter((group) => group.length > 1)
+  const duplicateGroups = Array.from(groups.values()).filter((group) => group.length > 1)
   console.log(`Found ${duplicateGroups.length} duplicate catalog groups (${songs.length} catalog rows)`)
 
   const idRemap = new Map<string, string>()

@@ -48,5 +48,5 @@ export function dedupeCatalogSongs<T extends CatalogSongRef>(songs: T[]): T[] {
     groups.set(key, group)
   }
 
-  return [...groups.values()].map(pickCanonicalCatalogSong)
+  return Array.from(groups.values()).map((group) => pickCanonicalCatalogSong(group))
 }
