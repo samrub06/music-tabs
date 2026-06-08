@@ -48,6 +48,11 @@ const VARIANT_GROUP_UI: Array<{
   },
   { id: 'd-major', searchKeys: ['d', 'd major', 'ré', 're majeur'], hideDbNames: ['D Major'] },
   {
+    id: 'd7',
+    searchKeys: ['d7', 'd 7', 'ré 7', 're 7', 'd dominant 7'],
+    hideDbNames: ['D7'],
+  },
+  {
     id: 'am-minor',
     searchKeys: ['am', 'a minor', 'a min', 'la mineur', 'la min'],
     hideDbNames: ['A Minor'],

@@ -21,25 +21,35 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
   const forYouService = personalizedForYouService(supabase)
 
-  const [trendingSongs, recentSongs, popularSongs, publicPlaylists, forYouResult, userSongs] =
-    await Promise.all([
-      songRepoInstance.getTrendingSongsLightweight(),
-      songRepoInstance.getRecentSongsLightweight(15),
-      songRepoInstance.getPopularSongsLightweight(15),
-      playlistRepoInstance.getPublicPlaylistsLightweight(),
-      userId
-        ? forYouService.getForYouData(userId).catch((err) => {
-            console.error('LibrarySections forYou fetch failed:', err)
-            return { featuredSong: null, topArtist: null, artistSongs: [] }
-          })
-        : Promise.resolve(null),
-      userId ? songRepoInstance.getAllSongsLightweight() : Promise.resolve([]),
-    ])
+  const [
+    trendingSongs,
+    recentSongs,
+    popularSongs,
+    publicPlaylists,
+    forYouResult,
+    userSongs,
+    featuredCatalogSong,
+  ] = await Promise.all([
+    songRepoInstance.getTrendingSongsLightweight(),
+    songRepoInstance.getRecentSongsLightweight(15),
+    songRepoInstance.getPopularSongsLightweight(15),
+    playlistRepoInstance.getPublicPlaylistsLightweight(),
+    userId
+      ? forYouService.getForYouData(userId).catch((err) => {
+          console.error('LibrarySections forYou fetch failed:', err)
+          return { featuredSong: null, topArtist: null, artistSongs: [] }
+        })
+      : Promise.resolve(null),
+    userId ? songRepoInstance.getAllSongsLightweight() : Promise.resolve([]),
+    songRepoInstance.getFeaturedCatalogSongLightweight(),
+  ])
 
   const forYouData = forYouResult
 
   const featuredSong =
-    forYouData?.featuredSong ?? (trendingSongs.length > 0 ? trendingSongs[0] : null)
+    featuredCatalogSong ??
+    forYouData?.featuredSong ??
+    (trendingSongs.length > 0 ? trendingSongs[0] : null)
 
   const recentSongsWithLibraryStatus: ForYouArtistSong[] = recentSongs.map((song) => {
     const match = userId ? findUserSongMatch(song, userSongs) : undefined

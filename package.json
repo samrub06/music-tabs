@@ -11,6 +11,7 @@
     "start:debug": "NODE_OPTIONS='--inspect' next start",
     "lint": "next lint",
     "seed:curated-playlists": "npx tsx scripts/seed-curated-playlists.ts",
+    "seed:featured-catalog-song": "npx tsx scripts/seed-featured-catalog-song.ts",
     "clean:catalog-duplicates": "npx tsx scripts/clean-duplicate-catalog-songs.ts",
     "sync:explore-catalog": "NODE_ENV=development npx tsx scripts/sync-explore-catalog.ts"
   },

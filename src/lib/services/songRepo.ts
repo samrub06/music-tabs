@@ -6,6 +6,7 @@ import { structuredSongToText } from '@/utils/structuredToText'
 import { extractAllChords } from '@/utils/structuredSong'
 import { fetchAllSongIdsFromQuery } from '@/lib/services/songListFilters'
 import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
+import { FEATURED_CATALOG_SONG_SLUG } from '@/data/featuredCatalogSong'
 
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
@@ -555,6 +556,18 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   },
 
   // Lightweight methods for library page - no sections/content
+  async getFeaturedCatalogSongLightweight(): Promise<Song | null> {
+    const { data, error } = await client
+      .from('songs')
+      .select(LIGHTWEIGHT_LIST_COLUMNS)
+      .eq('tab_id', `curated:${FEATURED_CATALOG_SONG_SLUG}`)
+      .is('user_id', null)
+      .maybeSingle()
+
+    if (error) throw error
+    return data ? mapDbSongToList(data) : null
+  },
+
   async getTrendingSongsLightweight(): Promise<Song[]> {
     const { data, error } = await client
       .from('songs')

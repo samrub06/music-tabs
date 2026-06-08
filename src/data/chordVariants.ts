@@ -287,6 +287,7 @@ import { cadd9VariantGroup } from './cadd9Variants';
 import { cMajorVariantGroup } from './cMajorVariants';
 import { cmMinorVariantGroup } from './cmMinorVariants';
 import { d4VariantGroup } from './d4Variants';
+import { d7VariantGroup } from './d7Variants';
 import { dFSharpVariantGroup } from './dFSharpVariants';
 import { dMajorVariantGroup } from './dMajorVariants';
 import { em7VariantGroup } from './em7Variants';
@@ -314,6 +315,7 @@ const chordVariantsFr = [
   cMajorVariantGroup,
   emMinorVariantGroup,
   dMajorVariantGroup,
+  d7VariantGroup,
   amMinorVariantGroup,
   bMajorVariantGroup,
   dFSharpVariantGroup,
