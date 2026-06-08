@@ -112,7 +112,7 @@ function UserAvatar({
 export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { language, setLanguage, t } = useLanguage()
+  const { language, setLanguage, t, isRtl } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext()
   const scrollChrome = useScrollChromeOptional()
@@ -161,7 +161,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               <Menu className="h-5 w-5" />
             </Button>
           ) : (
-            <SidebarTrigger className="hidden lg:flex -ml-1" />
+            <SidebarTrigger className="hidden lg:flex -ms-1" />
           )
         )}
 
@@ -185,10 +185,10 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 router.back()
               }
             }}
-            className="flex min-w-0 items-center gap-0.5 text-foreground -ml-1 py-1 pr-2 rounded-lg hover:opacity-80 active:opacity-70 transition-opacity"
+            className="flex min-w-0 items-center gap-0.5 text-foreground -ms-1 py-1 pe-2 ps-1 rounded-lg hover:opacity-80 active:opacity-70 transition-opacity"
             aria-label={t('common.back')}
           >
-            <ChevronLeft className="h-6 w-6 shrink-0" aria-hidden />
+            <ChevronLeft className={cn('h-6 w-6 shrink-0', isRtl && 'rotate-180')} aria-hidden />
             <h1 className="truncate text-base font-semibold">
               {pageHeaderOverride?.title ??
                 (isCreatePlaylistPage

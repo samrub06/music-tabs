@@ -23,6 +23,17 @@ export default function RootLayout({
                   if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');
                   }
+                  const language = localStorage.getItem('language');
+                  if (language === 'he') {
+                    document.documentElement.lang = 'he';
+                    document.documentElement.dir = 'rtl';
+                  } else if (language === 'fr') {
+                    document.documentElement.lang = 'fr';
+                    document.documentElement.dir = 'ltr';
+                  } else if (language === 'en') {
+                    document.documentElement.lang = 'en';
+                    document.documentElement.dir = 'ltr';
+                  }
                 } catch (e) {}
               })();
             `,

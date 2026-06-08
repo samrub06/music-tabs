@@ -81,7 +81,7 @@ export function ChordVariantsCarousel({
   resetKey,
   className,
 }: ChordVariantsCarouselProps) {
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const [index, setIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<SlideDirection>('next');
   const total = variants.length;
@@ -130,7 +130,11 @@ export function ChordVariantsCarousel({
               aria-label="Diagramme précédent"
               className="flex h-12 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:w-12"
             >
-              <ChevronLeftIcon className="h-8 w-8" />
+              {isRtl ? (
+                <ChevronRightIcon className="h-8 w-8" />
+              ) : (
+                <ChevronLeftIcon className="h-8 w-8" />
+              )}
             </button>
             <div className="relative min-h-[12.5rem] min-w-0 flex-1 overflow-hidden py-2">
               <div
@@ -149,7 +153,11 @@ export function ChordVariantsCarousel({
               aria-label="Diagramme suivant"
               className="flex h-12 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:w-12"
             >
-              <ChevronRightIcon className="h-8 w-8" />
+              {isRtl ? (
+                <ChevronLeftIcon className="h-8 w-8" />
+              ) : (
+                <ChevronRightIcon className="h-8 w-8" />
+              )}
             </button>
           </nav>
           <p className="w-full text-center text-sm font-medium text-muted-foreground">

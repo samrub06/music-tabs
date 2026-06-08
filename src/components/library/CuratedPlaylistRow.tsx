@@ -42,7 +42,7 @@ function GridCard({ href, compact = false, children, footer }: GridCardProps) {
       href={href}
       className={cn(
         'group relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl',
-        compact ? 'flex-shrink-0 w-36 h-24' : 'h-24 sm:h-28'
+        compact ? 'flex-shrink-0 w-36 h-24 sm:w-40 sm:h-28' : 'h-24 sm:h-28'
       )}
     >
       {children}
@@ -153,7 +153,7 @@ export default function CuratedPlaylistRow({
         {t(sectionTitleKey[section])}
       </h3>
       <div
-        className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide sm:hidden"
+        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory sm:gap-4"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -161,9 +161,6 @@ export default function CuratedPlaylistRow({
         }}
       >
         {renderCards(true)}
-      </div>
-      <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-3 lg:gap-4">
-        {renderCards(false)}
       </div>
     </section>
   )

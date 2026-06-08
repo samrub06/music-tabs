@@ -32,15 +32,23 @@ export default function HorizontalSongSlider({
   viewAllLabel,
   getLibraryStatus,
 }: HorizontalSongSliderProps) {
-  const { t } = useLanguage()
+  const { t, isRtl } = useLanguage()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const scrollAmount = 300
+      const physicalDirection =
+        direction === 'left'
+          ? isRtl
+            ? 1
+            : -1
+          : isRtl
+            ? -1
+            : 1
       scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
+        left: physicalDirection * scrollAmount,
+        behavior: 'smooth',
       })
     }
   }

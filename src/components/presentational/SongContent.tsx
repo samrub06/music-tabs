@@ -261,14 +261,14 @@ export default function SongContent({
               {transposedSong?.author && (
                 <Link
                   href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
-                  className="mt-0.5 block max-w-full truncate text-left text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
+                  className="mt-0.5 block max-w-full truncate text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
                   dir={/[\u0590-\u05FF]/.test(transposedSong.author) ? 'rtl' : 'ltr'}
                 >
                   {transposedSong.author}
                 </Link>
               )}
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="flex shrink-0 flex-col items-end gap-2 md:flex-row md:items-center md:gap-2">
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {onToggleEdit && (
                   <Button
@@ -332,13 +332,13 @@ export default function SongContent({
                 </button>
               </div>
               {isAuthenticated && onFolderChange && (
-                <div className="hidden w-full sm:flex">
+                <div className="hidden w-full sm:block md:w-auto md:min-w-[10rem]">
                   <FolderDropdown
                     currentFolderId={currentFolderId}
                     folders={folders}
                     onFolderChange={onFolderChange}
                     size="comfortable"
-                    fullWidth
+                    fullWidth={false}
                   />
                 </div>
               )}

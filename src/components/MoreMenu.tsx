@@ -44,7 +44,7 @@ function MenuNavItem({
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.08] hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors text-left"
+      className="w-full flex items-center gap-3 p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.08] hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors text-start"
     >
       <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
         {icon}
@@ -94,7 +94,7 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
         className="max-h-[85vh] z-[60] pb-6 rounded-t-[1.75rem] border-t border-x border-black/[0.06] dark:border-white/[0.08] shadow-none"
       >
         <SheetHeader className="pb-2">
-          <SheetTitle className="text-left text-lg">{t('navigation.more')}</SheetTitle>
+          <SheetTitle className="text-start text-lg">{t('navigation.more')}</SheetTitle>
         </SheetHeader>
 
         <div className="mt-4">

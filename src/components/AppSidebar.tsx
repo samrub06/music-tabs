@@ -38,10 +38,10 @@ const SECONDARY_NAV = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { t } = useLanguage()
+  const { t, isRtl } = useLanguage()
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" side={isRtl ? 'right' : 'left'}>
       <SidebarHeader className="group-data-[collapsible=icon]:items-center">
         <SidebarMenu>
           <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">

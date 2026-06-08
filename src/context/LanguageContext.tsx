@@ -1,13 +1,15 @@
 'use client';
 
 import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
+import { applyDocumentLanguage, type Language } from '@/utils/rtl';
 
-type Language = 'en' | 'fr' | 'he';
+export type { Language };
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  isRtl: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -36,12 +38,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
 
   useEffect(() => {
-    setLanguageState(getStoredLanguage());
+    const stored = getStoredLanguage();
+    setLanguageState(stored);
+    applyDocumentLanguage(stored);
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== 'undefined') localStorage.setItem(STORAGE_KEY, lang);
+    applyDocumentLanguage(lang);
   };
 
   const t = (key: string): string => {
@@ -56,7 +61,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isRtl: language === 'he' }}>
       {children}
     </LanguageContext.Provider>
   );

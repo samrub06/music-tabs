@@ -25,7 +25,7 @@ export default function Pagination({ page, limit, total, showAllLimit, className
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { t, language } = useLanguage()
+  const { t, isRtl } = useLanguage()
 
   const totalPages = Math.max(1, Math.ceil(total / limit))
   const canPrev = page > 1
@@ -56,7 +56,7 @@ export default function Pagination({ page, limit, total, showAllLimit, className
 
   return (
     <nav
-      dir={language === 'he' ? 'rtl' : 'ltr'}
+      dir={isRtl ? 'rtl' : 'ltr'}
       className={cn('mt-4 pb-1', className)}
       aria-label={t('common.pagination')}
     >
@@ -75,7 +75,11 @@ export default function Pagination({ page, limit, total, showAllLimit, className
               disabled={!canPrev}
               aria-label={t('common.previous')}
             >
-              <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+              {isRtl ? (
+                <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+              ) : (
+                <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+              )}
               <span className="truncate">{t('common.previous')}</span>
             </button>
 
@@ -99,7 +103,11 @@ export default function Pagination({ page, limit, total, showAllLimit, className
               aria-label={t('common.next')}
             >
               <span className="truncate">{t('common.next')}</span>
-              <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+              {isRtl ? (
+                <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+              ) : (
+                <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+              )}
             </button>
           </div>
 
