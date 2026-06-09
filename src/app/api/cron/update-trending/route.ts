@@ -1,50 +1,61 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { trendingService } from '@/lib/services/trendingService';
-import { Database } from '@/types/db';
+import * as Sentry from '@sentry/nextjs'
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { trendingService } from '@/lib/services/trendingService'
+import { Database } from '@/types/db'
 
-// Utiliser le client Service Role pour contourner RLS (écriture système)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function GET(request: Request) {
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
-    // Vérification basique d'autorisation (Header 'Authorization': 'Bearer CRON_SECRET')
-    // Pour Vercel Cron, on peut vérifier d'autres headers, mais simple secret est ok
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+    return await Sentry.withMonitor(
+      'update-trending',
+      async () => {
+        if (!supabaseServiceKey) {
+          console.error('SUPABASE_SERVICE_ROLE_KEY is not defined')
+          return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+        const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        })
 
-    if (!supabaseServiceKey) {
-      console.error('SUPABASE_SERVICE_ROLE_KEY is not defined');
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-    }
+        console.log('Starting trending songs update by categories...')
+        const stats = await trendingService.updateTrendingDatabaseByCategories(supabase, 15)
 
-    const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
-    console.log('Starting trending songs update by categories...');
-    const stats = await trendingService.updateTrendingDatabaseByCategories(supabase, 15);
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Trending songs updated successfully by categories',
-      stats
-    });
-
+        return NextResponse.json({
+          success: true,
+          message: 'Trending songs updated successfully by categories',
+          stats,
+        })
+      },
+      {
+        schedule: { type: 'crontab', value: '0 0 * * *' },
+        checkinMargin: 5,
+        maxRuntime: 30,
+        timezone: 'UTC',
+      },
+    )
   } catch (error) {
-    console.error('Cron job failed:', error);
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('Cron job failed:', error)
+    Sentry.captureException(error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 },
+    )
   }
 }
-

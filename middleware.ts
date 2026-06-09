@@ -11,6 +11,7 @@ export async function middleware(req: NextRequest) {
   // Skip for static files, API routes (except auth callback), and public routes
   if (
     pathname.startsWith('/_next') ||
+    pathname === '/monitoring' ||
     (pathname.startsWith('/api/') && !pathname.startsWith('/api/auth/')) ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$/)
   ) {
@@ -47,6 +48,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - Static assets (images, fonts, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
+    '/((?!monitoring|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
   ],
 }
