@@ -19,6 +19,8 @@ export const YAARAT_DVASH_CATALOG_SONG: NewSongData & {
   genre: 'hebrew-moroccan',
   difficulty: 'Intermediate',
   decade: 2010,
+  songImageUrl:
+    'https://ulagoqlmeckwaxabvdof.supabase.co/storage/v1/object/public/catalog-images/songs/yaarat-dvash.png',
   versionDescription: 'Piyut Ensemble · F · Bb · C · C7',
   sourceSite: 'Curated',
   tabId: `curated:${YAARAT_DVASH_CATALOG_SONG_SLUG}`,
