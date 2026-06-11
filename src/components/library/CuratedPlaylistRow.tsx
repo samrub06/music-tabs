@@ -45,6 +45,13 @@ const curatedGradientBySlug: Record<string, string> = {
   advanced: 'bg-gradient-to-br from-rose-600 to-red-800',
   'chabad-nigunim': 'bg-gradient-to-br from-blue-700 to-indigo-900',
   hassidic: 'bg-gradient-to-br from-amber-700 to-orange-900',
+  carlebach: 'bg-gradient-to-br from-emerald-700 to-green-900',
+  'moroccan-piyut': 'bg-gradient-to-br from-red-700 to-rose-900',
+  tunisian: 'bg-gradient-to-br from-yellow-600 to-amber-800',
+  'modern-israeli': 'bg-gradient-to-br from-violet-600 to-fuchsia-800',
+  'yosef-karduner': 'bg-gradient-to-br from-sky-600 to-blue-900',
+  akiva: 'bg-gradient-to-br from-orange-600 to-red-800',
+  'benny-landau': 'bg-gradient-to-br from-indigo-700 to-purple-900',
 }
 
 const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
