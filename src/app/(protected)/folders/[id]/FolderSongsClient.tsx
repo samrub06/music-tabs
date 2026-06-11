@@ -78,6 +78,19 @@ export default function FolderSongsClient({
   // Other state
   const [currentFolder, setCurrentFolder] = useState<string | null>(folder.id)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+
+  useEffect(() => {
+    const prefetchPage = (nextPage: number) => {
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      params.set('page', String(nextPage))
+      params.set('limit', String(limit))
+      router.prefetch(`${pathname}?${params.toString()}`)
+    }
+
+    if (page > 1) prefetchPage(page - 1)
+    if (page < totalPages) prefetchPage(page + 1)
+  }, [page, limit, totalPages, pathname, searchParams, router])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draggedSong, setDraggedSong] = useState<Song | null>(null)
   const [error, setError] = useState<string | null>(null)

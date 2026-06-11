@@ -93,6 +93,19 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+
+  useEffect(() => {
+    const prefetchPage = (nextPage: number) => {
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      params.set('page', String(nextPage))
+      params.set('limit', String(limit))
+      router.prefetch(`${pathname}?${params.toString()}`)
+    }
+
+    if (page > 1) prefetchPage(page - 1)
+    if (page < totalPages) prefetchPage(page + 1)
+  }, [page, limit, totalPages, pathname, searchParams, router])
 
   const openAddSongPageForArtist = (query: string) => {
     const folderId = selectedFolder || searchParams?.get('folder') || undefined

@@ -36,7 +36,8 @@
     "next": "Next",
     "pageOf": "{current} / {total}",
     "showingRange": "{from}–{to} of {total}",
-    "pagination": "Pagination"
+    "pagination": "Pagination",
+    "comingSoon": "Coming soon"
   },
   "navigation": {
     "home": "Home",
@@ -229,7 +230,12 @@
     "tabSearch": "Search",
     "tabAI": "AI",
     "tabManual": "Manual",
-    "aiHint": "Describe a style, mood, or era — we'll suggest matching songs."
+    "tabYouTube": "YouTube",
+    "aiHint": "Describe a style, mood, or era — we'll suggest matching songs.",
+    "TITLE_PLACEHOLDER": "e.g.: My favorite song",
+    "ARTIST_PLACEHOLDER": "e.g.: My Artist",
+    "CONTENT_LABEL": "Content (chords + lyrics) *",
+    "CONTENT_PLACEHOLDER": "Paste or type chords and lyrics here..."
   },
   "songViewer": {
     "chords": "Chords",
@@ -288,7 +294,9 @@
     "listView": "List",
     "gridView": "Grid",
     "noRecentlyAdded": "No recently added songs.",
-    "SEARCH_PLACEHOLDER": "Search title or author..."
+    "SEARCH_PLACEHOLDER": "Search title or author...",
+    "spotifySection": "Spotify",
+    "spotifyDescription": "Import songs from your Spotify playlists"
   },
   "auth": {
     "signIn": "Sign In",
@@ -661,12 +669,6 @@
     "EMPTY_LEADERBOARD": "No users on the leaderboard yet. Be the first!",
     "UNKNOWN_USER": "Unknown User",
     "YOU_BADGE": "(You)"
-  },
-  "songForm": {
-    "TITLE_PLACEHOLDER": "e.g.: My favorite song",
-    "ARTIST_PLACEHOLDER": "e.g.: My Artist",
-    "CONTENT_LABEL": "Content (chords + lyrics) *",
-    "CONTENT_PLACEHOLDER": "Paste or type chords and lyrics here..."
   },
   "songEnd": {
     "continueListening": "Keep playing",

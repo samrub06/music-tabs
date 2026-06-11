@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import type { NewSongData, Song } from '@/types'
@@ -177,15 +177,14 @@ export default function SongPreviewClient({
             <button
               onClick={handleAddToLibrary}
               disabled={isAdding}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              className="inline-flex h-9 w-9 items-center justify-center bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label={t('songPreview.ADD_TO_LIBRARY')}
+              title={t('songPreview.ADD_TO_LIBRARY')}
             >
               {isAdding ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  {t('songPreview.ADDING')}
-                </>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
               ) : (
-                t('songPreview.ADD_TO_LIBRARY')
+                <PlusIcon className="h-5 w-5" aria-hidden />
               )}
             </button>
           )}

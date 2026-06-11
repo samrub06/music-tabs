@@ -3,8 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/context/LanguageContext'
 import type { ForYouArtistSong } from '@/types/forYou'
 
@@ -90,25 +92,31 @@ export default function ForYouArtistSection({
                   </Link>
                 </div>
 
-                <div className="shrink-0">
-                  {song.inUserLibrary ? (
-                    <Link
-                      href={href}
-                      className="inline-flex h-11 w-12 items-center justify-center rounded-full text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
-                      aria-label={t('search.viewSong')}
-                    >
-                      <PlayIcon className="h-5 w-5" aria-hidden />
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-1">
+                  {!song.inUserLibrary && (
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="rounded-lg h-11 w-11 sm:h-8 sm:w-8"
                       onClick={() => handleAddToLibrary(song)}
                       disabled={isAdding || !userId}
-                      className="inline-flex min-h-8 items-center text-[11px] font-medium text-green-600 transition-colors hover:text-green-700 disabled:opacity-50 dark:text-green-400 dark:hover:text-green-300"
+                      aria-label={t('library.addToLibrary')}
+                      title={t('library.addToLibrary')}
                     >
-                      {isAdding ? t('library.adding') : t('library.addToLibrary')}
-                    </button>
+                      {isAdding ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent sm:h-3.5 sm:w-3.5" />
+                      ) : (
+                        <PlusIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                      )}
+                    </Button>
                   )}
+                  <Link
+                    href={href}
+                    className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                    aria-label={t('search.viewSong')}
+                  >
+                    <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
+                  </Link>
                 </div>
               </div>
             </li>

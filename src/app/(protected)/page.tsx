@@ -3,10 +3,8 @@ import { Suspense } from 'react'
 import SearchClient from './search/SearchClient'
 import LibrarySections from './search/LibrarySections'
 import ExplorerSectionsSkeleton from '@/components/library/ExplorerSectionsSkeleton'
-import { unstable_noStore as noStore } from 'next/cache'
 
 export default async function HomePage() {
-  noStore()
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 

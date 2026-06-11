@@ -40,6 +40,17 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
   /**
    * Get current user's profile
    */
+  async getPreferredInstrument(userId: string): Promise<PreferredInstrument | null> {
+    const { data, error } = await (client.from('profiles') as any)
+      .select('preferred_instrument')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    const value = (data as { preferred_instrument?: string | null } | null)?.preferred_instrument
+    return value === 'piano' || value === 'guitar' ? value : null
+  },
+
   async getProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await client
       .from('profiles')

@@ -1,13 +1,20 @@
-import { unstable_noStore as noStore } from 'next/cache'
 import { createSafeServerClient } from '@/lib/supabase/server'
-import { songRepo } from '@/lib/services/songRepo'
+import { getCachedExploreCatalog } from '@/lib/services/exploreCatalogCache'
 import ExploreClient from './ExploreClient'
 
-export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ page?: string; view?: string; limit?: string; q?: string; genre?: string; difficulty?: string; decade?: string }> }) {
-  noStore()
-  const supabase = await createSafeServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string
+    view?: string
+    limit?: string
+    q?: string
+    genre?: string
+    difficulty?: string
+    decade?: string
+  }>
+}) {
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
   const limit = Math.max(1, parseInt(params?.limit || '24', 10))
@@ -16,11 +23,15 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const genre = params?.genre || undefined
   const difficulty = params?.difficulty || undefined
   const decade = params?.decade ? parseInt(params.decade, 10) : undefined
-  
-  const { songs, total } = await songRepo(supabase).getTrendingSongsPaged(page, limit, q, genre, difficulty, decade)
+
+  const supabase = await createSafeServerClient()
+  const [{ data: { user } }, { songs, total }] = await Promise.all([
+    supabase.auth.getUser(),
+    getCachedExploreCatalog({ page, limit, q, genre, difficulty, decade }),
+  ])
 
   return (
-    <ExploreClient 
+    <ExploreClient
       songs={songs}
       total={total}
       page={page}
@@ -31,4 +42,3 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     />
   )
 }
-

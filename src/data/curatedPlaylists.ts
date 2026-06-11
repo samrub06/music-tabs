@@ -230,7 +230,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
   {
     slug: 'carlebach',
     name: 'Carlebach',
-    description: 'קרליבך — nigounim et chants de Rabbi Shlomo Carlebach (Tab4U)',
+    description: 'קרליבך — classiques et reprises modernes (Zusha, nigounim) (Tab4U)',
     section: 'jewish',
     displayOrder: 3,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.carlebach },
@@ -263,7 +263,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
   {
     slug: 'modern-israeli',
     name: 'Israélien moderne',
-    description: 'מוזיקה יהודית מודרנית — Zusha, Ishai Ribo, Aharon Razel, Hanan Ben Ari (Tab4U)',
+    description: 'מוזיקה יהודית מודרנית — Ishai Ribo, Hanan Ben Ari, Zusha, Akiva (Tab4U)',
     section: 'jewish',
     displayOrder: 6,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.modern },

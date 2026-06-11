@@ -1,32 +1,29 @@
-import { Suspense } from 'react'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { folderRepo } from '@/lib/services/folderRepo'
 import FoldersClient from './FoldersClient'
+import type { Folder } from '@/types'
 
-async function FoldersDataLoader() {
-  const supabase = await createSafeServerClient()
-  const folders = await folderRepo(supabase).getAllFolders()
-  return folders
+interface FoldersDataProps {
+  userId: string
 }
 
-async function SongCountsDataLoader() {
+export default async function FoldersData({ userId }: FoldersDataProps) {
   const supabase = await createSafeServerClient()
-  const folderSongCounts = await folderRepo(supabase).getSongCountsByFolder()
-  return folderSongCounts
-}
+  const repo = folderRepo(supabase)
 
-export default async function FoldersData() {
-  // Stream both data sources in parallel
-  const [folders, folderSongCounts] = await Promise.all([
-    FoldersDataLoader(),
-    SongCountsDataLoader(),
+  const [foldersLightweight, folderSongCounts] = await Promise.all([
+    repo.getAllFoldersLightweight(userId),
+    repo.getSongCountsByFolder(userId),
   ])
 
-  return (
-    <FoldersClient
-      folders={folders}
-      folderSongCounts={folderSongCounts}
-    />
-  )
-}
+  const folders: Folder[] = foldersLightweight.map((f) => ({
+    id: f.id,
+    name: f.name,
+    displayOrder: f.displayOrder,
+    parentId: undefined,
+    createdAt: f.createdAt,
+    updatedAt: f.createdAt,
+  }))
 
+  return <FoldersClient folders={folders} folderSongCounts={folderSongCounts} />
+}

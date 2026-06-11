@@ -100,15 +100,18 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
   },
 
   // Lightweight version: only load id, name, songCount, and createdAt for list views
-  async getAllPlaylistsLightweight(): Promise<Array<{ id: string; name: string; songCount: number; createdAt: Date }>> {
-    const { data: { user } } = await client.auth.getUser()
-    
-    if (!user) return []
+  async getAllPlaylistsLightweight(userId?: string): Promise<Array<{ id: string; name: string; songCount: number; createdAt: Date }>> {
+    let resolvedUserId = userId
+    if (!resolvedUserId) {
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) return []
+      resolvedUserId = user.id
+    }
 
     const { data, error } = await client
       .from('playlists')
       .select('id, name, song_ids, created_at')
-      .eq('user_id', user.id)
+      .eq('user_id', resolvedUserId)
       .order('created_at', { ascending: false })
 
     if (error) throw error

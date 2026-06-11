@@ -13,6 +13,9 @@ export type SongListFilterParams = {
   folderId?: string
 }
 
+export const USER_SONGS_LIST_COLUMNS =
+  'id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre, bpm, is_liked'
+
 const BATCH_SIZE = 1000
 
 export function tabToOrderBy(tab: SongListTab = 'all'): 'created_at' | 'updated_at' | 'view_count' {
@@ -21,51 +24,76 @@ export function tabToOrderBy(tab: SongListTab = 'all'): 'created_at' | 'updated_
   return 'created_at'
 }
 
-export function applySongListFilters(client: SupabaseClient<Database>, user: { id: string } | null, params: SongListFilterParams): any {
-  let baseQuery = client.from('songs').select('id', { count: 'exact' })
+export function orderByToTab(
+  orderBy?: 'created_at' | 'updated_at' | 'view_count'
+): SongListTab {
+  if (orderBy === 'updated_at') return 'recent'
+  if (orderBy === 'view_count') return 'popular'
+  return 'all'
+}
+
+/** Applies list filters to an already-selected songs query (call twice for parallel data + count). */
+export function applyUserSongsListFilters(
+  query: any,
+  user: { id: string } | null,
+  params: SongListFilterParams
+): { query: any; orderColumn: string } {
 
   if (!user) {
-    baseQuery = baseQuery.is('user_id', null)
+    query = query.is('user_id', null)
   } else {
-    baseQuery = baseQuery.eq('user_id', user.id)
+    query = query.eq('user_id', user.id)
   }
 
   const q = params.q?.trim()
   if (q) {
-    baseQuery = baseQuery.or(`title.ilike.%${q}%,author.ilike.%${q}%`)
+    query = query.or(`title.ilike.%${q}%,author.ilike.%${q}%`)
   }
 
   if (params.easyChord === true) {
-    baseQuery = baseQuery.or(
+    query = query.or(
       'difficulty.ilike.%easy%,difficulty.ilike.%facile%,difficulty.ilike.%beginner%,difficulty.ilike.%débutant%'
     )
   }
 
   if (params.capoFilter === 'with') {
-    baseQuery = baseQuery.not('capo', 'is', null).gt('capo', 0)
+    query = query.not('capo', 'is', null).gt('capo', 0)
   } else if (params.capoFilter === 'without') {
-    baseQuery = baseQuery.or('capo.is.null,capo.eq.0')
+    query = query.or('capo.is.null,capo.eq.0')
   }
 
   if (params.likedOnly === true) {
-    baseQuery = baseQuery.eq('is_liked', true)
+    query = query.eq('is_liked', true)
   }
 
   const orderBy = tabToOrderBy(params.tab)
   if (orderBy === 'view_count') {
-    baseQuery = baseQuery.not('view_count', 'is', null).gt('view_count', 0)
+    query = query.not('view_count', 'is', null).gt('view_count', 0)
   }
 
   if (params.folderId === 'unorganized') {
-    baseQuery = baseQuery.is('folder_id', null)
+    query = query.is('folder_id', null)
   } else if (params.folderId) {
-    baseQuery = baseQuery.eq('folder_id', params.folderId)
+    query = query.eq('folder_id', params.folderId)
   }
 
   const orderColumn =
     orderBy === 'updated_at' ? 'updated_at' : orderBy === 'view_count' ? 'view_count' : 'created_at'
 
-  return { baseQuery, orderColumn }
+  return { query, orderColumn }
+}
+
+export function applySongListFilters(
+  client: SupabaseClient<Database>,
+  user: { id: string } | null,
+  params: SongListFilterParams
+) {
+  const { query, orderColumn } = applyUserSongsListFilters(
+    (client.from('songs') as any).select('id', { count: 'exact' }),
+    user,
+    params
+  )
+  return { baseQuery: query, orderColumn }
 }
 
 export async function fetchAllSongIdsFromQuery(baseQuery: any, orderColumn: string): Promise<string[]> {

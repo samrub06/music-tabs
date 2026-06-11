@@ -7,61 +7,6 @@ import type { Playlist } from '@/types'
 
 type OrderByOption = 'created_at' | 'updated_at' | 'view_count'
 
-async function SongsDataLoader({
-  page,
-  limit,
-  q,
-  tab,
-  initialSongId,
-  initialFolder,
-  initialSortOrder,
-  easyChord,
-  capoFilter,
-  likedOnly,
-}: {
-  page: number
-  limit: number
-  q: string
-  tab: 'all' | 'recent' | 'popular'
-  initialSongId?: string
-  initialFolder?: string
-  initialSortOrder?: 'asc' | 'desc'
-  easyChord?: boolean
-  capoFilter?: 'any' | 'with' | 'without'
-  likedOnly?: boolean
-}) {
-  const supabase = await createSafeServerClient()
-  const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
-  const folderId = initialFolder === 'unorganized' ? 'unorganized' : initialFolder
-  const { songs, total } = await songService.getAllSongs(
-    supabase,
-    page,
-    limit,
-    q,
-    orderBy,
-    easyChord,
-    capoFilter,
-    likedOnly,
-    folderId
-  )
-  return { songs, total }
-}
-
-async function PlaylistsDataLoader(): Promise<Playlist[]> {
-  const supabase = await createSafeServerClient()
-  // Use lightweight version - only load id, name, songCount, createdAt
-  const playlistsLightweight = await playlistRepo(supabase).getAllPlaylistsLightweight()
-  // Map to full Playlist type for compatibility
-  return playlistsLightweight.map(p => ({
-    id: p.id,
-    name: p.name,
-    description: undefined,
-    createdAt: p.createdAt,
-    updatedAt: p.createdAt, // Use createdAt as fallback
-    songIds: [] // Will be loaded when playlist is clicked
-  }))
-}
-
 function SongsSkeleton() {
   return (
     <div className="p-3 sm:p-6">
@@ -82,8 +27,10 @@ function SongsSkeleton() {
 
 export default async function SongsData({
   searchParams,
+  userId,
 }: {
   searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string; easyChord?: string; capo?: string; filter?: string }>
+  userId: string
 }) {
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
@@ -103,6 +50,7 @@ export default async function SongsData({
   return (
     <Suspense fallback={<SongsSkeleton />}>
       <SongsDataWrapper
+        userId={userId}
         page={page}
         limit={limit}
         q={q}
@@ -120,6 +68,7 @@ export default async function SongsData({
 }
 
 async function SongsDataWrapper({
+  userId,
   page,
   limit,
   q,
@@ -132,6 +81,7 @@ async function SongsDataWrapper({
   capoFilter,
   likedOnly,
 }: {
+  userId: string
   page: number
   limit: number
   q: string
@@ -144,10 +94,34 @@ async function SongsDataWrapper({
   capoFilter?: 'any' | 'with' | 'without'
   likedOnly?: boolean
 }) {
-  const [songsData, playlistsData] = await Promise.all([
-    SongsDataLoader({ page, limit, q, tab, initialSongId, initialFolder, initialSortOrder, easyChord, capoFilter, likedOnly }),
-    PlaylistsDataLoader(),
+  const supabase = await createSafeServerClient()
+  const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
+  const folderId = initialFolder === 'unorganized' ? 'unorganized' : initialFolder
+
+  const [songsData, playlistsLightweight] = await Promise.all([
+    songService.getAllSongs(
+      supabase,
+      page,
+      limit,
+      q,
+      orderBy,
+      easyChord,
+      capoFilter,
+      likedOnly,
+      folderId,
+      userId
+    ),
+    playlistRepo(supabase).getAllPlaylistsLightweight(userId),
   ])
+
+  const playlistsData: Playlist[] = playlistsLightweight.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: undefined,
+    createdAt: p.createdAt,
+    updatedAt: p.createdAt,
+    songIds: [],
+  }))
 
   return (
     <SongsClient
@@ -168,4 +142,3 @@ async function SongsDataWrapper({
     />
   )
 }
-

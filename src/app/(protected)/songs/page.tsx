@@ -15,7 +15,7 @@ export default async function SongsPage({ searchParams }: { searchParams: Promis
 
   return (
     <Suspense fallback={<div className="p-3 sm:p-6"><div className="h-10 bg-gray-100 rounded w-full max-w-2xl mb-6 animate-pulse"></div></div>}>
-      <SongsData searchParams={searchParams} />
+      <SongsData searchParams={searchParams} userId={user.id} />
     </Suspense>
   )
 }

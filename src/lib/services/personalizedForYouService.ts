@@ -14,6 +14,8 @@ async function getTopViewedSongId(
     const { data, error } = await (client.from('daily_song_views') as any)
       .select('song_id')
       .eq('user_id', userId)
+      .order('viewed_date', { ascending: false })
+      .limit(500)
 
     if (error) throw error
     const rows = (data || []) as Array<{ song_id: string }>
@@ -68,12 +70,17 @@ function getTopArtistFromUserLibrary(
   return top ? { songId: top.songId, artist: top.displayName } : null
 }
 
+type UserSongMatchRef = { id: string; tabId?: string; sourceUrl?: string; title: string; author: string }
+
 export const personalizedForYouService = (client: SupabaseClient<Database>) => ({
-  async getForYouData(userId: string): Promise<PersonalizedForYouData> {
+  async getForYouData(
+    userId: string,
+    preloadedUserSongs?: UserSongMatchRef[]
+  ): Promise<PersonalizedForYouData> {
     const repo = songRepo(client)
 
     try {
-      const userSongs = await repo.getAllSongsLightweight()
+      const userSongs = preloadedUserSongs ?? (await repo.getAllSongsLightweight())
 
       let topSongId = await getTopViewedSongId(client, userId)
       let topArtist: string | null = null

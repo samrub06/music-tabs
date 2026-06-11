@@ -11,30 +11,30 @@ export default async function SongPage({
   params: Promise<{ id: string }>
 }) {
   const supabase = await createSafeServerClient()
-  const { id } = await params
-  const songId = id
+  const { id: songId } = await params
 
-  // Load song and user in parallel
-  const songRepoInstance = songRepo(supabase)
-  const [song, { data: { user } }] = await Promise.all([
-    songRepoInstance.getSong(songId),
-    supabase.auth.getUser()
+  const userPromise = supabase.auth.getUser()
+  const songPromise = songRepo(supabase).getSong(songId)
+  const preferredInstrumentPromise = userPromise.then(({ data: { user } }) =>
+    user ? profileRepo(supabase).getPreferredInstrument(user.id) : Promise.resolve(null)
+  )
+
+  const [{ data: { user } }, song, preferredInstrument] = await Promise.all([
+    userPromise,
+    songPromise,
+    preferredInstrumentPromise,
   ])
 
   if (!song) {
     redirect('/')
   }
 
-  // Check if song is in user's library (song belongs to user)
   const isInLibrary = user ? song.userId === user.id : false
-
-  // Fetch profile for preferred instrument when authenticated
-  const profile = user ? await profileRepo(supabase).getProfile(user.id) : null
-  const initialInstrument = profile?.preferredInstrument === 'guitar' ? 'guitar' : 'piano'
+  const initialInstrument = preferredInstrument === 'guitar' ? 'guitar' : 'piano'
 
   return (
-    <SongViewerContainerSSR 
-      song={song} 
+    <SongViewerContainerSSR
+      song={song}
       onUpdate={updateSongAction}
       onDelete={deleteSongAction}
       isAuthenticated={!!user}

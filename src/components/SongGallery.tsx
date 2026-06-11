@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { MusicalNoteIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon, ArrowsUpDownIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
@@ -132,10 +132,15 @@ function DraggableSongCard({
           <button
             onClick={() => onAddClick(song)}
             disabled={addingId === song.id}
-            className="m-2 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs sm:text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
+            className="m-2 inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
+            aria-label={t('library.addToLibrary')}
             title={t('library.addToLibrary')}
           >
-            {addingId === song.id ? t('library.adding') : t('library.addToLibrary')}
+            {addingId === song.id ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <PlusIcon className="h-4 w-4" aria-hidden />
+            )}
           </button>
         )}
       </div>

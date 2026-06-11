@@ -1,6 +1,9 @@
 import * as Sentry from '@sentry/nextjs'
+import { revalidateTag } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { EXPLORE_CATALOG_TAG } from '@/lib/services/exploreCatalogCache'
+import { LIBRARY_CATALOG_TAG } from '@/lib/services/libraryCatalogCache'
 import { trendingService } from '@/lib/services/trendingService'
 import { Database } from '@/types/db'
 
@@ -33,6 +36,9 @@ export async function GET(request: Request) {
 
         console.log('Starting trending songs update by categories...')
         const stats = await trendingService.updateTrendingDatabaseByCategories(supabase, 15)
+
+        revalidateTag(EXPLORE_CATALOG_TAG)
+        revalidateTag(LIBRARY_CATALOG_TAG)
 
         return NextResponse.json({
           success: true,

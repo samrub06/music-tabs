@@ -1,13 +1,14 @@
 import { createSafeServerClient } from '@/lib/supabase/server'
+import { getCachedLibraryCatalogSections } from '@/lib/services/libraryCatalogCache'
 import { personalizedForYouService } from '@/lib/services/personalizedForYouService'
 import { songRepo } from '@/lib/services/songRepo'
-import { playlistRepo } from '@/lib/services/playlistRepo'
 import { findUserSongMatch } from '@/lib/utils/songLibraryMatch'
 import ForYouArtistSection from '@/components/library/ForYouArtistSection'
 import CuratedPlaylistRow from '@/components/library/CuratedPlaylistRow'
 import FeaturedSongSection from '../library/FeaturedSongSection'
 import RecentSongsSection from '../library/RecentSongsSection'
 import PopularSongsSection from '../library/PopularSongsSection'
+import SpotifyComingSoonSection from '@/components/library/SpotifyComingSoonSection'
 import type { ForYouArtistSong } from '@/types/forYou'
 
 interface LibrarySectionsProps {
@@ -17,34 +18,22 @@ interface LibrarySectionsProps {
 export default async function LibrarySections({ userId }: LibrarySectionsProps) {
   const supabase = await createSafeServerClient()
   const songRepoInstance = songRepo(supabase)
-  const playlistRepoInstance = playlistRepo(supabase)
-
   const forYouService = personalizedForYouService(supabase)
 
-  const [
-    trendingSongs,
-    recentSongs,
-    popularSongs,
-    publicPlaylists,
-    forYouResult,
-    userSongs,
-    featuredCatalogSong,
-  ] = await Promise.all([
-    songRepoInstance.getTrendingSongsLightweight(),
-    songRepoInstance.getRecentSongsLightweight(15),
-    songRepoInstance.getPopularSongsLightweight(15),
-    playlistRepoInstance.getPublicPlaylistsLightweight(),
-    userId
-      ? forYouService.getForYouData(userId).catch((err) => {
-          console.error('LibrarySections forYou fetch failed:', err)
-          return { featuredSong: null, topArtist: null, artistSongs: [] }
-        })
-      : Promise.resolve(null),
+  const [catalogSections, userSongs] = await Promise.all([
+    getCachedLibraryCatalogSections(),
     userId ? songRepoInstance.getAllSongsLightweight() : Promise.resolve([]),
-    songRepoInstance.getFeaturedCatalogSongLightweight(),
   ])
 
-  const forYouData = forYouResult
+  const forYouData = userId
+    ? await forYouService.getForYouData(userId, userSongs).catch((err) => {
+        console.error('LibrarySections forYou fetch failed:', err)
+        return { featuredSong: null, topArtist: null, artistSongs: [] }
+      })
+    : null
+
+  const { trendingSongs, recentSongs, popularSongs, publicPlaylists, featuredCatalogSong } =
+    catalogSections
 
   const featuredSong =
     featuredCatalogSong ??
@@ -68,6 +57,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         showLikedCard={!!userId}
       />
       <CuratedPlaylistRow section="jewish" publicPlaylists={publicPlaylists} />
+      <SpotifyComingSoonSection />
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />

@@ -15,7 +15,7 @@ export default async function FoldersPage() {
 
   return (
     <Suspense fallback={<div className="p-3 sm:p-6"><div className="h-8 bg-gray-200 rounded w-48 mb-6 animate-pulse"></div></div>}>
-      <FoldersData />
+      <FoldersData userId={user.id} />
     </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Song } from '@/types'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
@@ -38,6 +38,19 @@ export default function ExploreClient({ songs, total, page, limit, initialView =
   const genres = EXPLORE_GENRES
   const difficulties = EXPLORE_DIFFICULTIES
   const decades = EXPLORE_DECADES
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+
+  useEffect(() => {
+    const prefetchPage = (nextPage: number) => {
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      params.set('page', String(nextPage))
+      params.set('limit', String(limit))
+      router.prefetch(`${pathname}?${params.toString()}`)
+    }
+
+    if (page > 1) prefetchPage(page - 1)
+    if (page < totalPages) prefetchPage(page + 1)
+  }, [page, limit, totalPages, pathname, searchParams, router])
 
   const updateFilter = (type: 'genre' | 'difficulty' | 'decade', value: string | number | null) => {
     const params = new URLSearchParams(searchParams?.toString() || '')

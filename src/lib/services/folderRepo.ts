@@ -39,18 +39,19 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     return (data || []).map(mapDbFolderToDomain)
   },
 
-  async getFolderById(folderId: string): Promise<Folder | null> {
-    const { data: { user } } = await client.auth.getUser()
-    
-    if (!user) {
-      return null
+  async getFolderById(folderId: string, userId?: string): Promise<Folder | null> {
+    let resolvedUserId = userId
+    if (!resolvedUserId) {
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) return null
+      resolvedUserId = user.id
     }
 
     const { data, error } = await client
       .from('folders')
-      .select('*')
+      .select('id, name, display_order, created_at, updated_at')
       .eq('id', folderId)
-      .eq('user_id', user.id)
+      .eq('user_id', resolvedUserId)
       .single()
 
     if (error) {
@@ -140,22 +141,16 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     return mapDbFolderToDomain(data)
   },
 
-  // Optimized method to get song counts per folder without loading song content
-  async getSongCountsByFolder(): Promise<Map<string, number>> {
-    const { data: { user } } = await client.auth.getUser()
-    if (!user) return new Map()
-
-    // Only select folder_id (not the full song data) to minimize data transfer
+  async getSongCountsByFolderLegacy(userId: string): Promise<Map<string, number>> {
     const { data, error } = await client
       .from('songs')
       .select('folder_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
 
     if (error) throw error
 
-    // Count songs per folder (including null folder_id)
     const counts = new Map<string, number>()
-    ;((data as Array<{ folder_id: string | null }>) || []).forEach(song => {
+    ;((data as Array<{ folder_id: string | null }>) || []).forEach((song) => {
       const folderId = song.folder_id || 'null'
       counts.set(folderId, (counts.get(folderId) || 0) + 1)
     })
@@ -163,25 +158,51 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     return counts
   },
 
+  // Aggregate counts in DB (get_folder_song_counts RPC) — falls back to legacy scan.
+  async getSongCountsByFolder(userId?: string): Promise<Map<string, number>> {
+    let resolvedUserId = userId
+    if (!resolvedUserId) {
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) return new Map()
+      resolvedUserId = user.id
+    }
+
+    const { data, error } = await (client as any).rpc('get_folder_song_counts')
+
+    if (error) {
+      return this.getSongCountsByFolderLegacy(resolvedUserId)
+    }
+
+    const counts = new Map<string, number>()
+    for (const row of (data as Array<{ folder_key: string; song_count: number }>) || []) {
+      counts.set(row.folder_key, Number(row.song_count))
+    }
+    return counts
+  },
+
   // Lightweight version: only load id, name, and display_order for list views
-  async getAllFoldersLightweight(): Promise<Array<{ id: string; name: string; displayOrder?: number }>> {
-    const { data: { user } } = await client.auth.getUser()
-    
-    if (!user) return []
+  async getAllFoldersLightweight(userId?: string): Promise<Array<{ id: string; name: string; displayOrder?: number; createdAt: Date }>> {
+    let resolvedUserId = userId
+    if (!resolvedUserId) {
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) return []
+      resolvedUserId = user.id
+    }
 
     const { data, error } = await client
       .from('folders')
-      .select('id, name, display_order')
-      .eq('user_id', user.id)
+      .select('id, name, display_order, created_at')
+      .eq('user_id', resolvedUserId)
       .order('display_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return ((data as Array<{ id: string; name: string; display_order: number | null }>) || []).map(f => ({
+    return ((data as Array<{ id: string; name: string; display_order: number | null; created_at: string }>) || []).map(f => ({
       id: f.id,
       name: f.name,
-      displayOrder: f.display_order ?? undefined
+      displayOrder: f.display_order ?? undefined,
+      createdAt: new Date(f.created_at),
     }))
   }
 })

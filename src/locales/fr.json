@@ -36,7 +36,8 @@
     "next": "Suivant",
     "pageOf": "{current} / {total}",
     "showingRange": "{from}–{to} sur {total}",
-    "pagination": "Pagination"
+    "pagination": "Pagination",
+    "comingSoon": "Bientôt disponible"
   },
   "navigation": {
     "home": "Accueil",
@@ -229,7 +230,12 @@
     "tabSearch": "Rechercher",
     "tabAI": "IA",
     "tabManual": "Manuel",
-    "aiHint": "Décrivez un style, une ambiance ou une époque — nous suggérerons des chansons."
+    "tabYouTube": "YouTube",
+    "aiHint": "Décrivez un style, une ambiance ou une époque — nous suggérerons des chansons.",
+    "TITLE_PLACEHOLDER": "ex : Ma chanson préférée",
+    "ARTIST_PLACEHOLDER": "ex : Mon Artiste",
+    "CONTENT_LABEL": "Contenu (accords + paroles) *",
+    "CONTENT_PLACEHOLDER": "Collez ou saisissez les accords et paroles ici..."
   },
   "songViewer": {
     "chords": "Accords",
@@ -288,7 +294,9 @@
     "listView": "Liste",
     "gridView": "Grille",
     "noRecentlyAdded": "Aucune chanson ajoutée récemment.",
-    "SEARCH_PLACEHOLDER": "Rechercher un titre ou un artiste..."
+    "SEARCH_PLACEHOLDER": "Rechercher un titre ou un artiste...",
+    "spotifySection": "Spotify",
+    "spotifyDescription": "Importez des chansons depuis vos playlists Spotify"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -661,12 +669,6 @@
     "EMPTY_LEADERBOARD": "Aucun joueur au classement pour l'instant. Soyez le premier !",
     "UNKNOWN_USER": "Utilisateur inconnu",
     "YOU_BADGE": "(Vous)"
-  },
-  "songForm": {
-    "TITLE_PLACEHOLDER": "ex : Ma chanson préférée",
-    "ARTIST_PLACEHOLDER": "ex : Mon Artiste",
-    "CONTENT_LABEL": "Contenu (accords + paroles) *",
-    "CONTENT_PLACEHOLDER": "Collez ou saisissez les accords et paroles ici..."
   },
   "songEnd": {
     "continueListening": "Continuer à écouter",

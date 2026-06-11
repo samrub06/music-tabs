@@ -27,7 +27,8 @@ import {
   SparklesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Youtube } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type ComponentType } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface AddSongFormProps {
@@ -62,6 +63,14 @@ interface SearchResult {
 }
 
 type AddSongTab = 'search' | 'ai' | 'manual'
+
+type AddSongTabConfig = {
+  id: AddSongTab | 'youtube'
+  label: string
+  icon: ComponentType<{ className?: string }>
+  disabled?: boolean
+  badge?: string
+}
 
 const AI_SUGGESTION_KEYS = [
   'search.aiSuggestion1',
@@ -105,10 +114,17 @@ export default function AddSongForm({
   const [isSaving, setIsSaving] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
-  const tabs: { id: AddSongTab; label: string; icon: typeof MagnifyingGlassIcon }[] = [
+  const tabs: AddSongTabConfig[] = [
     { id: 'search', label: t('songForm.tabSearch'), icon: MagnifyingGlassIcon },
     { id: 'ai', label: t('songForm.tabAI'), icon: SparklesIcon },
     { id: 'manual', label: t('songForm.tabManual'), icon: PlusIcon },
+    {
+      id: 'youtube',
+      label: t('songForm.tabYouTube'),
+      icon: Youtube,
+      disabled: true,
+      badge: t('common.comingSoon'),
+    },
   ]
 
   useEffect(() => {
@@ -459,30 +475,47 @@ export default function AddSongForm({
         variant === 'page' ? 'pt-1' : 'pt-3'
       )}
     >
-      <div className="flex gap-1 rounded-full bg-muted/80 p-0.5">
-        {tabs.map(({ id, label, icon: Icon }) => (
+      <div className="flex gap-0.5 overflow-visible rounded-full bg-muted/80 p-0.5 sm:gap-1">
+        {tabs.map(({ id, label, icon: Icon, disabled, badge }) => (
           <button
             key={id}
             type="button"
+            disabled={disabled}
+            aria-label={label}
             onClick={() => {
+              if (disabled || id === 'youtube') return
               setActiveTab(id)
               setMessage(null)
             }}
             className={cn(
-              'flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs font-medium transition-all duration-200 sm:px-3 sm:text-sm',
-              activeTab === id
-                ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                : 'text-muted-foreground hover:text-foreground',
-              id === 'ai' && activeTab === id && 'text-purple-700 dark:text-purple-400'
+              'relative flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-2 py-2.5 text-xs font-medium transition-all duration-200 sm:gap-1.5 sm:px-3 sm:py-2.5 sm:text-sm',
+              disabled && id !== 'youtube'
+                ? 'cursor-not-allowed text-muted-foreground/60 opacity-70'
+                : disabled && id === 'youtube'
+                  ? 'cursor-not-allowed opacity-90'
+                  : activeTab === id
+                    ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                    : 'text-muted-foreground hover:text-foreground',
+              id === 'ai' && !disabled && activeTab === id && 'text-purple-700 dark:text-purple-400'
             )}
           >
-            <Icon
-              className={cn(
-                'h-4 w-4 shrink-0',
-                id === 'ai' && (activeTab === id ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500/80')
+            <span className={cn('relative inline-flex shrink-0', id === 'youtube' && 'overflow-visible')}>
+              <Icon
+                className={cn(
+                  'h-4 w-4 shrink-0 sm:h-4 sm:w-4',
+                  id === 'ai' &&
+                    !disabled &&
+                    (activeTab === id ? 'text-purple-600 dark:text-purple-400' : 'text-purple-500/80'),
+                  id === 'youtube' && 'text-red-500/80'
+                )}
+              />
+              {id === 'youtube' && badge && (
+                <span className="pointer-events-none absolute -left-2.5 -top-2.5 z-10 animate-pulse whitespace-nowrap rounded-full border border-purple-300/50 bg-purple-600/35 px-1.5 py-0.5 text-[7px] font-bold uppercase leading-none tracking-wide text-purple-50 shadow-[0_0_14px_rgba(147,51,234,0.45)] backdrop-blur-md ring-1 ring-purple-200/30 sm:-left-3 sm:-top-3 sm:px-2 sm:py-0.5 sm:text-[8px]">
+                  {badge}
+                </span>
               )}
-            />
-            <span className="truncate">{label}</span>
+            </span>
+            <span className="hidden truncate sm:inline">{label}</span>
           </button>
         ))}
       </div>

@@ -207,25 +207,21 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         )}
       </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => router.push('/')}
+      <Link
+        href="/"
         className={cn(
-          'absolute left-1/2 -translate-x-1/2 px-2 hover:bg-transparent sm:px-3',
+          'absolute left-1/2 -translate-x-1/2 px-2 sm:px-3',
           usesAppSidebar && 'lg:hidden',
           showBackWithTitle && 'hidden'
         )}
         aria-label={t('common.backToHome')}
       >
         <AppLogo
-          variant={isLandingPage ? 'portrait' : 'text'}
+          variant="text"
           priority={isLandingPage}
-          className={cn(
-            isLandingPage ? 'h-9 w-auto sm:h-10' : 'h-6 w-auto sm:h-7'
-          )}
+          className="h-6 w-auto sm:h-7"
         />
-      </Button>
+      </Link>
 
       <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
         <DropdownMenu>

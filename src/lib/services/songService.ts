@@ -3,10 +3,37 @@ import { parseTextToStructuredSong } from '@/utils/songParser';
 import { extractAllChords } from '@/utils/structuredSong';
 import {
   applySongListFilters,
+  applyUserSongsListFilters,
   fetchAllSongIdsFromQuery,
-  tabToOrderBy,
+  orderByToTab,
+  USER_SONGS_LIST_COLUMNS,
   type SongListFilterParams,
 } from '@/lib/services/songListFilters';
+
+function mapUserSongRowToList(song: Record<string, unknown>) {
+  return {
+    ...song,
+    folderId: song.folder_id,
+    allChords: undefined,
+    createdAt: new Date(song.created_at as string),
+    updatedAt: new Date(song.updated_at as string),
+    version: song.version,
+    versionDescription: song.version_description,
+    rating: song.rating,
+    difficulty: song.difficulty,
+    capo: song.capo ?? undefined,
+    artistImageUrl: song.artist_image_url,
+    songImageUrl: song.song_image_url,
+    viewCount: (song.view_count as number) || 0,
+    key: song.key,
+    firstChord: song.first_chord,
+    lastChord: song.last_chord,
+    tabId: song.tab_id,
+    genre: song.genre,
+    bpm: song.bpm,
+    isLiked: (song.is_liked as boolean) ?? false,
+  }
+}
 
 // Service pour les chansons
 export const songService = {
@@ -22,93 +49,60 @@ export const songService = {
     easyChord?: boolean,
     capoFilter?: 'any' | 'with' | 'without',
     likedOnly?: boolean,
-    folderId?: string
+    folderId?: string,
+    userId?: string
   ): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
       throw new Error('Supabase client is required');
     }
-    const { data: { user } } = await client.auth.getUser();
-    
-    let baseQuery = client
-      .from('songs')
-      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, all_chords, tab_id, genre, bpm, is_liked', { count: 'exact' });
-    
-    // Si non connecté, récupérer uniquement les chansons publiques (sans user_id)
-    if (!user) {
-      baseQuery = baseQuery.is('user_id', null);
-    } else {
-      // Si connecté, récupérer uniquement les chansons de l'utilisateur
-      baseQuery = baseQuery.eq('user_id', user.id);
+
+    const user = userId
+      ? { id: userId }
+      : (await client.auth.getUser()).data.user;
+
+    const filterParams: SongListFilterParams = {
+      q,
+      tab: orderByToTab(orderBy),
+      easyChord,
+      capoFilter,
+      likedOnly,
+      folderId,
     }
 
-    if (q && q.trim()) {
-      const query = q.trim()
-      baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
-    }
+    const { query: dataQuery, orderColumn } = applyUserSongsListFilters(
+      (client.from('songs') as any).select(USER_SONGS_LIST_COLUMNS),
+      user,
+      filterParams
+    )
+    const { query: countQuery } = applyUserSongsListFilters(
+      (client.from('songs') as any).select('id', { count: 'planned', head: true }),
+      user,
+      filterParams
+    )
 
-    // Filtre accord facile (difficulty easy/facile/beginner)
-    if (easyChord === true) {
-      baseQuery = baseQuery.or('difficulty.ilike.%easy%,difficulty.ilike.%facile%,difficulty.ilike.%beginner%,difficulty.ilike.%débutant%');
-    }
+    const from = (page - 1) * limit
+    const to = page * limit - 1
 
-    // Filtre capo : avec capo / sans capo
-    if (capoFilter === 'with') {
-      baseQuery = baseQuery.not('capo', 'is', null).gt('capo', 0);
-    } else if (capoFilter === 'without') {
-      baseQuery = baseQuery.or('capo.is.null,capo.eq.0');
-    }
-
-    if (likedOnly === true) {
-      baseQuery = baseQuery.eq('is_liked', true);
-    }
-
-    if (folderId === 'unorganized') {
-      baseQuery = baseQuery.is('folder_id', null);
-    } else if (folderId) {
-      baseQuery = baseQuery.eq('folder_id', folderId);
-    }
-
-    // Pour popular : ne garder que les chansons avec view_count > 0
-    if (orderBy === 'view_count') {
-      baseQuery = baseQuery.not('view_count', 'is', null).gt('view_count', 0);
-    }
-
-    const orderColumn = orderBy === 'updated_at' ? 'updated_at' : orderBy === 'view_count' ? 'view_count' : 'created_at';
-    const { data, error, count } = await baseQuery
-      .order(orderColumn, { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+    const [{ data, error }, { count, error: countError }] = await Promise.all([
+      dataQuery.order(orderColumn, { ascending: false }).range(from, to),
+      countQuery,
+    ])
 
     if (error) {
       console.error('Error fetching songs:', error);
       throw error;
     }
+    if (countError) {
+      console.error('Error counting songs:', countError);
+      throw countError;
+    }
 
-    const mappedSongs: Song[] = (data as any[])?.map((song: any) => ({
-      ...song,
-      folderId: song.folder_id, // Map folder_id to folderId
-      allChords: song.all_chords || undefined,
-      createdAt: new Date(song.created_at),
-      updatedAt: new Date(song.updated_at),
-      // Mapper les nouveaux champs Ultimate Guitar
-      version: song.version,
-      versionDescription: song.version_description,
-      rating: song.rating,
-      difficulty: song.difficulty,
-      capo: song.capo ?? undefined,
-      artistImageUrl: song.artist_image_url,
-      songImageUrl: song.song_image_url,
-      viewCount: song.view_count || 0,
-      key: song.key,
-      firstChord: song.first_chord,
-      lastChord: song.last_chord,
-      tabId: song.tab_id,
-      genre: song.genre,
-      bpm: song.bpm,
-      isLiked: song.is_liked ?? false,
-    })) || [];
-    
-    return { songs: mappedSongs, total: count || 0 };
+    const mappedSongs: Song[] = ((data as Record<string, unknown>[]) ?? []).map(
+      (song) => mapUserSongRowToList(song) as Song
+    );
+
+    return { songs: mappedSongs, total: count ?? 0 };
   },
 
   async getAllSongIds(

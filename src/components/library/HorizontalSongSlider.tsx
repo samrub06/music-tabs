@@ -167,7 +167,9 @@ export default function HorizontalSongSlider({
                           onAddClick(song)
                         }}
                         disabled={addingId === song.id}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
+                        aria-label={t('library.addToLibrary')}
+                        title={t('library.addToLibrary')}
+                        className="w-full flex items-center justify-center px-3 py-1.5 text-xs sm:text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors disabled:opacity-50"
                       >
                         {addingId === song.id ? (
                           <>
@@ -175,10 +177,7 @@ export default function HorizontalSongSlider({
                             <span>{t('library.adding')}</span>
                           </>
                         ) : (
-                          <>
-                            <PlusIcon className="h-4 w-4" />
-                            <span>{t('library.addToLibrary')}</span>
-                          </>
+                          <PlusIcon className="h-4 w-4" aria-hidden />
                         )}
                       </button>
                     )}

@@ -36,7 +36,8 @@
     "next": "הבא",
     "pageOf": "{current} / {total}",
     "showingRange": "{from}–{to} מתוך {total}",
-    "pagination": "דפדוף"
+    "pagination": "דפדוף",
+    "comingSoon": "בקרוב"
   },
   "navigation": {
     "home": "בית",
@@ -229,7 +230,12 @@
     "tabSearch": "חיפוש",
     "tabAI": "בינה",
     "tabManual": "ידני",
-    "aiHint": "תאר סגנון, אווירה או תקופה — נציע שירים מתאימים."
+    "tabYouTube": "YouTube",
+    "aiHint": "תאר סגנון, אווירה או תקופה — נציע שירים מתאימים.",
+    "TITLE_PLACEHOLDER": "לדוגמה: השיר האהוב עלי",
+    "ARTIST_PLACEHOLDER": "לדוגמה: האמן שלי",
+    "CONTENT_LABEL": "תוכן (אקורדים + מילים) *",
+    "CONTENT_PLACEHOLDER": "הדבק או הקלד אקורדים ומילים כאן..."
   },
   "songViewer": {
     "chords": "אקורדים",
@@ -281,13 +287,16 @@
     "viewAll": "הצג הכל",
     "curatedPlaylists": "פלייליסטים לגלות",
     "curatedGenres": "ז'אנרים",
+    "curatedJewish": "מוזיקה יהודית",
     "curatedDecades": "עשורים",
     "curatedDifficulty": "רמה",
     "playlistSongCount": "פלייליסט · {count} שירים",
     "listView": "רשימה",
     "gridView": "רשת",
     "noRecentlyAdded": "אין שירים שנוספו לאחרונה.",
-    "SEARCH_PLACEHOLDER": "חפש כותרת או אמן..."
+    "SEARCH_PLACEHOLDER": "חפש כותרת או אמן...",
+    "spotifySection": "Spotify",
+    "spotifyDescription": "ייבא שירים מפלייליסטים של Spotify"
   },
   "auth": {
     "signIn": "התחבר",
@@ -660,12 +669,6 @@
     "EMPTY_LEADERBOARD": "אין משתמשים בלוח התוצאות עדיין. היה הראשון!",
     "UNKNOWN_USER": "משתמש לא ידוע",
     "YOU_BADGE": "(את/ה)"
-  },
-  "songForm": {
-    "TITLE_PLACEHOLDER": "לדוגמה: השיר האהוב עלי",
-    "ARTIST_PLACEHOLDER": "לדוגמה: האמן שלי",
-    "CONTENT_LABEL": "תוכן (אקורדים + מילים) *",
-    "CONTENT_PLACEHOLDER": "הדבק או הקלד אקורדים ומילים כאן..."
   },
   "songEnd": {
     "continueListening": "המשך להאזין",

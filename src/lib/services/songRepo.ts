@@ -477,31 +477,41 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   ): Promise<{ songs: Song[]; total: number }> {
     const from = (page - 1) * limit
     const to = page * limit - 1
-    let builder = (client.from('songs') as any)
-      .select(EXPLORE_LIST_COLUMNS, { count: 'exact' })
-      .or('is_trending.eq.true,is_public.eq.true')
-      .is('user_id', null)
-      .order('created_at', { ascending: false })
-    
-    // Appliquer les filtres
-    if (genre) {
-      builder = builder.eq('genre', genre)
+
+    const applyCatalogFilters = (builder: any) => {
+      let filtered = builder
+        .or('is_trending.eq.true,is_public.eq.true')
+        .is('user_id', null)
+
+      if (genre) filtered = filtered.eq('genre', genre)
+      if (difficulty) filtered = filtered.eq('difficulty', difficulty)
+      if (decade) filtered = filtered.eq('decade', decade)
+
+      if (q?.trim()) {
+        const query = q.trim()
+        filtered = filtered.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+      }
+      return filtered
     }
-    if (difficulty) {
-      builder = builder.eq('difficulty', difficulty)
-    }
-    if (decade) {
-      builder = builder.eq('decade', decade)
-    }
-    
-    if (q && q.trim()) {
-      const query = q.trim()
-      builder = builder.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
-    }
-    const { data, error, count } = await builder.range(from, to)
+
+    const dataQuery = applyCatalogFilters(
+      (client.from('songs') as any)
+        .select(EXPLORE_LIST_COLUMNS)
+        .order('created_at', { ascending: false })
+    )
+    const countQuery = applyCatalogFilters(
+      (client.from('songs') as any).select('id', { count: 'planned', head: true })
+    )
+
+    const [{ data, error }, { count, error: countError }] = await Promise.all([
+      dataQuery.range(from, to),
+      countQuery,
+    ])
 
     if (error) throw error
-    return { songs: (data || []).map(mapDbSongToList), total: count || 0 }
+    if (countError) throw countError
+
+    return { songs: (data || []).map(mapDbSongToList), total: count ?? 0 }
   },
 
   async searchSongs(query: string): Promise<Song[]> {
@@ -588,12 +598,10 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .or('is_trending.eq.true,is_public.eq.true')
       .is('user_id', null)
       .order('updated_at', { ascending: false })
-      .limit(limit * 2)
+      .limit(limit)
 
     if (error) throw error
-    return dedupeCatalogSongs(data || [])
-      .slice(0, limit)
-      .map(mapDbSongToList)
+    return dedupeCatalogSongs(data || []).map(mapDbSongToList)
   },
 
   async getPopularSongsLightweight(limit: number = 15): Promise<Song[]> {
@@ -605,12 +613,10 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       .not('view_count', 'is', null)
       .gt('view_count', 0)
       .order('view_count', { ascending: false })
-      .limit(limit * 2)
+      .limit(limit)
 
     if (error) throw error
-    return dedupeCatalogSongs(data || [])
-      .slice(0, limit)
-      .map(mapDbSongToList)
+    return dedupeCatalogSongs(data || []).map(mapDbSongToList)
   },
 
   async getSongLightweightById(id: string): Promise<Song | null> {
@@ -725,36 +731,41 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     folderId: string,
     page: number = 1,
     limit: number = 50,
-    q?: string
+    q?: string,
+    userId?: string
   ): Promise<{ songs: Song[]; total: number }> {
-    const { data: { user } } = await client.auth.getUser()
-    
-    if (!user) {
-      return { songs: [], total: 0 }
+    let resolvedUserId = userId
+    if (!resolvedUserId) {
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) return { songs: [], total: 0 }
+      resolvedUserId = user.id
     }
 
     const from = (page - 1) * limit
     const to = page * limit - 1
 
-    let baseQuery = (client.from('songs') as any)
-      .select('id, title, author, folder_id, created_at, updated_at, rating, difficulty, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre, bpm', { count: 'exact' })
-      .eq('user_id', user.id)
-      .eq('folder_id', folderId)
-
-    if (q && q.trim()) {
-      const query = q.trim()
-      baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+    const applyFilters = (builder: any) => {
+      let filtered = builder.eq('user_id', resolvedUserId).eq('folder_id', folderId)
+      if (q?.trim()) {
+        const query = q.trim()
+        filtered = filtered.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
+      }
+      return filtered
     }
 
-    const { data, error, count } = await baseQuery
-      .order('created_at', { ascending: false })
-      .range(from, to)
+    const [{ data, error }, { count, error: countError }] = await Promise.all([
+      applyFilters((client.from('songs') as any).select(EXPLORE_LIST_COLUMNS))
+        .order('created_at', { ascending: false })
+        .range(from, to),
+      applyFilters((client.from('songs') as any).select('id', { count: 'planned', head: true })),
+    ])
 
     if (error) throw error
+    if (countError) throw countError
 
     return {
       songs: (data || []).map(mapDbSongToList),
-      total: count || 0
+      total: count ?? 0,
     }
   },
 
