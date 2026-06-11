@@ -10,6 +10,7 @@ import {
   Music,
   Trophy,
 } from 'lucide-react'
+import { AppLogo } from '@/components/AppLogo'
 import { useLanguage } from '@/context/LanguageContext'
 import {
   Sidebar,
@@ -50,11 +51,15 @@ export function AppSidebar() {
               asChild
               className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
             >
-              <Link href="/">
-                <span className="text-xl leading-none group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:size-full group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center">
-                  🌶️
-                </span>
-                <span className="font-semibold group-data-[collapsible=icon]:hidden">{t('common.appName')}</span>
+              <Link href="/" className="flex min-w-0 items-center">
+                <AppLogo
+                  variant="portrait"
+                  className="hidden h-8 w-8 group-data-[collapsible=icon]:block"
+                />
+                <AppLogo
+                  variant="text"
+                  className="h-7 w-auto max-w-[9.5rem] group-data-[collapsible=icon]:hidden"
+                />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

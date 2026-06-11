@@ -17,6 +17,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useScrollChromeOptional } from '@/context/ScrollChromeContext'
 import { usePageHeaderOptional } from '@/context/PageHeaderContext'
 import { useTheme } from '@/context/ThemeContext'
+import { AppLogo } from '@/components/AppLogo'
 import CompactStatsDisplay from './gamification/CompactStatsDisplay'
 import { Button } from '@/components/ui/button'
 import {
@@ -135,6 +136,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
     isSongPage
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
+  const isLandingPage = pathname === '/'
   const currentLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
 
   return (
@@ -210,14 +212,19 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         variant="ghost"
         onClick={() => router.push('/')}
         className={cn(
-          'absolute left-1/2 -translate-x-1/2 gap-1.5 px-2 hover:bg-transparent sm:gap-2 sm:px-3',
+          'absolute left-1/2 -translate-x-1/2 px-2 hover:bg-transparent sm:px-3',
           usesAppSidebar && 'lg:hidden',
           showBackWithTitle && 'hidden'
         )}
         aria-label={t('common.backToHome')}
       >
-        <span className="text-lg md:text-xl leading-none">🌶️</span>
-        <span className="hidden text-base font-semibold sm:inline">{t('common.appName')}</span>
+        <AppLogo
+          variant={isLandingPage ? 'portrait' : 'text'}
+          priority={isLandingPage}
+          className={cn(
+            isLandingPage ? 'h-9 w-auto sm:h-10' : 'h-6 w-auto sm:h-7'
+          )}
+        />
       </Button>
 
       <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
