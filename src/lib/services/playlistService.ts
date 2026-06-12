@@ -15,8 +15,14 @@ export const playlistService = {
     return playlistRepo(clientSupabase).getPlaylist(playlistId);
   },
 
-  async createPlaylist(name: string, description: string | undefined, songIds: string[] = [], clientSupabase: SupabaseClient<Database>): Promise<Playlist> {
-    return playlistRepo(clientSupabase).createPlaylist({ name, description, songIds });
+  async createPlaylist(
+    name: string,
+    description: string | undefined,
+    songIds: string[] = [],
+    clientSupabase: SupabaseClient<Database>,
+    imageUrl?: string
+  ): Promise<Playlist> {
+    return playlistRepo(clientSupabase).createPlaylist({ name, description, songIds, imageUrl });
   },
 
   async setPlaylistSongs(playlistId: string, songIds: string[], clientSupabase: SupabaseClient<Database>): Promise<Playlist> {
@@ -27,7 +33,8 @@ export const playlistService = {
     name: string,
     playlist: PlaylistResult,
     description: string | undefined,
-    clientSupabase: SupabaseClient<Database>
+    clientSupabase: SupabaseClient<Database>,
+    imageUrl?: string
   ): Promise<Playlist> {
     const isUuid = (value?: string) => !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
     let ids: string[] = playlist.songs
@@ -79,7 +86,12 @@ export const playlistService = {
     }
 
     const uniqueIds = Array.from(new Set(ids));
-    const savedPlaylist = await playlistRepo(clientSupabase).createPlaylist({ name, description, songIds: uniqueIds });
+    const savedPlaylist = await playlistRepo(clientSupabase).createPlaylist({
+      name,
+      description,
+      songIds: uniqueIds,
+      imageUrl,
+    });
     return savedPlaylist;
   }
 };

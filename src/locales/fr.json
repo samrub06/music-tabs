@@ -518,7 +518,8 @@
     "noPlaylists": "Aucune playlist",
     "noPlaylistsMatch": "Aucune playlist ne correspond à votre recherche.",
     "startCreating": "Créez votre première playlist.",
-    "playPlaylist": "Lire"
+    "playPlaylist": "Lire",
+    "chooseCover": "Image de couverture"
   },
   "chords": {
     "markAsKnown": "Marquer comme inconnu",

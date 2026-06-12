@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils';
 interface PlaylistGeneratorProps {
   songs: Song[];
   folders: Folder[];
-  onPlaylistGenerated: (result: PlaylistResult) => void;
+  onPlaylistGenerated: (result: PlaylistResult, meta?: { genreId?: string }) => void;
 }
 
 const checkboxClass =
@@ -124,7 +124,7 @@ export default function PlaylistGenerator({
         maxSongs,
       });
 
-      onPlaylistGenerated(result);
+      onPlaylistGenerated(result, { genreId: selectedGenre || undefined });
     } catch (error) {
       console.error('Error generating playlist:', error);
       alert(t('errors.playlistGenerationError'));

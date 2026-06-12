@@ -17,17 +17,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+import { PlaylistCoverPicker } from '@/components/PlaylistCoverPicker';
+import { resolveAutoCoverSlug } from '@/utils/playlistCover';
+
 interface PlaylistViewProps {
   playlist: PlaylistResult;
   onSongSelect?: (song: PlaylistSong) => void;
-  onCreatePlaylist?: (name: string, playlist: PlaylistResult) => Promise<void>;
+  onCreatePlaylist?: (name: string, playlist: PlaylistResult, coverSlug?: string) => Promise<void>;
+  genreId?: string;
 }
 
-export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist }: PlaylistViewProps) {
+export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist, genreId }: PlaylistViewProps) {
   const router = useRouter();
   const { t } = useLanguage();
   const [showNameModal, setShowNameModal] = useState(false);
   const [playlistName, setPlaylistName] = useState('');
+  const [coverSlug, setCoverSlug] = useState<string | null>(null);
+  const [coverTouched, setCoverTouched] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success');
@@ -60,9 +66,19 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
     }
   }, [showNameModal]);
 
+  useEffect(() => {
+    if (!showNameModal || coverTouched) return;
+    const auto = resolveAutoCoverSlug({ name: playlistName, genreId, songs: playlist.songs });
+    if (auto) setCoverSlug(auto);
+  }, [playlistName, genreId, playlist.songs, showNameModal, coverTouched]);
+
   const handleOpenModal = () => {
     const defaultName = `${t('playlistView.yourPlaylist')} ${new Date().toLocaleString()}`;
     setPlaylistName(defaultName);
+    setCoverSlug(null);
+    setCoverTouched(false);
+    const auto = resolveAutoCoverSlug({ name: defaultName, genreId, songs: playlist.songs });
+    if (auto) setCoverSlug(auto);
     setShowNameModal(true);
   };
 
@@ -70,6 +86,8 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
     if (isSaving) return;
     setShowNameModal(false);
     setPlaylistName('');
+    setCoverSlug(null);
+    setCoverTouched(false);
   };
 
   const handleSavePlaylist = async () => {
@@ -77,9 +95,11 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
     
     setIsSaving(true);
     try {
-      await onCreatePlaylist(playlistName.trim(), playlist);
+      await onCreatePlaylist(playlistName.trim(), playlist, coverSlug ?? undefined);
       setShowNameModal(false);
       setPlaylistName('');
+      setCoverSlug(null);
+      setCoverTouched(false);
       setSnackbarMessage(t('playlistView.playlistSaved'));
       setSnackbarType('success');
       setShowSnackbar(true);
@@ -284,7 +304,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
               </Button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="max-h-[80vh] overflow-y-auto p-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="playlist-name">{t('playlistView.playlistName')}</Label>
                 <Input
@@ -297,6 +317,15 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist 
                   placeholder={t('playlistView.playlistNamePlaceholder')}
                 />
               </div>
+
+              <PlaylistCoverPicker
+                value={coverSlug}
+                onChange={(slug) => {
+                  setCoverTouched(true);
+                  setCoverSlug(slug);
+                }}
+                disabled={isSaving}
+              />
 
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                 <Button type="button" variant="outline" onClick={handleCloseModal} disabled={isSaving}>

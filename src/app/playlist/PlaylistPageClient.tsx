@@ -16,17 +16,19 @@ interface PlaylistPageClientProps {
 export default function PlaylistPageClient({ songs, folders }: PlaylistPageClientProps) {
   const router = useRouter();
   const [generatedPlaylist, setGeneratedPlaylist] = useState<PlaylistResult | null>(null);
+  const [generatorGenreId, setGeneratorGenreId] = useState<string | undefined>();
 
-  const handlePlaylistGenerated = (result: PlaylistResult) => {
+  const handlePlaylistGenerated = (result: PlaylistResult, meta?: { genreId?: string }) => {
     setGeneratedPlaylist(result);
+    setGeneratorGenreId(meta?.genreId);
   };
 
   const handleSongSelect = (song: { id: string }) => {
     router.push(`/song/${song.id}`);
   };
 
-  const handleCreatePlaylist = async (name: string, playlist: PlaylistResult) => {
-    await createPlaylistFromGeneratedPlaylistAction(name, playlist);
+  const handleCreatePlaylist = async (name: string, playlist: PlaylistResult, coverSlug?: string) => {
+    await createPlaylistFromGeneratedPlaylistAction(name, playlist, coverSlug, generatorGenreId);
   };
 
   return (
@@ -42,6 +44,7 @@ export default function PlaylistPageClient({ songs, folders }: PlaylistPageClien
             playlist={generatedPlaylist}
             onSongSelect={handleSongSelect}
             onCreatePlaylist={handleCreatePlaylist}
+            genreId={generatorGenreId}
           />
         )}
       </div>

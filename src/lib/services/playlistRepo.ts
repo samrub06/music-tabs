@@ -49,7 +49,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     return mapDbPlaylistToDomain(data)
   },
 
-  async createPlaylist(data: CreatePlaylistInput & { description?: string, songIds?: string[] }): Promise<Playlist> {
+  async createPlaylist(data: CreatePlaylistInput & { description?: string, songIds?: string[], imageUrl?: string }): Promise<Playlist> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to create playlists')
 
@@ -59,7 +59,8 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
         user_id: user.id,
         name: data.name,
         description: data.description || null,
-        song_ids: data.songIds || []
+        song_ids: data.songIds || [],
+        image_url: data.imageUrl || null,
       }])
       .select()
       .single()
@@ -79,6 +80,9 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     if (updates.name !== undefined) updateData.name = updates.name
     if (updates.description !== undefined) updateData.description = updates.description
     if (updates.songIds !== undefined) updateData.song_ids = updates.songIds
+    if ((updates as { imageUrl?: string }).imageUrl !== undefined) {
+      updateData.image_url = (updates as { imageUrl?: string }).imageUrl
+    }
 
     const { data, error } = await (client
       .from('playlists') as any)
@@ -101,7 +105,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
   },
 
   // Lightweight version: only load id, name, songCount, and createdAt for list views
-  async getAllPlaylistsLightweight(userId?: string): Promise<Array<{ id: string; name: string; songCount: number; createdAt: Date }>> {
+  async getAllPlaylistsLightweight(userId?: string): Promise<Array<{ id: string; name: string; songCount: number; createdAt: Date; imageUrl?: string }>> {
     let resolvedUserId = userId
     if (!resolvedUserId) {
       const { data: { user } } = await client.auth.getUser()
@@ -111,17 +115,18 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
 
     const { data, error } = await client
       .from('playlists')
-      .select('id, name, song_ids, created_at')
+      .select('id, name, song_ids, created_at, image_url')
       .eq('user_id', resolvedUserId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return ((data || []) as Array<{ id: string; name: string; song_ids: string[] | null; created_at: string }>).map(p => ({
+    return ((data || []) as Array<{ id: string; name: string; song_ids: string[] | null; created_at: string; image_url: string | null }>).map(p => ({
       id: p.id,
       name: p.name,
       songCount: (p.song_ids as string[] || []).length,
-      createdAt: new Date(p.created_at)
+      createdAt: new Date(p.created_at),
+      imageUrl: p.image_url || undefined,
     }))
   },
 

@@ -13,6 +13,7 @@ import type { NewSongData, SongEditData, Folder } from '@/types'
 import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
 import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
+import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
 
 export async function addSongAction(payload: NewSongData) {
   const validatedPayload = createSongSchema.parse(payload)
@@ -203,10 +204,11 @@ export async function deleteFolderAction(id: string) {
   revalidatePath('/folders', 'layout')
 }
 
-export async function createPlaylistAction(name: string) {
-  const { name: validatedName } = createPlaylistSchema.parse({ name })
+export async function createPlaylistAction(name: string, coverSlug?: string) {
+  const { name: validatedName, coverSlug: validatedCoverSlug } = createPlaylistSchema.parse({ name, coverSlug })
   const supabase = await createActionServerClient()
-  const created = await playlistService.createPlaylist(validatedName, undefined, [], supabase)
+  const imageUrl = resolvePlaylistImageUrl({ name: validatedName, coverSlug: validatedCoverSlug })
+  const created = await playlistService.createPlaylist(validatedName, undefined, [], supabase, imageUrl)
   
   // Award XP for creating playlist
   const { data: { user } } = await supabase.auth.getUser()
@@ -225,10 +227,27 @@ export async function createPlaylistAction(name: string) {
   return created
 }
 
-export async function createPlaylistFromGeneratedPlaylistAction(name: string, playlist: PlaylistResult) {
-  const { name: validatedName } = createPlaylistSchema.parse({ name })
+export async function createPlaylistFromGeneratedPlaylistAction(
+  name: string,
+  playlist: PlaylistResult,
+  coverSlug?: string,
+  genreId?: string
+) {
+  const { name: validatedName, coverSlug: validatedCoverSlug } = createPlaylistSchema.parse({ name, coverSlug })
   const supabase = await createActionServerClient()
-  const savedPlaylist = await playlistService.createPlaylistFromGeneratedPlaylist(validatedName, playlist, undefined, supabase)
+  const imageUrl = resolvePlaylistImageUrl({
+    name: validatedName,
+    coverSlug: validatedCoverSlug,
+    genreId,
+    songs: playlist.songs,
+  })
+  const savedPlaylist = await playlistService.createPlaylistFromGeneratedPlaylist(
+    validatedName,
+    playlist,
+    undefined,
+    supabase,
+    imageUrl
+  )
   revalidatePath('/playlists')
   return savedPlaylist
 }

@@ -518,7 +518,8 @@
     "noPlaylists": "אין פלייליסטים",
     "noPlaylistsMatch": "אין פלייליסטים התואמים לחיפוש.",
     "startCreating": "צור את הפלייליסט הראשון שלך.",
-    "playPlaylist": "השמע"
+    "playPlaylist": "השמע",
+    "chooseCover": "תמונת כריכה"
   },
   "chords": {
     "markAsKnown": "סמן כלא ידוע",

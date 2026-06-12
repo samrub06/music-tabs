@@ -50,7 +50,8 @@ export const updateSongSchema = createSongSchema.partial().extend({
 
 // Playlist Schemas
 export const createPlaylistSchema = z.object({
-  name: z.string().min(1, 'Name is required')
+  name: z.string().min(1, 'Name is required'),
+  coverSlug: z.string().min(1).optional(),
 })
 
 export const toggleSongFavoriteSchema = z.object({

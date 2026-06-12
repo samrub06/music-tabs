@@ -518,7 +518,8 @@
     "noPlaylists": "No playlists",
     "noPlaylistsMatch": "No playlists match your search.",
     "startCreating": "Create your first playlist.",
-    "playPlaylist": "Play"
+    "playPlaylist": "Play",
+    "chooseCover": "Cover image"
   },
   "chords": {
     "markAsKnown": "Mark as unknown",

@@ -243,11 +243,11 @@ export default function SongTable({
     }
   };
 
-  const handleBulkCreatePlaylist = async (name: string) => {
+  const handleBulkCreatePlaylist = async (name: string, coverSlug?: string) => {
     const songIds = Array.from(selectedSongs);
     if (songIds.length === 0) return;
     try {
-      const playlist = await createPlaylistWithSongsAction(name, '', songIds);
+      const playlist = await createPlaylistWithSongsAction(name, '', songIds, coverSlug);
       setSuccessMessage(t('songs.playlistCreated'));
       setSelectedSongs(new Set());
       router.push(`/playlist/${playlist.id}`);
@@ -498,6 +498,7 @@ export default function SongTable({
         onClose={() => setShowPlaylistModal(false)}
         songCount={selectedSongs.size}
         onCreate={handleBulkCreatePlaylist}
+        songs={songs.filter((song) => selectedSongs.has(song.id))}
       />
 
       {/* Success Snackbar */}

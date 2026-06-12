@@ -17,6 +17,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll';
 import { cn } from '@/lib/utils';
 import { Song, Playlist } from '@/types';
+import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -42,43 +43,34 @@ function PlaylistCard({
   onOpen: () => void;
 }) {
   const { t } = useLanguage();
+  const coverUrl = getPlaylistDisplayCoverUrl(playlist);
+
   return (
     <div
       onClick={onOpen}
-      className="w-full min-w-0 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="group relative aspect-square w-full min-w-0 cursor-pointer overflow-hidden rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
     >
-      <div className="p-3 sm:p-4">
-        <div className="flex-1 min-w-0 mb-2">
-          <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
-            {playlist.name}
-          </h3>
-          {playlist.description && (
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-2">
-              {playlist.description}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          <span className="flex items-center gap-1">
-            <MusicalNoteIcon className="h-3.5 w-3.5 flex-shrink-0" />
-            {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
-          </span>
-          <span>
-            {new Date(playlist.createdAt).toLocaleDateString(undefined, {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </span>
-        </div>
-        <button
-          onClick={onPlay}
-          aria-label={t('playlistsPage.playPlaylist')}
-          className="mt-3 w-full inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-        >
-          <PlayIcon className="h-6 w-6 flex-shrink-0" />
-        </button>
+      {coverUrl ? (
+        <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary" />
+      )}
+      <div className="absolute inset-0 bg-black/25 transition-colors group-hover:bg-black/40" />
+
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-2.5 pt-10">
+        <h3 className="truncate text-xs font-bold text-white sm:text-sm">{playlist.name}</h3>
+        <p className="truncate text-[10px] text-white/80 sm:text-xs">
+          {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
+        </p>
       </div>
+
+      <button
+        onClick={onPlay}
+        aria-label={t('playlistsPage.playPlaylist')}
+        className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/90 text-primary-foreground opacity-100 shadow-lg transition-all hover:bg-primary sm:opacity-0 sm:group-hover:opacity-100"
+      >
+        <PlayIcon className="h-4 w-4 flex-shrink-0" />
+      </button>
     </div>
   );
 }
@@ -328,7 +320,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             </p>
           </div>
         ) : view === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
             {sortedPlaylists.map((playlist) => (
               <PlaylistCard
                 key={playlist.id}

@@ -23,8 +23,9 @@ export default async function PlaylistsPage() {
     description: undefined,
     createdAt: p.createdAt,
     updatedAt: p.createdAt,
-    songIds: [], // Will be loaded when playlist is clicked
-    songCount: p.songCount // Add songCount for display
+    songIds: [],
+    imageUrl: p.imageUrl,
+    songCount: p.songCount,
   }));
 
   // Don't load all songs initially - they'll be loaded when needed
