@@ -9,6 +9,7 @@ export interface Profile {
   fullName: string | null
   avatarUrl: string | null
   preferredInstrument: PreferredInstrument | null
+  spotifyId: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -31,6 +32,7 @@ function mapDbProfileToDomain(dbProfile: Database['public']['Tables']['profiles'
     fullName: dbProfile.full_name,
     avatarUrl: dbProfile.avatar_url,
     preferredInstrument,
+    spotifyId: dbProfile.spotify_id ?? null,
     createdAt: new Date(dbProfile.created_at),
     updatedAt: new Date(dbProfile.updated_at)
   }
@@ -49,6 +51,17 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     if (error) throw error
     const value = (data as { preferred_instrument?: string | null } | null)?.preferred_instrument
     return value === 'piano' || value === 'guitar' ? value : null
+  },
+
+  async getSpotifyId(userId: string): Promise<string | null> {
+    const { data, error } = await client
+      .from('profiles')
+      .select('spotify_id')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    return data?.spotify_id ?? null
   },
 
   async getProfile(userId: string): Promise<Profile | null> {

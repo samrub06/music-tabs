@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/db'
 import type { Playlist } from '@/types'
 import type { CreatePlaylistInput } from '@/lib/validation/schemas'
+import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 
 function mapDbPlaylistToDomain(dbPlaylist: Database['public']['Tables']['playlists']['Row'] & { image_url?: string | null; is_public?: boolean }): Playlist {
   return {
@@ -147,7 +148,10 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     }>).map(p => ({
       id: p.id,
       name: p.name,
-      imageUrl: p.image_url || undefined,
+      imageUrl:
+        (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
+        p.image_url ??
+        undefined,
       songCount: (p.song_ids as string[] || []).length,
       createdAt: new Date(p.created_at),
       curatedSlug: p.curated_slug || undefined,

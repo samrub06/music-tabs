@@ -226,7 +226,7 @@ export function SelectModeToggleButton({
       type="button"
       onClick={onToggle}
       className={cn(
-        'flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
+        'flex min-h-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-sm font-medium transition-all duration-200 sm:gap-1.5 sm:px-4',
         isSelectMode
           ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
           : 'text-muted-foreground hover:text-foreground',

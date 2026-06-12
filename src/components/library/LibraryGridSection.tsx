@@ -13,13 +13,13 @@ export interface PublicPlaylistItem {
 
 interface LibraryGridSectionProps {
   publicPlaylists: PublicPlaylistItem[]
-  showLikedCard?: boolean
+  showUserShortcutCards?: boolean
 }
 
 /** Renders all curated playlist rows together (legacy / fallback). */
 export default function LibraryGridSection({
   publicPlaylists,
-  showLikedCard = true,
+  showUserShortcutCards = true,
 }: LibraryGridSectionProps) {
   return (
     <>
@@ -28,7 +28,7 @@ export default function LibraryGridSection({
           key={section}
           section={section}
           publicPlaylists={publicPlaylists}
-          showLikedCard={index === 0 && showLikedCard}
+          showUserShortcutCards={index === 0 && showUserShortcutCards}
         />
       ))}
     </>

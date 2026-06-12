@@ -8,7 +8,6 @@ export const HEBREW_CATALOG_GENRES = {
   modern: 'hebrew-modern',
   karduner: 'hebrew-karduner',
   akiva: 'hebrew-akiva',
-  bennyLandau: 'hebrew-benny-landau',
 } as const
 
 export type HebrewCatalogGenre =
@@ -245,32 +244,6 @@ export const HEBREW_PLAYLISTS: HebrewPlaylistDefinition[] = [
       { searchQuery: 'לא עוזב', authorIncludes: 'עקיבא' },
       { searchQuery: 'מרחקים', authorIncludes: 'עקיבא' },
       { searchQuery: 'אורחי', authorIncludes: 'עקיבא' },
-    ],
-  },
-  {
-    slug: 'benny-landau',
-    name: 'Benny Landau',
-    description: 'בנימין לנדאו — piyutim et chants de la tradition et de la scène actuelle',
-    catalogGenre: HEBREW_CATALOG_GENRES.bennyLandau,
-    displayOrder: 9,
-    gradientFrom: 'from-indigo-700',
-    gradientTo: 'to-purple-900',
-    songs: [
-      { searchQuery: 'דרור יקרא', authorIncludes: 'לנדאו' },
-      { searchQuery: 'אשרי האיש', authorIncludes: 'לנדאו' },
-      { searchQuery: 'מך ה', authorIncludes: 'לנדאו' },
-      { searchQuery: 'יום השבת', authorIncludes: 'לנדאו' },
-      { searchQuery: 'שירה חדשה', authorIncludes: 'לנדאו' },
-      { searchQuery: 'הנה אנכי שולח', authorIncludes: 'לנדאו' },
-      { searchQuery: 'כי לך', authorIncludes: 'לנדאו' },
-      { searchQuery: 'בואי בשלום', authorIncludes: 'לנדאו' },
-      { searchQuery: 'שמחה רבה', authorIncludes: 'לנדאו' },
-      { searchQuery: 'לכה דודי', authorIncludes: 'לנדאו' },
-      { searchQuery: 'ישמחו בשמים', authorIncludes: 'לנדאו' },
-      { searchQuery: 'יתברך שמך', authorIncludes: 'לנדאו' },
-      { searchQuery: 'אהבת עולם', authorIncludes: 'לנדאו' },
-      { searchQuery: 'אדון עולם', authorIncludes: 'לנדאו' },
-      { searchQuery: 'ממעמקים', authorIncludes: 'לנדאו' },
     ],
   },
 ]

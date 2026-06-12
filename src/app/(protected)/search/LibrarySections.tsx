@@ -9,6 +9,7 @@ import FeaturedSongSection from '../library/FeaturedSongSection'
 import RecentSongsSection from '../library/RecentSongsSection'
 import PopularSongsSection from '../library/PopularSongsSection'
 import SpotifyComingSoonSection from '@/components/library/SpotifyComingSoonSection'
+import { profileRepo } from '@/lib/services/profileRepo'
 import type { ForYouArtistSong } from '@/types/forYou'
 
 interface LibrarySectionsProps {
@@ -20,9 +21,12 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
   const songRepoInstance = songRepo(supabase)
   const forYouService = personalizedForYouService(supabase)
 
-  const [catalogSections, userSongs] = await Promise.all([
+  const profileRepoInstance = profileRepo(supabase)
+
+  const [catalogSections, userSongs, spotifyId] = await Promise.all([
     getCachedLibraryCatalogSections(),
     userId ? songRepoInstance.getAllSongsLightweight() : Promise.resolve([]),
+    userId ? profileRepoInstance.getSpotifyId(userId) : Promise.resolve(null),
   ])
 
   const forYouData = userId
@@ -54,10 +58,10 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
       <CuratedPlaylistRow
         section="genre"
         publicPlaylists={publicPlaylists}
-        showLikedCard={!!userId}
+        showUserShortcutCards={!!userId}
       />
       <CuratedPlaylistRow section="jewish" publicPlaylists={publicPlaylists} />
-      <SpotifyComingSoonSection />
+      <SpotifyComingSoonSection spotifyId={spotifyId} />
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />

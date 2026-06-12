@@ -16,7 +16,6 @@ export const EXPLORE_GENRES = [
   { id: '84', name: 'Jazz' },
   { id: '1781', name: 'Reggae & Ska' },
   { id: '99', name: 'Blues' },
-  { id: '79', name: 'Comedy' },
   { id: '85', name: 'Disco' },
 ] as const
 
@@ -28,7 +27,6 @@ export const EXPLORE_DIFFICULTIES = [
 ] as const
 
 export const EXPLORE_DECADES = [
-  { year: 1950, name: '1950s' },
   { year: 1960, name: '1960s' },
   { year: 1970, name: '1970s' },
   { year: 1980, name: '1980s' },

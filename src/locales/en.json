@@ -281,6 +281,7 @@
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
     "likedSongs": "Liked songs",
+    "myRecentSongs": "My recent songs",
     "adding": "Adding…",
     "viewInLibrary": "Open in library",
     "seeSong": "See song",
@@ -296,7 +297,11 @@
     "noRecentlyAdded": "No recently added songs.",
     "SEARCH_PLACEHOLDER": "Search title or author...",
     "spotifySection": "Spotify",
-    "spotifyDescription": "Import songs from your Spotify playlists"
+    "spotifyDescription": "Import songs from your Spotify playlists",
+    "spotifyDescriptionShort": "Import your playlists",
+    "spotifySignIn": "Sign in",
+    "spotifyImport": "Let's import",
+    "spotifyConnected": "Connected"
   },
   "auth": {
     "signIn": "Sign In",

@@ -281,6 +281,7 @@
     "addToFavorites": "הוסף למועדפים",
     "removeFromFavorites": "הסר מהמועדפים",
     "likedSongs": "שירים שאהבת",
+    "myRecentSongs": "השירים האחרונים שלי",
     "adding": "מוסיף…",
     "viewInLibrary": "פתח בספרייה",
     "seeSong": "צפה בשיר",
@@ -296,7 +297,11 @@
     "noRecentlyAdded": "אין שירים שנוספו לאחרונה.",
     "SEARCH_PLACEHOLDER": "חפש כותרת או אמן...",
     "spotifySection": "Spotify",
-    "spotifyDescription": "ייבא שירים מפלייליסטים של Spotify"
+    "spotifyDescription": "ייבא שירים מפלייליסטים של Spotify",
+    "spotifyDescriptionShort": "ייבא את הפלייליסטים שלך",
+    "spotifySignIn": "התחבר",
+    "spotifyImport": "בואו נייבא",
+    "spotifyConnected": "מחובר"
   },
   "auth": {
     "signIn": "התחבר",

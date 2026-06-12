@@ -10,6 +10,7 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   preferred_instrument: string | null;
+  spotify_id: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -6,6 +6,7 @@ import {
   type CuratedPlaylistFilter,
 } from '@/data/curatedPlaylists'
 import type { Database } from '@/types/db'
+import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
 
 type SongRow = {
@@ -81,7 +82,9 @@ export const curatedPlaylistService = (client: SupabaseClient<Database>) => ({
     const songs = await fetchSongIdsForPlaylist(client, definition.filter)
     const songIds = songs.map((s) => s.id)
     const imageUrl =
-      definition.section === 'difficulty' ? null : pickCoverImage(songs)
+      definition.section === 'difficulty'
+        ? null
+        : getCuratedPlaylistCoverUrl(definition.slug) ?? pickCoverImage(songs)
     const now = new Date().toISOString()
 
     const row = {

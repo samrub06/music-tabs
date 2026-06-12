@@ -519,7 +519,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'all', page: 1 })}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 sm:gap-2 sm:px-4 ${
                   activeTab === 'all'
                     ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -531,7 +531,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'recent', page: 1 })}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 sm:gap-2 sm:px-4 ${
                   activeTab === 'recent'
                     ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -543,7 +543,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'popular', page: 1 })}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 sm:gap-2 sm:px-4 ${
                   activeTab === 'popular'
                     ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -565,7 +565,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             )}
             <button
               type="button"
-              className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              className={`flex min-h-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-sm font-medium transition-all duration-200 sm:gap-1.5 sm:px-4 ${
                 view === 'gallery'
                   ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -578,7 +578,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </button>
             <button
               type="button"
-              className={`min-h-[40px] px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              className={`flex min-h-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-sm font-medium transition-all duration-200 sm:gap-1.5 sm:px-4 ${
                 view === 'table'
                   ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'

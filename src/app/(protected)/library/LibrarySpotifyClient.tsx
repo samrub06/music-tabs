@@ -14,7 +14,7 @@ interface LibrarySpotifyClientProps {
   recentSongs: Song[]
   popularSongs: Song[]
   publicPlaylists: PublicPlaylistItem[]
-  showLikedCard?: boolean
+  showUserShortcutCards?: boolean
   userId?: string
 }
 
@@ -23,7 +23,7 @@ export default function LibrarySpotifyClient({
   recentSongs,
   popularSongs,
   publicPlaylists,
-  showLikedCard = true,
+  showUserShortcutCards = true,
   userId
 }: LibrarySpotifyClientProps) {
   const router = useRouter()
@@ -58,7 +58,7 @@ export default function LibrarySpotifyClient({
         {/* Section 1: Grille de 8 cards */}
         <LibraryGridSection
           publicPlaylists={publicPlaylists}
-          showLikedCard={showLikedCard}
+          showUserShortcutCards={showUserShortcutCards}
         />
 
         {/* Section 2: Featured Song */}
