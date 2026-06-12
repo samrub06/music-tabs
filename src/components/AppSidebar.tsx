@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Search,
   Library,
-  Sparkles,
+  ListMusic,
   FolderOpen,
   Music,
   Trophy,
@@ -28,7 +28,7 @@ import {
 const MAIN_NAV = [
   { href: '/', labelKey: 'navigation.search', icon: Search, match: (p: string) => p === '/' || p === '/search' || p.startsWith('/search/') },
   { href: '/songs', labelKey: 'navigation.songs', icon: Library, match: (p: string) => p === '/songs' || p.startsWith('/songs/') },
-  { href: '/playlists', labelKey: 'navigation.playlists', icon: Sparkles, match: (p: string) => p === '/playlists' || p.startsWith('/playlists/') || p.startsWith('/playlist/') },
+  { href: '/playlists', labelKey: 'navigation.playlists', icon: ListMusic, match: (p: string) => p === '/playlists' || p.startsWith('/playlists/') || p.startsWith('/playlist/') },
 ] as const
 
 const SECONDARY_NAV = [

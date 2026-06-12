@@ -122,8 +122,8 @@ export default function HorizontalSongSlider({
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                        <PlayIcon className="h-6 w-6 text-white ml-1" />
+                      <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                        <PlayIcon className="h-6 w-6 text-primary-foreground ml-1" />
                       </div>
                     </div>
                   </div>

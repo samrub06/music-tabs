@@ -63,7 +63,7 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
           {t('library.viewAll')}
         </Link>
       </div>
-      <ul className="divide-y divide-border/60">
+      <ul className="space-y-1.5">
         {displaySongs.map((song) => {
           const imageUrl =
             song.songImageUrl || song.artistImageUrl || FALLBACK_IMAGE
@@ -75,7 +75,7 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
 
           return (
             <li key={song.id}>
-              <div className="flex items-center gap-2.5 py-2">
+              <div className="flex items-center gap-2.5 rounded-xl bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50 sm:px-3 sm:py-2.5">
                 <Link
                   href={href}
                   className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-muted"
@@ -124,7 +124,7 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
                   )}
                   <Link
                     href={href}
-                    className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                    className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:text-primary/80 sm:h-8 sm:w-8"
                     aria-label={t('search.viewSong')}
                   >
                     <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />

@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   RectangleStackIcon, 
-  SparklesIcon,
+  QueueListIcon,
   MagnifyingGlassIcon,
   EllipsisHorizontalIcon,
   FolderIcon,
@@ -15,7 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { 
   RectangleStackIcon as RectangleStackIconSolid, 
-  SparklesIcon as SparklesIconSolid,
+  QueueListIcon as QueueListIconSolid,
   MagnifyingGlassIcon as MagnifyingGlassIconSolid,
   EllipsisHorizontalIcon as EllipsisHorizontalIconSolid,
   FolderIcon as FolderIconSolid,
@@ -59,8 +59,8 @@ export default function BottomNavigation() {
     {
       href: '/playlists',
       label: t('navigation.playlists'),
-      icon: SparklesIcon,
-      iconSolid: SparklesIconSolid,
+      icon: QueueListIcon,
+      iconSolid: QueueListIconSolid,
       isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
     },
     {

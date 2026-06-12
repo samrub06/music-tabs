@@ -676,7 +676,7 @@ export default function SearchClient({
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-2 sm:gap-3 py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-muted/30 transition-all cursor-pointer"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50 sm:gap-3 sm:px-3 sm:py-2.5"
                     onClick={() => {
                       if (existingSongId) {
                         router.push(`/song/${existingSongId}`)
@@ -730,7 +730,7 @@ export default function SearchClient({
                       {existingSongId ? (
                         <Link
                           href={`/song/${existingSongId}`}
-                          className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                          className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:text-primary/80 sm:h-8 sm:w-8"
                           aria-label={t('search.viewSong')}
                         >
                           <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
@@ -754,7 +754,7 @@ export default function SearchClient({
                           </Button>
                           <button
                             type="button"
-                            className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 disabled:opacity-50 sm:h-8 sm:w-8 dark:text-green-400 dark:hover:text-green-300"
+                            className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:text-primary/80 disabled:opacity-50 sm:h-8 sm:w-8"
                             onClick={() => handleViewSong(result)}
                             disabled={isViewing}
                             aria-label={t('search.viewSong')}

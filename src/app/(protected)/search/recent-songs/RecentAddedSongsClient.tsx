@@ -39,7 +39,7 @@ function SongListItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps
   const isAdding = cloningId === song.id
 
   return (
-    <div className="flex items-center gap-3 py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-muted/30 transition-all">
+    <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50 sm:px-3 sm:py-2.5">
       <Link href={`/song/${song.id}`} className="flex-shrink-0">
         <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden bg-muted">
           <img src={imageUrl} alt="" className="w-full h-full object-cover" />
@@ -66,7 +66,7 @@ function SongListItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps
         </Button>
         <Link
           href={`/song/${song.id}`}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:text-primary/80"
           aria-label={t('search.viewSong')}
         >
           <PlayIcon className="h-5 w-5" aria-hidden />

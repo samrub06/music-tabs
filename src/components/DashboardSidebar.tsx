@@ -11,7 +11,7 @@ import {
     TrashIcon,
     ClockIcon,
     FireIcon,
-    SparklesIcon
+    QueueListIcon
 } from '@heroicons/react/24/outline';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -172,7 +172,7 @@ export default function DashboardSidebar({
             }}
             className="w-full flex items-center justify-center px-4 py-3 bg-purple-200 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 text-sm font-medium rounded-lg hover:bg-purple-300 dark:hover:bg-purple-900/50 transition-colors shadow-sm"
           >
-            <SparklesIcon className="h-5 w-5 mr-2" />
+            <QueueListIcon className="h-5 w-5 mr-2" />
             {t('navigation.playlists')}
           </button>
         </div>

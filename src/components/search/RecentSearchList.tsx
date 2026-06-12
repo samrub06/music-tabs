@@ -23,8 +23,8 @@ export function RecentSearchList({ items, onItemClick, compact = false }: Recent
             onClick={() => onItemClick(item)}
             className={
               compact
-                ? 'w-full flex items-center gap-2 py-1.5 px-2 rounded-lg bg-card border border-border/60 hover:border-border hover:bg-muted/30 transition-all text-start'
-                : 'w-full flex items-center gap-3 py-2 px-2.5 sm:py-2.5 sm:px-3 rounded-xl bg-card border border-border/80 hover:border-border hover:bg-muted/30 transition-all text-start'
+                ? 'w-full flex items-center gap-2 rounded-lg bg-gray-50 px-2 py-1.5 text-start transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50'
+                : 'w-full flex items-center gap-3 rounded-xl bg-gray-50 px-2.5 py-2 text-start transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50 sm:px-3 sm:py-2.5'
             }
           >
             <div
