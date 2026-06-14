@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { ArrowDownTrayIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { ArrowUpRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 
@@ -21,40 +21,36 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
 
   return (
     <section className="mb-6">
-      <div className="flex w-full items-center overflow-hidden rounded-xl bg-[#011E0B] px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex h-20 shrink-0 items-center sm:h-24">
+      <div className="relative min-h-[8.5rem] w-full overflow-hidden rounded-xl bg-[#011E0B] sm:min-h-[9.5rem]">
+        <div className="pointer-events-none absolute -bottom-14 -right-8 sm:-bottom-20 sm:-right-6" aria-hidden>
           <Image
             src="/spotify_logo_V2.png"
             alt=""
             width={756}
             height={846}
-            aria-hidden
-            className="h-16 w-auto object-contain sm:h-full"
+            className="h-48 w-auto rotate-[28deg] object-contain opacity-95 sm:h-60"
           />
         </div>
 
-        <div className="ml-3 flex min-w-0 flex-1 items-center sm:ml-4">
-          <div className="flex min-w-0 flex-1 flex-col justify-center py-2 sm:py-2.5">
+        <div className="relative z-10 flex min-h-[8.5rem] flex-col items-start justify-between p-5 sm:min-h-[9.5rem] sm:p-6">
+          <div className="flex min-w-0 max-w-[72%] flex-col items-start justify-start pr-2 sm:max-w-[68%]">
             <Image
               src="/spotify_text.png"
               alt="Spotify"
               width={637}
               height={287}
-              className="h-9 w-[100px] shrink-0 object-contain mix-blend-screen min-[400px]:h-10 min-[400px]:w-[112px] sm:h-11 sm:w-[124px]"
+              className="h-8 w-[5.5rem] shrink-0 object-contain object-left mix-blend-screen min-[400px]:h-9 min-[400px]:w-[6.25rem] sm:h-10 sm:w-[7rem]"
             />
-            <p className="truncate pl-2.5 text-[10px] leading-tight text-white/80 min-[400px]:pl-3 min-[400px]:text-xs sm:hidden">
-              {t('library.spotifyDescriptionShort')}
-            </p>
-            <p className="hidden truncate pl-3.5 text-sm text-white/80 sm:block">
+            <p className="mt-1.5 text-[11px] font-medium leading-relaxed text-white/80 min-[400px]:text-xs sm:mt-2 sm:max-w-sm sm:text-sm">
               {t('library.spotifyDescription')}
             </p>
           </div>
 
-          <div className="ml-2 flex shrink-0 items-center sm:ml-3">
+          <div className="mt-3 shrink-0 sm:mt-4">
             {isConnected ? (
-              <div className="flex min-w-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 sm:min-w-[5.5rem] sm:flex-row sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5">
-                <CheckIcon className="h-4 w-4 shrink-0 text-white/90 sm:h-5 sm:w-5" aria-hidden />
-                <span className="text-[10px] font-semibold leading-none text-white/90 sm:text-xs">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm sm:gap-2 sm:px-4 sm:py-2">
+                <CheckIcon className="h-3.5 w-3.5 shrink-0 text-white/90 sm:h-4 sm:w-4" aria-hidden />
+                <span className="text-[10px] font-bold uppercase tracking-wide text-white/90 sm:text-xs">
                   {t('library.spotifyConnected')}
                 </span>
               </div>
@@ -62,12 +58,10 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
               <button
                 type="button"
                 onClick={handleSpotifyConnect}
-                className="flex min-w-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-lg bg-[#1DB954] px-3 py-2 text-center transition-colors hover:bg-[#1ed760] sm:min-w-[5.5rem] sm:flex-row sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#1DB954] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-black transition-colors hover:bg-[#1ed760] sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
               >
-                <ArrowDownTrayIcon className="h-4 w-4 shrink-0 text-black sm:h-5 sm:w-5" aria-hidden />
-                <span className="text-[10px] font-bold leading-none text-black sm:text-sm">
-                  {t('library.spotifyImport')}
-                </span>
+                <ArrowUpRightIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                <span>{t('library.spotifyImport')}</span>
               </button>
             )}
           </div>

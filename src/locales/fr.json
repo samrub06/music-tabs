@@ -297,7 +297,7 @@
     "noRecentlyAdded": "Aucune chanson ajoutée récemment.",
     "SEARCH_PLACEHOLDER": "Rechercher un titre ou un artiste...",
     "spotifySection": "Spotify",
-    "spotifyDescription": "Importez des chansons depuis vos playlists Spotify",
+    "spotifyDescription": "Importez vos chansons depuis Spotify et ajoutez-les directement à votre bibliothèque.",
     "spotifyDescriptionShort": "Importez vos playlists",
     "spotifySignIn": "Se connecter",
     "spotifyImport": "Importons",
