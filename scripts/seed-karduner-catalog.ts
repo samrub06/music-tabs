@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
-import { SHIR_LAMAALOT_CATALOG_SONG } from '../src/data/catalogSongs/shirLamaalot'
-import { YAARAT_DVASH_CATALOG_SONG } from '../src/data/catalogSongs/yaaratDvash'
-import { FEATURED_CATALOG_SONG } from '../src/data/featuredCatalogSong'
+import { KARDUNER_CATALOG_SONGS } from '../src/data/catalogSongs/kardunerCatalog'
+import { HEBREW_PLAYLISTS } from '../src/data/hebrewPlaylists'
+import { hebrewPlaylistSeedService } from '../src/lib/services/hebrewPlaylistSeedService'
 import { songRepo } from '../src/lib/services/songRepo'
 import { parseTextToStructuredSong } from '../src/utils/songParser'
 import { extractAllChords } from '../src/utils/structuredSong'
@@ -10,15 +10,6 @@ import type { Database } from '../src/types/db'
 import type { NewSongData } from '../src/types'
 
 dotenv.config({ path: '.env.local' })
-
-const CATALOG_SONGS: Record<
-  string,
-  NewSongData & { slug: string; genre: string; difficulty: string; decade: number }
-> = {
-  'ki-leckha-nae': FEATURED_CATALOG_SONG,
-  'yaarat-dvash': YAARAT_DVASH_CATALOG_SONG,
-  'shir-lamaalot': SHIR_LAMAALOT_CATALOG_SONG,
-}
 
 async function upsertCatalogSong(
   supabase: ReturnType<typeof createClient<Database>>,
@@ -77,8 +68,7 @@ async function upsertCatalogSong(
   if (existing) {
     const { error } = await (supabase.from('songs') as any).update(row).eq('id', existing.id)
     if (error) throw error
-    console.log(`Updated "${payload.title}" (${existing.id})`)
-    return existing.id
+    return { id: existing.id, action: 'updated' as const, title: payload.title, slug }
   }
 
   const { data, error } = await (supabase.from('songs') as any)
@@ -87,20 +77,10 @@ async function upsertCatalogSong(
     .single()
 
   if (error) throw error
-  console.log(`Created "${payload.title}" (${data.id})`)
-  console.log(`Slug: ${slug}`)
-  return data.id as string
+  return { id: data.id as string, action: 'created' as const, title: payload.title, slug }
 }
 
 async function run() {
-  const slug = process.argv[2] ?? 'yaarat-dvash'
-  const song = CATALOG_SONGS[slug]
-
-  if (!song) {
-    console.error(`Unknown catalog slug "${slug}". Available: ${Object.keys(CATALOG_SONGS).join(', ')}`)
-    process.exit(1)
-  }
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -113,7 +93,20 @@ async function run() {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  await upsertCatalogSong(supabase, song)
+  console.log(`Seeding ${KARDUNER_CATALOG_SONGS.length} Karduner catalog songs...\n`)
+
+  for (const song of KARDUNER_CATALOG_SONGS) {
+    const result = await upsertCatalogSong(supabase, song)
+    const icon = result.action === 'created' ? '+' : '↻'
+    console.log(`${icon} ${result.title} (${result.slug})`)
+  }
+
+  const karduner = HEBREW_PLAYLISTS.find((p) => p.slug === 'yosef-karduner')
+  if (!karduner) throw new Error('yosef-karduner playlist not found')
+
+  const playlistResult = await hebrewPlaylistSeedService(supabase).seedPlaylist(karduner)
+  console.log(`\nPlaylist ${playlistResult.slug}: ${playlistResult.songCount} songs (${playlistResult.action})`)
+  console.log('Done.')
 }
 
 run().catch((error) => {

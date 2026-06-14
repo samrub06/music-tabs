@@ -1,4 +1,6 @@
 /** Catalog genre tags used when importing Tab4U songs into the public library. */
+import { KARDUNER_PLAYLIST_TAB_IDS } from '@/data/catalogSongs/kardunerCatalog'
+
 export const HEBREW_CATALOG_GENRES = {
   chabad: 'hebrew-chabad',
   hassidic: 'hebrew-hassidic',
@@ -192,23 +194,7 @@ export const HEBREW_PLAYLISTS: HebrewPlaylistDefinition[] = [
     displayOrder: 7,
     gradientFrom: 'from-sky-600',
     gradientTo: 'to-blue-900',
-    songs: [
-      { searchQuery: 'שיר המעלות', authorIncludes: 'קרדונר' },
-      { searchQuery: 'לך אלי', authorIncludes: 'קרדונר' },
-      { searchQuery: 'שבת קודש', authorIncludes: 'קרדונר' },
-      { searchQuery: 'הוא אלוקינו', authorIncludes: 'קרדונר' },
-      { searchQuery: 'זכרנו לחיים', authorIncludes: 'קרדונר' },
-      { searchQuery: 'אני מאמין', authorIncludes: 'קרדונר' },
-      { searchQuery: 'בואי כלה', authorIncludes: 'קרדונר' },
-      { searchQuery: 'מה נשאר', authorIncludes: 'קרדונר' },
-      { searchQuery: 'שיר לשבת', authorIncludes: 'קרדונר' },
-      { searchQuery: 'יהי רצון', authorIncludes: 'קרדונר' },
-      { searchQuery: 'אדון עולם', authorIncludes: 'קרדונר' },
-      { searchQuery: 'ושמרו', authorIncludes: 'קרדונר' },
-      { searchQuery: 'נר שבת', authorIncludes: 'קרדונר' },
-      { searchQuery: 'כל העולם', authorIncludes: 'קרדונר' },
-      { searchQuery: 'סוס אסור', authorIncludes: 'קרדונר' },
-    ],
+    songs: KARDUNER_PLAYLIST_TAB_IDS.map((tabId) => ({ catalogTabId: tabId })),
   },
   {
     slug: 'akiva',

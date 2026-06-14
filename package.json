@@ -14,6 +14,7 @@
     "upload:genre-images": "npx tsx scripts/upload-genre-images.ts",
     "seed:featured-catalog-song": "npx tsx scripts/seed-featured-catalog-song.ts",
     "seed:catalog-song": "npx tsx scripts/seed-catalog-song.ts",
+    "seed:karduner-catalog": "npx tsx scripts/seed-karduner-catalog.ts",
     "seed:hebrew-playlists": "npx tsx scripts/seed-hebrew-playlists.ts",
     "clean:catalog-duplicates": "npx tsx scripts/clean-duplicate-catalog-songs.ts",
     "sync:explore-catalog": "NODE_ENV=development npx tsx scripts/sync-explore-catalog.ts"
