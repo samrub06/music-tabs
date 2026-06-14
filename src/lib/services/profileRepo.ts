@@ -54,14 +54,13 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
   },
 
   async getSpotifyId(userId: string): Promise<string | null> {
-    const { data, error } = await client
-      .from('profiles')
+    const { data, error } = await (client.from('profiles') as any)
       .select('spotify_id')
       .eq('id', userId)
       .maybeSingle()
 
     if (error) throw error
-    return data?.spotify_id ?? null
+    return (data as { spotify_id?: string | null } | null)?.spotify_id ?? null
   },
 
   async getProfile(userId: string): Promise<Profile | null> {

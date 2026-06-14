@@ -218,7 +218,7 @@ async function seedPlaylistSong(
     }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    return { status: 'error', reason, query: entry.searchQuery }
+    return { status: 'error', reason, query: entry.searchQuery ?? '' }
   }
 }
 

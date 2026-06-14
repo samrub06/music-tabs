@@ -197,6 +197,8 @@ export interface Database {
           song_ids?: string[]
           created_at?: string
           updated_at?: string
+          is_public?: boolean
+          image_url?: string | null
         }
         Update: {
           id?: string
@@ -206,6 +208,8 @@ export interface Database {
           song_ids?: string[]
           created_at?: string
           updated_at?: string
+          is_public?: boolean
+          image_url?: string | null
         }
       }
       chords: {

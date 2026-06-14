@@ -158,7 +158,7 @@ async function run() {
     }
   }
   try {
-    const { revalidateTag } = await import('next/cache')
+    const { revalidatePath, revalidateTag } = await import('next/cache')
     revalidateTag(LIBRARY_CATALOG_TAG)
     revalidatePath('/')
     console.log('\nCache revalidated for home library sections.')

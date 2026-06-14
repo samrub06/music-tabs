@@ -70,7 +70,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     return mapDbPlaylistToDomain(result)
   },
 
-  async updatePlaylist(id: string, updates: Partial<CreatePlaylistInput> & { description?: string, songIds?: string[] }): Promise<Playlist> {
+  async updatePlaylist(id: string, updates: Partial<CreatePlaylistInput> & { description?: string, songIds?: string[], imageUrl?: string }): Promise<Playlist> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to update playlists')
 
@@ -80,8 +80,8 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     if (updates.name !== undefined) updateData.name = updates.name
     if (updates.description !== undefined) updateData.description = updates.description
     if (updates.songIds !== undefined) updateData.song_ids = updates.songIds
-    if ((updates as { imageUrl?: string }).imageUrl !== undefined) {
-      updateData.image_url = (updates as { imageUrl?: string }).imageUrl
+    if (updates.imageUrl !== undefined) {
+      updateData.image_url = updates.imageUrl
     }
 
     const { data, error } = await (client
