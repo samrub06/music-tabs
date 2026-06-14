@@ -1,8 +1,12 @@
+import { homeMetadata } from '@/lib/seo/metadata'
 import { createSafeServerClient } from '@/lib/supabase/server'
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import SearchClient from './search/SearchClient'
 import LibrarySections from './search/LibrarySections'
 import ExplorerSectionsSkeleton from '@/components/library/ExplorerSectionsSkeleton'
+
+export const metadata: Metadata = homeMetadata
 
 export default async function HomePage() {
   const supabase = await createSafeServerClient()

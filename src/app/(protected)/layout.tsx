@@ -1,5 +1,9 @@
+import { privateAreaMetadata } from '@/lib/seo/metadata'
+import type { Metadata } from 'next'
 import { ReactNode } from 'react'
 import ProtectedLayoutClient from './ProtectedLayoutClient'
+
+export const metadata: Metadata = privateAreaMetadata
 
 export default async function ProtectedLayout({ children }: { children: ReactNode }) {
   // No server-side redirect - let ProtectedLayoutClient handle authentication

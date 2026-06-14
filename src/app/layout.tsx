@@ -1,8 +1,12 @@
 import { Providers } from '@/components/Providers'
+import { defaultMetadata } from '@/lib/seo/site'
 import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = defaultMetadata
 
 export default function RootLayout({
   children,
@@ -10,10 +14,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <title>TABasco App</title>
-        <meta name="description" content="A modern music tabs application built with Next.js and Tailwind CSS" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

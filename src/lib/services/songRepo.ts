@@ -881,10 +881,10 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   },
 
   // Lightweight method for getting minimal song info (for navigation, lists, etc.)
-  async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author' | 'songImageUrl' | 'artistImageUrl'> | null> {
+  async getSongInfo(id: string): Promise<Pick<Song, 'id' | 'title' | 'author' | 'songImageUrl' | 'artistImageUrl' | 'userId'> | null> {
     const { data, error } = await (client
       .from('songs') as any)
-      .select('id, title, author, song_image_url, artist_image_url')
+      .select('id, title, author, song_image_url, artist_image_url, user_id')
       .eq('id', id)
       .single()
 
@@ -902,6 +902,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       author: data.author || '',
       songImageUrl: data.song_image_url || undefined,
       artistImageUrl: data.artist_image_url || undefined,
+      userId: data.user_id || undefined,
     }
   }
 })

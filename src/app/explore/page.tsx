@@ -1,6 +1,10 @@
+import { exploreMetadata } from '@/lib/seo/metadata'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { getCachedExploreCatalog } from '@/lib/services/exploreCatalogCache'
+import type { Metadata } from 'next'
 import ExploreClient from './ExploreClient'
+
+export const metadata: Metadata = exploreMetadata
 
 export default async function ExplorePage({
   searchParams,
