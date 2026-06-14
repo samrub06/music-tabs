@@ -69,8 +69,14 @@ function isUgProxyDisabled(): boolean {
   if (process.env.UG_SKIP_PROXY === 'true' || process.env.UG_SKIP_PROXY === '1') {
     return true;
   }
-  // Local dev: residential IP usually works; skip proxy unless explicitly forced
-  if (process.env.NODE_ENV === 'development' && process.env.UG_FORCE_PROXY !== 'true' && process.env.UG_FORCE_PROXY !== '1') {
+  if (process.env.UG_FORCE_PROXY === 'true' || process.env.UG_FORCE_PROXY === '1') {
+    return false;
+  }
+  // Local machine / dev: residential IP usually works without proxy
+  if (process.env.VERCEL !== '1') {
+    return true;
+  }
+  if (process.env.NODE_ENV === 'development') {
     return true;
   }
   return false;

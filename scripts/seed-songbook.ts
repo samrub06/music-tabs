@@ -9,6 +9,7 @@ function parseArgs() {
   const args = process.argv.slice(2)
   let limit: number | undefined
   let dryRun = false
+  let source: 'tab4u' | 'ultimate-guitar' | 'both' = 'tab4u'
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--limit' && args[i + 1]) {
@@ -16,10 +17,16 @@ function parseArgs() {
       i++
     } else if (args[i] === '--dry-run') {
       dryRun = true
+    } else if (args[i] === '--source' && args[i + 1]) {
+      const value = args[i + 1]
+      if (value === 'tab4u' || value === 'ultimate-guitar' || value === 'both') {
+        source = value
+      }
+      i++
     }
   }
 
-  return { limit, dryRun }
+  return { limit, dryRun, source }
 }
 
 async function run() {
@@ -33,20 +40,31 @@ async function run() {
     process.exit(1)
   }
 
-  const { limit, dryRun } = parseArgs()
+  const { limit, dryRun, source } = parseArgs()
+
+  if (source === 'ultimate-guitar' || source === 'both') {
+    process.env.UG_SKIP_PROXY = '1'
+  }
 
   const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
+  const sourceLabel =
+    source === 'both' ? 'Tab4U + Ultimate Guitar' : source === 'ultimate-guitar' ? 'Ultimate Guitar' : 'Tab4U'
+
   console.log(
-    `Importing songbook from Tab4U${dryRun ? ' (dry run)' : ''}${limit ? ` — limit ${limit} entries` : ''}...\n`
+    `Importing songbook from ${sourceLabel}${dryRun ? ' (dry run)' : ''}${limit ? ` — limit ${limit} entries` : ''}...\n`
   )
+  if (source === 'ultimate-guitar' || source === 'both') {
+    console.log('UG: direct fetch (no proxy)\n')
+  }
 
   try {
     const summary = await songbookSeedService(supabase).seedFromSonglist({
       limit,
       dryRun,
+      source,
       sectionIds: ['main', 'supplementary'],
     })
 
