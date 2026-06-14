@@ -284,6 +284,17 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     seedMode: 'manual',
   },
   {
+    slug: 'jewish-songbook',
+    name: 'Songbook',
+    description: 'ספר זמרות — chants du songbook (Tab4U)',
+    section: 'jewish',
+    displayOrder: 9,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.songbook },
+    gradientFrom: 'from-teal-700',
+    gradientTo: 'to-cyan-900',
+    seedMode: 'manual',
+  },
+  {
     slug: '60s',
     name: '60s',
     description: 'Hits from the 1960s',

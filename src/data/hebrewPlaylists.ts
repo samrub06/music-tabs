@@ -10,6 +10,7 @@ export const HEBREW_CATALOG_GENRES = {
   modern: 'hebrew-modern',
   karduner: 'hebrew-karduner',
   akiva: 'hebrew-akiva',
+  songbook: 'hebrew-songbook',
 } as const
 
 export type HebrewCatalogGenre =
