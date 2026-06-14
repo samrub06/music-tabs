@@ -33,8 +33,11 @@ export const defaultMetadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   icons: {
-    icon: [{ url: BRAND_ASSETS.icon, type: 'image/png' }],
-    apple: [{ url: BRAND_ASSETS.appleTouchIcon, type: 'image/png' }],
+    icon: [
+      { url: BRAND_ASSETS.icon, type: 'image/png', sizes: '512x512' },
+      { url: '/brand/favicon-32.png', type: 'image/png', sizes: '32x32' },
+    ],
+    apple: [{ url: BRAND_ASSETS.appleTouchIcon, type: 'image/png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',
