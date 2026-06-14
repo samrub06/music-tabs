@@ -1,6 +1,11 @@
 'use client'
 
 import { searchSongsByStyleAction } from '@/app/(protected)/search/actions'
+import {
+  collectAiSearchResults,
+  fetchAiSongSearchBatches,
+} from '@/lib/utils/aiSearchResults'
+import type { AiExcludeSong } from '@/lib/services/aiSearchService'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
 import {
@@ -112,6 +117,9 @@ export default function AddSongForm({
     text: string
   } | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingMoreAi, setIsLoadingMoreAi] = useState(false)
+  const [canLoadMoreAi, setCanLoadMoreAi] = useState(false)
+  const [aiExcludeSongs, setAiExcludeSongs] = useState<AiExcludeSong[]>([])
   const searchInputRef = useRef<HTMLInputElement>(null)
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
   const tabs: AddSongTabConfig[] = [
@@ -384,6 +392,8 @@ export default function AddSongForm({
     setSearchResults([])
     setShowSearchResults(false)
     setMessage(null)
+    setCanLoadMoreAi(false)
+    setAiExcludeSongs([])
 
     try {
       const aiResult = await searchSongsByStyleAction(query)
@@ -396,20 +406,15 @@ export default function AddSongForm({
         return
       }
 
-      const allResults: SearchResult[] = []
-      for (const aiSong of aiResult.songs) {
-        const q = `${aiSong.title} ${aiSong.artist}`
-        const response = await fetch(
-          `/api/songs/search?q=${encodeURIComponent(q)}&source=${aiSong.source}`
-        )
-        const data = await response.json()
-        if (response.ok && data.results?.length > 0) {
-          allResults.push(...data.results)
-        }
-      }
+      const resultBatches = await fetchAiSongSearchBatches<SearchResult>(aiResult.songs)
+      const allResults = collectAiSearchResults(resultBatches)
 
       if (allResults.length > 0) {
         setSearchResults(allResults)
+        setAiExcludeSongs(
+          aiResult.songs.map((song) => ({ title: song.title, artist: song.artist }))
+        )
+        setCanLoadMoreAi(true)
         setShowSearchResults(true)
       } else {
         setMessage({ type: 'error', text: t('search.noResultsForAISuggestions') })
@@ -419,6 +424,46 @@ export default function AddSongForm({
       setMessage({ type: 'error', text: t('search.searchError') })
     } finally {
       setIsSearching(false)
+    }
+  }
+
+  const handleLoadMoreAi = async () => {
+    const query = aiQuery.trim()
+    if (!query || isLoadingMoreAi || isSearching || !canLoadMoreAi) return
+
+    setIsLoadingMoreAi(true)
+    setMessage(null)
+
+    try {
+      const aiResult = await searchSongsByStyleAction(query, aiExcludeSongs)
+
+      if (!aiResult.success || aiResult.songs.length === 0) {
+        setCanLoadMoreAi(false)
+        setMessage({ type: 'info', text: t('search.noMoreAiResults') })
+        return
+      }
+
+      const resultBatches = await fetchAiSongSearchBatches<SearchResult>(aiResult.songs)
+      const excludeUrls = new Set(searchResults.map((result) => result.url))
+      const moreResults = collectAiSearchResults(resultBatches, { excludeUrls })
+
+      if (moreResults.length === 0) {
+        setCanLoadMoreAi(false)
+        setMessage({ type: 'info', text: t('search.noMoreAiResults') })
+        return
+      }
+
+      setSearchResults((prev) => [...prev, ...moreResults])
+      setAiExcludeSongs((prev) => [
+        ...prev,
+        ...aiResult.songs.map((song) => ({ title: song.title, artist: song.artist })),
+      ])
+      setShowSearchResults(true)
+    } catch (error) {
+      console.error('Error loading more AI results:', error)
+      setMessage({ type: 'error', text: t('search.searchError') })
+    } finally {
+      setIsLoadingMoreAi(false)
     }
   }
 
@@ -463,6 +508,16 @@ export default function AddSongForm({
               </li>
             ))}
           </ul>
+          {activeTab === 'ai' && canLoadMoreAi && (
+            <button
+              type="button"
+              onClick={() => void handleLoadMoreAi()}
+              disabled={isLoadingMoreAi || isSearching}
+              className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+            >
+              {isLoadingMoreAi ? t('search.loadingMoreAi') : t('search.loadMoreAi')}
+            </button>
+          )}
         </div>
       )}
     </>

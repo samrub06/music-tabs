@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
+import { collectAiSearchResults, fetchAiSongSearchBatches } from '@/lib/utils/aiSearchResults'
+import type { AiExcludeSong } from '@/lib/services/aiSearchService'
 import { searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
@@ -81,6 +83,9 @@ export default function SearchClient({
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
   const [isAIMode, setIsAIMode] = useState(false)
+  const [isLoadingMoreAi, setIsLoadingMoreAi] = useState(false)
+  const [canLoadMoreAi, setCanLoadMoreAi] = useState(false)
+  const [aiExcludeSongs, setAiExcludeSongs] = useState<AiExcludeSong[]>([])
 
   useEffect(() => {
     setRecentSearches(loadRecentSearches())
@@ -106,9 +111,12 @@ export default function SearchClient({
   }
 
   // Check if search results exist in user's songs
-  const checkExistingSongs = useCallback(async (results: SearchResult[]) => {
+  const checkExistingSongs = useCallback(async (
+    results: SearchResult[],
+    mergeAtIndex?: number
+  ) => {
     if (!supabase || !userId || results.length === 0) {
-      setExistingSongs(new Map())
+      if (mergeAtIndex == null) setExistingSongs(new Map())
       return
     }
 
@@ -120,11 +128,12 @@ export default function SearchClient({
       const existingMap = new Map<number, string>()
       
       results.forEach((result, index) => {
+        const mapIndex = mergeAtIndex != null ? mergeAtIndex + index : index
         // Try to match by tabId first (most reliable)
         if (result.tabId) {
           const match = userSongs.find(song => song.tabId === result.tabId)
           if (match) {
-            existingMap.set(index, match.id)
+            existingMap.set(mapIndex, match.id)
             return
           }
         }
@@ -134,7 +143,7 @@ export default function SearchClient({
           const url = result.url || result.sourceUrl
           const match = userSongs.find(song => song.sourceUrl === url)
           if (match) {
-            existingMap.set(index, match.id)
+            existingMap.set(mapIndex, match.id)
             return
           }
         }
@@ -147,11 +156,19 @@ export default function SearchClient({
           song.author.toLowerCase().trim() === authorMatch
         )
         if (match) {
-          existingMap.set(index, match.id)
+          existingMap.set(mapIndex, match.id)
         }
       })
       
-      setExistingSongs(existingMap)
+      if (mergeAtIndex != null) {
+        setExistingSongs((prev) => {
+          const next = new Map(prev)
+          existingMap.forEach((id, idx) => next.set(idx, id))
+          return next
+        })
+      } else {
+        setExistingSongs(existingMap)
+      }
     } catch (error) {
       console.error('Error checking existing songs:', error)
     } finally {
@@ -165,12 +182,16 @@ export default function SearchClient({
       setSearchResults([])
       setExistingSongs(new Map())
       setHasSearched(false)
+      setCanLoadMoreAi(false)
+      setAiExcludeSongs([])
       return
     }
 
     setIsSearching(true)
     setMessage(null)
-    setHasSearched(true) // Mark that a search was performed
+    setHasSearched(true)
+    setCanLoadMoreAi(false)
+    setAiExcludeSongs([])
     
     try {
       if (isAIMode) {
@@ -185,20 +206,15 @@ export default function SearchClient({
           return
         }
 
-        // Search for each AI suggestion on the appropriate source
-        const allResults: SearchResult[] = []
-        for (const aiSong of aiResult.songs) {
-          const searchQuery = `${aiSong.title} ${aiSong.artist}`
-          const response = await fetch(`/api/songs/search?q=${encodeURIComponent(searchQuery)}&source=${aiSong.source}`)
-          const data = await response.json()
-          
-          if (response.ok && data.results && data.results.length > 0) {
-            allResults.push(...data.results)
-          }
-        }
+        const resultBatches = await fetchAiSongSearchBatches<SearchResult>(aiResult.songs)
+        const allResults = collectAiSearchResults(resultBatches)
 
         if (allResults.length > 0) {
           setSearchResults(allResults)
+          setAiExcludeSongs(
+            aiResult.songs.map((song) => ({ title: song.title, artist: song.artist }))
+          )
+          setCanLoadMoreAi(true)
           saveToRecentSearches(query.trim(), allResults[0])
           await checkExistingSongs(allResults)
         } else {
@@ -243,6 +259,57 @@ export default function SearchClient({
     }
   }, [isAIMode, checkExistingSongs, t])
 
+  const handleLoadMoreAi = useCallback(async () => {
+    const query = searchQuery.trim()
+    if (!query || !isAIMode || isLoadingMoreAi || isSearching || !canLoadMoreAi) return
+
+    setIsLoadingMoreAi(true)
+    setMessage(null)
+
+    try {
+      const aiResult = await searchSongsByStyleAction(query, aiExcludeSongs)
+
+      if (!aiResult.success || aiResult.songs.length === 0) {
+        setCanLoadMoreAi(false)
+        setMessage({ type: 'info', text: t('search.noMoreAiResults') })
+        return
+      }
+
+      const resultBatches = await fetchAiSongSearchBatches<SearchResult>(aiResult.songs)
+      const excludeUrls = new Set(searchResults.map((result) => result.url))
+      const moreResults = collectAiSearchResults(resultBatches, { excludeUrls })
+
+      if (moreResults.length === 0) {
+        setCanLoadMoreAi(false)
+        setMessage({ type: 'info', text: t('search.noMoreAiResults') })
+        return
+      }
+
+      const startIndex = searchResults.length
+      setSearchResults((prev) => [...prev, ...moreResults])
+      setAiExcludeSongs((prev) => [
+        ...prev,
+        ...aiResult.songs.map((song) => ({ title: song.title, artist: song.artist })),
+      ])
+      await checkExistingSongs(moreResults, startIndex)
+    } catch (error) {
+      console.error('Error loading more AI results:', error)
+      setMessage({ type: 'error', text: t('search.searchError') })
+    } finally {
+      setIsLoadingMoreAi(false)
+    }
+  }, [
+    aiExcludeSongs,
+    canLoadMoreAi,
+    checkExistingSongs,
+    isAIMode,
+    isLoadingMoreAi,
+    isSearching,
+    searchQuery,
+    searchResults,
+    t,
+  ])
+
   useEffect(() => {
     const q = searchParams.get('q')?.trim()
     if (!q || initialQueryApplied.current) return
@@ -265,6 +332,8 @@ export default function SearchClient({
       setSearchResults([])
       setExistingSongs(new Map())
       setHasSearched(false)
+      setCanLoadMoreAi(false)
+      setAiExcludeSongs([])
       setMessage(null)
     }
     if (isAIMode) {
@@ -773,6 +842,18 @@ export default function SearchClient({
                 )
               })}
             </div>
+            {isAIMode && canLoadMoreAi && (
+              <div className="border-t border-border px-3 py-3 sm:px-4">
+                <button
+                  type="button"
+                  onClick={() => void handleLoadMoreAi()}
+                  disabled={isLoadingMoreAi || isSearching}
+                  className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                >
+                  {isLoadingMoreAi ? t('search.loadingMoreAi') : t('search.loadMoreAi')}
+                </button>
+              </div>
+            )}
           </>
             ) : hasSearched && queryTrimmed && !message ? (
               <div className="px-4 py-8 text-center">

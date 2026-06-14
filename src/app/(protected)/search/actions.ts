@@ -1,7 +1,10 @@
 'use server'
 
-import { searchSongsByStyle } from '@/lib/services/aiSearchService'
+import { searchSongsByStyle, type AiExcludeSong } from '@/lib/services/aiSearchService'
 
-export async function searchSongsByStyleAction(description: string) {
-  return await searchSongsByStyle(description)
+export async function searchSongsByStyleAction(
+  description: string,
+  exclude?: AiExcludeSong[]
+) {
+  return await searchSongsByStyle(description, { exclude })
 }

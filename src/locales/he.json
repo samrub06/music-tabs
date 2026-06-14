@@ -458,7 +458,10 @@
     "aiSuggestion3": "שירים קלים למתחילים בגיטרה",
     "aiSuggestion4": "להיטים לשיר סביב מדורה",
     "enableAIStyleSearch": "הפעל חיפוש סגנון עם AI",
-    "disableAIStyleSearch": "כבה חיפוש סגנון עם AI"
+    "disableAIStyleSearch": "כבה חיפוש סגנון עם AI",
+    "loadMoreAi": "עוד תוצאות",
+    "loadingMoreAi": "טוען...",
+    "noMoreAiResults": "אין עוד הצעות לסגנון זה"
   },
   "folders": {
     "newFolder": "תיקייה חדשה",

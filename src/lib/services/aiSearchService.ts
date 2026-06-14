@@ -72,10 +72,15 @@ Réponds UNIQUEMENT par "true" ou "false" (sans guillemets, sans explication).`
   return false
 }
 
+export type AiExcludeSong = { title: string; artist: string }
+
 /**
  * Recherche des chansons par style musical avec l'IA
  */
-export async function searchSongsByStyle(description: string): Promise<AISearchResponse> {
+export async function searchSongsByStyle(
+  description: string,
+  options?: { exclude?: AiExcludeSong[] }
+): Promise<AISearchResponse> {
   try {
     // Vérifier si l'IA est disponible
     if (!isAIAvailable()) {
@@ -102,10 +107,18 @@ export async function searchSongsByStyle(description: string): Promise<AISearchR
       ? 'IMPORTANT: Ces chansons doivent être recherchées sur Tab4U (site israélien). Utilise uniquement des titres et artistes en hébreu ou des chansons israéliennes/juives populaires.'
       : 'Choisis des chansons très populaires et facilement trouvables sur Ultimate Guitar ou Tab4U'
 
+    const exclude = options?.exclude?.filter((song) => song.title && song.artist) ?? []
+    const excludeBlock =
+      exclude.length > 0
+        ? `\nNe propose PAS ces chansons déjà suggérées:\n${exclude
+            .map((song) => `- ${song.title} — ${song.artist}`)
+            .join('\n')}\n`
+        : ''
+
     const prompt = `Tu es un expert en musique. Génère une liste de chansons populaires et bien connues qui correspondent au style musical suivant: "${description}"
 
-Contrainte: retourne AU MAXIMUM 10 à 15 chansons (pas plus de 15).
-
+Contrainte: retourne exactement 12 chansons (pas plus, pas moins).
+${excludeBlock}
 Règles importantes:
 - ${sourceNote}
 - Inclus des chansons classiques et reconnues du style demandé
@@ -177,9 +190,9 @@ JSON:`
       throw new Error('Invalid JSON structure from OpenAI - missing songs array')
     }
 
-    const MAX_AI_RESULTS = 15
+    const MAX_AI_RESULTS = 12
 
-    // Valider et nettoyer les chansons, ajouter la source, limiter à 15 max
+    // Valider et nettoyer les chansons, ajouter la source, limiter à 12 max
     const validSongs: AISearchResult[] = parsedData.songs
       .slice(0, MAX_AI_RESULTS)
       .filter((song: any) => song.title && song.artist)

@@ -458,7 +458,10 @@
     "aiSuggestion3": "Chansons faciles pour débutants",
     "aiSuggestion4": "Hits pour feu de camp",
     "enableAIStyleSearch": "Activer la recherche par style IA",
-    "disableAIStyleSearch": "Désactiver la recherche par style IA"
+    "disableAIStyleSearch": "Désactiver la recherche par style IA",
+    "loadMoreAi": "Plus de résultats",
+    "loadingMoreAi": "Chargement...",
+    "noMoreAiResults": "Plus de suggestions pour ce style"
   },
   "folders": {
     "newFolder": "Nouveau dossier",

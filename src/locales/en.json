@@ -458,7 +458,10 @@
     "aiSuggestion3": "Easy beginner guitar songs",
     "aiSuggestion4": "Campfire sing-along hits",
     "enableAIStyleSearch": "Enable AI style search",
-    "disableAIStyleSearch": "Disable AI style search"
+    "disableAIStyleSearch": "Disable AI style search",
+    "loadMoreAi": "Load more",
+    "loadingMoreAi": "Loading...",
+    "noMoreAiResults": "No more suggestions for this style"
   },
   "folders": {
     "newFolder": "New folder",
