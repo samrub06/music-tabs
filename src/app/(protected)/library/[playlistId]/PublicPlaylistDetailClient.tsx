@@ -17,26 +17,96 @@ import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { useState, useCallback } from 'react'
 
-interface PublicPlaylistDetailClientProps {
+interface PublicPlaylistDetailShellProps {
+  playlist: Playlist
+  songCount: number
+}
+
+export function PublicPlaylistDetailShell({
+  playlist,
+  songCount,
+}: PublicPlaylistDetailShellProps) {
+  const { t } = useLanguage()
+  const router = useRouter()
+
+  const coverUrl = getPlaylistDisplayCoverUrl(playlist) ?? null
+
+  const songCountLabel =
+    songCount === 1
+      ? `1 ${t('playlistView.songs').slice(0, -1)}`
+      : `${songCount} ${t('playlistView.songs')}`
+
+  return (
+  <>
+      <div className="relative h-80 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[32rem]">
+        {coverUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          </>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/25 via-primary/10 to-muted">
+            <MusicalNoteIcon className="h-16 w-16 text-muted-foreground/40" />
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+          aria-label={t('common.back')}
+        >
+          <BackArrowIcon className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="px-4 pt-4 sm:px-6">
+        <div className="flex items-center gap-3">
+          <h1 className="min-w-0 flex-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            {playlist.name}
+          </h1>
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/50 text-primary-foreground sm:h-14 sm:w-14">
+            <PlayIcon className="h-6 w-6 translate-x-0.5 opacity-50 sm:h-7 sm:w-7" />
+          </div>
+        </div>
+
+        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
+      </div>
+  </>
+  )
+}
+
+export function PublicPlaylistSongListSkeleton() {
+  return (
+    <ul className="mt-4">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        <li key={i} className="flex items-center gap-3 px-4 py-2.5 sm:gap-4 sm:py-3">
+          <div className="h-10 w-10 shrink-0 animate-pulse rounded-md bg-muted" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+interface PublicPlaylistSongListProps {
   playlist: Playlist
   songs: Song[]
   userId?: string
 }
 
-export default function PublicPlaylistDetailClient({
+export function PublicPlaylistSongList({
   playlist,
   songs,
   userId,
-}: PublicPlaylistDetailClientProps) {
+}: PublicPlaylistSongListProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const [addingId, setAddingId] = useState<string | null>(null)
-
-  const coverUrl =
-    getPlaylistDisplayCoverUrl(playlist) ??
-    songs[0]?.songImageUrl ??
-    songs[0]?.artistImageUrl ??
-    null
 
   const handleAddToLibrary = useCallback(
     async (song: Song) => {
@@ -91,9 +161,130 @@ export default function PublicPlaylistDetailClient({
     [songs, playlist.id, router]
   )
 
+  if (songs.length === 0) {
+    return (
+      <div className="px-4 py-16 text-center sm:px-6">
+        <MusicalNoteIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+        <h3 className="text-base font-medium text-foreground">
+          {t('playlistView.noSongsInPlaylist')}
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('playlistView.EMPTY_PLAYLIST_DESCRIPTION')}
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <ul className="mt-4">
+      {songs.map((song) => {
+        const isAdding = addingId === song.id
+
+        return (
+          <li key={song.id}>
+            <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
+              <button
+                type="button"
+                onClick={() => navigateToSong(song.id)}
+                className="shrink-0"
+              >
+                <SongThumbnail
+                  songImageUrl={song.songImageUrl}
+                  artistImageUrl={song.artistImageUrl}
+                  genre={song.genre}
+                  alt={song.title}
+                  size="xs"
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigateToSong(song.id)}
+                className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
+              >
+                <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+                {song.author ? (
+                  <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+                ) : null}
+              </button>
+
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
+                  onClick={() => handleAddToLibrary(song)}
+                  disabled={isAdding || !userId}
+                  aria-label={t('library.addToLibrary')}
+                  title={t('library.addToLibrary')}
+                >
+                  {isAdding ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <PlusIcon className="h-4 w-4" />
+                  )}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => navigateToSong(song.id)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 sm:h-10 sm:w-10"
+                  aria-label={t('search.viewSong')}
+                >
+                  <PlayIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+interface PublicPlaylistDetailClientProps {
+  playlist: Playlist
+  songs: Song[]
+  userId?: string
+}
+
+export default function PublicPlaylistDetailClient({
+  playlist,
+  songs,
+  userId,
+}: PublicPlaylistDetailClientProps) {
+  const { t } = useLanguage()
+  const router = useRouter()
+
+  const coverUrl =
+    getPlaylistDisplayCoverUrl(playlist) ??
+    songs[0]?.songImageUrl ??
+    songs[0]?.artistImageUrl ??
+    null
+
   const handleStartPlaylist = () => {
     if (songs.length === 0) return
-    navigateToSong(songs[0].id)
+    const songList = songs.map((s) => s.id)
+    const playlistContext = {
+      isPlaylist: true,
+      targetKey: '',
+      songs: songs.map((s) => ({
+        id: s.id,
+        keyAdjustment: 0,
+        originalKey: s.key || '',
+        targetKey: s.key || '',
+      })),
+    }
+    sessionStorage.setItem(
+      'songNavigation',
+      JSON.stringify({
+        songList,
+        currentIndex: 0,
+        sourceUrl: `/library/${playlist.id}`,
+        playlistContext,
+      })
+    )
+    sessionStorage.removeItem('hasUsedNext')
+    router.push(`/song/${songs[0].id}`)
   }
 
   const songCountLabel =
@@ -145,80 +336,7 @@ export default function PublicPlaylistDetailClient({
         <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
       </div>
 
-      {songs.length === 0 ? (
-        <div className="px-4 py-16 text-center sm:px-6">
-          <MusicalNoteIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
-          <h3 className="text-base font-medium text-foreground">
-            {t('playlistView.noSongsInPlaylist')}
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('playlistView.EMPTY_PLAYLIST_DESCRIPTION')}
-          </p>
-        </div>
-      ) : (
-        <ul className="mt-4">
-          {songs.map((song) => {
-            const isAdding = addingId === song.id
-
-            return (
-              <li key={song.id}>
-                <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
-                  <button
-                    type="button"
-                    onClick={() => navigateToSong(song.id)}
-                    className="shrink-0"
-                  >
-                    <SongThumbnail
-                      songImageUrl={song.songImageUrl}
-                      artistImageUrl={song.artistImageUrl}
-                      genre={song.genre}
-                      alt={song.title}
-                      size="xs"
-                    />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => navigateToSong(song.id)}
-                    className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
-                  >
-                    <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
-                    {song.author ? (
-                      <p className="truncate text-xs text-muted-foreground">{song.author}</p>
-                    ) : null}
-                  </button>
-
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
-                      onClick={() => handleAddToLibrary(song)}
-                      disabled={isAdding || !userId}
-                      aria-label={t('library.addToLibrary')}
-                      title={t('library.addToLibrary')}
-                    >
-                      {isAdding ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      ) : (
-                        <PlusIcon className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={() => navigateToSong(song.id)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 sm:h-10 sm:w-10"
-                      aria-label={t('search.viewSong')}
-                    >
-                      <PlayIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      <PublicPlaylistSongList playlist={playlist} songs={songs} userId={userId} />
     </div>
   )
 }

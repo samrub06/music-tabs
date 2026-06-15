@@ -83,6 +83,9 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
 const LIGHTWEIGHT_LIST_COLUMNS =
   'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, is_liked'
 
+const PUBLIC_PLAYLIST_LIST_COLUMNS =
+  'id, title, author, song_image_url, artist_image_url, genre, key'
+
 const LIBRARY_LIST_COLUMNS =
   'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, is_liked, key, capo, difficulty'
 
@@ -882,7 +885,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     if (songIds.length === 0) return []
 
     const { data, error } = await (client.from('songs') as any)
-      .select('id, title, author, folder_id, created_at, updated_at, key, song_image_url, artist_image_url, view_count, version, version_description, genre')
+      .select(PUBLIC_PLAYLIST_LIST_COLUMNS)
       .in('id', songIds)
 
     if (error) throw error

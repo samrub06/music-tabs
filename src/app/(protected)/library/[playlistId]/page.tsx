@@ -1,11 +1,14 @@
 import { playlistMetadata } from '@/lib/seo/metadata'
 import { createSafeServerClient } from '@/lib/supabase/server'
-import { playlistRepo } from '@/lib/services/playlistRepo'
-import { songRepo } from '@/lib/services/songRepo'
-import PublicPlaylistDetailClient from './PublicPlaylistDetailClient'
-import { unstable_noStore as noStore } from 'next/cache'
+import PublicPlaylistSongsData from './PublicPlaylistSongsData'
+import {
+  PublicPlaylistDetailShell,
+  PublicPlaylistSongListSkeleton,
+} from './PublicPlaylistDetailClient'
+import { getCachedPublicPlaylist } from './loadPublicPlaylist'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
 export async function generateMetadata({
   params,
@@ -13,10 +16,9 @@ export async function generateMetadata({
   params: Promise<{ playlistId: string }>
 }): Promise<Metadata> {
   const { playlistId } = await params
-  const supabase = await createSafeServerClient()
 
   try {
-    const playlist = await playlistRepo(supabase).getPublicPlaylist(playlistId)
+    const playlist = await getCachedPublicPlaylist(playlistId)
     return playlistMetadata({
       name: playlist.name,
       description: playlist.description,
@@ -29,26 +31,27 @@ export async function generateMetadata({
 }
 
 export default async function PublicPlaylistDetailPage({
-  params
+  params,
 }: {
   params: Promise<{ playlistId: string }>
 }) {
-  noStore()
-
   const { playlistId } = await params
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   try {
-    const playlist = await playlistRepo(supabase).getPublicPlaylist(playlistId)
-    const playlistSongs = await songRepo(supabase).getSongsByIdsForPublicPlaylist(playlist.songIds)
+    const playlist = await getCachedPublicPlaylist(playlistId)
 
     return (
-      <PublicPlaylistDetailClient
-        playlist={playlist}
-        songs={playlistSongs}
-        userId={user?.id}
-      />
+      <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+        <PublicPlaylistDetailShell
+          playlist={playlist}
+          songCount={playlist.songIds.length}
+        />
+        <Suspense fallback={<PublicPlaylistSongListSkeleton />}>
+          <PublicPlaylistSongsData playlist={playlist} userId={user?.id} />
+        </Suspense>
+      </div>
     )
   } catch {
     notFound()

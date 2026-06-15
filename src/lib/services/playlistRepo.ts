@@ -185,7 +185,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
   async getPublicPlaylist(id: string): Promise<Playlist> {
     const { data, error } = await client
       .from('playlists')
-      .select('*')
+      .select('id, name, description, created_at, updated_at, song_ids, image_url, is_public, curated_slug')
       .eq('id', id)
       .eq('is_public', true)
       .single()
