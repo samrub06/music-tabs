@@ -637,13 +637,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
               {searchQuery.trim() && (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  className="mt-3 min-h-[44px] w-full"
                   onClick={() => openAddSongPageForArtist(searchQuery.trim())}
-                  className="mt-3 w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}
-                </button>
+                </Button>
               )}
             </>
           ) : (
@@ -651,13 +652,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <SongGallery songs={sortedSongs} />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
               {searchQuery.trim() && (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  className="mt-3 min-h-[44px] w-full"
                   onClick={() => openAddSongPageForArtist(searchQuery.trim())}
-                  className="mt-3 w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
                   {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}
-                </button>
+                </Button>
               )}
             </>
           )

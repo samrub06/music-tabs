@@ -18,11 +18,11 @@ const COLUMN_DEFINITIONS = [
   { key: 'title', labelKey: 'songs.title', icon: '📝', defaultVisible: true },
   { key: 'author', labelKey: 'songs.artist', icon: '👤', defaultVisible: true },
   { key: 'key', labelKey: 'songs.key', icon: '🎵', defaultVisible: true },
-  { key: 'rating', labelKey: 'songs.rating', icon: '⭐', defaultVisible: true },
+  { key: 'rating', labelKey: 'songs.rating', icon: '⭐', defaultVisible: false },
   { key: 'reviews', labelKey: 'songs.reviews', icon: '👥', defaultVisible: false },
   { key: 'difficulty', labelKey: 'songs.difficulty', icon: '🎸', defaultVisible: false },
   { key: 'version', labelKey: 'songs.version', icon: '🔢', defaultVisible: false },
-  { key: 'viewCount', labelKey: 'songs.viewCount', icon: '👁️', defaultVisible: true },
+  { key: 'viewCount', labelKey: 'songs.viewCount', icon: '👁️', defaultVisible: false },
   { key: 'folder', labelKey: 'songs.folder', icon: '📁', defaultVisible: true },
   { key: 'updatedAt', labelKey: 'songs.modified', icon: '📅', defaultVisible: false },
 ];

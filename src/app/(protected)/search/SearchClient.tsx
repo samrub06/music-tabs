@@ -579,6 +579,9 @@ export default function SearchClient({
               </div>
             ) : (
               <>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+                  <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
+                </div>
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -587,7 +590,7 @@ export default function SearchClient({
                   onKeyDown={handleKeyDown}
                   placeholder={t('search.searchPlaceholder')}
                   className={cn(
-                    'block h-14 w-full border-0 bg-transparent py-4 pl-4 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none',
+                    'block h-14 w-full border-0 bg-transparent py-4 pl-10 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none sm:pl-12',
                     !showAIModeToggle
                       ? queryTrimmed
                         ? 'pr-20 sm:pr-24'
@@ -668,13 +671,13 @@ export default function SearchClient({
         {/* Recent searches — below search bar with vignettes */}
         {showRecentSearches && (
           <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="flex items-center gap-2 mb-2 min-w-0">
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t('search.recentSearches')}
               </h2>
               <Link
                 href="/search/recent"
-                className="text-xs font-medium text-primary hover:text-primary/80 shrink-0"
+                className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 {t('search.viewAllRecent')}

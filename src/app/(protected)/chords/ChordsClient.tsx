@@ -27,11 +27,9 @@ import { CHORD_PREVIEW_DIAGRAM_OPTS } from '@/components/chords/chordCardDimensi
 import type { ChordVariantGroup } from '@/types/chordVariants';
 const CHORDS_INSTRUMENT_STORAGE_KEY = 'chords-instrument';
 
-const CHORDS_GRID_CLASS =
-  'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+const CHORDS_GRID_CLASS = 'grid grid-cols-2 gap-4';
 
-const CHORDS_PIANO_GRID_CLASS =
-  'grid grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3';
+const CHORDS_PIANO_GRID_CLASS = 'grid grid-cols-2 gap-3';
 
 /** Static variant carousel groups shown as grid cards (replaces duplicate DB open shapes). */
 const VARIANT_GROUP_UI: Array<{

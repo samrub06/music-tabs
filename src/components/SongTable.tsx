@@ -91,8 +91,9 @@ export default function SongTable({
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [expandedCoverSongId, setExpandedCoverSongId] = useState<string | null>(null);
   const router = useRouter();
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'rating', 'viewCount', 'folder']);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'folder']);
   
   // Use external select mode if provided, otherwise default to false
   const isSelectMode = externalIsSelectMode ?? false;
@@ -431,6 +432,12 @@ export default function SongTable({
               onFolderChange={handleFolderChange}
               hasUser={hasUser}
               isSelectMode={isSelectMode}
+              isCoverExpanded={expandedCoverSongId === song.id}
+              onToggleCover={() =>
+                setExpandedCoverSongId((current) =>
+                  current === song.id ? null : song.id
+                )
+              }
             />
           ))
         )}

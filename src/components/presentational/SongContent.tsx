@@ -39,6 +39,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
+import { StarRatingDisplay } from './StarRatingDisplay';
 import type { LibrarySongRef } from '@/utils/songSuggestions';
 import {
   Select,
@@ -270,12 +271,31 @@ export default function SongContent({
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2 md:flex-row md:items-center md:gap-2">
               <div className="flex flex-wrap items-center justify-end gap-2">
+                {transposedSong?.rating != null && (
+                  <div className="flex h-14 min-h-14 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3">
+                    <StarRatingDisplay rating={Number(transposedSong.rating)} size="md" />
+                  </div>
+                )}
+                {transposedSong?.viewCount != null && transposedSong.viewCount > 0 && (
+                  <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-border/80 bg-white px-2 shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/icons/eyeview_icon.jpeg"
+                      alt=""
+                      className="h-8 w-8 object-contain"
+                      aria-hidden
+                    />
+                    <span className="text-[10px] font-semibold tabular-nums leading-none text-foreground">
+                      {transposedSong.viewCount}
+                    </span>
+                  </div>
+                )}
                 {onToggleEdit && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={onToggleEdit}
-                    className="h-11 min-h-[44px] shrink-0 gap-1.5 rounded-xl px-3 text-sm font-medium"
+                    className="h-14 min-h-14 w-14 shrink-0 gap-1.5 rounded-xl px-0 text-sm font-medium sm:w-auto sm:px-3"
                     aria-label={t('songHeader.edit')}
                   >
                     <PencilSquareIcon className="h-5 w-5" />
@@ -284,7 +304,7 @@ export default function SongContent({
                 )}
                 {isInLibrary && (
                   <div
-                    className="inline-flex h-11 min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
+                    className="inline-flex h-14 min-h-14 w-14 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 sm:w-auto dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
                     title={t('library.inYourLibrary')}
                   >
                     <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
@@ -308,7 +328,7 @@ export default function SongContent({
                     (!isInLibrary && !onAddToLibrary) ||
                     (isInLibrary && !onToggleFavorite)
                   }
-                  className="inline-flex h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
+                  className="inline-flex h-14 w-14 min-h-14 min-w-14 shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
                   aria-label={
                     isInLibrary
                       ? isLiked
@@ -345,7 +365,7 @@ export default function SongContent({
             </div>
             </div>
             {isAuthenticated && onFolderChange && (
-              <div className="w-full sm:hidden">
+              <div className="mt-1 w-full sm:hidden">
                 <FolderDropdown
                   currentFolderId={currentFolderId}
                   folders={folders}

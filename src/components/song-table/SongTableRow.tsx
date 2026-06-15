@@ -11,13 +11,15 @@ import {
 import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
 import { Bars3Icon, HeartIcon } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
-import { SongThumbnail } from '@/components/presentational/SongThumbnail'
+import { HeartIcon as HeartSolidIcon, MusicalNoteIcon } from '@heroicons/react/24/solid'
+import { getSongCoverUrl } from '@/components/presentational/SongThumbnail'
+import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
 import { useRouter, usePathname } from 'next/navigation'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { toggleSongFavoriteAction } from '@/app/song/[id]/actions'
 import { useLanguage } from '@/context/LanguageContext'
+import { cn } from '@/lib/utils'
 
 interface SongTableRowProps {
   song: Song
@@ -29,6 +31,8 @@ interface SongTableRowProps {
   onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>
   hasUser: boolean
   isSelectMode: boolean
+  isCoverExpanded?: boolean
+  onToggleCover?: () => void
 }
 
 export default function SongTableRow({
@@ -41,6 +45,8 @@ export default function SongTableRow({
   onFolderChange,
   hasUser,
   isSelectMode,
+  isCoverExpanded = false,
+  onToggleCover,
 }: SongTableRowProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -104,6 +110,13 @@ export default function SongTableRow({
     })
   }
 
+  const coverUrl = getSongCoverUrl(song.songImageUrl, song.artistImageUrl)
+
+  const handleToggleCover = (e: MouseEvent) => {
+    e.stopPropagation()
+    onToggleCover?.()
+  }
+
   const metadataParts: ReactNode[] = []
 
   if (visibleColumns.includes('author') && song.author) {
@@ -117,13 +130,6 @@ export default function SongTableRow({
     metadataParts.push(
       <span key="key" className="text-purple-600 dark:text-purple-400 font-medium shrink-0">
         🎵 {song.key}
-      </span>
-    )
-  }
-  if (visibleColumns.includes('rating') && song.rating) {
-    metadataParts.push(
-      <span key="rating" className="text-yellow-600 dark:text-yellow-400 font-medium shrink-0">
-        ⭐ {song.rating.toFixed(1)}
       </span>
     )
   }
@@ -145,13 +151,6 @@ export default function SongTableRow({
     metadataParts.push(
       <span key="version" className="text-green-600 dark:text-green-400 shrink-0">
         v{song.version}
-      </span>
-    )
-  }
-  if (visibleColumns.includes('viewCount') && song.viewCount && song.viewCount > 0) {
-    metadataParts.push(
-      <span key="views" className="shrink-0">
-        👁️ {song.viewCount}
       </span>
     )
   }
@@ -214,12 +213,29 @@ export default function SongTableRow({
         )}
 
         {visibleColumns.includes('title') && (
-          <SongThumbnail
-            songImageUrl={song.songImageUrl}
-            artistImageUrl={song.artistImageUrl}
-            alt={song.title}
-            size="xs"
-          />
+          <button
+            type="button"
+            onClick={handleToggleCover}
+            className={cn(
+              'h-9 w-9 shrink-0 overflow-hidden rounded-lg sm:h-10 sm:w-10',
+              !coverUrl &&
+                'flex items-center justify-center bg-gradient-to-br from-muted-foreground/40 via-muted to-muted-foreground/25',
+              isCoverExpanded && 'ring-2 ring-primary/40'
+            )}
+            aria-label={song.title}
+            aria-expanded={isCoverExpanded}
+          >
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <MusicalNoteIcon className="h-5 w-5 text-foreground/35 dark:text-foreground/45 sm:h-6 sm:w-6" />
+            )}
+          </button>
         )}
 
         <div className="min-w-0 flex-1">
@@ -271,6 +287,19 @@ export default function SongTableRow({
           </button>
         )}
       </div>
+
+      {isCoverExpanded && visibleColumns.includes('title') && (
+        <div className="px-4 pb-3" onClick={(e) => e.stopPropagation()}>
+          <div className="aspect-[2/1] w-full max-h-52 overflow-hidden rounded-xl bg-muted">
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverUrl} alt={song.title} className="h-full w-full object-cover" />
+            ) : (
+              <SongCoverPlaceholder />
+            )}
+          </div>
+        </div>
+      )}
     </li>
   )
 }
