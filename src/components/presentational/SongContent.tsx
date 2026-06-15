@@ -251,8 +251,15 @@ export default function SongContent({
     </div>
   );
 
+  const titleRowHeight = 'h-14 min-h-14 sm:h-16 sm:min-h-16';
+
   const songCoverVignette = (
-    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16">
+    <div
+      className={cn(
+        'relative w-14 shrink-0 overflow-hidden rounded-xl bg-muted sm:w-16',
+        titleRowHeight
+      )}
+    >
       {coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -282,7 +289,7 @@ export default function SongContent({
       </div>
     ) : null;
 
-  const titleRowStatHeight = 'h-14 min-h-14 sm:h-16 sm:min-h-16';
+  const titleRowStatHeight = titleRowHeight;
 
   const ratingDisplay =
     transposedSong?.rating != null ? (
@@ -349,7 +356,8 @@ export default function SongContent({
       }
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70',
-        metaRowActionSize
+        titleRowHeight,
+        'w-14 sm:w-16'
       )}
       aria-label={
         isInLibrary
@@ -380,8 +388,8 @@ export default function SongContent({
       variant="outline"
       onClick={onToggleEdit}
       className={cn(
-        'shrink-0 gap-1 rounded-lg px-0 text-xs font-medium sm:w-auto sm:px-2.5',
-        metaRowActionSize
+        'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
+        titleRowHeight
       )}
       aria-label={t('songHeader.edit')}
     >
@@ -423,10 +431,12 @@ export default function SongContent({
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
             <div className="flex flex-col gap-3">
-              <div className="flex items-stretch gap-3">
+              <div className={cn('flex items-stretch gap-3', titleRowHeight)}>
                 {songCoverVignette}
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <div className="min-w-0 flex-1">{songTitleBlock}</div>
+                <div className="flex min-w-0 flex-1 items-stretch gap-2">
+                  <div className="flex min-w-0 flex-1 flex-col justify-center">
+                    {songTitleBlock}
+                  </div>
                   {titleRowTrailingActions}
                 </div>
               </div>

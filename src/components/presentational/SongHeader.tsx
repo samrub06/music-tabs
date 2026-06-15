@@ -9,7 +9,7 @@ import {
   PlusIcon,
   PauseIcon,
   PlayIcon,
-  Cog6ToothIcon,
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 import {
   BackArrowIcon,
@@ -93,74 +93,78 @@ export default function SongHeader({
           </span>
         )}
 
-        {/* Auto-scroll: label + play + speed; icon/text order swaps in RTL */}
-        <div className="flex flex-shrink-0 items-center gap-1.5">
+        {/* Auto-scroll + song tools — grouped, minimal gap */}
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:justify-start">
           <div
-            className="flex items-center gap-1 rounded-md border px-1 py-0.5"
+            className={cn(
+              'flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30',
+              'sm:flex-initial sm:min-w-[11rem] md:min-w-[13rem]'
+            )}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <Button
-              variant={autoScroll.isActive ? 'default' : 'ghost'}
-              size="icon"
-              className="order-2 h-9 w-9"
-              onClick={onToggleAutoScroll}
-              title={
-                autoScroll.isActive
-                  ? t('songHeader.STOP_AUTO_SCROLL')
-                  : t('songHeader.START_AUTO_SCROLL')
-              }
-            >
-              {autoScroll.isActive ? (
-                <PauseIcon className="h-4 w-4" />
-              ) : (
-                <PlayIcon className={cn('h-4 w-4', isRtl && '-scale-x-100')} />
+            <div className="flex min-w-0 flex-1 items-center gap-0.5 px-1.5 py-0.5 sm:gap-1 sm:px-2">
+              <Button
+                variant={autoScroll.isActive ? 'default' : 'ghost'}
+                size="icon"
+                className="order-2 h-9 w-9 shrink-0"
+                onClick={onToggleAutoScroll}
+                title={
+                  autoScroll.isActive
+                    ? t('songHeader.STOP_AUTO_SCROLL')
+                    : t('songHeader.START_AUTO_SCROLL')
+                }
+              >
+                {autoScroll.isActive ? (
+                  <PauseIcon className="h-4 w-4" />
+                ) : (
+                  <PlayIcon className={cn('h-4 w-4', isRtl && '-scale-x-100')} />
+                )}
+              </Button>
+              <span className="order-1 hidden min-w-0 truncate whitespace-nowrap px-0.5 text-xs text-muted-foreground sm:inline">
+                {t('songHeader.AUTO_SCROLL_LABEL')}
+              </span>
+              <span className="order-3 min-w-[2.25rem] shrink-0 text-center text-xs font-semibold tabular-nums">
+                {autoScroll.speed.toFixed(1)}x
+              </span>
+              {autoScroll.isActive && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="order-4 h-8 w-8 shrink-0"
+                    onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+                  >
+                    <MinusIcon className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="order-5 h-8 w-8 shrink-0"
+                    onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+                  >
+                    <PlusIcon className="h-3.5 w-3.5" />
+                  </Button>
+                </>
               )}
-            </Button>
-            <span
-              className="order-1 hidden whitespace-nowrap px-0.5 text-xs text-muted-foreground md:inline"
-            >
-              {t('songHeader.AUTO_SCROLL_LABEL')}
-            </span>
-            <span className="order-3 min-w-[2rem] text-center text-xs font-medium">
-              {autoScroll.speed.toFixed(1)}x
-            </span>
-            {autoScroll.isActive && (
+            </div>
+
+            {onToggleToolsBar && (
               <>
+                <div className="h-8 w-px shrink-0 bg-border/80" aria-hidden />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="order-4 h-7 w-7"
-                  onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+                  className="h-10 w-10 shrink-0 rounded-none rounded-e-xl rtl:rounded-e-none rtl:rounded-s-xl"
+                  onClick={() => onToggleToolsBar()}
+                  aria-label={t('songHeader.TOOLS_LABEL')}
+                  title={t('songHeader.TOOLS_LABEL')}
                 >
-                  <MinusIcon className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="order-5 h-7 w-7"
-                  onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
-                >
-                  <PlusIcon className="h-3 w-3" />
+                  <AdjustmentsHorizontalIcon className="h-5 w-5" />
                 </Button>
               </>
             )}
           </div>
         </div>
-
-        {/* Tools: icon only below md, icon + "Outils" from md */}
-        {onToggleToolsBar && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-10 w-10 flex-shrink-0 md:h-9 md:w-auto md:min-w-0 md:gap-1.5 md:px-3"
-            onClick={() => onToggleToolsBar()}
-            aria-label={t('songHeader.TOOLS_LABEL')}
-            title={t('songHeader.TOOLS_LABEL')}
-          >
-            <Cog6ToothIcon className="h-5 w-5 md:h-4 md:w-4" />
-            <span className="hidden text-sm md:inline">{t('songHeader.TOOLS_LABEL')}</span>
-          </Button>
-        )}
 
         {onPrevSong && onNextSong && (
           <div className="flex items-center gap-1 flex-shrink-0">
