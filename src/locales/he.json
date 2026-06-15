@@ -46,6 +46,7 @@
     "songs": "שירים",
     "library": "ספרייה",
     "search": "חיפוש",
+    "explore": "Explore",
     "folders": "תיקיות",
     "playlists": "פלייליסטים",
     "chords": "אקורדים",
@@ -629,7 +630,12 @@
     "LEVELS_SECTION": "רמות",
     "DECADES_SECTION": "עשורים",
     "ALL_FILTER": "הכל",
-    "ALL_DECADES_FILTER": "הכל"
+    "ALL_DECADES_FILTER": "הכל",
+    "EMPTY_TITLE": "לא נמצאו שירים",
+    "EMPTY_DESCRIPTION": "נסה ז'אנר, עשור או מילת חיפוש אחרת.",
+    "ADVANCED_FILTERS": "מסננים מתקדמים",
+    "APPLY_FILTERS": "החל",
+    "CLEAR_FILTERS": "נקה מסננים"
   },
   "learningPath": {
     "TITLE": "ההתקדמות שלך בלמידה",

@@ -21,6 +21,8 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     pathname === '/' ||
     pathname === '/search' ||
     pathname.startsWith('/search/') ||
+    pathname === '/explore' ||
+    pathname.startsWith('/explore/') ||
     pathname.startsWith('/library/')
 
   useEffect(() => {
@@ -45,6 +47,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (path.startsWith('/search/')) return undefined
     if (path === '/songs') return t('navigation.songs')
     if (path.startsWith('/songs/')) return undefined
+    if (path === '/explore' || path.startsWith('/explore/')) return t('navigation.explore')
     if (path === '/add-song') return t('navigation.addSong')
     if (path === '/folders') return t('navigation.folders')
     if (path.startsWith('/folders/')) return undefined

@@ -410,7 +410,7 @@ export default function SongTable({
         </div>
       )}
 
-      <ul className="divide-y divide-border">
+      <ul>
         {sortedSongs.length === 0 ? (
           <SongTableEmptyState
             currentFolder={currentFolder}

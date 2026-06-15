@@ -46,6 +46,7 @@
     "songs": "Chansons",
     "library": "Bibliothèque",
     "search": "Rechercher",
+    "explore": "Explore",
     "folders": "Dossiers",
     "playlists": "Playlists",
     "chords": "Accords",
@@ -629,7 +630,12 @@
     "LEVELS_SECTION": "Niveaux",
     "DECADES_SECTION": "Décennies",
     "ALL_FILTER": "Tous",
-    "ALL_DECADES_FILTER": "Toutes"
+    "ALL_DECADES_FILTER": "Toutes",
+    "EMPTY_TITLE": "Aucune chanson trouvée",
+    "EMPTY_DESCRIPTION": "Essayez un autre genre, une autre décennie ou un autre terme de recherche.",
+    "ADVANCED_FILTERS": "Filtres avancés",
+    "APPLY_FILTERS": "Appliquer",
+    "CLEAR_FILTERS": "Effacer les filtres"
   },
   "learningPath": {
     "TITLE": "Votre progression d'apprentissage",

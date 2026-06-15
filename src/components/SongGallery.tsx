@@ -1,12 +1,11 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { MusicalNoteIcon, ArrowsUpDownIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { useLanguage } from '@/context/LanguageContext'
+import { cn } from '@/lib/utils'
 
 interface SongGalleryProps {
   songs: Song[]
@@ -22,21 +21,13 @@ function DraggableSongCard({
   songs, 
   pathname, 
   router, 
-  showAddButton, 
-  onAddClick, 
-  addingId,
   hasUser,
-  t,
 }: { 
   song: Song
   songs: Song[]
   pathname: string | null
   router: any
-  showAddButton?: boolean
-  onAddClick?: (song: Song) => void
-  addingId?: string | null
   hasUser?: boolean
-  t: (key: string) => string
 }) {
   const {
     attributes,
@@ -76,84 +67,57 @@ function DraggableSongCard({
   }
 
   return (
-    <div 
+    <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-white dark:bg-gray-800 rounded-lg overflow-hidden transition-all hover:shadow-lg border-2 relative flex flex-col ${
-        isDragging 
-          ? 'z-50 shadow-xl border-blue-500 dark:border-blue-400 opacity-75' 
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-      }`}
-    >
-      {/* Drag handle - positioned in bottom-right corner */}
-      {hasUser && (
-        <div
-          {...listeners}
-          {...attributes}
-          onClick={(e) => e.stopPropagation()}
-          className="absolute bottom-2 right-2 z-10 p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-md shadow-md cursor-grab active:cursor-grabbing hover:bg-white dark:hover:bg-gray-800 transition-colors touch-none"
-          style={{ touchAction: 'none' }}
-          aria-label="Drag to move song"
-        >
-          <ArrowsUpDownIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-400" />
-        </div>
+      className={cn(
+        'group relative flex flex-col gap-2',
+        isDragging && 'z-50 opacity-75'
       )}
-      <div onClick={handleSongClick} className="flex-1 cursor-pointer">
-            <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden">
-              {song.songImageUrl ? (
-                <img 
-                  src={song.songImageUrl} 
-                  alt={song.title}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <MusicalNoteIcon className="h-10 w-10 text-gray-400 dark:text-gray-500" />
-                </div>
-              )}
-            </div>
-            <div className="p-1.5 sm:p-2">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-xs sm:text-sm truncate mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {song.title}
-              </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-2">
-                {song.author}
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {song.rating && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
-                    ⭐ {song.rating.toFixed(1)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        {showAddButton && onAddClick && (
-          <button
-            onClick={() => onAddClick(song)}
-            disabled={addingId === song.id}
-            className="m-2 inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75 disabled:cursor-not-allowed"
-            aria-label={t('library.addToLibrary')}
-            title={t('library.addToLibrary')}
+    >
+      <div
+        onClick={handleSongClick}
+        className="relative aspect-square w-full cursor-pointer overflow-hidden rounded-xl bg-muted"
+      >
+        {song.songImageUrl ? (
+          <img
+            src={song.songImageUrl}
+            alt={song.title}
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          />
+        ) : null}
+
+        {hasUser && (
+          <div
+            {...listeners}
+            {...attributes}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-2 right-2 z-10 touch-none rounded-md bg-background/90 p-1.5 shadow-sm backdrop-blur-sm transition-colors hover:bg-background active:cursor-grabbing cursor-grab"
+            style={{ touchAction: 'none' }}
+            aria-label="Drag to move song"
           >
-            {addingId === song.id ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            ) : (
-              <PlusIcon className="h-4 w-4" aria-hidden />
-            )}
-          </button>
+            <ArrowsUpDownIcon className="h-4 w-4 text-muted-foreground" />
+          </div>
         )}
+
       </div>
-    )
+
+      <div onClick={handleSongClick} className="min-w-0 cursor-pointer space-y-0.5">
+        <h3 className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
+          {song.title}
+        </h3>
+        <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+      </div>
+    </div>
+  )
 }
 
-export default function SongGallery({ songs, showAddButton, onAddClick, addingId, hasUser = false }: SongGalleryProps) {
+export default function SongGallery({ songs, hasUser = false }: SongGalleryProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { t } = useLanguage()
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {songs.map((song) => (
         <DraggableSongCard
           key={song.id}
@@ -161,11 +125,7 @@ export default function SongGallery({ songs, showAddButton, onAddClick, addingId
           songs={songs}
           pathname={pathname}
           router={router}
-          showAddButton={showAddButton}
-          onAddClick={onAddClick}
-          addingId={addingId}
           hasUser={hasUser}
-          t={t}
         />
       ))}
     </div>
