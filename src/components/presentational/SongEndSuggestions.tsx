@@ -11,6 +11,7 @@ import {
   type LibrarySongRef,
 } from '@/utils/songSuggestions'
 import { cn } from '@/lib/utils'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 
 export type NextSongRef = {
   id: string
@@ -49,6 +50,8 @@ function SuggestionCard({
   href: string
   onNavigate?: () => void
 }) {
+  const { isRtl } = useLanguage()
+
   return (
     <Link
       href={href}
@@ -65,23 +68,16 @@ function SuggestionCard({
         alt={title}
         size="sm"
       />
-      <div className="min-w-0 flex-1">
+      <div
+        className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p
-          className="truncate text-base font-semibold text-foreground"
-          dir={/[\u0590-\u05FF]/.test(title) ? 'rtl' : 'ltr'}
-        >
-          {title}
-        </p>
+        <p className="truncate text-base font-semibold text-foreground">{title}</p>
         {subtitle && (
-          <p
-            className="truncate text-sm text-muted-foreground"
-            dir={/[\u0590-\u05FF]/.test(subtitle) ? 'rtl' : 'ltr'}
-          >
-            {subtitle}
-          </p>
+          <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
       <ForwardChevronIcon
@@ -99,7 +95,7 @@ export function SongEndSuggestions({
   nextSong,
   onPlayNext,
 }: SongEndSuggestionsProps) {
-  const { t } = useLanguage()
+  const { t, isRtl } = useLanguage()
   const sentinelRef = useRef<HTMLDivElement>(null)
   const [librarySongs, setLibrarySongs] = useState<LibrarySongRef[]>([])
   const [shouldLoadLibrary, setShouldLoadLibrary] = useState(false)
@@ -166,7 +162,10 @@ export function SongEndSuggestions({
 
   return (
     <div ref={sentinelRef} className="mt-8 space-y-3 border-t border-border pt-6">
-      <h3 className="text-sm font-semibold text-foreground">
+      <h3
+        className={cn('text-sm font-semibold text-foreground', UI_TEXT_ALIGN)}
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
         {t('songEnd.continueListening')}
       </h3>
       {nextSong && (

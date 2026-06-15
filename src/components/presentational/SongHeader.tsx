@@ -50,7 +50,6 @@ export default function SongHeader({
   canNextSong,
   nextSongInfo,
   onToggleToolsBar,
-  isInLibrary = false,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
   const coverUrl = useSongCover(song);
@@ -169,11 +168,11 @@ export default function SongHeader({
               <BackArrowIcon className="h-5 w-5" />
             </Button>
             {nextSongInfo && canNextSong && (
-              <div className="hidden md:flex min-w-0 max-w-[7rem] flex-col items-end rtl:items-start">
-                <span
-                  className="truncate text-xs font-medium text-foreground"
-                  dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}
-                >
+              <div
+                className="hidden min-w-0 max-w-[7rem] flex-col md:flex text-start"
+                dir={isRtl ? 'rtl' : 'ltr'}
+              >
+                <span className="truncate text-xs font-medium text-foreground">
                   {nextSongInfo.title}
                 </span>
               </div>

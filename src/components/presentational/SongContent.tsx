@@ -138,7 +138,7 @@ export default function SongContent({
   currentFolderId,
   onFolderChange,
 }: SongContentProps) {
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const pathname = usePathname();
   const { signInWithGoogle } = useAuthContext();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -234,27 +234,21 @@ export default function SongContent({
   };
 
   const coverUrl = useSongCover(transposedSong);
-  const titleIsRtl = /[\u0590-\u05FF]/.test(transposedSong?.title || '');
-  const authorIsRtl = /[\u0590-\u05FF]/.test(transposedSong?.author || '');
 
   const songTitleBlock = (
-    <>
-      <h2
-        className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
-        dir={titleIsRtl ? 'rtl' : 'ltr'}
-      >
+    <div className="min-w-0 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
+      <h2 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base">
         {transposedSong?.title || ''}
       </h2>
       {transposedSong?.author && (
         <Link
           href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
-          className="mt-0.5 block max-w-full truncate text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
-          dir={authorIsRtl ? 'rtl' : 'ltr'}
+          className="mt-0.5 block max-w-full truncate text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
         >
           {transposedSong.author}
         </Link>
       )}
-    </>
+    </div>
   );
 
   const songCoverVignette = (
@@ -397,20 +391,20 @@ export default function SongContent({
   ) : null;
 
   const titleRowTrailingActions =
-    ratingDisplay || viewsDisplay ? (
-      <div className="flex shrink-0 items-stretch gap-2 self-stretch">
+    ratingDisplay || viewsDisplay || favoriteButton || editButton ? (
+      <div className="flex shrink-0 items-stretch gap-1.5 self-stretch sm:gap-2">
         {ratingDisplay}
         {viewsDisplay}
+        {favoriteButton}
+        {editButton}
       </div>
     ) : null;
 
   const songMetaRow =
-    folderControl || inLibraryBadge || favoriteButton || editButton ? (
+    folderControl || inLibraryBadge ? (
       <div className="flex w-full items-center gap-1.5">
         {folderControl}
         {inLibraryBadge}
-        {favoriteButton}
-        {editButton}
       </div>
     ) : null;
 
