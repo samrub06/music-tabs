@@ -101,12 +101,7 @@ function GridCard({ href, layout = 'scroll', title, children }: GridCardProps) {
       >
         {children}
       </div>
-      <div
-        className={cn(
-          'min-w-0 truncate font-medium text-foreground transition-colors group-hover:text-primary',
-          layout === 'grid' ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'
-        )}
-      >
+      <div className="min-w-0 truncate text-xs font-medium leading-tight text-foreground transition-colors group-hover:text-primary sm:text-sm">
         {title}
       </div>
     </Link>
@@ -140,7 +135,7 @@ function buildPlaylistCard(item: PublicPlaylistItem, options?: { gaugeSize?: num
     ) : isDifficultyBanner && difficultyTheme ? (
       <div className="absolute inset-0" style={{ backgroundColor: difficultyTheme.bannerBg }}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <DifficultyGauge level={difficultyTheme.level} size={options?.gaugeSize ?? 60} />
+          <DifficultyGauge level={difficultyTheme.level} size={options?.gaugeSize ?? 72} />
         </div>
       </div>
     ) : (
@@ -247,7 +242,7 @@ export default function CuratedPlaylistRow({
     filteredPlaylists.map((item) => buildPlaylistCard(item, options))
 
   const cards = buildCards()
-  const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: 36 }) : cards
+  const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: 56 }) : cards
 
   if (cards.length === 0 && userShortcutCards.length === 0) return null
 
@@ -278,7 +273,7 @@ export default function CuratedPlaylistRow({
   return (
     <section className="mb-6">
       {showSectionTitle && section && (
-        <h3 className="mb-3 text-base font-semibold text-foreground sm:text-lg">
+        <h3 className="mb-3 text-lg font-bold tracking-tight text-foreground sm:text-xl">
           {t(sectionTitleKey[section])}
         </h3>
       )}

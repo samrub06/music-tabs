@@ -167,15 +167,21 @@ Songbook / Shabbat, Israeli et International — sans quitter l'app.
 
 ### 3.1 État actuel vs cible
 
-| Aujourd'hui (`LibrarySections`) | Problème | Cible |
-|---------------------------------|----------|-------|
-| Genres internationaux en **premier** | Le catalogue hébreu passe après Rock/Pop | **Hebrew content first** (Israël first) |
-| Section `jewish` unique | Songbook + Israeli mélangés | **Deux sous-zones** visuelles |
-| Décennies / difficulté au milieu | Casse la lecture des 3 univers | Regroupés sous **International** |
-| Pas de titre de zone | Scroll anonyme | **En-têtes + ancre / onglets** |
-| `/explore` peu lié à `/` | Deux parcours déconnectés | Lien **See all → /explore** depuis International |
+| Point produit | Statut (juin 2026) | Reste à faire |
+|---------------|-------------------|---------------|
+| Hebrew content first (Songbook → Israeli → International) | **Fait** — `LibrarySections` réordonné | — |
+| Deux sous-zones Songbook / Israeli (plus `jewish` unique) | **Fait** — `hubZone` dans `curatedPlaylists.ts` | Mizrahi dédié si catalogue étoffé |
+| Genres / décennies / difficulté sous International | **Fait** | Limiter l’aperçu genre sur `/` (ex. 6 cartes) si scroll trop long |
+| En-têtes de zone | **Fait** — `HubZoneHeader` (titres seuls, sans accent couleur) | Couleurs d’accent : volontairement retirées (feedback UX) |
+| Lien See all → `/explore` | **Fait** — `ExploreHubCta` pleine largeur | — |
+| Onglets sticky + ancres scroll | **Fait** — `HubZoneNav` | Affiner `scroll-mt` / offset header si collision mobile |
+| Sections transversales sous les 3 zones | **Fait** — Recent → Featured → For You → Popular ; Spotify en bas | Trending explicite sur `/` (aujourd’hui via Popular) |
+| Filtre recherche par zone (All / Songbook / Israeli / Intl) | **Non fait** (Phase 2b) | Nécessite logique métier (UG vs Tab4U vs catalogue) — pas un simple filtre UI |
+| Cartes playlists (image + titre dessous, pas de compteur) | **Fait** — `CuratedPlaylistRow` | — |
 
-Ordre actuel des rows sur `/` : genre → jewish → Spotify → recent → decade → featured → For You → difficulty → popular.
+Ordre actuel sur `/` : zones hub (avec nav sticky) → Recent → Featured → For You → Popular → Spotify.
+
+**Écart wireframe vs réalité :** pas de limite « 6 genres » sur l’aperçu International ; le sticky nav compense partiellement la longueur du scroll.
 
 ### 3.2 Wireframe cible (mobile-first)
 
@@ -260,11 +266,13 @@ Pas de duplication de données : **changement de présentation** sur `/`, pas un
 
 ### 3.6 Implémentation (ordre suggéré)
 
-1. **Réordonner** `LibrarySections` : jewish (splité en 2 rows) → genre/decade/difficulty groupés sous header International.
-2. **Ajouter** composant `HubZoneHeader` (titre + description + accent couleur).
-3. **Scinder** `CuratedPlaylistRow section="jewish"` en `songbook` + `israeli` (filtre par slug ou nouveau champ `hubZone` dans `CuratedPlaylistDefinition`).
-4. **Ajouter** lien CTA vers `/explore` en bas de la zone International.
-5. **Phase 2 :** onglets sticky + filtre recherche par zone.
+1. ~~**Réordonner** `LibrarySections`~~ — fait.
+2. ~~**Ajouter** `HubZoneHeader`~~ — fait (titres uniquement).
+3. ~~**Scinder** jewish en `songbook` + `israeli` via `hubZone`~~ — fait.
+4. ~~**Ajouter** CTA `/explore`~~ — fait.
+5. ~~**Phase 2a :** onglets sticky + ancres (`HubZoneNav`)~~ — fait.
+6. **Phase 2b (à prioriser ensuite) :** filtre recherche par zone + plafond genres sur `/`.
+7. **Phase 3 (optionnel) :** couleurs d’accent par zone si tests utilisateurs le demandent.
 
-> Voir aussi : `src/app/(protected)/search/LibrarySections.tsx`, `src/data/curatedPlaylists.ts`.
+> Voir : `LibrarySections.tsx`, `HubZoneNav.tsx`, `curatedPlaylists.ts`, `SearchClient.tsx`.
 

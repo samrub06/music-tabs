@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { RecentSearchList } from '@/components/search/RecentSearchList'
+import { HubZoneNav } from '@/components/library/HubZoneNav'
 import {
   FALLBACK_SEARCH_IMAGE_URL,
   loadRecentSearches,
@@ -870,6 +871,7 @@ export default function SearchClient({
 
         {/* Library sections — always mounted, hidden via CSS to avoid RSC reload flash */}
         <div className={cn(!showLibrarySections && 'hidden')}>
+          {showLibrarySections && <HubZoneNav scrollContainerRef={scrollContainerRef} />}
           {children}
         </div>
     </div>

@@ -10,7 +10,7 @@ import {
   XMarkIcon,
   AdjustmentsHorizontalIcon,
   Squares2X2Icon,
-  TableCellsIcon,
+  ListBulletIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
@@ -75,6 +75,64 @@ function PlaylistCard({
   );
 }
 
+function PlaylistListRow({
+  playlist,
+  songCount,
+  onPlay,
+  onOpen,
+}: {
+  playlist: Playlist;
+  songCount: number;
+  onPlay: (e: React.MouseEvent) => void;
+  onOpen: () => void;
+}) {
+  const { t } = useLanguage();
+  const coverUrl = getPlaylistDisplayCoverUrl(playlist);
+  const songCountLabel =
+    songCount === 1 ? `1 ${t('songs.songCount')}` : `${songCount} ${t('songs.songCountPlural')}`;
+
+  return (
+    <li>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:py-3"
+      >
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-primary/10">
+          {coverUrl ? (
+            <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
+              <MusicalNoteIcon className="h-5 w-5 text-primary-foreground/90" />
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-foreground">{playlist.name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {playlist.description ? `${songCountLabel} · ${playlist.description}` : songCountLabel}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onPlay}
+          aria-label={t('playlistsPage.playPlaylist')}
+          className="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+        >
+          <PlayIcon className="h-5 w-5" />
+        </button>
+      </div>
+    </li>
+  );
+}
+
 export default function PlaylistsClient({ songs, playlists }: PlaylistsClientProps) {
   const router = useRouter();
   const { t } = useLanguage();
@@ -85,7 +143,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
   const [localSearchValue, setLocalSearchValue] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [view, setView] = useState<'grid' | 'list'>('grid');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -271,17 +329,17 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             </button>
             <button
               type="button"
-              onClick={() => setView('table')}
+              onClick={() => setView('list')}
               className={cn(
                 'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
-                view === 'table'
+                view === 'list'
                   ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
               )}
-              title={t('playlistsPage.tableView')}
+              title={t('playlistsPage.listView')}
             >
-              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="hidden sm:inline">{t('playlistsPage.tableView')}</span>
+              <ListBulletIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="hidden sm:inline">{t('playlistsPage.listView')}</span>
             </button>
           </div>
         </div>
@@ -332,71 +390,17 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             ))}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t('playlistsPage.name')}
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
-                    {t('playlistsPage.description')}
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t('playlistsPage.songCount')}
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
-                    {t('playlistsPage.createdAt')}
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    {t('common.play')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {sortedPlaylists.map((playlist) => (
-                  <tr
-                    key={playlist.id}
-                    onClick={() => handlePlaylistClick(playlist)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
-                  >
-                    <td className="px-3 sm:px-4 py-3">
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-[200px]">
-                        {playlist.name}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 hidden sm:table-cell">
-                      <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xs">
-                        {playlist.description || '–'}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
-                        {getSongCount(playlist)}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
-                      {new Date(playlist.createdAt).toLocaleDateString(undefined, {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </td>
-                    <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-right">
-                      <button
-                        onClick={(e) => handleStartSavedPlaylist(e, playlist)}
-                        aria-label={t('playlistsPage.playPlaylist')}
-                        className="inline-flex items-center justify-center min-h-[40px] min-w-[40px] rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        <PlayIcon className="h-5 w-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul>
+            {sortedPlaylists.map((playlist) => (
+              <PlaylistListRow
+                key={playlist.id}
+                playlist={playlist}
+                songCount={getSongCount(playlist)}
+                onPlay={(e) => handleStartSavedPlaylist(e, playlist)}
+                onOpen={() => handlePlaylistClick(playlist)}
+              />
+            ))}
+          </ul>
         )}
       </div>
 

@@ -57,7 +57,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
   return (
     <>
-      <div className="mb-2">
+      <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="songbook" />
         <CuratedPlaylistRow
           hubZone="songbook"
@@ -66,7 +66,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
       </div>
 
-      <div className="mb-2">
+      <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="israeli" />
         <CuratedPlaylistRow
           hubZone="israeli"
@@ -75,7 +75,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
       </div>
 
-      <div className="mb-2">
+      <div id="hub-zone-international" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="international" />
         <CuratedPlaylistRow
           section="genre"
@@ -88,7 +88,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         <ExploreHubCta />
       </div>
 
-      <SpotifyComingSoonSection spotifyId={spotifyId} />
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
       {userId && forYouData?.topArtist && forYouData.artistSongs.length > 0 && (
@@ -99,6 +98,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
       )}
       <PopularSongsSection songs={popularSongs} userId={userId} />
+      <SpotifyComingSoonSection spotifyId={spotifyId} />
     </>
   )
 }
