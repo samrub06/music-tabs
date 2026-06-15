@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Search,
+  Home,
   Library,
   ListMusic,
   FolderOpen,
@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/sidebar'
 
 const MAIN_NAV = [
-  { href: '/', labelKey: 'navigation.search', icon: Search, match: (p: string) => p === '/' || p === '/search' || p.startsWith('/search/') },
+  { href: '/', labelKey: 'navigation.home', icon: Home, match: (p: string) => p === '/' || p === '/search' || p.startsWith('/search/') },
   { href: '/songs', labelKey: 'navigation.songs', icon: Library, match: (p: string) => p === '/songs' || p.startsWith('/songs/') },
   { href: '/playlists', labelKey: 'navigation.playlists', icon: ListMusic, match: (p: string) => p === '/playlists' || p.startsWith('/playlists/') || p.startsWith('/playlist/') },
 ] as const

@@ -411,3 +411,27 @@ export const CURATED_PLAYLIST_SONG_LIMIT = 20
 export const curatedPlaylistSectionBySlug = Object.fromEntries(
   CURATED_PLAYLISTS.map((playlist) => [playlist.slug, playlist.section])
 ) as Record<string, CuratedPlaylistSection>
+
+/** Home hub zones (product.md §3) — maps curated slugs to visible catalog areas. */
+export type HubZone = 'songbook' | 'israeli' | 'international'
+
+const SONGBOOK_HUB_SLUGS = new Set([
+  'jewish-songbook',
+  'chabad-nigunim',
+  'hassidic',
+  'carlebach',
+  'moroccan-piyut',
+  'tunisian',
+])
+
+const ISRAELI_HUB_SLUGS = new Set(['modern-israeli', 'yosef-karduner', 'akiva'])
+
+export function getHubZoneForSlug(slug: string): HubZone | undefined {
+  if (SONGBOOK_HUB_SLUGS.has(slug)) return 'songbook'
+  if (ISRAELI_HUB_SLUGS.has(slug)) return 'israeli'
+  const section = curatedPlaylistSectionBySlug[slug]
+  if (section === 'genre' || section === 'decade' || section === 'difficulty') {
+    return 'international'
+  }
+  return undefined
+}

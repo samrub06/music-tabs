@@ -159,7 +159,7 @@ export default function DashboardSidebar({
             className="w-full flex items-center justify-center px-4 py-3 bg-blue-200 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg hover:bg-blue-300 dark:hover:bg-blue-900/50 transition-colors shadow-sm"
           >
             <MagnifyingGlassIcon className="h-5 w-5 mr-2" />
-            {t('navigation.search')}
+            {t('navigation.home')}
           </button>
         </div>
 

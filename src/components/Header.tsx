@@ -169,7 +169,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
 
         {!user && (
           <Button variant="ghost" size="icon" className="md:hidden" asChild>
-            <Link href="/" aria-label={t('navigation.search')}>
+            <Link href="/" aria-label={t('navigation.home')}>
               <Search className="h-5 w-5" />
             </Link>
           </Button>

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { 
   RectangleStackIcon, 
   QueueListIcon,
-  MagnifyingGlassIcon,
+  HomeIcon,
   EllipsisHorizontalIcon,
   FolderIcon,
   MusicalNoteIcon,
@@ -16,7 +16,7 @@ import {
 import { 
   RectangleStackIcon as RectangleStackIconSolid, 
   QueueListIcon as QueueListIconSolid,
-  MagnifyingGlassIcon as MagnifyingGlassIconSolid,
+  HomeIcon as HomeIconSolid,
   EllipsisHorizontalIcon as EllipsisHorizontalIconSolid,
   FolderIcon as FolderIconSolid,
   MusicalNoteIcon as MusicalNoteIconSolid,
@@ -44,9 +44,9 @@ export default function BottomNavigation() {
   const navItems = [
     {
       href: '/',
-      label: t('navigation.search'),
-      icon: MagnifyingGlassIcon,
-      iconSolid: MagnifyingGlassIconSolid,
+      label: t('navigation.home'),
+      icon: HomeIcon,
+      iconSolid: HomeIconSolid,
       isActive: pathname === '/' || pathname === '/search' || pathname.startsWith('/search/'),
     },
     {

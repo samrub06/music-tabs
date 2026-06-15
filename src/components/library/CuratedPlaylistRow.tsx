@@ -7,7 +7,9 @@ import { useLanguage } from '@/context/LanguageContext'
 import {
   CURATED_PLAYLISTS,
   curatedPlaylistSectionBySlug,
+  getHubZoneForSlug,
   type CuratedPlaylistSection,
+  type HubZone,
 } from '@/data/curatedPlaylists'
 import {
   getCuratedPlaylistCoverUrl,
@@ -56,6 +58,7 @@ const curatedGradientBySlug: Record<string, string> = {
   'modern-israeli': 'bg-gradient-to-br from-violet-600 to-fuchsia-800',
   'yosef-karduner': 'bg-gradient-to-br from-sky-600 to-blue-900',
   akiva: 'bg-gradient-to-br from-orange-600 to-red-800',
+  'jewish-songbook': 'bg-gradient-to-br from-teal-700 to-cyan-900',
 }
 
 const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
@@ -167,17 +170,26 @@ function buildCoverCardContent(coverUrl: string | null, fallback: ReactNode): Re
 }
 
 interface CuratedPlaylistRowProps {
-  section: CuratedPlaylistSection
+  section?: CuratedPlaylistSection
+  hubZone?: HubZone
   publicPlaylists: PublicPlaylistItem[]
   showUserShortcutCards?: boolean
+  /** When false, only the card row is rendered (parent supplies HubZoneHeader). */
+  showSectionTitle?: boolean
 }
 
 export default function CuratedPlaylistRow({
   section,
+  hubZone,
   publicPlaylists,
   showUserShortcutCards = false,
+  showSectionTitle = true,
 }: CuratedPlaylistRowProps) {
   const { t } = useLanguage()
+
+  if (!section && !hubZone) {
+    throw new Error('CuratedPlaylistRow requires section or hubZone')
+  }
 
   const userShortcutCards: ShortcutCardData[] = showUserShortcutCards
     ? [
@@ -219,12 +231,12 @@ export default function CuratedPlaylistRow({
     : []
 
   const cards = publicPlaylists
-    .filter(
-      (item) =>
-        item.songCount > 0 &&
-        item.curatedSlug &&
-        curatedPlaylistSectionBySlug[item.curatedSlug] === section
-    )
+    .filter((item) => {
+      if (item.songCount <= 0 || !item.curatedSlug) return false
+      if (hubZone) return getHubZoneForSlug(item.curatedSlug) === hubZone
+      if (section) return curatedPlaylistSectionBySlug[item.curatedSlug] === section
+      return false
+    })
     .sort((a, b) => {
       const orderA = CURATED_PLAYLISTS.find((p) => p.slug === a.curatedSlug)?.displayOrder ?? 0
       const orderB = CURATED_PLAYLISTS.find((p) => p.slug === b.curatedSlug)?.displayOrder ?? 0
@@ -251,9 +263,11 @@ export default function CuratedPlaylistRow({
 
   return (
     <section className="mb-6">
-      <h3 className="mb-3 text-base font-semibold text-foreground sm:text-lg">
-        {t(sectionTitleKey[section])}
-      </h3>
+      {showSectionTitle && section && (
+        <h3 className="mb-3 text-base font-semibold text-foreground sm:text-lg">
+          {t(sectionTitleKey[section])}
+        </h3>
+      )}
       <div
         className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory sm:gap-4"
         style={{

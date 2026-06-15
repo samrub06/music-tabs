@@ -5,6 +5,8 @@ import { songRepo } from '@/lib/services/songRepo'
 import { findUserSongMatch } from '@/lib/utils/songLibraryMatch'
 import ForYouArtistSection from '@/components/library/ForYouArtistSection'
 import CuratedPlaylistRow from '@/components/library/CuratedPlaylistRow'
+import { ExploreHubCta } from '@/components/library/ExploreHubCta'
+import { HubZoneHeader } from '@/components/library/HubZoneHeader'
 import FeaturedSongSection from '../library/FeaturedSongSection'
 import RecentSongsSection from '../library/RecentSongsSection'
 import PopularSongsSection from '../library/PopularSongsSection'
@@ -55,15 +57,38 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
   return (
     <>
-      <CuratedPlaylistRow
-        section="genre"
-        publicPlaylists={publicPlaylists}
-        showUserShortcutCards={!!userId}
-      />
-      <CuratedPlaylistRow section="jewish" publicPlaylists={publicPlaylists} />
+      <div className="mb-2">
+        <HubZoneHeader zone="songbook" />
+        <CuratedPlaylistRow
+          hubZone="songbook"
+          publicPlaylists={publicPlaylists}
+          showSectionTitle={false}
+        />
+      </div>
+
+      <div className="mb-2">
+        <HubZoneHeader zone="israeli" />
+        <CuratedPlaylistRow
+          hubZone="israeli"
+          publicPlaylists={publicPlaylists}
+          showSectionTitle={false}
+        />
+      </div>
+
+      <div className="mb-2">
+        <HubZoneHeader zone="international" />
+        <CuratedPlaylistRow
+          section="genre"
+          publicPlaylists={publicPlaylists}
+          showUserShortcutCards={!!userId}
+        />
+        <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
+        <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
+        <ExploreHubCta className="hidden sm:block" />
+      </div>
+
       <SpotifyComingSoonSection spotifyId={spotifyId} />
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
-      <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
       {userId && forYouData?.topArtist && forYouData.artistSongs.length > 0 && (
         <ForYouArtistSection
@@ -72,7 +97,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           userId={userId}
         />
       )}
-      <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
       <PopularSongsSection songs={popularSongs} userId={userId} />
     </>
   )
