@@ -39,7 +39,6 @@ import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { StarRatingDisplay } from './StarRatingDisplay';
 import { useSongCover } from '@/lib/hooks/useSongCover';
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
-import type { LibrarySongRef } from '@/utils/songSuggestions';
 import {
   Select,
   SelectContent,
@@ -95,7 +94,6 @@ interface SongContentProps {
   onSetTransposeValue?: (value: number) => void;
   easyChordMode?: boolean;
   onToggleEasyChordMode?: () => void;
-  librarySongs?: LibrarySongRef[];
   nextSong?: NextSongRef | null;
   onPlayNext?: () => void;
   folders?: Folder[];
@@ -134,7 +132,6 @@ export default function SongContent({
   onSetTransposeValue,
   easyChordMode = false,
   onToggleEasyChordMode,
-  librarySongs = [],
   nextSong = null,
   onPlayNext,
   folders = [],
@@ -611,7 +608,7 @@ export default function SongContent({
               currentSongId={transposedSong.id}
               currentAuthor={transposedSong.author ?? ''}
               currentGenre={transposedSong.genre}
-              librarySongs={librarySongs}
+              isInLibrary={isInLibrary}
               nextSong={nextSong}
               onPlayNext={onPlayNext}
             />

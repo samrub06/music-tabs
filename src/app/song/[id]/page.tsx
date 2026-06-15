@@ -1,10 +1,10 @@
 import { songMetadata } from '@/lib/seo/metadata'
 import { redirect } from 'next/navigation'
 import { createSafeServerClient } from '@/lib/supabase/server'
-import { songRepo } from '@/lib/services/songRepo'
 import { profileRepo } from '@/lib/services/profileRepo'
 import SongViewerContainerSSR from '@/components/containers/SongViewerContainerSSR'
 import { updateSongAction, deleteSongAction } from './actions'
+import { getCachedSong } from './loadSong'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -13,8 +13,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createSafeServerClient()
-  const song = await songRepo(supabase).getSongInfo(id)
+  const song = await getCachedSong(id)
 
   if (!song) {
     return { title: 'Song not found', robots: { index: false, follow: false } }
@@ -28,11 +27,11 @@ export default async function SongPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const supabase = await createSafeServerClient()
   const { id: songId } = await params
+  const supabase = await createSafeServerClient()
 
   const userPromise = supabase.auth.getUser()
-  const songPromise = songRepo(supabase).getSong(songId)
+  const songPromise = getCachedSong(songId)
   const preferredInstrumentPromise = userPromise.then(({ data: { user } }) =>
     user ? profileRepo(supabase).getPreferredInstrument(user.id) : Promise.resolve(null)
   )

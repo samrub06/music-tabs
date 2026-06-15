@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ForwardChevronIcon } from '@/components/icons/DirectionalIcons'
 import { SongThumbnail } from './SongThumbnail'
 import { useLanguage } from '@/context/LanguageContext'
+import { getLibrarySongRefsAction } from '@/app/song/[id]/actions'
 import {
   pickAlternativeSong,
   type LibrarySongRef,
@@ -24,7 +25,7 @@ interface SongEndSuggestionsProps {
   currentSongId: string
   currentAuthor: string
   currentGenre?: string
-  librarySongs: LibrarySongRef[]
+  isInLibrary?: boolean
   nextSong: NextSongRef | null
   onPlayNext?: () => void
 }
@@ -94,13 +95,58 @@ export function SongEndSuggestions({
   currentSongId,
   currentAuthor,
   currentGenre,
-  librarySongs,
+  isInLibrary = false,
   nextSong,
   onPlayNext,
 }: SongEndSuggestionsProps) {
   const { t } = useLanguage()
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const [librarySongs, setLibrarySongs] = useState<LibrarySongRef[]>([])
+  const [shouldLoadLibrary, setShouldLoadLibrary] = useState(false)
+
+  useEffect(() => {
+    if (!isInLibrary) {
+      setLibrarySongs([])
+      setShouldLoadLibrary(false)
+      return
+    }
+
+    const el = sentinelRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoadLibrary(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '320px' }
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [isInLibrary, currentSongId])
+
+  useEffect(() => {
+    if (!shouldLoadLibrary || !isInLibrary) return
+
+    let cancelled = false
+    getLibrarySongRefsAction()
+      .then((refs) => {
+        if (!cancelled) setLibrarySongs(refs)
+      })
+      .catch((error) => {
+        console.error('Failed to load library song refs:', error)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [shouldLoadLibrary, isInLibrary, currentSongId])
 
   const alternative = useMemo(() => {
+    if (librarySongs.length === 0) return null
     const exclude = new Set<string>([currentSongId])
     if (nextSong) exclude.add(nextSong.id)
     return pickAlternativeSong(
@@ -116,10 +162,10 @@ export function SongEndSuggestions({
     nextSong,
   ])
 
-  if (!nextSong && !alternative) return null
+  if (!nextSong && !isInLibrary) return null
 
   return (
-    <div className="mt-8 space-y-3 border-t border-border pt-6">
+    <div ref={sentinelRef} className="mt-8 space-y-3 border-t border-border pt-6">
       <h3 className="text-sm font-semibold text-foreground">
         {t('songEnd.continueListening')}
       </h3>

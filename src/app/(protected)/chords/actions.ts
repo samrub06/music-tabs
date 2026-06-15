@@ -3,7 +3,6 @@
 import { createActionServerClient } from '@/lib/supabase/server'
 import { knownChordService } from '@/lib/services/knownChordService'
 import { requestChordSchema } from '@/lib/validation/schemas'
-import { revalidatePath } from 'next/cache'
 
 export async function markChordKnownAction(chordId: string) {
   const supabase = await createActionServerClient()
@@ -15,7 +14,6 @@ export async function markChordKnownAction(chordId: string) {
 
   try {
     await knownChordService.markKnown(user.id, chordId, supabase)
-    revalidatePath('/chords')
     return { success: true }
   } catch (error) {
     console.error('Error marking chord as known:', error)
@@ -59,7 +57,6 @@ export async function unmarkChordKnownAction(chordId: string) {
 
   try {
     await knownChordService.unmarkKnown(user.id, chordId, supabase)
-    revalidatePath('/chords')
     return { success: true }
   } catch (error) {
     console.error('Error unmarking chord as known:', error)

@@ -7,7 +7,6 @@ import React, { RefObject } from 'react';
 import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ToolsBottomBar from './ToolsBottomBar';
-import type { LibrarySongRef } from '@/utils/songSuggestions';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
 
@@ -60,7 +59,6 @@ interface SongViewerProps {
   canPrevSong?: boolean;
   canNextSong?: boolean;
   nextSongInfo?: NextSongRef | null;
-  librarySongs?: LibrarySongRef[];
   onPlayNext?: () => void;
   isAuthenticated?: boolean;
   manualBpm?: number | null;
@@ -121,7 +119,6 @@ export default function SongViewer({
   canPrevSong,
   canNextSong,
     nextSongInfo,
-    librarySongs = [],
     onPlayNext,
     isAuthenticated = false,
     manualBpm,
@@ -213,7 +210,6 @@ export default function SongViewer({
               onSetTransposeValue={onSetTransposeValue}
               easyChordMode={easyChordMode}
               onToggleEasyChordMode={onToggleEasyChordMode}
-              librarySongs={librarySongs}
               nextSong={nextSongInfo}
               onPlayNext={onPlayNext}
               folders={folders}

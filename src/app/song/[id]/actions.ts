@@ -29,22 +29,25 @@ export async function getLibrarySongRefsAction(): Promise<LibrarySongRef[]> {
   }))
 }
 
-/** Records a song view: increments view_count, updates updated_at, awards XP, and revalidates /songs */
+/** Records a song view: increments view_count immediately; gamification runs after response. */
 export async function recordSongViewAction(songId: string) {
   const supabase = await createActionServerClient()
 
-  // 1. Increment view count and update updated_at (RPC updates both)
   try {
     await songService.incrementViewCount(songId, supabase)
   } catch (error) {
     console.error('Error incrementing view count:', error)
   }
 
-  // 2. Gamification (XP) for authenticated users
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const gamification = gamificationRepo(supabase)
+  after(async () => {
+    revalidatePath('/songs')
+
     try {
+      const deferredSupabase = await createActionServerClient()
+      const { data: { user } } = await deferredSupabase.auth.getUser()
+      if (!user) return
+
+      const gamification = gamificationRepo(deferredSupabase)
       const hasViewed = await gamification.hasViewedSongToday(user.id, songId)
       if (!hasViewed) {
         await gamification.recordSongView(user.id, songId)
@@ -55,11 +58,6 @@ export async function recordSongViewAction(songId: string) {
     } catch (err) {
       console.error('Error awarding XP for song view:', err)
     }
-  }
-
-  // 3. Defer revalidation so navigation back to /songs is not blocked
-  after(() => {
-    revalidatePath('/songs')
   })
 }
 

@@ -18,14 +18,12 @@ import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
 import {
-  getLibrarySongRefsAction,
   recordSongViewAction,
   toggleSongFavoriteAction,
 } from '@/app/song/[id]/actions';
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions';
 import { useLanguage } from '@/context/LanguageContext';
 import { useFoldersContext } from '@/context/FoldersContext';
-import type { LibrarySongRef } from '@/utils/songSuggestions';
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -76,8 +74,8 @@ export default function SongViewerContainerSSR({
   const [chords, setChords] = useState<Chord[]>([]);
   const [isLiked, setIsLiked] = useState(song.isLiked ?? false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
-  const [librarySongs, setLibrarySongs] = useState<LibrarySongRef[]>([]);
   const chordsLoadedRef = useRef(false);
+  const viewRecordedForSongIdRef = useRef<string | null>(null);
   const { folders } = useFoldersContext();
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(
     song.folderId
@@ -90,26 +88,6 @@ export default function SongViewerContainerSSR({
   useEffect(() => {
     setCurrentFolderId(song.folderId);
   }, [song.id, song.folderId]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !isInLibrary) {
-      setLibrarySongs([]);
-      return;
-    }
-
-    let cancelled = false;
-    getLibrarySongRefsAction()
-      .then((refs) => {
-        if (!cancelled) setLibrarySongs(refs);
-      })
-      .catch((error) => {
-        console.error('Failed to load library song refs:', error);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, isInLibrary, song.id]);
 
   const handleFolderChange = async (folderId: string | undefined) => {
     if (!isInLibrary) return;
@@ -233,17 +211,14 @@ export default function SongViewerContainerSSR({
     }));
   }, [song.bpm]);
 
-  // Record view: increment view count, update updated_at, award XP, revalidate /songs
+  // Record view once per song (guards React Strict Mode double-mount in dev)
   useEffect(() => {
-    const handleView = async () => {
-      try {
-        await recordSongViewAction(song.id);
-      } catch (error) {
-        console.error('Failed to record song view:', error);
-      }
-    };
+    if (viewRecordedForSongIdRef.current === song.id) return
+    viewRecordedForSongIdRef.current = song.id
 
-    handleView();
+    recordSongViewAction(song.id).catch((error) => {
+      console.error('Failed to record song view:', error)
+    })
   }, [song.id]);
 
   // Normalize chord name for comparison
@@ -526,7 +501,6 @@ export default function SongViewerContainerSSR({
     canPrevSong: canPrevSong,
     canNextSong: canNextSong,
     nextSongInfo: nextSongInfo,
-    librarySongs,
     onPlayNext: handleNextSong,
     isAuthenticated,
     knownChordIds,
