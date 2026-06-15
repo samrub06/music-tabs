@@ -10,17 +10,11 @@ import { FEATURED_CATALOG_SONG_SLUG } from '@/data/featuredCatalogSong'
 
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
-  // Reconstruct content from sections since it's not stored in DB anymore
   const sections = (dbSong.sections as unknown as SongSection[]) || []
-  
-  // Create a temporary song object to pass to structuredSongToText
-  // We only need sections for the conversion
-  const tempSong = { sections } as Song
-  const content = structuredSongToText(tempSong)
 
   return {
     ...dbSong,
-    content, // Add the reconstructed content
+    content: '', // Sections are source of truth; use renderStructuredSong() when text is needed
     userId: dbSong.user_id || undefined,
     folderId: dbSong.folder_id || undefined,
     createdAt: new Date(dbSong.created_at),

@@ -3,12 +3,12 @@
 import { Song } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSongCover } from '@/lib/hooks/useSongCover';
+import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
 import {
   MinusIcon,
   PlusIcon,
   PauseIcon,
   PlayIcon,
-  MusicalNoteIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import {
@@ -72,27 +72,19 @@ export default function SongHeader({
           <BackArrowIcon className="h-5 w-5" />
         </Button>
 
-        <div
-          className={cn(
-            'flex min-w-0 flex-1 items-center',
-            isInLibrary && 'hidden sm:flex'
-          )}
-        >
-          {coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={coverUrl}
-              alt=""
-              className="h-10 w-10 shrink-0 rounded-lg object-cover"
-            />
-          ) : (
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted"
-              aria-hidden
-            >
-              <MusicalNoteIcon className="h-5 w-5 text-muted-foreground" />
-            </div>
-          )}
+        <div className="hidden min-w-0 flex-1 items-center sm:flex">
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <SongCoverPlaceholder iconClassName="min-h-5 min-w-5 max-h-6 max-w-6" />
+            )}
+          </div>
         </div>
 
         {/* Capo: show in header on all breakpoints (including mobile), same height as other buttons (h-10) */}

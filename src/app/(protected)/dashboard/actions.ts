@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
 import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
+import { renderStructuredSong } from '@/utils/structuredSong'
 import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
 import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
 
@@ -267,7 +268,7 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
   const newSongData: NewSongData = {
     title: sourceSong.title,
     author: sourceSong.author,
-    content: sourceSong.content,
+    content: sourceSong.content || renderStructuredSong(sourceSong),
     folderId: targetFolderId,
     reviews: sourceSong.reviews,
     capo: sourceSong.capo,

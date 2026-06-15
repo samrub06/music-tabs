@@ -139,6 +139,10 @@ export function PublicPlaylistSongList({
         targetKey: '',
         songs: songs.map((s) => ({
           id: s.id,
+          title: s.title,
+          author: s.author,
+          songImageUrl: s.songImageUrl,
+          artistImageUrl: s.artistImageUrl,
           keyAdjustment: 0,
           originalKey: s.key || '',
           targetKey: s.key || '',
@@ -269,6 +273,10 @@ export default function PublicPlaylistDetailClient({
       targetKey: '',
       songs: songs.map((s) => ({
         id: s.id,
+        title: s.title,
+        author: s.author,
+        songImageUrl: s.songImageUrl,
+        artistImageUrl: s.artistImageUrl,
         keyAdjustment: 0,
         originalKey: s.key || '',
         targetKey: s.key || '',

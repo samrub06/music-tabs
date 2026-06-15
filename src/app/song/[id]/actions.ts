@@ -6,7 +6,7 @@ import { songRepo } from '@/lib/services/songRepo'
 import { songService } from '@/lib/services/songService'
 import { toggleSongFavoriteSchema, updateSongSchema } from '@/lib/validation/schemas'
 import type { SongEditData } from '@/types'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { after } from 'next/server'
 import type { LibrarySongRef } from '@/utils/songSuggestions'
 
@@ -123,6 +123,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
   revalidatePath('/songs')
   revalidatePath('/')
   revalidatePath(`/song/${id}`)
+  revalidateTag(`song-${id}`)
   return updated
 }
 

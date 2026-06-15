@@ -428,26 +428,16 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
-            {isInLibrary ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-stretch gap-3">
-                  {songCoverVignette}
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <div className="min-w-0 flex-1">{songTitleBlock}</div>
-                    {titleRowTrailingActions}
-                  </div>
-                </div>
-                {songMetaRow}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <div className="flex min-w-0 items-stretch gap-2">
-                  <div className="flex min-w-0 flex-1 items-center">{songTitleBlock}</div>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-stretch gap-3">
+                {songCoverVignette}
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <div className="min-w-0 flex-1">{songTitleBlock}</div>
                   {titleRowTrailingActions}
                 </div>
-                {songMetaRow}
               </div>
-            )}
+              {songMetaRow}
+            </div>
           </div>
 
           {/* Chord Diagrams Section - accordion */}

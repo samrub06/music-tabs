@@ -146,23 +146,37 @@ export default function SongViewerContainerSSR({
             sessionStorage.setItem('songNavigation', JSON.stringify(updatedData));
           }
           
-          // Load next song info if available
+          // Load next song info if available (prefer playlist context to avoid extra fetch)
           if (currentIndex >= 0 && currentIndex < songList.length - 1) {
             const nextSongId = songList[currentIndex + 1];
-            const repo = songRepo(supabase);
-            repo.getSongInfo(nextSongId).then(nextSong => {
-              if (nextSong) {
-                setNextSongInfo({
-                  id: nextSong.id,
-                  title: nextSong.title,
-                  author: nextSong.author,
-                  songImageUrl: nextSong.songImageUrl,
-                  artistImageUrl: nextSong.artistImageUrl,
-                });
-              }
-            }).catch(err => {
-              console.error('Error loading next song info:', err);
-            });
+            const nextFromPlaylist = playlistContext?.songs?.find(
+              (s: { id: string }) => s.id === nextSongId
+            );
+
+            if (nextFromPlaylist?.title) {
+              setNextSongInfo({
+                id: nextFromPlaylist.id,
+                title: nextFromPlaylist.title,
+                author: nextFromPlaylist.author,
+                songImageUrl: nextFromPlaylist.songImageUrl,
+                artistImageUrl: nextFromPlaylist.artistImageUrl,
+              });
+            } else {
+              const repo = songRepo(supabase);
+              repo.getSongInfo(nextSongId).then(nextSong => {
+                if (nextSong) {
+                  setNextSongInfo({
+                    id: nextSong.id,
+                    title: nextSong.title,
+                    author: nextSong.author,
+                    songImageUrl: nextSong.songImageUrl,
+                    artistImageUrl: nextSong.artistImageUrl,
+                  });
+                }
+              }).catch(err => {
+                console.error('Error loading next song info:', err);
+              });
+            }
           } else {
             setNextSongInfo(null);
           }
