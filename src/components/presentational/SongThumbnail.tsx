@@ -1,6 +1,6 @@
 'use client'
 
-import { MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon } from '@heroicons/react/24/solid'
 import { cn } from '@/lib/utils'
 
 type SongThumbnailProps = {
@@ -19,10 +19,10 @@ const sizeClasses = {
 } as const
 
 const iconClasses = {
-  xs: 'h-4 w-4 sm:h-5 sm:w-5',
-  sm: 'h-5 w-5',
-  md: 'h-6 w-6',
-  lg: 'h-7 w-7',
+  xs: 'h-5 w-5 sm:h-6 sm:w-6',
+  sm: 'h-6 w-6',
+  md: 'h-8 w-8',
+  lg: 'h-9 w-9 sm:h-10 sm:w-10',
 } as const
 
 export function getSongCoverUrl(
@@ -55,13 +55,13 @@ export function SongThumbnail({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center bg-muted',
+        'flex shrink-0 items-center justify-center bg-gradient-to-br from-muted-foreground/40 via-muted to-muted-foreground/25',
         sizeClasses[size],
         className
       )}
       aria-hidden={!alt}
     >
-      <MusicalNoteIcon className={cn('text-muted-foreground', iconClasses[size])} />
+      <MusicalNoteIcon className={cn('text-foreground/30 dark:text-foreground/40', iconClasses[size])} />
     </div>
   )
 }

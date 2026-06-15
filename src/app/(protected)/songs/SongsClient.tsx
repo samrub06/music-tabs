@@ -648,7 +648,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </>
           ) : (
             <>
-              <SongGallery songs={sortedSongs} hasUser={true} />
+              <SongGallery songs={sortedSongs} />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
               {searchQuery.trim() && (
                 <button

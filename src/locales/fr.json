@@ -430,7 +430,10 @@
     "saving": "Enregistrement...",
     "playlistSaved": "Playlist enregistrée",
     "saveError": "Erreur lors de la sauvegarde de la playlist",
-    "close": "Fermer"
+    "close": "Fermer",
+    "removeFromPlaylist": "Retirer de la playlist",
+    "sharePlaylist": "Partager la playlist",
+    "copyLink": "Copier le lien"
   },
   "search": {
     "searchPlaceholder": "Rechercher des chansons...",

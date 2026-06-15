@@ -430,7 +430,10 @@
     "saving": "Saving...",
     "playlistSaved": "Playlist saved",
     "saveError": "Error saving playlist",
-    "close": "Close"
+    "close": "Close",
+    "removeFromPlaylist": "Remove from playlist",
+    "sharePlaylist": "Share playlist",
+    "copyLink": "Copy link"
   },
   "search": {
     "searchPlaceholder": "Search for songs...",

@@ -430,7 +430,10 @@
     "saving": "שומר...",
     "playlistSaved": "פלייליסט נשמר",
     "saveError": "שגיאה בשמירת הפלייליסט",
-    "close": "סגור"
+    "close": "סגור",
+    "removeFromPlaylist": "הסר מהפלייליסט",
+    "sharePlaylist": "שתף פלייליסט",
+    "copyLink": "העתק קישור"
   },
   "search": {
     "searchPlaceholder": "חפש שירים...",

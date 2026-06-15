@@ -6,6 +6,8 @@ import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
+import { getSongCoverUrl } from '@/components/presentational/SongThumbnail'
+import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
 
 interface SongGalleryProps {
   songs: Song[]
@@ -13,21 +15,31 @@ interface SongGalleryProps {
   onAddClick?: (song: Song) => void
   addingId?: string | null
   hasUser?: boolean
+  variant?: 'default' | 'compact'
 }
 
+const gridVariantClasses = {
+  default:
+    'grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
+  compact:
+    'grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7',
+} as const
+
 // Draggable song card component
-function DraggableSongCard({ 
-  song, 
-  songs, 
-  pathname, 
-  router, 
+function DraggableSongCard({
+  song,
+  songs,
+  pathname,
+  router,
   hasUser,
-}: { 
+  variant = 'default',
+}: {
   song: Song
   songs: Song[]
   pathname: string | null
   router: any
   hasUser?: boolean
+  variant?: 'default' | 'compact'
 }) {
   const {
     attributes,
@@ -66,26 +78,37 @@ function DraggableSongCard({
     router.push(`/song/${song.id}`)
   }
 
+  const isCompact = variant === 'compact'
+  const coverUrl = getSongCoverUrl(song.songImageUrl, song.artistImageUrl)
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative flex flex-col gap-2',
+        'group relative flex flex-col',
+        isCompact ? 'gap-1' : 'gap-2',
         isDragging && 'z-50 opacity-75'
       )}
     >
       <div
         onClick={handleSongClick}
-        className="relative aspect-square w-full cursor-pointer overflow-hidden rounded-xl bg-muted"
+        className={cn(
+          'relative aspect-square w-full cursor-pointer overflow-hidden bg-muted',
+          isCompact ? 'rounded-lg' : 'rounded-xl'
+        )}
       >
-        {song.songImageUrl ? (
+        {coverUrl ? (
           <img
-            src={song.songImageUrl}
+            src={coverUrl}
             alt={song.title}
             className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
           />
-        ) : null}
+        ) : (
+          <SongCoverPlaceholder
+            iconClassName={isCompact ? 'min-h-7 min-w-7 max-h-11 max-w-11' : undefined}
+          />
+        )}
 
         {hasUser && (
           <div
@@ -102,22 +125,36 @@ function DraggableSongCard({
 
       </div>
 
-      <div onClick={handleSongClick} className="min-w-0 cursor-pointer space-y-0.5">
-        <h3 className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
+      <div
+        onClick={handleSongClick}
+        className={cn('min-w-0 cursor-pointer', isCompact ? 'space-y-0' : 'space-y-0.5')}
+      >
+        <h3
+          className={cn(
+            'truncate font-medium text-foreground transition-colors group-hover:text-primary',
+            isCompact ? 'text-xs' : 'text-sm'
+          )}
+        >
           {song.title}
         </h3>
-        <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+        <p className={cn('truncate text-muted-foreground', isCompact ? 'text-[10px]' : 'text-xs')}>
+          {song.author}
+        </p>
       </div>
     </div>
   )
 }
 
-export default function SongGallery({ songs, hasUser = false }: SongGalleryProps) {
+export default function SongGallery({
+  songs,
+  hasUser = false,
+  variant = 'default',
+}: SongGalleryProps) {
   const router = useRouter()
   const pathname = usePathname()
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    <div className={gridVariantClasses[variant]}>
       {songs.map((song) => (
         <DraggableSongCard
           key={song.id}
@@ -126,6 +163,7 @@ export default function SongGallery({ songs, hasUser = false }: SongGalleryProps
           pathname={pathname}
           router={router}
           hasUser={hasUser}
+          variant={variant}
         />
       ))}
     </div>

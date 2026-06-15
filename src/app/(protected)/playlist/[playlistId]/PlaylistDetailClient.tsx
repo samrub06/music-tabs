@@ -1,118 +1,192 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  PlayIcon, 
-  MusicalNoteIcon, 
+import {
+  PlayIcon,
+  MusicalNoteIcon,
   ArrowLeftIcon,
   Bars3Icon,
-  PencilIcon,
-  TrashIcon
+  EllipsisHorizontalIcon,
+  TrashIcon,
+  ShareIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { Playlist, Song } from '@/types'
-import { updatePlaylistOrderAction } from './actions'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { removeSongFromPlaylistAction, updatePlaylistOrderAction } from './actions'
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
+import { SongThumbnail } from '@/components/presentational/SongThumbnail'
+import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface PlaylistDetailClientProps {
   playlist: Playlist
   songs: Song[]
 }
 
-function SortableSongItem({ 
-  song, 
-  index,
-  isDragging 
-}: { 
+function SortableSongItem({
+  song,
+  isDragging,
+  onRemove,
+  t,
+}: {
   song: Song
-  index: number
   isDragging: boolean
+  onRemove: (songId: string) => void
+  t: (key: string) => string
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: song.id })
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: song.id,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
   }
 
   const router = useRouter()
 
   return (
-    <div
+    <li
       ref={setNodeRef}
       style={style}
-      className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors ${
-        isDragging ? 'opacity-50' : ''
-      }`}
+      className={cn(isDragging && 'relative z-50 opacity-50')}
     >
-      <div className="flex items-center gap-3 sm:gap-4">
-        {/* Drag handle */}
+      <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
         <div
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex-shrink-0"
+          className="flex shrink-0 cursor-grab touch-none rounded-md p-1 active:cursor-grabbing"
+          style={{ touchAction: 'none' }}
+          aria-label="Reorder"
         >
-          <Bars3Icon className="h-5 w-5 text-gray-400" />
+          <Bars3Icon className="h-4 w-4 text-muted-foreground" />
         </div>
 
-        {/* Index */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm font-medium text-gray-600 dark:text-gray-400">
-          {index + 1}
-        </div>
+        <SongThumbnail
+          songImageUrl={song.songImageUrl}
+          artistImageUrl={song.artistImageUrl}
+          alt={song.title}
+          size="xs"
+        />
 
-        {/* Song image */}
-        <div className="flex-shrink-0">
-          {song.songImageUrl ? (
-            <img 
-              src={song.songImageUrl} 
-              alt={song.title}
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-              <MusicalNoteIcon className="h-6 w-6 sm:h-7 sm:w-7 text-gray-400 dark:text-gray-500" />
-            </div>
-          )}
-        </div>
-
-        {/* Song info */}
-        <div 
-          className="flex-1 min-w-0 cursor-pointer"
+        <button
+          type="button"
           onClick={() => router.push(`/song/${song.id}`)}
+          className="min-w-0 flex-1 text-left"
         >
-          <div className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100 truncate">
-            {song.title}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">
-            {song.author}
-          </div>
-          {song.key && (
-            <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-              {song.key}
-            </div>
-          )}
-        </div>
+          <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+          <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+        </button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={t('songs.moreActions')}
+            >
+              <EllipsisHorizontalIcon className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => router.push(`/song/${song.id}`)}>
+              {t('search.viewSong')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => onRemove(song.id)}
+            >
+              <TrashIcon className="h-4 w-4" />
+              {t('playlistView.removeFromPlaylist')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </li>
+  )
+}
+
+function PlaylistSongRow({ song }: { song: Song }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5 sm:gap-4 sm:py-3">
+      <SongThumbnail
+        songImageUrl={song.songImageUrl}
+        artistImageUrl={song.artistImageUrl}
+        alt={song.title}
+        size="xs"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+        <p className="truncate text-xs text-muted-foreground">{song.author}</p>
       </div>
     </div>
   )
 }
 
-export default function PlaylistDetailClient({ playlist, songs: initialSongs }: PlaylistDetailClientProps) {
+export default function PlaylistDetailClient({
+  playlist,
+  songs: initialSongs,
+}: PlaylistDetailClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const [songs, setSongs] = useState(initialSongs)
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [isReordering, setIsReordering] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [linkCopied, setLinkCopied] = useState(false)
+
+  const openShareDialog = useCallback(() => {
+    const url =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/playlist/${playlist.id}`
+        : `/playlist/${playlist.id}`
+    setShareUrl(url)
+    setShareOpen(true)
+  }, [playlist.id])
+
+  const handleCopyShareLink = useCallback(async () => {
+    if (!shareUrl) return
+
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setLinkCopied(true)
+      window.setTimeout(() => setLinkCopied(false), 2500)
+    } catch (error) {
+      console.error('Failed to copy playlist link:', error)
+    }
+  }, [shareUrl])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -122,11 +196,16 @@ export default function PlaylistDetailClient({ playlist, songs: initialSongs }: 
     })
   )
 
-  const songIds = useMemo(() => songs.map(s => s.id), [songs])
+  const songIds = useMemo(() => songs.map((s) => s.id), [songs])
+
+  const coverUrl =
+    getPlaylistDisplayCoverUrl(playlist) ??
+    songs[0]?.songImageUrl ??
+    songs[0]?.artistImageUrl ??
+    null
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
-    setIsReordering(true)
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -134,7 +213,6 @@ export default function PlaylistDetailClient({ playlist, songs: initialSongs }: 
 
     if (!over || active.id === over.id) {
       setActiveId(null)
-      setIsReordering(false)
       return
     }
 
@@ -144,116 +222,154 @@ export default function PlaylistDetailClient({ playlist, songs: initialSongs }: 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newSongs = arrayMove(songs, oldIndex, newIndex)
       setSongs(newSongs)
-      
-      // Sauvegarder le nouvel ordre
+
       try {
-        await updatePlaylistOrderAction(playlist.id, newSongs.map(s => s.id))
+        await updatePlaylistOrderAction(
+          playlist.id,
+          newSongs.map((s) => s.id)
+        )
       } catch (error) {
         console.error('Error updating playlist order:', error)
-        // Revert on error
         setSongs(songs)
       }
     }
 
     setActiveId(null)
-    setIsReordering(false)
+  }
+
+  const handleRemoveSong = async (songId: string) => {
+    const previousSongs = songs
+    const newSongs = songs.filter((s) => s.id !== songId)
+    setSongs(newSongs)
+
+    try {
+      await removeSongFromPlaylistAction(playlist.id, songId)
+    } catch (error) {
+      console.error('Error removing song from playlist:', error)
+      setSongs(previousSongs)
+    }
   }
 
   const handleStartPlaylist = () => {
     if (songs.length === 0) return
 
-    // Save playlist context to sessionStorage
     if (typeof window !== 'undefined') {
-      const songList = songs.map(s => s.id)
+      const songList = songs.map((s) => s.id)
       const playlistContext = {
         isPlaylist: true,
         targetKey: '',
-        songs: songs.map(s => ({
+        songs: songs.map((s) => ({
           id: s.id,
           keyAdjustment: 0,
           originalKey: s.key || '',
-          targetKey: s.key || ''
-        }))
+          targetKey: s.key || '',
+        })),
       }
 
       const navigationData = {
         songList,
         currentIndex: 0,
         sourceUrl: `/playlist/${playlist.id}`,
-        playlistContext
+        playlistContext,
       }
 
       sessionStorage.setItem('songNavigation', JSON.stringify(navigationData))
       sessionStorage.removeItem('hasUsedNext')
 
-      // Navigate to first song
       router.push(`/song/${songs[0].id}`)
     }
   }
 
-  const activeSong = activeId ? songs.find(s => s.id === activeId) : null
+  const activeSong = activeId ? songs.find((s) => s.id === activeId) : null
+
+  const songCountLabel =
+    songs.length === 1
+      ? `1 ${t('playlistView.songs').slice(0, -1)}`
+      : `${songs.length} ${t('playlistView.songs')}`
 
   return (
-    <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto">
-      {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <button
-            onClick={() => router.push('/playlists')}
-            className="p-2 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
-            aria-label={t('common.back')}
-          >
-            <ArrowLeftIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">
-              {playlist.name}
-            </h1>
-            {playlist.description && (
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-2">
-                {playlist.description}
-              </p>
-            )}
+    <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+      <div className="relative h-40 w-full overflow-hidden sm:h-auto sm:aspect-[5/2] sm:max-h-72">
+        {coverUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+          </>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/25 via-primary/10 to-muted">
+            <MusicalNoteIcon className="h-16 w-16 text-muted-foreground/40" />
           </div>
-        </div>
+        )}
 
-        {/* Stats and Actions */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <MusicalNoteIcon className="h-4 w-4" />
-              <span>{songs.length} {songs.length === 1 ? t('playlistView.songs').slice(0, -1) : t('playlistView.songs')}</span>
-            </div>
-            {playlist.createdAt && (
-              <div className="hidden sm:block">
-                {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric'
-                })}
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={handleStartPlaylist}
-            disabled={songs.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm sm:text-base font-medium rounded-lg transition-colors active:scale-95"
-          >
-            <PlayIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span>{t('playlistView.startPlaylist')}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => router.push('/playlists')}
+          className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+          aria-label={t('common.back')}
+        >
+          <ArrowLeftIcon className="h-5 w-5" />
+        </button>
       </div>
 
-      {/* Songs List */}
+      <div className="px-4 pt-4 sm:px-6">
+        <div className="flex items-center gap-3">
+          <h1 className="min-w-0 flex-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            {playlist.name}
+          </h1>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={openShareDialog}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-11 sm:w-11"
+              aria-label={t('playlistView.sharePlaylist')}
+            >
+              <ShareIcon className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleStartPlaylist}
+              disabled={songs.length === 0}
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
+              aria-label={t('playlistView.startPlaylist')}
+            >
+              <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
+            </button>
+          </div>
+        </div>
+
+        {playlist.description ? (
+          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+            {playlist.description}
+          </p>
+        ) : null}
+
+        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+          {songCountLabel}
+          {playlist.createdAt ? (
+            <>
+              {' · '}
+              {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
+            </>
+          ) : null}
+        </p>
+      </div>
+
       {songs.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
-          <MusicalNoteIcon className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+        <div className="px-4 py-16 text-center sm:px-6">
+          <MusicalNoteIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+          <h3 className="text-base font-medium text-foreground">
             {t('playlistView.noSongsInPlaylist')}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t('playlistView.addSongsToPlaylist')}
           </p>
         </div>
@@ -265,38 +381,41 @@ export default function PlaylistDetailClient({ playlist, songs: initialSongs }: 
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={songIds} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2 sm:space-y-3">
-              {songs.map((song, index) => (
+            <ul className="mt-4">
+              {songs.map((song) => (
                 <SortableSongItem
                   key={song.id}
                   song={song}
-                  index={index}
                   isDragging={activeId === song.id}
+                  onRemove={handleRemoveSong}
+                  t={t}
                 />
               ))}
-            </div>
+            </ul>
           </SortableContext>
           <DragOverlay>
             {activeSong ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-purple-500 shadow-lg p-4 opacity-95">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                    <MusicalNoteIcon className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
-                      {activeSong.title}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                      {activeSong.author}
-                    </div>
-                  </div>
-                </div>
+              <div className="rounded-lg bg-background/95 shadow-lg backdrop-blur-sm">
+                <PlaylistSongRow song={activeSong} />
               </div>
             ) : null}
           </DragOverlay>
         </DndContext>
       )}
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('playlistView.sharePlaylist')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input readOnly value={shareUrl} className="text-sm" onFocus={(e) => e.target.select()} />
+            <Button type="button" className="w-full" onClick={() => void handleCopyShareLink()}>
+              {linkCopied ? t('songHeader.linkCopied') : t('playlistView.copyLink')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

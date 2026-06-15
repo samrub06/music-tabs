@@ -92,12 +92,13 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
         side="bottom"
         showCloseButton={false}
         overlayClassName="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:duration-500 data-[state=open]:duration-500 backdrop-blur-sm"
-        className="max-h-[85vh] z-[60] gap-0 overflow-visible border-0 bg-transparent p-0 pb-6 shadow-none"
+        className="!bottom-0 max-h-[85vh] z-[60] gap-0 overflow-hidden rounded-t-[1.75rem] border-0 border-t-0 bg-background p-0 shadow-none"
       >
-        <BottomSheetDippedTop onClose={handleClose} />
+        <div className="bg-background">
+          <BottomSheetDippedTop onClose={handleClose} hideBorder />
 
-        <div className="overflow-y-auto bg-background px-6 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]">
-          <SheetHeader className="pb-2 pt-1">
+          <div className="-mt-px px-6 pb-6">
+          <SheetHeader className=" pb-2 pt-1">
             <SheetTitle className="text-center text-lg">{t('navigation.more')}</SheetTitle>
           </SheetHeader>
 
@@ -170,6 +171,7 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
               </div>
             </div>
           )}
+          </div>
           </div>
         </div>
       </SheetContent>

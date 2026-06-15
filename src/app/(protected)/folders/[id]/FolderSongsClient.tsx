@@ -74,6 +74,10 @@ export default function FolderSongsClient({
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
+  const [draftSortField, setDraftSortField] = useState<SortField>('title')
+  const [draftSortDirection, setDraftSortDirection] = useState<SortDirection>(initialSortOrder)
+
+  const hasActiveFilters = sortField !== 'title' || sortDirection !== 'asc'
 
   // Other state
   const [currentFolder, setCurrentFolder] = useState<string | null>(folder.id)
@@ -192,14 +196,25 @@ export default function FolderSongsClient({
   }
 
   const handleApplyFilters = () => {
-    applyQuery({ sortOrder: sortDirection, page: 1 })
+    setSortField(draftSortField)
+    setSortDirection(draftSortDirection)
+    applyQuery({ sortOrder: draftSortDirection, page: 1 })
     setIsFilterSheetOpen(false)
   }
 
   const handleClearFilters = () => {
+    setDraftSortField('title')
+    setDraftSortDirection('asc')
     setSortField('title')
     setSortDirection('asc')
     applyQuery({ sortOrder: 'asc', page: 1 })
+    setIsFilterSheetOpen(false)
+  }
+
+  const openFilterSheet = () => {
+    setDraftSortField(sortField)
+    setDraftSortDirection(sortDirection)
+    setIsFilterSheetOpen(true)
   }
 
   const handleSortChange = (field: SortField, direction: SortDirection) => {
@@ -288,14 +303,18 @@ export default function FolderSongsClient({
             </div>
             <button
               type="button"
-              onClick={() => setIsFilterSheetOpen(true)}
+              onClick={openFilterSheet}
               className={cn(
-                'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                hasActiveFilters && 'border-primary/40 text-primary',
                 isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
               )}
-              aria-label={t('songs.filters')}
+              aria-label={t('songs.advancedFilters')}
             >
               <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
+              {hasActiveFilters && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
+              )}
             </button>
             <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
             <button
@@ -357,7 +376,12 @@ export default function FolderSongsClient({
             </>
           ) : (
             <>
-              <SongGallery songs={sortedSongs} hasUser={true} />
+              <div className="lg:hidden">
+                <SongGallery songs={sortedSongs} variant="compact" />
+              </div>
+              <div className="hidden lg:block">
+                <SongGallery songs={sortedSongs} />
+              </div>
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
             </>
           )
@@ -424,7 +448,7 @@ export default function FolderSongsClient({
               <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
                 {t('songs.sortBy')}
               </Label>
-              <Select value={sortField} onValueChange={(value) => setSortField(value as SortField)}>
+              <Select value={draftSortField} onValueChange={(value) => setDraftSortField(value as SortField)}>
                 <SelectTrigger id="sortField" className="h-10 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
@@ -442,7 +466,7 @@ export default function FolderSongsClient({
               <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
                 {t('songs.sortOrder')}
               </Label>
-              <Select value={sortDirection} onValueChange={(value) => setSortDirection(value as SortDirection)}>
+              <Select value={draftSortDirection} onValueChange={(value) => setDraftSortDirection(value as SortDirection)}>
                 <SelectTrigger id="sortDirection" className="h-10 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>

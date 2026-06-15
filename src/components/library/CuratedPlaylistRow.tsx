@@ -70,7 +70,7 @@ const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
 
 interface GridCardProps {
   href: string
-  compact?: boolean
+  layout?: 'scroll' | 'landscape' | 'grid'
   children: ReactNode
   footer: ReactNode
 }
@@ -82,30 +82,50 @@ interface PlaylistCardData {
   footer: ReactNode
 }
 
-function GridCard({ href, compact = false, children, footer }: GridCardProps) {
+function GridCard({ href, layout = 'scroll', children, footer }: GridCardProps) {
   return (
     <Link
       href={href}
       className={cn(
-        'group relative aspect-square overflow-hidden rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-xl',
-        compact ? 'w-28 flex-shrink-0 sm:w-32' : 'w-full'
+        'group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-200 hover:shadow-xl',
+        layout === 'scroll' && 'aspect-square w-28 flex-shrink-0 snap-start',
+        layout === 'landscape' && 'aspect-[5/3] w-full hover:scale-[1.02]',
+        layout === 'grid' && 'aspect-square w-full'
       )}
     >
       {children}
-      <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent">
+      <div
+        className={cn(
+          'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent',
+          layout === 'grid' ? 'p-1' : 'p-2'
+        )}
+      >
         {footer}
       </div>
     </Link>
   )
 }
 
-function buildPlaylistCard(item: PublicPlaylistItem, t: (key: string) => string): PlaylistCardData {
+function buildPlaylistCard(
+  item: PublicPlaylistItem,
+  t: (key: string) => string,
+  options?: { gaugeSize?: number; compactFooter?: boolean }
+): PlaylistCardData {
   const footer = (
     <>
-      <div className="font-bold text-white text-xs sm:text-sm truncate">{item.name}</div>
-      <div className="text-white/80 text-[10px] sm:text-xs truncate">
-        {t('library.playlistSongCount').replace('{count}', String(item.songCount))}
+      <div
+        className={cn(
+          'truncate font-bold text-white',
+          options?.compactFooter ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'
+        )}
+      >
+        {item.name}
       </div>
+      {!options?.compactFooter && (
+        <div className="text-white/80 text-[10px] sm:text-xs truncate">
+          {t('library.playlistSongCount').replace('{count}', String(item.songCount))}
+        </div>
+      )}
     </>
   )
 
@@ -135,7 +155,7 @@ function buildPlaylistCard(item: PublicPlaylistItem, t: (key: string) => string)
         style={{ backgroundColor: difficultyTheme.bannerBg }}
       >
         <div className="absolute inset-0 flex items-center justify-center pb-3 sm:pb-4">
-          <DifficultyGauge level={difficultyTheme.level} size={60} />
+          <DifficultyGauge level={difficultyTheme.level} size={options?.gaugeSize ?? 60} />
         </div>
       </div>
     ) : (
@@ -230,6 +250,8 @@ export default function CuratedPlaylistRow({
       ]
     : []
 
+  const isDifficultySection = section === 'difficulty'
+
   const cards = publicPlaylists
     .filter((item) => {
       if (item.songCount <= 0 || !item.curatedSlug) return false
@@ -246,20 +268,44 @@ export default function CuratedPlaylistRow({
 
   if (cards.length === 0 && userShortcutCards.length === 0) return null
 
-  const renderCards = (compact: boolean) => (
-    <>
-      {userShortcutCards.map((item) => (
-        <GridCard key={item.id} href={item.href} compact={compact} footer={item.footer}>
-          {item.content}
-        </GridCard>
-      ))}
-      {cards.map((item) => (
-        <GridCard key={item.id} href={item.href} compact={compact} footer={item.footer}>
-          {item.content}
-        </GridCard>
-      ))}
-    </>
-  )
+  type CardLayout = NonNullable<GridCardProps['layout']>
+
+  const renderCards = (layout: CardLayout) => {
+    const isCompactGrid = layout === 'grid'
+    const playlistCards = isCompactGrid
+      ? publicPlaylists
+          .filter((item) => {
+            if (item.songCount <= 0 || !item.curatedSlug) return false
+            if (hubZone) return getHubZoneForSlug(item.curatedSlug) === hubZone
+            if (section) return curatedPlaylistSectionBySlug[item.curatedSlug] === section
+            return false
+          })
+          .sort((a, b) => {
+            const orderA = CURATED_PLAYLISTS.find((p) => p.slug === a.curatedSlug)?.displayOrder ?? 0
+            const orderB = CURATED_PLAYLISTS.find((p) => p.slug === b.curatedSlug)?.displayOrder ?? 0
+            return orderA - orderB
+          })
+          .map((item) =>
+            buildPlaylistCard(item, t, { gaugeSize: 36, compactFooter: true })
+          )
+      : cards
+
+    return (
+      <>
+        {layout === 'scroll' &&
+          userShortcutCards.map((item) => (
+            <GridCard key={item.id} href={item.href} layout={layout} footer={item.footer}>
+              {item.content}
+            </GridCard>
+          ))}
+        {playlistCards.map((item) => (
+          <GridCard key={item.id} href={item.href} layout={layout} footer={item.footer}>
+            {item.content}
+          </GridCard>
+        ))}
+      </>
+    )
+  }
 
   return (
     <section className="mb-6">
@@ -269,7 +315,7 @@ export default function CuratedPlaylistRow({
         </h3>
       )}
       <div
-        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory sm:gap-4"
+        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory md:hidden"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
@@ -277,6 +323,9 @@ export default function CuratedPlaylistRow({
         }}
       >
         {renderCards(true)}
+      </div>
+      <div className="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {renderCards(false)}
       </div>
     </section>
   )
