@@ -39,7 +39,7 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
             className={`
               flex items-center gap-4 p-4 rounded-lg border-2 transition-all
               ${isCurrentUser
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-primary bg-primary/10'
                 : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
               }
             `}
@@ -74,7 +74,7 @@ export default function Leaderboard({ entries, currentUserId, className = '' }: 
               <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {entry.fullName || entry.email || t('gamification.UNKNOWN_USER')}
                 {isCurrentUser && (
-                  <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">{t('gamification.YOU_BADGE')}</span>
+                  <span className="ml-2 text-xs text-primary">{t('gamification.YOU_BADGE')}</span>
                 )}
               </p>
               <div className="flex items-center gap-4 mt-1 flex-wrap">

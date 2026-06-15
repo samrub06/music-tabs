@@ -60,6 +60,8 @@ interface SongViewerProps {
   canNextSong?: boolean;
   nextSongInfo?: NextSongRef | null;
   onPlayNext?: () => void;
+  onReachSongEnd?: () => void;
+  canAwardOnEndReach?: boolean;
   isAuthenticated?: boolean;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
@@ -120,6 +122,8 @@ export default function SongViewer({
   canNextSong,
     nextSongInfo,
     onPlayNext,
+    onReachSongEnd,
+    canAwardOnEndReach,
     isAuthenticated = false,
     manualBpm,
     onSetManualBpm,
@@ -212,6 +216,8 @@ export default function SongViewer({
               onToggleEasyChordMode={onToggleEasyChordMode}
               nextSong={nextSongInfo}
               onPlayNext={onPlayNext}
+              onReachSongEnd={onReachSongEnd}
+              canAwardOnEndReach={canAwardOnEndReach}
               folders={folders}
               currentFolderId={currentFolderId}
               onFolderChange={onFolderChange}

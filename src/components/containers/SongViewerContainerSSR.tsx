@@ -3,7 +3,7 @@
 import { Song, Chord } from '@/types';
 import { transposeStructuredSong, renderStructuredSong } from '@/utils/structuredSong';
 import { useRouter } from 'next/navigation';
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import SongViewer from '../presentational/SongViewer';
 import { getDefaultToolsBarHeight } from '../presentational/ToolsBottomBar';
 import { useSongEditor } from '@/lib/hooks/useSongEditor';
@@ -19,11 +19,18 @@ import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
 import {
   recordSongViewAction,
+  completeSongProgressAction,
   toggleSongFavoriteAction,
 } from '@/app/song/[id]/actions';
+import { xpLog } from '@/utils/xpLog';
+import { triggerXpConfetti } from '@/utils/triggerXpConfetti';
+import { mountXpCelebration } from '@/utils/mountXpCelebration';
+import type { SongProgressResult } from '@/types';
 import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions';
 import { useLanguage } from '@/context/LanguageContext';
 import { useFoldersContext } from '@/context/FoldersContext';
+
+const CELEBRATION_NAV_DELAY_MS = 1100;
 
 interface SongViewerContainerSSRProps {
   song: Song;
@@ -76,6 +83,8 @@ export default function SongViewerContainerSSR({
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const chordsLoadedRef = useRef(false);
   const viewRecordedForSongIdRef = useRef<string | null>(null);
+  const xpAwardInFlightRef = useRef(false);
+  const endProgressAttemptedRef = useRef<string | null>(null);
   const { folders } = useFoldersContext();
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(
     song.folderId
@@ -230,9 +239,13 @@ export default function SongViewerContainerSSR({
     if (viewRecordedForSongIdRef.current === song.id) return
     viewRecordedForSongIdRef.current = song.id
 
-    recordSongViewAction(song.id).catch((error) => {
-      console.error('Failed to record song view:', error)
-    })
+    recordSongViewAction(song.id)
+      .then(() => {
+        xpLog('view_count_recorded', { songId: song.id });
+      })
+      .catch((error) => {
+        console.error('Failed to record song view:', error);
+      });
   }, [song.id]);
 
   // Normalize chord name for comparison
@@ -375,38 +388,95 @@ export default function SongViewerContainerSSR({
     }
   }
 
-  const handleNextSong = () => {
+  const runCompleteProgress = useCallback(
+    async (trigger: 'next' | 'end_reached'): Promise<SongProgressResult | null> => {
+      if (xpAwardInFlightRef.current) {
+        xpLog('next_blocked_in_flight', { songId: song.id, trigger });
+        return null;
+      }
+
+      xpAwardInFlightRef.current = true;
+      xpLog('complete_started', { songId: song.id, trigger });
+
+      try {
+        const result = await completeSongProgressAction(song.id);
+
+        if (result.awarded) {
+          xpLog('complete_awarded', {
+            songId: song.id,
+            xpAmount: result.xpAmount,
+            levelUp: result.levelUp,
+          });
+          mountXpCelebration({
+            xpLabel: t('gamification.XP_EARNED').replace('{amount}', String(result.xpAmount)),
+            levelUp: result.levelUp,
+            levelUpLabel: t('gamification.LEVEL_UP'),
+          });
+          triggerXpConfetti(result.levelUp ? 'levelUp' : 'standard');
+          await new Promise((resolve) => setTimeout(resolve, CELEBRATION_NAV_DELAY_MS));
+        } else {
+          xpLog('complete_skipped', { songId: song.id, reason: result.reason, trigger });
+        }
+
+        return result;
+      } finally {
+        xpAwardInFlightRef.current = false;
+      }
+    },
+    [song.id, t]
+  );
+
+  const handleNextSong = async () => {
     if (typeof window === 'undefined') return;
-    
+
+    if (xpAwardInFlightRef.current) {
+      xpLog('next_blocked_in_flight', { songId: song.id });
+      return;
+    }
+
     const navigationDataStr = sessionStorage.getItem('songNavigation');
     if (!navigationDataStr) return;
-    
+
     try {
       const navigationData = JSON.parse(navigationDataStr);
       const { songList, currentIndex } = navigationData;
-      
+
       if (currentIndex < songList.length - 1) {
         const nextIndex = currentIndex + 1;
         const nextSongId = songList[nextIndex];
-        
-        // Update current index in sessionStorage
+
+        await runCompleteProgress('next');
+
         const updatedData = {
           ...navigationData,
-          currentIndex: nextIndex
+          currentIndex: nextIndex,
         };
         sessionStorage.setItem('songNavigation', JSON.stringify(updatedData));
-        
-        // Mark that Next has been used
+
         sessionStorage.setItem('hasUsedNext', 'true');
         setHasUsedNext(true);
-        
-        // Navigate to next song without stacking browser history
+
+        xpLog('next_navigate', {
+          from: song.id,
+          to: nextSongId,
+          delayMs: CELEBRATION_NAV_DELAY_MS,
+        });
+
         router.replace(`/song/${nextSongId}`);
       }
     } catch (error) {
       console.error('Error parsing navigation data:', error);
     }
   };
+
+  const handleReachSongEnd = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    if (!sessionStorage.getItem('songNavigation')) return;
+    if (endProgressAttemptedRef.current === song.id) return;
+
+    endProgressAttemptedRef.current = song.id;
+    await runCompleteProgress('end_reached');
+  }, [song.id, runCompleteProgress]);
 
   const handlePrevSong = () => {
     if (!hasUsedNext) return;
@@ -434,6 +504,11 @@ export default function SongViewerContainerSSR({
   })();
 
   const canPrevSong = hasUsedNext;
+
+  const canAwardOnEndReach =
+    !canNextSong &&
+    typeof window !== 'undefined' &&
+    !!sessionStorage.getItem('songNavigation');
 
   // Handle Easy Chord Mode
   useEffect(() => {
@@ -516,6 +591,8 @@ export default function SongViewerContainerSSR({
     canNextSong: canNextSong,
     nextSongInfo: nextSongInfo,
     onPlayNext: handleNextSong,
+    onReachSongEnd: canAwardOnEndReach ? handleReachSongEnd : undefined,
+    canAwardOnEndReach,
     isAuthenticated,
     knownChordIds,
     chordNameToIdMap,

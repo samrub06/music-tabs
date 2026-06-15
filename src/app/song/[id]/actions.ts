@@ -5,9 +5,8 @@ import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { songRepo } from '@/lib/services/songRepo'
 import { songService } from '@/lib/services/songService'
 import { toggleSongFavoriteSchema, updateSongSchema } from '@/lib/validation/schemas'
-import type { SongEditData } from '@/types'
+import type { SongEditData, SongProgressResult } from '@/types'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { after } from 'next/server'
 import type { LibrarySongRef } from '@/utils/songSuggestions'
 
 /** Returns lightweight library song refs for end-of-song suggestions (client lazy load). */
@@ -29,7 +28,9 @@ export async function getLibrarySongRefsAction(): Promise<LibrarySongRef[]> {
   }))
 }
 
-/** Records a song view: increments view_count immediately; gamification runs after response. */
+const SONG_VIEW_XP = 5
+
+/** Records a song view: increments view_count only. XP is awarded via completeSongProgressAction. */
 export async function recordSongViewAction(songId: string) {
   const supabase = await createActionServerClient()
 
@@ -38,27 +39,43 @@ export async function recordSongViewAction(songId: string) {
   } catch (error) {
     console.error('Error incrementing view count:', error)
   }
+}
 
-  after(async () => {
+/** Awards +5 XP when the user completes a song (Next in playlist or end-of-list scroll). */
+export async function completeSongProgressAction(songId: string): Promise<SongProgressResult> {
+  const supabase = await createActionServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { awarded: false, reason: 'unauthenticated' }
+  }
+
+  const gamification = gamificationRepo(supabase)
+
+  try {
+    const hasViewed = await gamification.hasViewedSongToday(user.id, songId)
+    if (hasViewed) {
+      return { awarded: false, reason: 'already_viewed_today' }
+    }
+
+    await gamification.recordSongView(user.id, songId)
+    const xpResult = await gamification.awardXp(user.id, SONG_VIEW_XP, 'view_song', songId)
+    await gamification.incrementCounter(user.id, 'total_songs_viewed')
+    await gamification.checkAndAwardBadges(user.id)
+
     revalidatePath('/songs')
 
-    try {
-      const deferredSupabase = await createActionServerClient()
-      const { data: { user } } = await deferredSupabase.auth.getUser()
-      if (!user) return
-
-      const gamification = gamificationRepo(deferredSupabase)
-      const hasViewed = await gamification.hasViewedSongToday(user.id, songId)
-      if (!hasViewed) {
-        await gamification.recordSongView(user.id, songId)
-        await gamification.awardXp(user.id, 5, 'view_song', songId)
-        await gamification.incrementCounter(user.id, 'total_songs_viewed')
-        await gamification.checkAndAwardBadges(user.id)
-      }
-    } catch (err) {
-      console.error('Error awarding XP for song view:', err)
+    return {
+      awarded: true,
+      xpAmount: SONG_VIEW_XP,
+      levelUp: xpResult.levelUp,
+      newLevel: xpResult.newLevel,
+      totalXp: xpResult.totalXp,
     }
-  })
+  } catch (error) {
+    console.error('[xp] completeSongProgress failed', { songId, error })
+    return { awarded: false, reason: 'error' }
+  }
 }
 
 /** @deprecated Use recordSongViewAction instead. Kept for backward compatibility. */

@@ -296,6 +296,10 @@ export interface XpAwardResult {
   newLevel: number;
 }
 
+export type SongProgressResult =
+  | { awarded: true; xpAmount: number; levelUp: boolean; newLevel: number; totalXp: number }
+  | { awarded: false; reason: 'unauthenticated' | 'already_viewed_today' | 'error' };
+
 export interface StreakUpdateResult {
   currentStreak: number;
   longestStreak: number;

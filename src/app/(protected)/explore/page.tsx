@@ -1,8 +1,10 @@
 import { exploreMetadata } from '@/lib/seo/metadata'
 import { createSafeServerClient } from '@/lib/supabase/server'
-import { getCachedExploreCatalog } from '@/lib/services/exploreCatalogCache'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import ExploreClient from './ExploreClient'
+import ExploreCatalogSection from './ExploreCatalogSection'
+import ExploreCatalogSkeleton from './ExploreCatalogSkeleton'
 
 export const metadata: Metadata = exploreMetadata
 
@@ -29,20 +31,28 @@ export default async function ExplorePage({
   const decade = params?.decade ? parseInt(params.decade, 10) : undefined
 
   const supabase = await createSafeServerClient()
-  const [{ data: { user } }, { songs, total }] = await Promise.all([
-    supabase.auth.getUser(),
-    getCachedExploreCatalog({ page, limit, q, genre, difficulty, decade }),
-  ])
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const catalogKey = `${page}:${limit}:${q}:${genre ?? ''}:${difficulty ?? ''}:${decade ?? ''}:${view}`
 
   return (
     <ExploreClient
-      songs={songs}
-      total={total}
-      page={page}
-      limit={limit}
       initialView={view}
       initialQuery={q}
-      userId={user?.id}
-    />
+      limit={limit}
+    >
+      <Suspense key={catalogKey} fallback={<ExploreCatalogSkeleton view={view} />}>
+        <ExploreCatalogSection
+          page={page}
+          limit={limit}
+          q={q}
+          genre={genre}
+          difficulty={difficulty}
+          decade={decade}
+          view={view}
+          userId={user?.id}
+        />
+      </Suspense>
+    </ExploreClient>
   )
 }

@@ -699,7 +699,8 @@
     "NO_BADGES": "עדיין אין תגים. המשך לנגן כדי לזכות בתגים!",
     "EMPTY_LEADERBOARD": "אין משתמשים בלוח התוצאות עדיין. היה הראשון!",
     "UNKNOWN_USER": "משתמש לא ידוע",
-    "YOU_BADGE": "(את/ה)"
+    "YOU_BADGE": "(את/ה)",
+    "XP_EARNED": "+{amount} XP"
   },
   "songEnd": {
     "continueListening": "המשך להאזין",

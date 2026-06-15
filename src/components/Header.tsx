@@ -104,7 +104,7 @@ function UserAvatar({
   }
 
   return (
-    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-xs border-2 border-border">
+    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold text-xs border-2 border-border">
       {getInitials(name, email)}
     </div>
   )

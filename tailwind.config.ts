@@ -68,9 +68,20 @@ const config: Config = {
   				accent: 'hsl(var(--sidebar-accent))',
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))'
+  			ring: 'hsl(var(--sidebar-ring))'
   			}
-  		}
+  		},
+  		keyframes: {
+  			'xp-float': {
+  				'0%': { opacity: '0', transform: 'translateY(12px) scale(0.92)' },
+  				'15%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+  				'75%': { opacity: '1', transform: 'translateY(-24px) scale(1)' },
+  				'100%': { opacity: '0', transform: 'translateY(-48px) scale(0.96)' },
+  			},
+  		},
+  		animation: {
+  			'xp-float': 'xp-float 0.85s ease-out forwards',
+  		},
   	}
   },
   plugins: [require("tailwindcss-animate")],

@@ -1,8 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { Song } from '@/types'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   MagnifyingGlassIcon,
@@ -11,9 +9,6 @@ import {
   TableCellsIcon,
   AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline'
-import SongGallery from '@/components/SongGallery'
-import SongTable from '@/components/SongTable'
-import Pagination from '@/components/Pagination'
 import { EXPLORE_DECADES, EXPLORE_DIFFICULTIES, EXPLORE_GENRES } from '@/data/exploreCategories'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
@@ -30,26 +25,19 @@ import {
 import { Button } from '@/components/ui/button'
 
 interface ExploreClientProps {
-  songs: Song[]
-  total: number
-  page: number
+  children: ReactNode
   limit: number
   initialView?: 'gallery' | 'table'
   initialQuery?: string
-  userId?: string
 }
 
 export default function ExploreClient({
-  songs,
-  total,
-  page,
+  children,
   limit,
   initialView = 'gallery',
   initialQuery = '',
-  userId,
 }: ExploreClientProps) {
   const { t } = useLanguage()
-  const [cloningId, setCloningId] = useState<string | null>(null)
   const [localSearch, setLocalSearch] = useState(initialQuery)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [draftDifficulty, setDraftDifficulty] = useState<string | null>(null)
@@ -65,24 +53,11 @@ export default function ExploreClient({
   const currentGenre = searchParams?.get('genre') || null
   const currentDifficulty = searchParams?.get('difficulty') || null
   const currentDecade = searchParams?.get('decade') || null
-  const totalPages = Math.max(1, Math.ceil(total / limit))
   const hasAdvancedFilters = !!(currentDifficulty || currentDecade)
 
   useEffect(() => {
     setLocalSearch(initialQuery)
   }, [initialQuery])
-
-  useEffect(() => {
-    const prefetchPage = (nextPage: number) => {
-      const params = new URLSearchParams(searchParams?.toString() || '')
-      params.set('page', String(nextPage))
-      params.set('limit', String(limit))
-      router.prefetch(`${pathname}?${params.toString()}`)
-    }
-
-    if (page > 1) prefetchPage(page - 1)
-    if (page < totalPages) prefetchPage(page + 1)
-  }, [page, limit, totalPages, pathname, searchParams, router])
 
   const pushParams = (mutate: (params: URLSearchParams) => void) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
@@ -95,6 +70,7 @@ export default function ExploreClient({
       if (value) params.set(type, String(value))
       else params.delete(type)
       params.set('page', '1')
+      params.set('limit', String(limit))
     })
   }
 
@@ -104,6 +80,7 @@ export default function ExploreClient({
       if (trimmed) params.set('q', trimmed)
       else params.delete('q')
       params.set('page', '1')
+      params.set('limit', String(limit))
     })
   }
 
@@ -111,6 +88,7 @@ export default function ExploreClient({
     pushParams((params) => {
       params.set('view', nextView)
       params.set('page', '1')
+      params.set('limit', String(limit))
     })
   }
 
@@ -127,6 +105,7 @@ export default function ExploreClient({
       if (draftDecade) params.set('decade', draftDecade)
       else params.delete('decade')
       params.set('page', '1')
+      params.set('limit', String(limit))
     })
     setIsFilterSheetOpen(false)
   }
@@ -138,25 +117,9 @@ export default function ExploreClient({
       params.delete('difficulty')
       params.delete('decade')
       params.set('page', '1')
+      params.set('limit', String(limit))
     })
     setIsFilterSheetOpen(false)
-  }
-
-  const handleAddToLibrary = async (song: Song) => {
-    if (!userId) {
-      router.push(`/?next=${encodeURIComponent('/explore')}`)
-      return
-    }
-
-    try {
-      setCloningId(song.id)
-      await cloneSongAction(song.id)
-      router.refresh()
-    } catch (error) {
-      console.error('Error cloning song:', error)
-    } finally {
-      setCloningId(null)
-    }
   }
 
   const viewToggle = (
@@ -195,18 +158,18 @@ export default function ExploreClient({
   const genreFilters = (
     <div className="lg:hidden">
       <FilterChipRow>
-      <FilterChip active={!currentGenre} onClick={() => updateFilter('genre', null)}>
-        {t('explore.ALL_FILTER')}
-      </FilterChip>
-      {EXPLORE_GENRES.map((genre) => (
-        <FilterChip
-          key={genre.id}
-          active={currentGenre === genre.id}
-          onClick={() => updateFilter('genre', genre.id)}
-        >
-          {genre.name}
+        <FilterChip active={!currentGenre} onClick={() => updateFilter('genre', null)}>
+          {t('explore.ALL_FILTER')}
         </FilterChip>
-      ))}
+        {EXPLORE_GENRES.map((genre) => (
+          <FilterChip
+            key={genre.id}
+            active={currentGenre === genre.id}
+            onClick={() => updateFilter('genre', genre.id)}
+          >
+            {genre.name}
+          </FilterChip>
+        ))}
       </FilterChipRow>
     </div>
   )
@@ -321,41 +284,7 @@ export default function ExploreClient({
           {allFilterSections}
         </div>
 
-        <div className="pb-6">
-          {songs.length > 0 ? (
-            view === 'table' ? (
-              <>
-                <SongTable
-                  songs={songs}
-                  folders={[]}
-                  playlists={[]}
-                  hasUser={!!userId}
-                  onFolderChange={async () => {}}
-                  onDeleteSongs={async () => {}}
-                  onDeleteAllSongs={async () => {}}
-                />
-                <Pagination page={page} limit={limit} total={total} />
-              </>
-            ) : (
-              <>
-                <SongGallery
-                  songs={songs}
-                  showAddButton={!!userId}
-                  onAddClick={handleAddToLibrary}
-                  addingId={cloningId}
-                />
-                <Pagination page={page} limit={limit} total={total} />
-              </>
-            )
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-lg font-medium text-foreground">{t('explore.EMPTY_TITLE')}</p>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                {t('explore.EMPTY_DESCRIPTION')}
-              </p>
-            </div>
-          )}
-        </div>
+        <div className="pb-6">{children}</div>
       </div>
 
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>

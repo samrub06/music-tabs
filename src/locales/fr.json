@@ -699,7 +699,8 @@
     "NO_BADGES": "Pas encore de badges. Continuez à jouer pour en gagner !",
     "EMPTY_LEADERBOARD": "Aucun joueur au classement pour l'instant. Soyez le premier !",
     "UNKNOWN_USER": "Utilisateur inconnu",
-    "YOU_BADGE": "(Vous)"
+    "YOU_BADGE": "(Vous)",
+    "XP_EARNED": "+{amount} XP"
   },
   "songEnd": {
     "continueListening": "Continuer à écouter",

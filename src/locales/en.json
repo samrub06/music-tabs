@@ -699,7 +699,8 @@
     "NO_BADGES": "No badges yet. Keep playing to earn badges!",
     "EMPTY_LEADERBOARD": "No users on the leaderboard yet. Be the first!",
     "UNKNOWN_USER": "Unknown User",
-    "YOU_BADGE": "(You)"
+    "YOU_BADGE": "(You)",
+    "XP_EARNED": "+{amount} XP"
   },
   "songEnd": {
     "continueListening": "Keep playing",

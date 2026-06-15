@@ -96,6 +96,8 @@ interface SongContentProps {
   onToggleEasyChordMode?: () => void;
   nextSong?: NextSongRef | null;
   onPlayNext?: () => void;
+  onReachSongEnd?: () => void;
+  canAwardOnEndReach?: boolean;
   folders?: Folder[];
   currentFolderId?: string;
   onFolderChange?: (folderId: string | undefined) => Promise<void>;
@@ -134,6 +136,8 @@ export default function SongContent({
   onToggleEasyChordMode,
   nextSong = null,
   onPlayNext,
+  onReachSongEnd,
+  canAwardOnEndReach = false,
   folders = [],
   currentFolderId,
   onFolderChange,
@@ -142,6 +146,7 @@ export default function SongContent({
   const pathname = usePathname();
   const { signInWithGoogle } = useAuthContext();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
+  const endSuggestionsRef = useRef<HTMLDivElement>(null);
   const lastPinchTime = useRef(0);
   const onFontSizeChangeRef = useRef(onFontSizeChange);
   onFontSizeChangeRef.current = onFontSizeChange;
@@ -172,6 +177,26 @@ export default function SongContent({
       el.removeEventListener('touchcancel', handleTouchEnd);
     };
   }, [contentRef]);
+
+  useEffect(() => {
+    if (!canAwardOnEndReach || !onReachSongEnd || !isAuthenticated) return;
+
+    const el = endSuggestionsRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          onReachSongEnd();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [canAwardOnEndReach, onReachSongEnd, isAuthenticated, transposedSong.id]);
 
   const [chordSectionOpen, setChordSectionOpen] = useState(true);
   const [showTransposeControls, setShowTransposeControls] = useState(false);
@@ -598,14 +623,16 @@ export default function SongContent({
           />
 
           {isAuthenticated && (
-            <SongEndSuggestions
-              currentSongId={transposedSong.id}
-              currentAuthor={transposedSong.author ?? ''}
-              currentGenre={transposedSong.genre}
-              isInLibrary={isInLibrary}
-              nextSong={nextSong}
-              onPlayNext={onPlayNext}
-            />
+            <div ref={endSuggestionsRef}>
+              <SongEndSuggestions
+                currentSongId={transposedSong.id}
+                currentAuthor={transposedSong.author ?? ''}
+                currentGenre={transposedSong.genre}
+                isInLibrary={isInLibrary}
+                nextSong={nextSong}
+                onPlayNext={onPlayNext}
+              />
+            </div>
           )}
         </div>
       </div>
