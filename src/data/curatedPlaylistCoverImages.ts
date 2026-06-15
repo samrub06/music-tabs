@@ -27,6 +27,7 @@ export const CURATED_PLAYLIST_COVER_FILES: Record<string, string> = {
   'moroccan-piyut': 'marroco.jpeg',
   tunisian: 'Tunis.jpeg',
   'modern-israeli': 'israel.jpeg',
+  'ishay-ribo': 'israel.jpeg',
   'yosef-karduner': 'yosef.jpeg',
   akiva: 'akiva.jpeg',
   // Decades

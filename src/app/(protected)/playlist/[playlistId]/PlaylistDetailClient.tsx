@@ -289,15 +289,11 @@ export default function PlaylistDetailClient({
 
   return (
     <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-      <div className="relative h-40 w-full overflow-hidden sm:h-auto sm:aspect-[5/2] sm:max-h-72">
+      <div className="relative h-80 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[32rem]">
         {coverUrl ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={coverUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
+            <img src={coverUrl} alt="" className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
           </>
         ) : (

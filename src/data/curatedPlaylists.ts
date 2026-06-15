@@ -253,7 +253,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
   {
     slug: 'modern-israeli',
     name: 'Israélien moderne',
-    description: 'מוזיקה יהודית מודרנית — Ishai Ribo, Hanan Ben Ari, Zusha, Akiva (Tab4U)',
+    description: 'מוזיקה יהודית מודרנית — Hanan Ben Ari, Zusha, Akiva, Aharon Razel…',
     section: 'jewish',
     displayOrder: 6,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.modern },
@@ -262,11 +262,22 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     seedMode: 'manual',
   },
   {
+    slug: 'ishay-ribo',
+    name: 'Ishay Ribo',
+    description: 'ישי ריבו — hits et discographie (Tab4U)',
+    section: 'jewish',
+    displayOrder: 7,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.ribo },
+    gradientFrom: 'from-indigo-600',
+    gradientTo: 'to-violet-800',
+    seedMode: 'manual',
+  },
+  {
     slug: 'yosef-karduner',
     name: 'Yosef Karduner',
     description: 'יוסף קארדונר — albums et discographie (Tab4U)',
     section: 'jewish',
-    displayOrder: 7,
+    displayOrder: 8,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.karduner },
     gradientFrom: 'from-sky-600',
     gradientTo: 'to-blue-900',
@@ -277,7 +288,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     name: 'Akiva',
     description: 'עקיבא — discographie et hits (Tab4U)',
     section: 'jewish',
-    displayOrder: 8,
+    displayOrder: 9,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.akiva },
     gradientFrom: 'from-orange-600',
     gradientTo: 'to-red-800',
@@ -286,9 +297,9 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
   {
     slug: 'jewish-songbook',
     name: 'Songbook',
-    description: 'ספר זמרות — chants du songbook (Tab4U)',
+    description: '',
     section: 'jewish',
-    displayOrder: 9,
+    displayOrder: 10,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.songbook },
     gradientFrom: 'from-teal-700',
     gradientTo: 'to-cyan-900',
@@ -424,7 +435,7 @@ const SONGBOOK_HUB_SLUGS = new Set([
   'tunisian',
 ])
 
-const ISRAELI_HUB_SLUGS = new Set(['modern-israeli', 'yosef-karduner', 'akiva'])
+const ISRAELI_HUB_SLUGS = new Set(['modern-israeli', 'ishay-ribo', 'yosef-karduner', 'akiva'])
 
 export function getHubZoneForSlug(slug: string): HubZone | undefined {
   if (SONGBOOK_HUB_SLUGS.has(slug)) return 'songbook'

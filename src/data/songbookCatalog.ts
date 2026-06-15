@@ -4,7 +4,7 @@ export const SONGBOOK_CATALOG_GENRE = 'hebrew-songbook'
 export const SONGBOOK_PLAYLIST = {
   slug: 'jewish-songbook',
   name: 'Songbook',
-  description: 'ספר זמרות — chants du songbook (Tab4U et autres sources)',
+  description: '',
   displayOrder: 9,
   gradientFrom: 'from-teal-700',
   gradientTo: 'to-cyan-900',

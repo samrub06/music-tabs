@@ -56,6 +56,7 @@ const curatedGradientBySlug: Record<string, string> = {
   'moroccan-piyut': 'bg-gradient-to-br from-red-700 to-rose-900',
   tunisian: 'bg-gradient-to-br from-yellow-600 to-amber-800',
   'modern-israeli': 'bg-gradient-to-br from-violet-600 to-fuchsia-800',
+  'ishay-ribo': 'bg-gradient-to-br from-indigo-600 to-violet-800',
   'yosef-karduner': 'bg-gradient-to-br from-sky-600 to-blue-900',
   akiva: 'bg-gradient-to-br from-orange-600 to-red-800',
   'jewish-songbook': 'bg-gradient-to-br from-teal-700 to-cyan-900',
