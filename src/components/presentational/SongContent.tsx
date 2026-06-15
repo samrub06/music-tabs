@@ -9,21 +9,13 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
+import dynamic from 'next/dynamic';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
-import { ChordBox } from 'vexchords';
-import {
-  CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS,
-  CHORD_PREVIEW_DIAGRAM_OPTS,
-  CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS,
-} from '@/components/chords/chordCardDimensions';
-import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
-import { getChordVariantGroup } from '@/utils/chordVariantLookup';
-import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
 import type { ChordInstrument } from '@/components/chords/InstrumentToggle';
 import type { Chord, Folder } from '@/types';
 import FolderDropdown from '@/components/FolderDropdown';
-import { mapChordNicknameToDbName, normalizeChordNameForComparison } from '@/utils/chords';
+import { normalizeChordNameForComparison } from '@/utils/chords';
 import { generateAllKeys } from '@/utils/chords';
 import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
@@ -33,6 +25,11 @@ import { Piano, Guitar } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
+
+const ChordDiagramsGrid = dynamic(
+  () => import('./ChordDiagramsGrid').then((mod) => mod.ChordDiagramsGrid),
+  { ssr: false }
+);
 import {
   Collapsible,
   CollapsibleContent,
@@ -474,6 +471,7 @@ export default function SongContent({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="pt-4 space-y-2.5">
+                {chordSectionOpen && (
                 <ChordDiagramsGrid
                   song={transposedSong}
                   onChordClick={onChordClick}
@@ -483,6 +481,7 @@ export default function SongContent({
                   chordNameToIdMap={chordNameToIdMap}
                   chords={chords}
                 />
+                )}
 
                 <div className="flex items-center gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:pb-0.5 sm:flex-wrap sm:gap-2">
                 {/* Fixed height so expand/collapse does not shift sibling controls */}
@@ -1149,198 +1148,3 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
 );
 
 WrappedChordLyricsLine.displayName = 'WrappedChordLyricsLine';
-
-// Chord Diagrams Grid Component
-interface ChordDiagramsGridProps {
-  song: any;
-  onChordClick: (chord: string) => void;
-  fontSize: number;
-  selectedInstrument?: ChordInstrument;
-  knownChordIds?: Set<string>;
-  chordNameToIdMap?: Map<string, string>;
-  chords?: Chord[]; // Full chord objects from database
-}
-
-// Normalize chord name for comparison
-function normalizeChordName(chord: string): string {
-  if (!chord) return '';
-  let normalized = chord.trim().toUpperCase();
-  const enharmonicMap: { [key: string]: string } = {
-    'C#': 'DB', 'D#': 'EB', 'F#': 'GB', 'G#': 'AB', 'A#': 'BB'
-  };
-  for (const [sharp, flat] of Object.entries(enharmonicMap)) {
-    if (normalized.startsWith(sharp)) {
-      normalized = normalized.replace(sharp, flat);
-      break;
-    }
-  }
-  return normalized;
-}
-
-// Find chord in database by matching song chord name
-function findChordInDatabase(songChordName: string, chords: Chord[]): Chord | null {
-  if (!chords || chords.length === 0) return null;
-  
-  // First try: map nickname to database name and find exact match
-  const dbName = mapChordNicknameToDbName(songChordName);
-  const normalizedDbName = normalizeChordNameForComparison(dbName);
-  
-  for (const chord of chords) {
-    const normalizedChordName = normalizeChordNameForComparison(chord.name);
-    if (normalizedChordName === normalizedDbName) {
-      return chord;
-    }
-  }
-  
-  // Second try: direct match (for chords like "C7", "Dsus4" that match directly)
-  const normalizedSongChord = normalizeChordNameForComparison(songChordName);
-  for (const chord of chords) {
-    const normalizedChordName = normalizeChordNameForComparison(chord.name);
-    if (normalizedChordName === normalizedSongChord) {
-      return chord;
-    }
-  }
-  
-  return null;
-}
-
-function ChordDiagramsGrid({ 
-  song, 
-  onChordClick, 
-  fontSize,
-  selectedInstrument = 'guitar',
-  knownChordIds = new Set(),
-  chordNameToIdMap = new Map(),
-  chords = []
-}: ChordDiagramsGridProps) {
-  const { extractAllChords } = require('@/utils/structuredSong');
-  const allChords = extractAllChords(song);
-  const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const chordBoxesRef = useRef<Map<string, ChordBox>>(new Map());
-  
-  // Filter out known chords - only show chords the user doesn't know yet
-  const unknownChords = useMemo(() => {
-    return allChords.filter((songChordName: string) => {
-      const normalized = normalizeChordName(songChordName);
-      const chordId = chordNameToIdMap.get(normalized);
-      const isKnown = chordId ? knownChordIds.has(chordId) : false;
-      return !isKnown; // Only keep chords that are NOT known
-    });
-  }, [allChords, chordNameToIdMap, knownChordIds]);
-
-  const dbOnlyChords = useMemo(
-    () =>
-      unknownChords.filter(
-        (songChordName: string) => getChordVariantGroup(songChordName) == null
-      ),
-    [unknownChords]
-  );
-
-  const useGuitarDiagrams = selectedInstrument !== 'piano';
-  
-  // DB fallback diagrams (variant groups use VexChordDiagram in JSX)
-  useEffect(() => {
-    if (!useGuitarDiagrams) return;
-    if (chords.length === 0 || dbOnlyChords.length === 0) return;
-    
-    const timer = setTimeout(() => {
-      dbOnlyChords.forEach((songChordName: string) => {
-        const dbChord = findChordInDatabase(songChordName, chords);
-        if (!dbChord) return;
-        
-        const container = chordRefs.current.get(songChordName);
-        if (!container) return;
-        
-        container.innerHTML = '';
-        chordBoxesRef.current.delete(songChordName);
-        
-        const chordBox = new ChordBox(container, CHORD_PREVIEW_DIAGRAM_OPTS);
-        
-        chordBoxesRef.current.set(songChordName, chordBox);
-        chordBox.draw({
-          chord: dbChord.chordData.chord,
-          position: dbChord.chordData.position,
-          barres: dbChord.chordData.barres,
-          tuning: dbChord.tuning,
-        });
-      });
-    }, 0);
-    
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [dbOnlyChords, chords, useGuitarDiagrams]);
-  
-  return (
-    <div>
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-3">
-        {unknownChords.map((songChordName: string) => {
-          const variantGroup = getChordVariantGroup(songChordName);
-          const previewVariant = variantGroup?.variants[0];
-          const dbChord =
-            variantGroup == null ? findChordInDatabase(songChordName, chords) : null;
-          const hasPianoDiagram =
-            selectedInstrument === 'piano' && hasPianoChordDiagram(songChordName);
-          const hasDiagram =
-            hasPianoDiagram ||
-            (selectedInstrument !== 'piano' &&
-              (previewVariant != null || dbChord != null));
-
-          if (!hasDiagram) {
-            return (
-              <button
-                key={songChordName}
-                type="button"
-                onClick={() => onChordClick(songChordName)}
-                className={cn(
-                  'flex min-h-[9.75rem] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-2 shadow-sm hover:border-blue-400 hover:shadow-md sm:w-full',
-                  CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS
-                )}
-              >
-                <span
-                  className="text-center font-bold text-gray-900"
-                  style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
-                  title={songChordName}
-                >
-                  {songChordName}
-                </span>
-              </button>
-            );
-          }
-
-          const useGuitarDiagrams = selectedInstrument !== 'piano';
-          const previewDiagram =
-            useGuitarDiagrams && previewVariant
-              ? {
-                  ...previewVariant.chord,
-                  name: variantGroup!.symbol,
-                }
-              : null;
-
-          return (
-            <ChordPreviewCard
-              key={songChordName}
-              chordLabel={songChordName}
-              instrument={selectedInstrument}
-              diagram={previewDiagram}
-              diagramContainerRef={
-                useGuitarDiagrams && !previewDiagram
-                  ? (el) => {
-                      if (el) chordRefs.current.set(songChordName, el);
-                    }
-                  : undefined
-              }
-              onClick={() => onChordClick(songChordName)}
-              className={cn(
-                'sm:w-full',
-                selectedInstrument === 'piano'
-                  ? CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS
-                  : CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS
-              )}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-}

@@ -1,21 +1,11 @@
-/** Catalog genre tags used when importing Tab4U songs into the public library. */
+/** Hebrew playlist seed definitions (server/scripts only — pulls full catalog song data). */
 import { KARDUNER_PLAYLIST_TAB_IDS } from '@/data/catalogSongs/kardunerCatalog'
+import {
+  HEBREW_CATALOG_GENRES,
+  type HebrewCatalogGenre,
+} from '@/data/hebrewCatalogGenres'
 
-export const HEBREW_CATALOG_GENRES = {
-  chabad: 'hebrew-chabad',
-  hassidic: 'hebrew-hassidic',
-  carlebach: 'hebrew-carlebach',
-  moroccan: 'hebrew-moroccan',
-  tunisian: 'hebrew-tunisian',
-  modern: 'hebrew-modern',
-  karduner: 'hebrew-karduner',
-  akiva: 'hebrew-akiva',
-  ribo: 'hebrew-ribo',
-  songbook: 'hebrew-songbook',
-} as const
-
-export type HebrewCatalogGenre =
-  (typeof HEBREW_CATALOG_GENRES)[keyof typeof HEBREW_CATALOG_GENRES]
+export { HEBREW_CATALOG_GENRES, type HebrewCatalogGenre } from '@/data/hebrewCatalogGenres'
 
 export interface HebrewPlaylistSongEntry {
   /** Hebrew search query sent to Tab4U */

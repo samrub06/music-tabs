@@ -2,14 +2,16 @@
 
 import { Song, Chord } from '@/types';
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
+import dynamic from 'next/dynamic';
 import React, { RefObject } from 'react';
 import SongHeader from './SongHeader';
 import SongContent from './SongContent';
-import ChordDiagramModal from './ChordDiagramModal';
 import ToolsBottomBar from './ToolsBottomBar';
 import type { LibrarySongRef } from '@/utils/songSuggestions';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
+
+const ChordDiagramModal = dynamic(() => import('./ChordDiagramModal'), { ssr: false });
 
 interface SongViewerProps {
   song: Song;

@@ -88,6 +88,27 @@ pids
 tmp/
 temp/
 
+# Dev-only / seed assets (not used at runtime — see scripts/upload-genre-images.ts)
+/partition/
+yaarat_dvash.png
+
+# Duplicate root assets (canonical copies live under public/)
+/A.svg
+/A7.svg
+/C.svg
+/D.svg
+/DM.svg
+/E.svg
+/Em.svg
+/G.svg
+/Gm.svg
+/spotify_logo.png
+/spotify_logo_V2.png
+/spotify_text.png
+/eyeview_icon.jpeg
+/logo_tabasco.svg
+/logo_text.svg
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

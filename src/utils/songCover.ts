@@ -1,4 +1,4 @@
-import { HEBREW_CATALOG_GENRES } from '@/data/hebrewPlaylists'
+import { HEBREW_CATALOG_GENRES } from '@/data/hebrewCatalogGenres'
 import { SONGBOOK_CATALOG_GENRE } from '@/data/songbookCatalog'
 
 const RELIGIOUS_SONG_GENRES = new Set<string>([

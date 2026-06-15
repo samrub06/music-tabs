@@ -1,4 +1,4 @@
-import { HEBREW_CATALOG_GENRES } from '@/data/hebrewPlaylists'
+import { HEBREW_CATALOG_GENRES } from '@/data/hebrewCatalogGenres'
 
 export type CuratedPlaylistFilter =
   | { type: 'genre'; value: string }
