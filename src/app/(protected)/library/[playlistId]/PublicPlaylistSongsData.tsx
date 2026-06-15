@@ -11,7 +11,7 @@ export default async function PublicPlaylistSongsData({
   playlist,
   userId,
 }: PublicPlaylistSongsDataProps) {
-  const songs = await getCachedPublicPlaylistSongs(playlist.id)
+  const songs = await getCachedPublicPlaylistSongs(playlist.id, playlist.songIds)
 
   return (
     <PublicPlaylistSongList
