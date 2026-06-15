@@ -12,7 +12,7 @@ import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
 import { Bars3Icon, HeartIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartSolidIcon, MusicalNoteIcon } from '@heroicons/react/24/solid'
-import { getSongCoverUrl } from '@/components/presentational/SongThumbnail'
+import { useSongCover } from '@/lib/hooks/useSongCover'
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
 import { useRouter, usePathname } from 'next/navigation'
 import { useDraggable } from '@dnd-kit/core'
@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { toggleSongFavoriteAction } from '@/app/song/[id]/actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 
 interface SongTableRowProps {
   song: Song
@@ -110,7 +111,7 @@ export default function SongTableRow({
     })
   }
 
-  const coverUrl = getSongCoverUrl(song.songImageUrl, song.artistImageUrl)
+  const coverUrl = useSongCover(song)
 
   const handleToggleCover = (e: MouseEvent) => {
     e.stopPropagation()
@@ -182,7 +183,10 @@ export default function SongTableRow({
             handleSongClick()
           }
         }}
-        className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-muted/50 sm:gap-3 sm:py-3"
+        className={cn(
+          'flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-3 sm:py-3',
+          UI_TEXT_ALIGN
+        )}
       >
         {hasUser && isSelectMode && (
           <div
@@ -238,12 +242,12 @@ export default function SongTableRow({
           </button>
         )}
 
-        <div className="min-w-0 flex-1">
+        <div className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}>
           {visibleColumns.includes('title') && (
             <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
           )}
           {metadataParts.length > 0 && (
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 flex flex-wrap items-center justify-start gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
               {metadataParts.map((part, index) => (
                 <Fragment key={index}>
                   {index > 0 ? (

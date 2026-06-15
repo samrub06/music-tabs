@@ -4,15 +4,17 @@ import { useRouter } from 'next/navigation'
 import {
   PlayIcon,
   MusicalNoteIcon,
-  ArrowLeftIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline'
+import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { Playlist, Song } from '@/types'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { useState, useCallback } from 'react'
 
 interface PublicPlaylistDetailClientProps {
@@ -109,10 +111,10 @@ export default function PublicPlaylistDetailClient({
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+          className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
           aria-label={t('common.back')}
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <BackArrowIcon className="h-5 w-5" />
         </button>
       </div>
 
@@ -161,6 +163,7 @@ export default function PublicPlaylistDetailClient({
                     <SongThumbnail
                       songImageUrl={song.songImageUrl}
                       artistImageUrl={song.artistImageUrl}
+                      genre={song.genre}
                       alt={song.title}
                       size="xs"
                     />
@@ -169,7 +172,7 @@ export default function PublicPlaylistDetailClient({
                   <button
                     type="button"
                     onClick={() => router.push(`/song/${song.id}`)}
-                    className="min-w-0 flex-1 text-left"
+                    className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
                   >
                     <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
                     {song.author ? (

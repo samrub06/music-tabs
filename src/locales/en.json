@@ -80,6 +80,8 @@
     "preferredInstrument": "Preferred instrument",
     "piano": "Piano",
     "guitar": "Guitar",
+    "tsnioutFilter": "Tsniout filter",
+    "tsnioutFilterDescription": "Replace secular song covers with a generic image. Religious catalog songs (songbook, Hebrew playlists) keep their artwork.",
     "updateError": "Error updating profile"
   },
   "leaderboard": {

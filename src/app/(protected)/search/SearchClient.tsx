@@ -16,8 +16,10 @@ import type { NewSongData } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { RecentSearchList } from '@/components/search/RecentSearchList'
 import { HubZoneNav } from '@/components/library/HubZoneNav'
+import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import {
   FALLBACK_SEARCH_IMAGE_URL,
   loadRecentSearches,
@@ -739,7 +741,6 @@ export default function SearchClient({
             <div className="space-y-1.5 p-2 sm:p-3">
               {searchResults.map((result, index) => {
                 const existingSongId = existingSongs.get(index)
-                const imageUrl = result.songImageUrl || result.artistImageUrl || FALLBACK_SEARCH_IMAGE_URL
                 const isTab4U = result.source === 'Tab4U' || result.sourceSite === 'Tab4U'
                 const isViewing = viewingSongId === result.url
                 const isAdding = addingSongId === result.url
@@ -760,15 +761,17 @@ export default function SearchClient({
                   >
                     {/* Photo compacte */}
                     <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-md overflow-hidden bg-muted">
-                      <img
-                        src={imageUrl}
-                        alt=""
-                        className="w-full h-full object-cover"
+                      <SongThumbnail
+                        songImageUrl={result.songImageUrl || result.artistImageUrl || FALLBACK_SEARCH_IMAGE_URL}
+                        artistImageUrl={result.artistImageUrl}
+                        alt={result.title}
+                        size="sm"
+                        className="h-full w-full rounded-md"
                       />
                     </div>
 
                     {/* Titre et auteur visibles sur 2 lignes max, étoiles en dessous */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center gap-0">
+                    <div className={cn('flex min-w-0 flex-1 flex-col justify-center gap-0', UI_TEXT_ALIGN)}>
                       <div className="min-w-0">
                         <h3
                           className="text-sm font-semibold text-foreground line-clamp-2 break-words"

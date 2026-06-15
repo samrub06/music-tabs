@@ -11,6 +11,7 @@ interface Profile {
   avatar_url: string | null;
   preferred_instrument: string | null;
   spotify_id: string | null;
+  tsniout_filter_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -102,6 +103,12 @@ export function useAuth() {
     }
   };
 
+  const refetchProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
+  };
+
   return {
     user,
     profile,
@@ -109,5 +116,6 @@ export function useAuth() {
     loading,
     signInWithGoogle,
     signOut,
+    refetchProfile,
   };
 }

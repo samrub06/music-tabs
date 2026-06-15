@@ -40,7 +40,7 @@ export default function FolderSongsClient({
   total,
   page,
   limit,
-  initialView = 'table',
+  initialView = 'gallery',
   initialQuery = '',
   initialSortOrder = 'asc',
 }: FolderSongsClientProps) {
@@ -376,12 +376,7 @@ export default function FolderSongsClient({
             </>
           ) : (
             <>
-              <div className="lg:hidden">
-                <SongGallery songs={sortedSongs} variant="compact" />
-              </div>
-              <div className="hidden lg:block">
-                <SongGallery songs={sortedSongs} />
-              </div>
+              <SongGallery songs={sortedSongs} variant="folder" hasUser />
               <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
             </>
           )

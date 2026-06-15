@@ -10,6 +10,7 @@ export interface Profile {
   avatarUrl: string | null
   preferredInstrument: PreferredInstrument | null
   spotifyId: string | null
+  tsnioutFilterEnabled: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -18,6 +19,7 @@ export interface UpdateProfileData {
   fullName?: string | null
   avatarUrl?: string | null
   preferredInstrument?: PreferredInstrument | null
+  tsnioutFilterEnabled?: boolean
 }
 
 // Helper to map DB result to Domain Entity
@@ -33,6 +35,7 @@ function mapDbProfileToDomain(dbProfile: Database['public']['Tables']['profiles'
     avatarUrl: dbProfile.avatar_url,
     preferredInstrument,
     spotifyId: dbProfile.spotify_id ?? null,
+    tsnioutFilterEnabled: dbProfile.tsniout_filter_enabled ?? false,
     createdAt: new Date(dbProfile.created_at),
     updatedAt: new Date(dbProfile.updated_at)
   }
@@ -85,10 +88,15 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
    * Update current user's profile
    */
   async updateProfile(userId: string, updates: UpdateProfileData): Promise<Profile> {
-    const updateData: Database['public']['Tables']['profiles']['Update'] = {
-      full_name: updates.fullName,
-      avatar_url: updates.avatarUrl,
-      ...(updates.preferredInstrument !== undefined && { preferred_instrument: updates.preferredInstrument })
+    const updateData: Database['public']['Tables']['profiles']['Update'] = {}
+
+    if (updates.fullName !== undefined) updateData.full_name = updates.fullName
+    if (updates.avatarUrl !== undefined) updateData.avatar_url = updates.avatarUrl
+    if (updates.preferredInstrument !== undefined) {
+      updateData.preferred_instrument = updates.preferredInstrument
+    }
+    if (updates.tsnioutFilterEnabled !== undefined) {
+      updateData.tsniout_filter_enabled = updates.tsnioutFilterEnabled
     }
 
     const { data, error } = await (client

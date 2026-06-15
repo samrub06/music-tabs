@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import {
   PlayIcon,
   MusicalNoteIcon,
-  ArrowLeftIcon,
   Bars3Icon,
   EllipsisHorizontalIcon,
   TrashIcon,
   ShareIcon,
 } from '@heroicons/react/24/outline'
+import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { Playlist, Song } from '@/types'
 import { removeSongFromPlaylistAction, updatePlaylistOrderAction } from './actions'
@@ -34,6 +34,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,6 +97,7 @@ function SortableSongItem({
         <SongThumbnail
           songImageUrl={song.songImageUrl}
           artistImageUrl={song.artistImageUrl}
+          genre={song.genre}
           alt={song.title}
           size="xs"
         />
@@ -103,7 +105,7 @@ function SortableSongItem({
         <button
           type="button"
           onClick={() => router.push(`/song/${song.id}`)}
-          className="min-w-0 flex-1 text-left"
+          className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
         >
           <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
           <p className="truncate text-xs text-muted-foreground">{song.author}</p>
@@ -144,6 +146,7 @@ function PlaylistSongRow({ song }: { song: Song }) {
       <SongThumbnail
         songImageUrl={song.songImageUrl}
         artistImageUrl={song.artistImageUrl}
+        genre={song.genre}
         alt={song.title}
         size="xs"
       />
@@ -305,10 +308,10 @@ export default function PlaylistDetailClient({
         <button
           type="button"
           onClick={() => router.push('/playlists')}
-          className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+          className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
           aria-label={t('common.back')}
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <BackArrowIcon className="h-5 w-5" />
         </button>
       </div>
 

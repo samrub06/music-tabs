@@ -4,20 +4,19 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
 import {
-  ArrowLeftIcon,
   PlusIcon,
   Squares2X2Icon,
   ListBulletIcon,
 } from '@heroicons/react/24/outline'
+import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { useLanguage } from '@/context/LanguageContext'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
+import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import type { Song } from '@/types'
-
-const FALLBACK_IMAGE_URL =
-  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop'
 
 type ViewMode = 'list' | 'grid'
 
@@ -35,17 +34,20 @@ interface SongItemProps {
 
 function SongListItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps) {
   const { t } = useLanguage()
-  const imageUrl = song.songImageUrl || song.artistImageUrl || FALLBACK_IMAGE_URL
   const isAdding = cloningId === song.id
 
   return (
     <div className="flex items-center gap-3 rounded-xl bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50 sm:px-3 sm:py-2.5">
       <Link href={`/song/${song.id}`} className="flex-shrink-0">
-        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden bg-muted">
-          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
-        </div>
+        <SongThumbnail
+          songImageUrl={song.songImageUrl}
+          artistImageUrl={song.artistImageUrl}
+          genre={song.genre}
+          alt={song.title}
+          size="sm"
+        />
       </Link>
-      <Link href={`/song/${song.id}`} className="flex-1 min-w-0">
+      <Link href={`/song/${song.id}`} className={cn('flex-1 min-w-0', UI_TEXT_ALIGN)}>
         <p className="text-sm font-semibold text-foreground truncate">{song.title}</p>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{song.author}</p>
       </Link>
@@ -78,14 +80,20 @@ function SongListItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps
 
 function SongGridItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps) {
   const { t } = useLanguage()
-  const imageUrl = song.songImageUrl || song.artistImageUrl || FALLBACK_IMAGE_URL
   const isAdding = cloningId === song.id
 
   return (
     <div className="group">
-      <Link href={`/song/${song.id}`}>
+      <Link href={`/song/${song.id}`} className={cn('block', UI_TEXT_ALIGN)}>
         <div className="relative aspect-square rounded-lg overflow-hidden bg-muted mb-2 shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-[1.02]">
-          <img src={imageUrl} alt={song.title} className="w-full h-full object-cover" />
+          <SongThumbnail
+            songImageUrl={song.songImageUrl}
+            artistImageUrl={song.artistImageUrl}
+            genre={song.genre}
+            alt={song.title}
+            size="lg"
+            className="h-full w-full rounded-lg"
+          />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg">
@@ -95,10 +103,10 @@ function SongGridItem({ song, userId, cloningId, onAddToLibrary }: SongItemProps
           </div>
         </div>
       </Link>
-      <Link href={`/song/${song.id}`}>
+      <Link href={`/song/${song.id}`} className={cn('block', UI_TEXT_ALIGN)}>
         <h3 className="font-semibold text-foreground text-sm truncate hover:underline">{song.title}</h3>
       </Link>
-      <p className="text-xs text-muted-foreground truncate mb-2">{song.author}</p>
+      <p className={cn('mb-2 truncate text-xs text-muted-foreground', UI_TEXT_ALIGN)}>{song.author}</p>
       <Button
         variant="secondary"
         size="sm"
@@ -153,7 +161,7 @@ export default function RecentAddedSongsClient({ songs, userId }: RecentAddedSon
           <div className="flex items-center gap-3 min-w-0">
             <Button asChild variant="ghost" size="icon" className="shrink-0 rounded-lg">
               <Link href="/" aria-label={t('common.back')}>
-                <ArrowLeftIcon className="h-5 w-5" />
+                <BackArrowIcon className="h-5 w-5" />
               </Link>
             </Button>
             <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">

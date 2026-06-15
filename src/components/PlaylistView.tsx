@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 import { PlaylistCoverPicker } from '@/components/PlaylistCoverPicker';
+import { SongThumbnail } from '@/components/presentational/SongThumbnail';
 import { resolveAutoCoverSlug } from '@/utils/playlistCover';
 
 interface PlaylistViewProps {
@@ -207,15 +208,13 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist,
             className="flex items-start sm:items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg border border-border bg-background/50 hover:bg-muted/50 cursor-pointer transition-colors"
           >
             <div className="flex-shrink-0 mr-2 sm:mr-3">
-              {song.songImageUrl ? (
-                <img 
-                  src={song.songImageUrl} 
-                  alt={song.title}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
-                />
-              ) : (
-                <MusicalNoteIcon className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground" />
-              )}
+              <SongThumbnail
+                songImageUrl={song.songImageUrl}
+                artistImageUrl={song.artistImageUrl}
+                genre={song.genre ?? genreId}
+                alt={song.title}
+                size="sm"
+              />
             </div>
             
             <div className="flex-1 min-w-0">

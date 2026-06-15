@@ -19,3 +19,6 @@ export function applyDocumentLanguage(language: Language): void {
   html.lang = language
   html.dir = rtl ? 'rtl' : 'ltr'
 }
+
+/** Align text to the UI reading edge (right in RTL, left in LTR). Use for list titles regardless of script. */
+export const UI_TEXT_ALIGN = 'text-start' as const

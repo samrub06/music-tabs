@@ -7,7 +7,10 @@ import { PlusIcon } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
+import { SongThumbnail } from '@/components/presentational/SongThumbnail'
+import { cn } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import type { ForYouArtistSong } from '@/types/forYou'
 
 interface ForYouArtistSectionProps {
@@ -15,9 +18,6 @@ interface ForYouArtistSectionProps {
   songs: ForYouArtistSong[]
   userId?: string
 }
-
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=120&h=120&fit=crop'
 
 export default function ForYouArtistSection({
   artistName,
@@ -62,8 +62,6 @@ export default function ForYouArtistSection({
       <h2 className="mb-2 text-lg font-bold text-foreground sm:text-xl">{sectionTitle}</h2>
       <ul className="space-y-1.5">
         {songs.map((song) => {
-          const imageUrl =
-            song.songImageUrl || song.artistImageUrl || FALLBACK_IMAGE
           const href = song.inUserLibrary && song.userSongId
             ? `/song/${song.userSongId}`
             : `/song/${song.id}`
@@ -74,16 +72,19 @@ export default function ForYouArtistSection({
               <div className="flex items-center gap-2.5 rounded-xl bg-gray-50 px-2.5 py-2 transition-colors hover:bg-gray-100 dark:bg-muted/30 dark:hover:bg-muted/50 sm:px-3 sm:py-2.5">
                 <Link
                   href={href}
-                  className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-muted"
+                  className="block h-10 w-10 shrink-0 overflow-hidden rounded-md bg-muted"
                 >
-                  <img
-                    src={imageUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
+                  <SongThumbnail
+                    songImageUrl={song.songImageUrl}
+                    artistImageUrl={song.artistImageUrl}
+                    genre={song.genre}
+                    alt={song.title}
+                    size="sm"
+                    className="h-full w-full rounded-md"
                   />
                 </Link>
 
-                <div className="min-w-0 flex-1">
+                <div className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}>
                   <Link
                     href={href}
                     className="block truncate text-sm font-medium text-foreground hover:underline"

@@ -17,6 +17,7 @@ export interface Database {
           avatar_url: string | null
           preferred_instrument: string | null
           spotify_id: string | null
+          tsniout_filter_enabled: boolean
           created_at: string
           updated_at: string
         }
@@ -27,6 +28,7 @@ export interface Database {
           avatar_url?: string | null
           preferred_instrument?: string | null
           spotify_id?: string | null
+          tsniout_filter_enabled?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -37,6 +39,7 @@ export interface Database {
           avatar_url?: string | null
           preferred_instrument?: string | null
           spotify_id?: string | null
+          tsniout_filter_enabled?: boolean
           created_at?: string
           updated_at?: string
         }

@@ -2,18 +2,20 @@
 
 import { Song } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSongCover } from '@/lib/hooks/useSongCover';
 import {
-  ArrowLeftIcon,
   MinusIcon,
   PlusIcon,
   PauseIcon,
   PlayIcon,
   MusicalNoteIcon,
-  ArrowRightIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import {
+  BackArrowIcon,
+  ForwardArrowIcon,
+} from '@/components/icons/DirectionalIcons';
+import { cn } from '@/lib/utils';
 
 interface SongHeaderProps {
   song: Song;
@@ -47,12 +49,16 @@ export default function SongHeader({
   nextSongInfo,
   onToggleToolsBar,
 }: SongHeaderProps) {
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
+  const coverUrl = useSongCover(song);
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
       {/* Single row: back, cover, auto-scroll, tools, prev/next, saved or add */}
-      <div className="flex items-center justify-between gap-2 p-2 sm:p-3 md:p-4 w-full min-w-0">
+      <div
+        className="flex items-center justify-between gap-2 p-2 sm:p-3 md:p-4 w-full min-w-0"
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -60,14 +66,14 @@ export default function SongHeader({
           className="flex-shrink-0 h-10 w-10"
           aria-label={t('songHeader.back')}
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <BackArrowIcon className="h-5 w-5" />
         </Button>
 
         <div className="flex min-w-0 flex-1 items-center">
-          {song.songImageUrl ? (
+          {coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={song.songImageUrl}
+              src={coverUrl}
               alt=""
               className="h-10 w-10 shrink-0 rounded-lg object-cover"
             />
@@ -88,20 +94,53 @@ export default function SongHeader({
           </span>
         )}
 
-        {/* Auto-scroll: from md show label "Auto scroll" + play + speed, +/- when playing */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className="hidden md:inline text-xs text-muted-foreground whitespace-nowrap">{t('songHeader.AUTO_SCROLL_LABEL')}</span>
-          <div className="flex items-center gap-0.5 border rounded-md px-1 py-0.5">
-            <Button variant={autoScroll.isActive ? 'default' : 'ghost'} size="icon" className="h-9 w-9" onClick={onToggleAutoScroll} title={autoScroll.isActive ? t('songHeader.STOP_AUTO_SCROLL') : t('songHeader.START_AUTO_SCROLL')}>
-              {autoScroll.isActive ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+        {/* Auto-scroll: label + play + speed; icon/text order swaps in RTL */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div
+            className="flex items-center gap-1 rounded-md border px-1 py-0.5"
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            <Button
+              variant={autoScroll.isActive ? 'default' : 'ghost'}
+              size="icon"
+              className="order-2 h-9 w-9"
+              onClick={onToggleAutoScroll}
+              title={
+                autoScroll.isActive
+                  ? t('songHeader.STOP_AUTO_SCROLL')
+                  : t('songHeader.START_AUTO_SCROLL')
+              }
+            >
+              {autoScroll.isActive ? (
+                <PauseIcon className="h-4 w-4" />
+              ) : (
+                <PlayIcon className={cn('h-4 w-4', isRtl && '-scale-x-100')} />
+              )}
             </Button>
-            <span className="text-xs font-medium min-w-[2rem] text-center">{autoScroll.speed.toFixed(1)}x</span>
+            <span
+              className="order-1 hidden whitespace-nowrap px-0.5 text-xs text-muted-foreground md:inline"
+            >
+              {t('songHeader.AUTO_SCROLL_LABEL')}
+            </span>
+            <span className="order-3 min-w-[2rem] text-center text-xs font-medium">
+              {autoScroll.speed.toFixed(1)}x
+            </span>
             {autoScroll.isActive && (
               <>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="order-4 h-7 w-7"
+                  onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+                >
                   <MinusIcon className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="order-5 h-7 w-7"
+                  onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+                >
                   <PlusIcon className="h-3 w-3" />
                 </Button>
               </>
@@ -111,19 +150,26 @@ export default function SongHeader({
 
         {/* Tools: icon only below md, icon + "Outils" from md */}
         {onToggleToolsBar && (
-          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10 md:h-9 md:gap-1.5 md:px-3 md:w-auto md:min-w-0" onClick={() => onToggleToolsBar()} aria-label={t('songHeader.TOOLS_LABEL')} title={t('songHeader.TOOLS_LABEL')}>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10 flex-shrink-0 md:h-9 md:w-auto md:min-w-0 md:gap-1.5 md:px-3"
+            onClick={() => onToggleToolsBar()}
+            aria-label={t('songHeader.TOOLS_LABEL')}
+            title={t('songHeader.TOOLS_LABEL')}
+          >
             <Cog6ToothIcon className="h-5 w-5 md:h-4 md:w-4" />
-            <span className="hidden md:inline text-sm">{t('songHeader.TOOLS_LABEL')}</span>
+            <span className="hidden text-sm md:inline">{t('songHeader.TOOLS_LABEL')}</span>
           </Button>
         )}
 
         {onPrevSong && onNextSong && (
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="ghost" size="icon" onClick={onPrevSong} disabled={!canPrevSong} className="h-10 w-10" aria-label={t('common.back')}>
-              <ArrowLeftIcon className="h-5 w-5" />
+              <BackArrowIcon className="h-5 w-5" />
             </Button>
             {nextSongInfo && canNextSong && (
-              <div className="hidden md:flex min-w-0 max-w-[7rem] flex-col items-end">
+              <div className="hidden md:flex min-w-0 max-w-[7rem] flex-col items-end rtl:items-start">
                 <span
                   className="truncate text-xs font-medium text-foreground"
                   dir={/[\u0590-\u05FF]/.test(nextSongInfo.title) ? 'rtl' : 'ltr'}
@@ -136,11 +182,14 @@ export default function SongHeader({
               variant="default"
               onClick={onNextSong}
               disabled={!canNextSong}
-              className="h-10 shrink-0 gap-1.5 px-4 min-w-[5.25rem] shadow-sm"
+              className={cn(
+                'h-10 min-w-[5.25rem] shrink-0 gap-1.5 px-4 shadow-sm',
+                isRtl && 'flex-row-reverse'
+              )}
               aria-label={t('songHeader.nextSong')}
             >
               <span className="text-sm font-medium">{t('songHeader.next')}</span>
-              <ArrowRightIcon className="h-5 w-5 shrink-0" />
+              <ForwardArrowIcon className="h-5 w-5 shrink-0" />
             </Button>
           </div>
         )}

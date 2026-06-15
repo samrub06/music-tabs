@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  ChevronLeft,
   LogOut,
   Menu,
   Moon,
@@ -12,6 +11,7 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
+import { BackChevronIcon } from '@/components/icons/DirectionalIcons'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useScrollChromeOptional } from '@/context/ScrollChromeContext'
@@ -113,7 +113,7 @@ function UserAvatar({
 export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { language, setLanguage, t, isRtl } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext()
   const scrollChrome = useScrollChromeOptional()
@@ -190,7 +190,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             className="flex min-w-0 items-center gap-0.5 text-foreground -ms-1 py-1 pe-2 ps-1 rounded-lg hover:opacity-80 active:opacity-70 transition-opacity"
             aria-label={t('common.back')}
           >
-            <ChevronLeft className={cn('h-6 w-6 shrink-0', isRtl && 'rotate-180')} aria-hidden />
+            <BackChevronIcon className="h-6 w-6 shrink-0" />
             <h1 className="truncate text-base font-semibold">
               {pageHeaderOverride?.title ??
                 (isCreatePlaylistPage

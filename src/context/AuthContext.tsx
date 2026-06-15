@@ -11,6 +11,7 @@ interface Profile {
   avatar_url: string | null;
   preferred_instrument: string | null;
   spotify_id: string | null;
+  tsniout_filter_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +23,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: (next?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -6,7 +6,8 @@ import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
-import { getSongCoverUrl } from '@/components/presentational/SongThumbnail'
+import { UI_TEXT_ALIGN } from '@/utils/rtl'
+import { useSongCover } from '@/lib/hooks/useSongCover'
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
 
 interface SongGalleryProps {
@@ -15,7 +16,7 @@ interface SongGalleryProps {
   onAddClick?: (song: Song) => void
   addingId?: string | null
   hasUser?: boolean
-  variant?: 'default' | 'compact'
+  variant?: 'default' | 'compact' | 'folder'
 }
 
 const gridVariantClasses = {
@@ -23,6 +24,8 @@ const gridVariantClasses = {
     'grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
   compact:
     'grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7',
+  folder:
+    'grid grid-cols-4 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7',
 } as const
 
 // Draggable song card component
@@ -39,7 +42,7 @@ function DraggableSongCard({
   pathname: string | null
   router: any
   hasUser?: boolean
-  variant?: 'default' | 'compact'
+  variant?: 'default' | 'compact' | 'folder'
 }) {
   const {
     attributes,
@@ -78,8 +81,8 @@ function DraggableSongCard({
     router.push(`/song/${song.id}`)
   }
 
-  const isCompact = variant === 'compact'
-  const coverUrl = getSongCoverUrl(song.songImageUrl, song.artistImageUrl)
+  const isCompact = variant === 'compact' || variant === 'folder'
+  const coverUrl = useSongCover(song)
 
   return (
     <div
@@ -127,7 +130,7 @@ function DraggableSongCard({
 
       <div
         onClick={handleSongClick}
-        className={cn('min-w-0 cursor-pointer', isCompact ? 'space-y-0' : 'space-y-0.5')}
+        className={cn('min-w-0 cursor-pointer', isCompact ? 'space-y-0' : 'space-y-0.5', UI_TEXT_ALIGN)}
       >
         <h3
           className={cn(

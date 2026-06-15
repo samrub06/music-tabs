@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { RecentSearchList } from '@/components/search/RecentSearchList'
 import { Button } from '@/components/ui/button'
@@ -42,7 +42,7 @@ export default function RecentSearchesClient() {
           <div className="flex items-center gap-3 min-w-0">
             <Button asChild variant="ghost" size="icon" className="shrink-0 rounded-lg">
               <Link href="/" aria-label={t('common.back')}>
-                <ArrowLeftIcon className="h-5 w-5" />
+                <BackArrowIcon className="h-5 w-5" />
               </Link>
             </Button>
             <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">

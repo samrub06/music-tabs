@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo } from 'react'
-import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ForwardChevronIcon } from '@/components/icons/DirectionalIcons'
 import { SongThumbnail } from './SongThumbnail'
 import { useLanguage } from '@/context/LanguageContext'
 import {
@@ -15,6 +15,7 @@ export type NextSongRef = {
   id: string
   title: string
   author?: string
+  genre?: string
   songImageUrl?: string
   artistImageUrl?: string
 }
@@ -34,6 +35,7 @@ function SuggestionCard({
   subtitle,
   songImageUrl,
   artistImageUrl,
+  genre,
   href,
   onNavigate,
 }: {
@@ -42,6 +44,7 @@ function SuggestionCard({
   subtitle?: string
   songImageUrl?: string
   artistImageUrl?: string
+  genre?: string
   href: string
   onNavigate?: () => void
 }) {
@@ -57,6 +60,7 @@ function SuggestionCard({
       <SongThumbnail
         songImageUrl={songImageUrl}
         artistImageUrl={artistImageUrl}
+        genre={genre}
         alt={title}
         size="sm"
       />
@@ -79,9 +83,8 @@ function SuggestionCard({
           </p>
         )}
       </div>
-      <ChevronRightIcon
-        className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
-        aria-hidden
+      <ForwardChevronIcon
+        className="h-5 w-5 shrink-0 text-muted-foreground group-hover:text-foreground"
       />
     </Link>
   )
@@ -127,6 +130,7 @@ export function SongEndSuggestions({
           subtitle={nextSong.author}
           songImageUrl={nextSong.songImageUrl}
           artistImageUrl={nextSong.artistImageUrl}
+          genre={nextSong.genre}
           href={`/song/${nextSong.id}`}
           onNavigate={onPlayNext}
         />
@@ -145,6 +149,7 @@ export function SongEndSuggestions({
           subtitle={alternative.author}
           songImageUrl={alternative.songImageUrl}
           artistImageUrl={alternative.artistImageUrl}
+          genre={alternative.genre}
           href={`/song/${alternative.id}`}
         />
       )}

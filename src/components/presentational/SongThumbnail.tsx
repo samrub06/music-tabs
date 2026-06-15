@@ -2,10 +2,11 @@
 
 import { MusicalNoteIcon } from '@heroicons/react/24/solid'
 import { cn } from '@/lib/utils'
+import { useSongCover } from '@/lib/hooks/useSongCover'
+import { resolveSongCoverUrl } from '@/utils/songCover'
+import type { SongCoverInput } from '@/utils/songCover'
 
-type SongThumbnailProps = {
-  songImageUrl?: string | null
-  artistImageUrl?: string | null
+type SongThumbnailProps = SongCoverInput & {
   alt?: string
   className?: string
   size?: 'xs' | 'sm' | 'md' | 'lg'
@@ -25,21 +26,23 @@ const iconClasses = {
   lg: 'h-9 w-9 sm:h-10 sm:w-10',
 } as const
 
+/** Unfiltered cover URL (server components / no profile context). */
 export function getSongCoverUrl(
   songImageUrl?: string | null,
   artistImageUrl?: string | null
 ): string | undefined {
-  return songImageUrl || artistImageUrl || undefined
+  return resolveSongCoverUrl({ songImageUrl, artistImageUrl, tsnioutFilterEnabled: false })
 }
 
 export function SongThumbnail({
   songImageUrl,
   artistImageUrl,
+  genre,
   alt = '',
   className,
   size = 'md',
 }: SongThumbnailProps) {
-  const url = getSongCoverUrl(songImageUrl, artistImageUrl)
+  const url = useSongCover({ songImageUrl, artistImageUrl, genre })
 
   if (url) {
     return (

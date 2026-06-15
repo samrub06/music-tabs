@@ -20,7 +20,7 @@ interface ProfileClientProps {
 }
 
 export default function ProfileClient({ initialProfile, initialStats }: ProfileClientProps) {
-  const { user, profile: contextProfile } = useAuthContext()
+  const { user, profile: contextProfile, refetchProfile } = useAuthContext()
   const { t } = useLanguage()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -31,6 +31,9 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatarUrl || contextProfile?.avatar_url || '')
   const [preferredInstrument, setPreferredInstrument] = useState<PreferredInstrument | null>(
     initialProfile?.preferredInstrument ?? null
+  )
+  const [tsnioutFilterEnabled, setTsnioutFilterEnabled] = useState(
+    initialProfile?.tsnioutFilterEnabled ?? false
   )
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats | null>(initialStats)
@@ -56,7 +59,8 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
         await updateProfileAction({
           fullName: fullName.trim() || null,
           avatarUrl: avatarUrl.trim() || null,
-          preferredInstrument: preferredInstrument
+          preferredInstrument: preferredInstrument,
+          tsnioutFilterEnabled,
         })
         setIsEditing(false)
         router.refresh()
@@ -70,6 +74,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
     setFullName(initialProfile?.fullName || contextProfile?.full_name || '')
     setAvatarUrl(initialProfile?.avatarUrl || contextProfile?.avatar_url || '')
     setPreferredInstrument(initialProfile?.preferredInstrument ?? null)
+    setTsnioutFilterEnabled(initialProfile?.tsnioutFilterEnabled ?? false)
     setPreviewUrl(null)
     setIsEditing(false)
     setError(null)
@@ -132,6 +137,22 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
     if (isEditing && fileInputRef.current) {
       fileInputRef.current.click()
     }
+  }
+
+  const handleTsnioutToggle = () => {
+    const next = !tsnioutFilterEnabled
+    setTsnioutFilterEnabled(next)
+    setError(null)
+    startTransition(async () => {
+      try {
+        await updateProfileAction({ tsnioutFilterEnabled: next })
+        await refetchProfile()
+        router.refresh()
+      } catch (err) {
+        setTsnioutFilterEnabled(!next)
+        setError(err instanceof Error ? err.message : t('profile.updateError'))
+      }
+    })
   }
 
   const getInitials = (name: string | null | undefined, email: string | null | undefined) => {
@@ -308,6 +329,38 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
             </button>
           )}
         </div>
+      </div>
+
+      <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {t('profile.tsnioutFilter')}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {t('profile.tsnioutFilterDescription')}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={tsnioutFilterEnabled}
+            onClick={handleTsnioutToggle}
+            disabled={isPending}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+              tsnioutFilterEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+            } disabled:opacity-50`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                tsnioutFilterEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+        {error && !isEditing && (
+          <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+        )}
       </div>
 
       {/* Stats Card */}

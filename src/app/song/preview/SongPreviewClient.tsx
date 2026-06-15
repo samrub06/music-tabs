@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
+import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import type { NewSongData, Song } from '@/types'
@@ -157,7 +158,7 @@ export default function SongPreviewClient({
             onClick={() => router.push('/')}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <ArrowLeftIcon className="h-4 w-4" />
+            <BackArrowIcon className="h-4 w-4" />
             {t('songPreview.BACK_TO_SEARCH')}
           </button>
         </div>

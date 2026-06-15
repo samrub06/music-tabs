@@ -80,6 +80,8 @@
     "preferredInstrument": "Instrument préféré",
     "piano": "Piano",
     "guitar": "Guitare",
+    "tsnioutFilter": "Filtre tsniout",
+    "tsnioutFilterDescription": "Remplace les pochettes des chansons profanes par une image générique. Les chansons du catalogue religieux (songbook, playlists hébraïques) gardent leur illustration.",
     "updateError": "Erreur lors de la mise à jour du profil"
   },
   "leaderboard": {

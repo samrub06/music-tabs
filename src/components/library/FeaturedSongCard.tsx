@@ -4,6 +4,7 @@ import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
 import { Song } from '@/types'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
+import { useSongCover } from '@/lib/hooks/useSongCover'
 
 interface FeaturedSongCardProps {
   song: Song
@@ -17,7 +18,10 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
   const cardTitle = title ?? t('library.selectedForYou')
   const description = song.versionDescription || song.genre || t('library.DISCOVER_THIS_SONG')
 
-  const imageUrl = song.songImageUrl || song.artistImageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=600&fit=crop'
+  const coverUrl = useSongCover(song)
+  const imageUrl =
+    coverUrl ||
+    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=600&fit=crop'
 
   return (
     <div className="mb-8">
