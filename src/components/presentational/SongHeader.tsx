@@ -16,6 +16,7 @@ import {
   ForwardArrowIcon,
 } from '@/components/icons/DirectionalIcons';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface SongHeaderProps {
   song: Song;

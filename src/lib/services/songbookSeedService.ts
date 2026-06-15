@@ -119,7 +119,7 @@ function buildSearchTerms(hebrew?: string, latin?: string): string[] {
   if (/כ"ץ|katz/i.test(blob)) terms.push('כ"ץ', 'katz')
   if (/ריבו|ribo/i.test(blob)) terms.push('ריבו', 'ribo')
 
-  return [...new Set(terms.map((t) => normalizeMatchText(t)).filter((t) => t.length >= 2))]
+  return Array.from(new Set(terms.map((t) => normalizeMatchText(t)).filter((t) => t.length >= 2)))
 }
 
 function parseArtistTargets(entry: SongbookEntry): ArtistTarget[] {
@@ -225,7 +225,7 @@ async function searchTab4uForEntry(
   }
 
   const merged = new Map<string, SearchResult>()
-  for (const query of [...new Set(queries)]) {
+  for (const query of Array.from(new Set(queries))) {
     const results = await searchTab4UOnly(query)
     for (const result of results) {
       merged.set(result.url, result)
@@ -233,7 +233,7 @@ async function searchTab4uForEntry(
     await sleep(300)
   }
 
-  return [...merged.values()]
+  return Array.from(merged.values())
 }
 
 async function searchUgForEntry(
@@ -247,7 +247,7 @@ async function searchUgForEntry(
   }
 
   const merged = new Map<string, SearchResult>()
-  for (const query of [...new Set(queries.filter(Boolean))]) {
+  for (const query of Array.from(new Set(queries.filter(Boolean)))) {
     const results = await searchUltimateGuitarOnly(query)
     for (const result of results) {
       merged.set(result.url, result)
@@ -255,7 +255,7 @@ async function searchUgForEntry(
     await sleep(800)
   }
 
-  return [...merged.values()]
+  return Array.from(merged.values())
 }
 
 async function findExistingBySourceOnly(
@@ -439,7 +439,7 @@ async function upsertSongbookPlaylist(
 
   if (existingError) throw existingError
 
-  const mergedSongIds = [...new Set([...(existing?.song_ids ?? []), ...songIds])]
+  const mergedSongIds = Array.from(new Set([...(existing?.song_ids ?? []), ...songIds]))
 
   if (existing?.id) {
     const { error } = await (client.from('playlists') as any)
