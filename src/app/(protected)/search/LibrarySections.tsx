@@ -85,7 +85,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
         <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
         <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
-        <ExploreHubCta className="hidden sm:block" />
+        <ExploreHubCta />
       </div>
 
       <SpotifyComingSoonSection spotifyId={spotifyId} />

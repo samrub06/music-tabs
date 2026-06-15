@@ -71,63 +71,50 @@ const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
 interface GridCardProps {
   href: string
   layout?: 'scroll' | 'landscape' | 'grid'
+  title: ReactNode
   children: ReactNode
-  footer: ReactNode
 }
 
 interface PlaylistCardData {
   id: string
   href: string
   content: ReactNode
-  footer: ReactNode
+  title: ReactNode
 }
 
-function GridCard({ href, layout = 'scroll', children, footer }: GridCardProps) {
+function GridCard({ href, layout = 'scroll', title, children }: GridCardProps) {
   return (
     <Link
       href={href}
       className={cn(
-        'group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-200 hover:shadow-xl',
-        layout === 'scroll' && 'aspect-square w-28 flex-shrink-0 snap-start',
-        layout === 'landscape' && 'aspect-[5/3] w-full hover:scale-[1.02]',
-        layout === 'grid' && 'aspect-square w-full'
+        'group flex cursor-pointer flex-col transition-colors',
+        layout === 'scroll' && 'w-28 flex-shrink-0 snap-start gap-1',
+        layout === 'landscape' && 'w-full gap-2',
+        layout === 'grid' && 'w-full gap-1'
       )}
     >
-      {children}
       <div
         className={cn(
-          'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent',
-          layout === 'grid' ? 'p-1' : 'p-2'
+          'relative aspect-square w-full overflow-hidden bg-muted',
+          layout === 'scroll' ? 'rounded-lg' : 'rounded-xl'
         )}
       >
-        {footer}
+        {children}
+      </div>
+      <div
+        className={cn(
+          'min-w-0 truncate font-medium text-foreground transition-colors group-hover:text-primary',
+          layout === 'grid' ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'
+        )}
+      >
+        {title}
       </div>
     </Link>
   )
 }
 
-function buildPlaylistCard(
-  item: PublicPlaylistItem,
-  t: (key: string) => string,
-  options?: { gaugeSize?: number; compactFooter?: boolean }
-): PlaylistCardData {
-  const footer = (
-    <>
-      <div
-        className={cn(
-          'truncate font-bold text-white',
-          options?.compactFooter ? 'text-[10px] leading-tight' : 'text-xs sm:text-sm'
-        )}
-      >
-        {item.name}
-      </div>
-      {!options?.compactFooter && (
-        <div className="text-white/80 text-[10px] sm:text-xs truncate">
-          {t('library.playlistSongCount').replace('{count}', String(item.songCount))}
-        </div>
-      )}
-    </>
-  )
+function buildPlaylistCard(item: PublicPlaylistItem, options?: { gaugeSize?: number }): PlaylistCardData {
+  const title = item.name
 
   const difficultyTheme = item.curatedSlug ? getDifficultyThemeBySlug(item.curatedSlug) : undefined
 
@@ -145,44 +132,43 @@ function buildPlaylistCard(
 
   const content =
     !isDifficultyBanner && coverUrl ? (
-      <div className="absolute inset-0">
-        <img src={coverUrl} alt={item.name} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-      </div>
+      <img
+        src={coverUrl}
+        alt={item.name}
+        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+      />
     ) : isDifficultyBanner && difficultyTheme ? (
-      <div
-        className="absolute inset-0"
-        style={{ backgroundColor: difficultyTheme.bannerBg }}
-      >
-        <div className="absolute inset-0 flex items-center justify-center pb-3 sm:pb-4">
+      <div className="absolute inset-0" style={{ backgroundColor: difficultyTheme.bannerBg }}>
+        <div className="absolute inset-0 flex items-center justify-center">
           <DifficultyGauge level={difficultyTheme.level} size={options?.gaugeSize ?? 60} />
         </div>
       </div>
     ) : (
       <div className={cn('absolute inset-0', gradientClass)}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <SparklesIcon className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+          <SparklesIcon className="h-10 w-10 text-white sm:h-12 sm:w-12" />
         </div>
       </div>
     )
 
-  return { id: item.id, href: `/library/${item.id}`, content, footer }
+  return { id: item.id, href: `/library/${item.id}`, content, title }
 }
 
 interface ShortcutCardData {
   id: string
   href: string
   content: ReactNode
-  footer: ReactNode
+  title: ReactNode
 }
 
 function buildCoverCardContent(coverUrl: string | null, fallback: ReactNode): ReactNode {
   if (coverUrl) {
     return (
-      <div className="absolute inset-0">
-        <img src={coverUrl} alt="" className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-      </div>
+      <img
+        src={coverUrl}
+        alt=""
+        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+      />
     )
   }
 
@@ -220,15 +206,11 @@ export default function CuratedPlaylistRow({
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <HeartIcon className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+                <HeartIcon className="h-10 w-10 text-white sm:h-12 sm:w-12" />
               </div>
             </>
           )),
-          footer: (
-            <div className="truncate text-xs font-bold text-white sm:text-sm">
-              {t('library.likedSongs')}
-            </div>
-          ),
+          title: t('library.likedSongs'),
         },
         {
           id: 'recent-songs',
@@ -237,22 +219,18 @@ export default function CuratedPlaylistRow({
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-blue-700" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <ClockIcon className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
+                <ClockIcon className="h-10 w-10 text-white sm:h-12 sm:w-12" />
               </div>
             </>
           )),
-          footer: (
-            <div className="truncate text-xs font-bold text-white sm:text-sm">
-              {t('library.myRecentSongs')}
-            </div>
-          ),
+          title: t('library.myRecentSongs'),
         },
       ]
     : []
 
   const isDifficultySection = section === 'difficulty'
 
-  const cards = publicPlaylists
+  const filteredPlaylists = publicPlaylists
     .filter((item) => {
       if (item.songCount <= 0 || !item.curatedSlug) return false
       if (hubZone) return getHubZoneForSlug(item.curatedSlug) === hubZone
@@ -264,42 +242,32 @@ export default function CuratedPlaylistRow({
       const orderB = CURATED_PLAYLISTS.find((p) => p.slug === b.curatedSlug)?.displayOrder ?? 0
       return orderA - orderB
     })
-    .map((item) => buildPlaylistCard(item, t))
+
+  const buildCards = (options?: { gaugeSize?: number }) =>
+    filteredPlaylists.map((item) => buildPlaylistCard(item, options))
+
+  const cards = buildCards()
+  const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: 36 }) : cards
 
   if (cards.length === 0 && userShortcutCards.length === 0) return null
 
   type CardLayout = NonNullable<GridCardProps['layout']>
 
-  const renderCards = (layout: CardLayout) => {
-    const isCompactGrid = layout === 'grid'
-    const playlistCards = isCompactGrid
-      ? publicPlaylists
-          .filter((item) => {
-            if (item.songCount <= 0 || !item.curatedSlug) return false
-            if (hubZone) return getHubZoneForSlug(item.curatedSlug) === hubZone
-            if (section) return curatedPlaylistSectionBySlug[item.curatedSlug] === section
-            return false
-          })
-          .sort((a, b) => {
-            const orderA = CURATED_PLAYLISTS.find((p) => p.slug === a.curatedSlug)?.displayOrder ?? 0
-            const orderB = CURATED_PLAYLISTS.find((p) => p.slug === b.curatedSlug)?.displayOrder ?? 0
-            return orderA - orderB
-          })
-          .map((item) =>
-            buildPlaylistCard(item, t, { gaugeSize: 36, compactFooter: true })
-          )
-      : cards
+  const renderCards = (
+    layout: CardLayout,
+    playlistCards: PlaylistCardData[] = layout === 'grid' ? mobileGridCards : cards
+  ) => {
 
     return (
       <>
         {layout === 'scroll' &&
           userShortcutCards.map((item) => (
-            <GridCard key={item.id} href={item.href} layout={layout} footer={item.footer}>
+            <GridCard key={item.id} href={item.href} layout={layout} title={item.title}>
               {item.content}
             </GridCard>
           ))}
         {playlistCards.map((item) => (
-          <GridCard key={item.id} href={item.href} layout={layout} footer={item.footer}>
+          <GridCard key={item.id} href={item.href} layout={layout} title={item.title}>
             {item.content}
           </GridCard>
         ))}
@@ -314,18 +282,31 @@ export default function CuratedPlaylistRow({
           {t(sectionTitleKey[section])}
         </h3>
       )}
+      {isDifficultySection ? (
+        <div className="grid grid-cols-4 gap-2 md:hidden">
+          {renderCards('grid')}
+        </div>
+      ) : (
+        <div
+          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory md:hidden"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {renderCards('scroll')}
+        </div>
+      )}
       <div
-        className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory md:hidden"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch',
-        }}
+        className={cn(
+          'hidden gap-4 md:grid',
+          isDifficultySection
+            ? 'md:grid-cols-4'
+            : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+        )}
       >
-        {renderCards(true)}
-      </div>
-      <div className="hidden gap-4 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-        {renderCards(false)}
+        {renderCards('landscape', cards)}
       </div>
     </section>
   )

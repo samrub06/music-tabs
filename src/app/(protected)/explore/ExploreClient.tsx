@@ -343,7 +343,6 @@ export default function ExploreClient({
                   showAddButton={!!userId}
                   onAddClick={handleAddToLibrary}
                   addingId={cloningId}
-                  hasUser={!!userId}
                 />
                 <Pagination page={page} limit={limit} total={total} />
               </>
