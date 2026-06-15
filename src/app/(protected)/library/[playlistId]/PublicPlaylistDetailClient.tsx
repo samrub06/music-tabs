@@ -58,11 +58,12 @@ export default function PublicPlaylistDetailClient({
     [userId, router]
   )
 
-  const handleStartPlaylist = () => {
-    if (songs.length === 0) return
+  const navigateToSong = useCallback(
+    (songId: string) => {
+      if (typeof window === 'undefined') return
 
-    if (typeof window !== 'undefined') {
       const songList = songs.map((s) => s.id)
+      const currentIndex = songList.indexOf(songId)
       const playlistContext = {
         isPlaylist: true,
         targetKey: '',
@@ -74,18 +75,25 @@ export default function PublicPlaylistDetailClient({
         })),
       }
 
-      const navigationData = {
-        songList,
-        currentIndex: 0,
-        sourceUrl: `/library/${playlist.id}`,
-        playlistContext,
-      }
-
-      sessionStorage.setItem('songNavigation', JSON.stringify(navigationData))
+      sessionStorage.setItem(
+        'songNavigation',
+        JSON.stringify({
+          songList,
+          currentIndex: currentIndex >= 0 ? currentIndex : 0,
+          sourceUrl: `/library/${playlist.id}`,
+          playlistContext,
+        })
+      )
       sessionStorage.removeItem('hasUsedNext')
 
-      router.push(`/song/${songs[0].id}`)
-    }
+      router.push(`/song/${songId}`)
+    },
+    [songs, playlist.id, router]
+  )
+
+  const handleStartPlaylist = () => {
+    if (songs.length === 0) return
+    navigateToSong(songs[0].id)
   }
 
   const songCountLabel =
@@ -157,7 +165,7 @@ export default function PublicPlaylistDetailClient({
                 <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
                   <button
                     type="button"
-                    onClick={() => router.push(`/song/${song.id}`)}
+                    onClick={() => navigateToSong(song.id)}
                     className="shrink-0"
                   >
                     <SongThumbnail
@@ -171,7 +179,7 @@ export default function PublicPlaylistDetailClient({
 
                   <button
                     type="button"
-                    onClick={() => router.push(`/song/${song.id}`)}
+                    onClick={() => navigateToSong(song.id)}
                     className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
                   >
                     <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
@@ -198,7 +206,7 @@ export default function PublicPlaylistDetailClient({
                     </Button>
                     <button
                       type="button"
-                      onClick={() => router.push(`/song/${song.id}`)}
+                      onClick={() => navigateToSong(song.id)}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 sm:h-10 sm:w-10"
                       aria-label={t('search.viewSong')}
                     >

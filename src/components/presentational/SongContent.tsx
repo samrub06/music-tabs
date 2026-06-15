@@ -40,6 +40,8 @@ import {
 } from '@/components/ui/collapsible';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { StarRatingDisplay } from './StarRatingDisplay';
+import { useSongCover } from '@/lib/hooks/useSongCover';
+import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
 import type { LibrarySongRef } from '@/utils/songSuggestions';
 import {
   Select,
@@ -237,6 +239,114 @@ export default function SongContent({
     onSetTransposeValue(newTransposeValue);
   };
 
+  const coverUrl = useSongCover(transposedSong);
+  const titleIsRtl = /[\u0590-\u05FF]/.test(transposedSong?.title || '');
+  const authorIsRtl = /[\u0590-\u05FF]/.test(transposedSong?.author || '');
+
+  const songTitleBlock = (
+    <>
+      <h2
+        className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
+        dir={titleIsRtl ? 'rtl' : 'ltr'}
+      >
+        {transposedSong?.title || ''}
+      </h2>
+      {transposedSong?.author && (
+        <Link
+          href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
+          className="mt-0.5 block max-w-full truncate text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
+          dir={authorIsRtl ? 'rtl' : 'ltr'}
+        >
+          {transposedSong.author}
+        </Link>
+      )}
+    </>
+  );
+
+  const songActionButtons = (
+    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+      {transposedSong?.rating != null && (
+        <div className="flex h-14 min-h-14 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3">
+          <StarRatingDisplay rating={Number(transposedSong.rating)} size="md" />
+        </div>
+      )}
+      {transposedSong?.viewCount != null && transposedSong.viewCount > 0 && (
+        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-border/80 bg-white px-2 shadow-sm dark:bg-gray-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/eyeview_icon.jpeg"
+            alt=""
+            className="h-8 w-8 object-contain"
+            aria-hidden
+          />
+          <span className="text-[10px] font-semibold tabular-nums leading-none text-foreground">
+            {transposedSong.viewCount}
+          </span>
+        </div>
+      )}
+      {onToggleEdit && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onToggleEdit}
+          className="h-14 min-h-14 w-14 shrink-0 gap-1.5 rounded-xl px-0 text-sm font-medium sm:w-auto sm:px-3"
+          aria-label={t('songHeader.edit')}
+        >
+          <PencilSquareIcon className="h-5 w-5" />
+          <span className="hidden sm:inline">{t('songHeader.edit')}</span>
+        </Button>
+      )}
+      {isInLibrary && (
+        <div
+          className="inline-flex h-14 min-h-14 w-14 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 sm:w-auto dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
+          title={t('library.inYourLibrary')}
+        >
+          <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
+          <span className="hidden text-xs font-medium sm:inline">
+            {t('library.inYourLibrary')}
+          </span>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!isInLibrary) {
+            onAddToLibrary?.();
+            return;
+          }
+          onToggleFavorite?.();
+        }}
+        disabled={
+          isTogglingFavorite ||
+          (!isInLibrary && !onAddToLibrary) ||
+          (isInLibrary && !onToggleFavorite)
+        }
+        className="inline-flex h-14 w-14 min-h-14 min-w-14 shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
+        aria-label={
+          isInLibrary
+            ? isLiked
+              ? t('library.removeFromFavorites')
+              : t('library.addToFavorites')
+            : t('library.addToLibrary')
+        }
+        title={
+          isInLibrary
+            ? isLiked
+              ? t('library.removeFromFavorites')
+              : t('library.addToFavorites')
+            : t('library.addToLibrary')
+        }
+      >
+        {isLiked ? (
+          <HeartSolidIcon className="h-6 w-6" />
+        ) : (
+          <HeartIcon className="h-6 w-6" />
+        )}
+      </button>
+    </div>
+  );
+
   return (
     <div 
       ref={contentRef}
@@ -251,118 +361,54 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
-            <div className="flex items-start gap-2 sm:items-center">
-            <div className="min-w-0 flex-1">
-              <h2
-                className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base"
-                dir={/[\u0590-\u05FF]/.test(transposedSong?.title || '') ? 'rtl' : 'ltr'}
-              >
-                {transposedSong?.title || ''}
-              </h2>
-              {transposedSong?.author && (
-                <Link
-                  href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
-                  className="mt-0.5 block max-w-full truncate text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
-                  dir={/[\u0590-\u05FF]/.test(transposedSong.author) ? 'rtl' : 'ltr'}
-                >
-                  {transposedSong.author}
-                </Link>
-              )}
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-2 md:flex-row md:items-center md:gap-2">
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {transposedSong?.rating != null && (
-                  <div className="flex h-14 min-h-14 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3">
-                    <StarRatingDisplay rating={Number(transposedSong.rating)} size="md" />
-                  </div>
-                )}
-                {transposedSong?.viewCount != null && transposedSong.viewCount > 0 && (
-                  <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-border/80 bg-white px-2 shadow-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+            {isInLibrary && (
+              <div className="flex flex-col gap-2 sm:hidden">
+                <div className="aspect-[2/1] w-full max-h-44 overflow-hidden rounded-xl bg-muted">
+                  {coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src="/icons/eyeview_icon.jpeg"
-                      alt=""
-                      className="h-8 w-8 object-contain"
-                      aria-hidden
+                      src={coverUrl}
+                      alt={transposedSong?.title || ''}
+                      className="h-full w-full object-cover"
                     />
-                    <span className="text-[10px] font-semibold tabular-nums leading-none text-foreground">
-                      {transposedSong.viewCount}
-                    </span>
-                  </div>
-                )}
-                {onToggleEdit && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onToggleEdit}
-                    className="h-14 min-h-14 w-14 shrink-0 gap-1.5 rounded-xl px-0 text-sm font-medium sm:w-auto sm:px-3"
-                    aria-label={t('songHeader.edit')}
-                  >
-                    <PencilSquareIcon className="h-5 w-5" />
-                    <span className="hidden sm:inline">{t('songHeader.edit')}</span>
-                  </Button>
-                )}
-                {isInLibrary && (
-                  <div
-                    className="inline-flex h-14 min-h-14 w-14 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 sm:w-auto dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
-                    title={t('library.inYourLibrary')}
-                  >
-                    <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
-                    <span className="hidden text-xs font-medium sm:inline">
-                      {t('library.inYourLibrary')}
-                    </span>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isInLibrary) {
-                      onAddToLibrary?.();
-                      return;
-                    }
-                    onToggleFavorite?.();
-                  }}
-                  disabled={
-                    isTogglingFavorite ||
-                    (!isInLibrary && !onAddToLibrary) ||
-                    (isInLibrary && !onToggleFavorite)
-                  }
-                  className="inline-flex h-14 w-14 min-h-14 min-w-14 shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
-                  aria-label={
-                    isInLibrary
-                      ? isLiked
-                        ? t('library.removeFromFavorites')
-                        : t('library.addToFavorites')
-                      : t('library.addToLibrary')
-                  }
-                  title={
-                    isInLibrary
-                      ? isLiked
-                        ? t('library.removeFromFavorites')
-                        : t('library.addToFavorites')
-                      : t('library.addToLibrary')
-                  }
-                >
-                  {isLiked ? (
-                    <HeartSolidIcon className="h-6 w-6" />
                   ) : (
-                    <HeartIcon className="h-6 w-6" />
+                    <SongCoverPlaceholder />
                   )}
-                </button>
-              </div>
-              {isAuthenticated && onFolderChange && (
-                <div className="hidden w-full sm:block md:w-auto md:min-w-[10rem]">
-                  <FolderDropdown
-                    currentFolderId={currentFolderId}
-                    folders={folders}
-                    onFolderChange={onFolderChange}
-                    size="comfortable"
-                    fullWidth={false}
-                  />
                 </div>
+                <div className="min-w-0 w-full">{songTitleBlock}</div>
+              </div>
+            )}
+
+            <div
+              className={cn(
+                'flex gap-2',
+                isInLibrary
+                  ? 'flex-col sm:flex-row sm:items-center'
+                  : 'items-start sm:items-center'
               )}
-            </div>
+            >
+              <div className={cn('min-w-0 flex-1', isInLibrary && 'hidden sm:block')}>
+                {songTitleBlock}
+              </div>
+              <div
+                className={cn(
+                  'flex shrink-0 flex-col items-stretch gap-2 md:flex-row md:items-center md:gap-2',
+                  isInLibrary ? 'w-full sm:w-auto sm:items-end' : 'items-end'
+                )}
+              >
+                {songActionButtons}
+                {isAuthenticated && onFolderChange && (
+                  <div className="hidden w-full sm:block md:w-auto md:min-w-[10rem]">
+                    <FolderDropdown
+                      currentFolderId={currentFolderId}
+                      folders={folders}
+                      onFolderChange={onFolderChange}
+                      size="comfortable"
+                      fullWidth={false}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             {isAuthenticated && onFolderChange && (
               <div className="mt-1 w-full sm:hidden">

@@ -13,11 +13,20 @@ import { PencilIcon, CheckIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24
 import { getUserStatsAction, getUserBadgesAction } from '@/app/(protected)/gamification/actions'
 import { useEffect, useRef } from 'react'
 import type { UserBadge } from '@/types'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 
 interface ProfileClientProps {
   initialProfile: Profile | null
   initialStats: UserStats | null
 }
+
+const sectionCardClass =
+  'rounded-2xl border border-black/[0.06] bg-card p-4 dark:border-white/[0.08] sm:p-5'
+
+const fieldInputClass =
+  'h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30'
 
 export default function ProfileClient({ initialProfile, initialStats }: ProfileClientProps) {
   const { user, profile: contextProfile, refetchProfile } = useAuthContext()
@@ -173,26 +182,29 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const displayAvatarUrl = avatarUrl || contextProfile?.avatar_url
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* Profile Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+      <div className={sectionCardClass}>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-4">
+            <div className="relative shrink-0">
               {previewUrl || displayAvatarUrl ? (
                 <img 
                   src={previewUrl || displayAvatarUrl || ''} 
                   alt={displayName}
-                  className={`h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 ${
-                    isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                  }`}
+                  className={cn(
+                    'h-16 w-16 rounded-full object-cover border-2 border-border sm:h-20 sm:w-20',
+                    isEditing && 'cursor-pointer transition-opacity hover:opacity-80'
+                  )}
                   onClick={handleAvatarClick}
                 />
               ) : (
                 <div 
-                  className={`h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-2xl border-2 border-gray-200 dark:border-gray-700 ${
-                    isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                  }`}
+                  className={cn(
+                    'flex h-16 w-16 items-center justify-center rounded-full border-2 border-border bg-gradient-to-br from-primary to-primary/80 text-xl font-semibold text-primary-foreground sm:h-20 sm:w-20 sm:text-2xl',
+                    isEditing && 'cursor-pointer transition-opacity hover:opacity-80'
+                  )}
                   onClick={handleAvatarClick}
                 >
                   {getInitials(fullName || contextProfile?.full_name, user?.email || null)}
@@ -207,110 +219,113 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                     onChange={handleFileSelect}
                     className="hidden"
                   />
-                  <div className="absolute bottom-0 right-0 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors">
+                  <div className="absolute bottom-0 right-0 cursor-pointer rounded-full bg-primary p-1.5 text-primary-foreground transition-colors hover:bg-primary/90">
                     <PhotoIcon className="h-4 w-4" />
                   </div>
                 </>
               )}
               {isUploading && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                  <div className="h-7 w-7 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-8 sm:w-8" />
                 </div>
               )}
             </div>
             
-            <div>
+            <div className="min-w-0 w-full text-center sm:text-start">
               {isEditing ? (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <Label htmlFor="profile-full-name" className="mb-2 block text-[11px] font-medium text-muted-foreground">
                       {t('profile.fullName')}
-                    </label>
+                    </Label>
                     <input
+                      id="profile-full-name"
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder={t('profile.fullNamePlaceholder')}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className={fieldInputClass}
                       autoFocus
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <Label htmlFor="profile-avatar-url" className="mb-2 block text-[11px] font-medium text-muted-foreground">
                       {t('profile.avatarUrl')} ({t('profile.orUpload')})
-                    </label>
+                    </Label>
                     <input
+                      id="profile-avatar-url"
                       type="url"
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       placeholder={t('profile.avatarUrlPlaceholder')}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      className={fieldInputClass}
                     />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1.5 text-xs text-muted-foreground">
                       {t('profile.uploadHint')}
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Label className="mb-2 block text-[11px] font-medium text-muted-foreground">
                       {t('profile.preferredInstrument')}
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                    </Label>
+                    <div className="flex flex-wrap justify-center gap-4 sm:justify-start">
+                      <label className="flex cursor-pointer items-center gap-2">
                         <input
                           type="radio"
                           name="preferredInstrument"
                           checked={preferredInstrument === 'piano'}
                           onChange={() => setPreferredInstrument('piano')}
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                          className="text-primary focus:ring-primary"
                         />
-                        <span className="text-gray-700 dark:text-gray-300">{t('profile.piano')}</span>
+                        <span className="text-sm text-foreground">{t('profile.piano')}</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
+                      <label className="flex cursor-pointer items-center gap-2">
                         <input
                           type="radio"
                           name="preferredInstrument"
                           checked={preferredInstrument === 'guitar'}
                           onChange={() => setPreferredInstrument('guitar')}
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                          className="text-primary focus:ring-primary"
                         />
-                        <span className="text-gray-700 dark:text-gray-300">{t('profile.guitar')}</span>
+                        <span className="text-sm text-foreground">{t('profile.guitar')}</span>
                       </label>
                     </div>
                   </div>
                   {error && (
-                    <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm">
+                    <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                       {error}
                     </div>
                   )}
-                  <div className="flex items-center space-x-2">
-                    <button
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button
                       onClick={handleSave}
                       disabled={isPending}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="h-10 min-h-[44px] flex-1 rounded-xl sm:flex-initial"
                     >
                       <CheckIcon className="h-4 w-4" />
-                      <span>{t('common.save')}</span>
-                    </button>
-                    <button
+                      {t('common.save')}
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={handleCancel}
                       disabled={isPending}
-                      className="flex items-center space-x-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="h-10 min-h-[44px] flex-1 rounded-xl sm:flex-initial"
                     >
                       <XMarkIcon className="h-4 w-4" />
-                      <span>{t('common.cancel')}</span>
-                    </button>
+                      {t('common.cancel')}
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl">
                     {displayName}
                   </h1>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
                     {user?.email}
                   </p>
                   {preferredInstrument && (
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {t('profile.preferredInstrument')}: {preferredInstrument === 'piano' ? t('profile.piano') : t('profile.guitar')}
                     </p>
                   )}
@@ -320,24 +335,26 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
           </div>
           
           {!isEditing && (
-            <button
+            <Button
+              variant="outline"
               onClick={() => setIsEditing(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="h-10 min-h-[44px] w-full shrink-0 rounded-xl sm:ms-auto sm:w-auto"
             >
               <PencilIcon className="h-4 w-4" />
-              <span>{t('common.edit')}</span>
-            </button>
+              {t('common.edit')}
+            </Button>
           )}
+          </div>
         </div>
       </div>
 
-      <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className={sectionCardClass}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-foreground">
               {t('profile.tsnioutFilter')}
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               {t('profile.tsnioutFilterDescription')}
             </p>
           </div>
@@ -347,19 +364,22 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
             aria-checked={tsnioutFilterEnabled}
             onClick={handleTsnioutToggle}
             disabled={isPending}
-            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
-              tsnioutFilterEnabled ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-            } disabled:opacity-50`}
+            className={cn(
+              'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors',
+              tsnioutFilterEnabled ? 'bg-primary' : 'bg-muted',
+              'disabled:opacity-50'
+            )}
           >
             <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+              className={cn(
+                'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
                 tsnioutFilterEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              )}
             />
           </button>
         </div>
         {error && !isEditing && (
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-3 text-sm text-destructive">{error}</p>
         )}
       </div>
 
@@ -370,8 +390,8 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
 
       {/* Badges */}
       {badges.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className={sectionCardClass}>
+          <h2 className="mb-3 text-base font-semibold text-foreground sm:mb-4">
             {t('profile.badges')}
           </h2>
           <BadgeDisplay badges={badges} />
@@ -380,40 +400,40 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
 
       {/* Additional Stats */}
       {stats && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className={sectionCardClass}>
+          <h2 className="mb-3 text-base font-semibold text-foreground sm:mb-4">
             {t('profile.activity')}
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4">
+            <div className="rounded-xl bg-muted/50 p-3 text-center sm:p-4">
+              <p className="text-xl font-bold tabular-nums text-foreground sm:text-2xl">
                 {stats.totalSongsCreated}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                 {t('profile.songsCreated')}
               </p>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="rounded-xl bg-muted/50 p-3 text-center sm:p-4">
+              <p className="text-xl font-bold tabular-nums text-foreground sm:text-2xl">
                 {stats.totalSongsViewed}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                 {t('profile.songsViewed')}
               </p>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="rounded-xl bg-muted/50 p-3 text-center sm:p-4">
+              <p className="text-xl font-bold tabular-nums text-foreground sm:text-2xl">
                 {stats.totalFoldersCreated}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                 {t('profile.foldersCreated')}
               </p>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="rounded-xl bg-muted/50 p-3 text-center sm:p-4">
+              <p className="text-xl font-bold tabular-nums text-foreground sm:text-2xl">
                 {stats.totalPlaylistsCreated}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                 {t('profile.playlistsCreated')}
               </p>
             </div>

@@ -174,6 +174,7 @@ export default function SongViewer({
         canNextSong={!!canNextSong}
         nextSongInfo={nextSongInfo}
         onToggleToolsBar={onToggleToolsBar}
+        isInLibrary={isInLibrary}
       />
 
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">

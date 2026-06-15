@@ -59,11 +59,13 @@ function SortableSongItem({
   song,
   isDragging,
   onRemove,
+  onPlaySong,
   t,
 }: {
   song: Song
   isDragging: boolean
   onRemove: (songId: string) => void
+  onPlaySong: (songId: string) => void
   t: (key: string) => string
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -74,8 +76,6 @@ function SortableSongItem({
     transform: CSS.Transform.toString(transform),
     transition,
   }
-
-  const router = useRouter()
 
   return (
     <li
@@ -104,7 +104,7 @@ function SortableSongItem({
 
         <button
           type="button"
-          onClick={() => router.push(`/song/${song.id}`)}
+          onClick={() => onPlaySong(song.id)}
           className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
         >
           <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
@@ -123,7 +123,7 @@ function SortableSongItem({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => router.push(`/song/${song.id}`)}>
+            <DropdownMenuItem onClick={() => onPlaySong(song.id)}>
               {t('search.viewSong')}
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -253,11 +253,12 @@ export default function PlaylistDetailClient({
     }
   }
 
-  const handleStartPlaylist = () => {
-    if (songs.length === 0) return
+  const navigateToSong = useCallback(
+    (songId: string) => {
+      if (typeof window === 'undefined') return
 
-    if (typeof window !== 'undefined') {
       const songList = songs.map((s) => s.id)
+      const currentIndex = songList.indexOf(songId)
       const playlistContext = {
         isPlaylist: true,
         targetKey: '',
@@ -269,18 +270,25 @@ export default function PlaylistDetailClient({
         })),
       }
 
-      const navigationData = {
-        songList,
-        currentIndex: 0,
-        sourceUrl: `/playlist/${playlist.id}`,
-        playlistContext,
-      }
-
-      sessionStorage.setItem('songNavigation', JSON.stringify(navigationData))
+      sessionStorage.setItem(
+        'songNavigation',
+        JSON.stringify({
+          songList,
+          currentIndex: currentIndex >= 0 ? currentIndex : 0,
+          sourceUrl: `/playlist/${playlist.id}`,
+          playlistContext,
+        })
+      )
       sessionStorage.removeItem('hasUsedNext')
 
-      router.push(`/song/${songs[0].id}`)
-    }
+      router.push(`/song/${songId}`)
+    },
+    [songs, playlist.id, router]
+  )
+
+  const handleStartPlaylist = () => {
+    if (songs.length === 0) return
+    navigateToSong(songs[0].id)
   }
 
   const activeSong = activeId ? songs.find((s) => s.id === activeId) : null
@@ -387,6 +395,7 @@ export default function PlaylistDetailClient({
                   song={song}
                   isDragging={activeId === song.id}
                   onRemove={handleRemoveSong}
+                  onPlaySong={navigateToSong}
                   t={t}
                 />
               ))}

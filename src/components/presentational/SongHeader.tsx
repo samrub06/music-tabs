@@ -34,6 +34,7 @@ interface SongHeaderProps {
   canNextSong?: boolean;
   nextSongInfo?: { title: string; author?: string } | null;
   onToggleToolsBar?: () => void;
+  isInLibrary?: boolean;
 }
 
 export default function SongHeader({
@@ -49,6 +50,7 @@ export default function SongHeader({
   canNextSong,
   nextSongInfo,
   onToggleToolsBar,
+  isInLibrary = false,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
   const coverUrl = useSongCover(song);
@@ -70,7 +72,12 @@ export default function SongHeader({
           <BackArrowIcon className="h-5 w-5" />
         </Button>
 
-        <div className="flex min-w-0 flex-1 items-center">
+        <div
+          className={cn(
+            'flex min-w-0 flex-1 items-center',
+            isInLibrary && 'hidden sm:flex'
+          )}
+        >
           {coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

@@ -360,6 +360,32 @@ export default function SongViewerContainerSSR({
   };
 
   // Navigation handlers
+  const handleNavigateBack = () => {
+    if (typeof window === 'undefined') {
+      router.push('/songs')
+      return
+    }
+
+    const navigationDataStr = sessionStorage.getItem('songNavigation')
+    if (navigationDataStr) {
+      try {
+        const navigationData = JSON.parse(navigationDataStr)
+        if (navigationData.sourceUrl) {
+          router.back()
+          return
+        }
+      } catch (error) {
+        console.error('Error parsing navigation data:', error)
+      }
+    }
+
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/songs')
+    }
+  }
+
   const handleNextSong = () => {
     if (typeof window === 'undefined') return;
     
@@ -385,8 +411,8 @@ export default function SongViewerContainerSSR({
         sessionStorage.setItem('hasUsedNext', 'true');
         setHasUsedNext(true);
         
-        // Navigate to next song
-        router.push(`/song/${nextSongId}`);
+        // Navigate to next song without stacking browser history
+        router.replace(`/song/${nextSongId}`);
       }
     } catch (error) {
       console.error('Error parsing navigation data:', error);
@@ -494,7 +520,7 @@ export default function SongViewerContainerSSR({
     onToggleEasyChordMode: () => setEasyChordMode(prev => !prev),
     useCapo,
     onToggleCapo: handleToggleCapo,
-    onNavigateBack: () => router.push('/songs'),
+    onNavigateBack: handleNavigateBack,
     onPrevSong: handlePrevSong,
     onNextSong: handleNextSong,
     canPrevSong: canPrevSong,

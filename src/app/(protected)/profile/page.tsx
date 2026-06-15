@@ -22,12 +22,12 @@ export default async function ProfilePage() {
   ])
   
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
       <div
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mx-auto max-w-4xl p-4 sm:p-6">
           <ProfileClient
             initialProfile={profile}
             initialStats={stats}
