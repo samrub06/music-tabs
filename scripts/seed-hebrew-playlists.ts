@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
 import { hebrewPlaylistSeedService } from '../src/lib/services/hebrewPlaylistSeedService'
+import { LIBRARY_CATALOG_TAG } from '../src/lib/services/libraryCatalogCache'
 import type { Database } from '../src/types/db'
 
 dotenv.config({ path: '.env.local' })
@@ -44,6 +45,15 @@ async function run() {
     }
 
     console.log('Done.')
+
+    try {
+      const { revalidatePath, revalidateTag } = await import('next/cache')
+      revalidateTag(LIBRARY_CATALOG_TAG)
+      revalidatePath('/')
+      console.log('Cache revalidated for home library sections.')
+    } catch {
+      console.log('Hard-refresh the home page (Cmd+Shift+R) if playlists look stale.')
+    }
   } catch (error) {
     console.error('Seed failed:', error)
     process.exit(1)

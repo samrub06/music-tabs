@@ -14,6 +14,7 @@ import {
 import { parseTextToStructuredSong } from '@/utils/songParser'
 import { extractAllChords } from '@/utils/structuredSong'
 import type { Database } from '@/types/db'
+import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 
 const REQUEST_DELAY_MS = 600
 
@@ -236,7 +237,7 @@ async function upsertHebrewPlaylist(
     is_public: true,
     curated_slug: definition.slug,
     display_order: definition.displayOrder,
-    image_url: null,
+    image_url: getCuratedPlaylistCoverUrl(definition.slug) ?? null,
     updated_at: now,
   }
 

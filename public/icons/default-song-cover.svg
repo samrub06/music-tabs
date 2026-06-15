@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="">
-  <rect width="100" height="100" fill="#e8e8ed"/>
-  <g fill="#aeaeb2" transform="translate(50 52)">
-    <ellipse cx="0" cy="14" rx="10" ry="8"/>
-    <path d="M-3-18 L-3 10 Q-3 18 0 18 Q3 18 3 10 L3-18 Q3-22 0-22 Q-3-22-3-18 Z"/>
-  </g>
-</svg>

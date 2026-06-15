@@ -33,12 +33,10 @@ interface PlaylistsClientProps {
 
 function PlaylistCard({
   playlist,
-  songCount,
   onPlay,
   onOpen,
 }: {
   playlist: Playlist;
-  songCount: number;
   onPlay: (e: React.MouseEvent) => void;
   onOpen: () => void;
 }) {
@@ -48,48 +46,44 @@ function PlaylistCard({
   return (
     <div
       onClick={onOpen}
-      className="group relative aspect-square w-full min-w-0 cursor-pointer overflow-hidden rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
+      className="group flex min-w-0 cursor-pointer flex-col gap-1.5"
     >
-      {coverUrl ? (
-        <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary" />
-      )}
-      <div className="absolute inset-0 bg-black/25 transition-colors group-hover:bg-black/40" />
-
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-2.5 pt-10">
-        <h3 className="truncate text-xs font-bold text-white sm:text-sm">{playlist.name}</h3>
-        <p className="truncate text-[10px] text-white/80 sm:text-xs">
-          {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
-        </p>
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
+            <MusicalNoteIcon className="h-8 w-8 text-primary-foreground/90 sm:h-9 sm:w-9" />
+          </div>
+        )}
+        <button
+          onClick={onPlay}
+          aria-label={t('playlistsPage.playPlaylist')}
+          className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg transition-all hover:bg-primary sm:opacity-0 sm:group-hover:opacity-100"
+        >
+          <PlayIcon className="h-4 w-4 flex-shrink-0" />
+        </button>
       </div>
-
-      <button
-        onClick={onPlay}
-        aria-label={t('playlistsPage.playPlaylist')}
-        className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/90 text-primary-foreground opacity-100 shadow-lg transition-all hover:bg-primary sm:opacity-0 sm:group-hover:opacity-100"
-      >
-        <PlayIcon className="h-4 w-4 flex-shrink-0" />
-      </button>
+      <h3 className="truncate text-xs font-medium text-foreground">{playlist.name}</h3>
     </div>
   );
 }
 
 function PlaylistListRow({
   playlist,
-  songCount,
   onPlay,
   onOpen,
 }: {
   playlist: Playlist;
-  songCount: number;
   onPlay: (e: React.MouseEvent) => void;
   onOpen: () => void;
 }) {
   const { t } = useLanguage();
   const coverUrl = getPlaylistDisplayCoverUrl(playlist);
-  const songCountLabel =
-    songCount === 1 ? `1 ${t('songs.songCount')}` : `${songCount} ${t('songs.songCountPlural')}`;
 
   return (
     <li>
@@ -116,9 +110,9 @@ function PlaylistListRow({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">{playlist.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {playlist.description ? `${songCountLabel} · ${playlist.description}` : songCountLabel}
-          </p>
+          {playlist.description ? (
+            <p className="truncate text-xs text-muted-foreground">{playlist.description}</p>
+          ) : null}
         </div>
         <button
           type="button"
@@ -244,7 +238,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
     }
   };
 
-  const getSongCount = (p: Playlist) => (p as any).songCount ?? p.songIds?.length ?? 0;
+  const getSongCount = (p: Playlist) => (p as Playlist & { songCount?: number }).songCount ?? p.songIds?.length ?? 0;
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background p-4 sm:p-6">
@@ -378,12 +372,11 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
             </p>
           </div>
         ) : view === 'grid' ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {sortedPlaylists.map((playlist) => (
               <PlaylistCard
                 key={playlist.id}
                 playlist={playlist}
-                songCount={getSongCount(playlist)}
                 onPlay={(e) => handleStartSavedPlaylist(e, playlist)}
                 onOpen={() => handlePlaylistClick(playlist)}
               />
@@ -395,7 +388,6 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
               <PlaylistListRow
                 key={playlist.id}
                 playlist={playlist}
-                songCount={getSongCount(playlist)}
                 onPlay={(e) => handleStartSavedPlaylist(e, playlist)}
                 onOpen={() => handlePlaylistClick(playlist)}
               />

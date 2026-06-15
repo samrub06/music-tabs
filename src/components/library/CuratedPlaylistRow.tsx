@@ -123,7 +123,7 @@ function buildPlaylistCard(item: PublicPlaylistItem, options?: { gaugeSize?: num
     !!item.curatedSlug && curatedPlaylistSectionBySlug[item.curatedSlug] === 'difficulty'
 
   const coverUrl = item.curatedSlug
-    ? getCuratedPlaylistCoverUrl(item.curatedSlug) ?? item.imageUrl ?? null
+    ? item.imageUrl ?? getCuratedPlaylistCoverUrl(item.curatedSlug) ?? null
     : item.imageUrl ?? null
 
   const content =

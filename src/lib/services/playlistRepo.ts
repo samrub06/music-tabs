@@ -154,8 +154,8 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
       id: p.id,
       name: p.name,
       imageUrl:
-        (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
         p.image_url ??
+        (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
         undefined,
       songCount: (p.song_ids as string[] || []).length,
       createdAt: new Date(p.created_at),

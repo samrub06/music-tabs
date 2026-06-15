@@ -1,9 +1,6 @@
 import { HEBREW_CATALOG_GENRES } from '@/data/hebrewPlaylists'
 import { SONGBOOK_CATALOG_GENRE } from '@/data/songbookCatalog'
 
-/** Generic cover (iTunes / Apple Music style) for secular songs when tsniout filter is on. */
-export const DEFAULT_SONG_COVER_URL = '/icons/default-song-cover.svg'
-
 const RELIGIOUS_SONG_GENRES = new Set<string>([
   ...Object.values(HEBREW_CATALOG_GENRES),
   SONGBOOK_CATALOG_GENRE,
@@ -39,10 +36,6 @@ export function resolveSongCoverUrl({
 
   if (isReligiousSongGenre(genre)) {
     return rawUrl
-  }
-
-  if (rawUrl) {
-    return DEFAULT_SONG_COVER_URL
   }
 
   return undefined

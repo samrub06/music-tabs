@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/context/LanguageContext'
 import { useSongCover } from '@/lib/hooks/useSongCover'
+import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
 import { Song } from '@/types'
 import Link from 'next/link'
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
@@ -13,9 +14,6 @@ export interface SongLibraryStatus {
   actionLabel?: string
   variant?: 'inLibrary' | 'notInLibrary'
 }
-
-const FALLBACK_SLIDER_COVER =
-  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=300&fit=crop'
 
 function HorizontalSongSlide({
   song,
@@ -30,13 +28,16 @@ function HorizontalSongSlide({
 }) {
   const { t } = useLanguage()
   const coverUrl = useSongCover(song)
-  const imageUrl = coverUrl || FALLBACK_SLIDER_COVER
 
   return (
     <div className="group relative w-40 flex-shrink-0 sm:w-48">
       <Link href={`/song/${song.id}`}>
         <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
-          <img src={imageUrl} alt={song.title} className="h-full w-full object-cover" />
+          {coverUrl ? (
+            <img src={coverUrl} alt={song.title} className="h-full w-full object-cover" />
+          ) : (
+            <SongCoverPlaceholder />
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
             <div className="opacity-0 transition-opacity group-hover:opacity-100">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg">

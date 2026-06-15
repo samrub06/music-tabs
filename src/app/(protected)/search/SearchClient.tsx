@@ -596,27 +596,14 @@ export default function SearchClient({
                     'block h-14 w-full border-0 bg-transparent py-4 pl-10 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none sm:pl-12',
                     !showAIModeToggle
                       ? queryTrimmed
-                        ? 'pr-20 sm:pr-24'
-                        : 'pr-12 sm:pr-14'
+                        ? 'pr-10 sm:pr-12'
+                        : 'pr-3 sm:pr-4'
                       : searchQuery
-                        ? 'pr-48 sm:pr-56'
-                        : 'pr-44 sm:pr-52'
+                        ? 'pr-36 sm:pr-44'
+                        : 'pr-32 sm:pr-40'
                   )}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2 sm:pr-3">
-                  <button
-                    type="button"
-                    onClick={handleSubmitSearch}
-                    disabled={!queryTrimmed || isSearching}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
-                    aria-label={t('common.search')}
-                  >
-                    {isSearching ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    ) : (
-                      <MagnifyingGlassIcon className="h-5 w-5" />
-                    )}
-                  </button>
                   {showAIModeToggle && (
                     <button
                       onClick={(e) => {

@@ -9,6 +9,19 @@ import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
 
 const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
 const MAX_RECENT_SEARCHES = 10
+
+const toolbarSegmentContainer =
+  'flex items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800'
+
+function toolbarSegmentButton(active: boolean, className?: string) {
+  return cn(
+    'flex h-11 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-medium transition-all duration-200 sm:gap-2 sm:px-4',
+    active
+      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+      : 'text-muted-foreground hover:text-foreground',
+    className
+  )
+}
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
 import { useMemo, useState, useEffect, useRef } from 'react'
@@ -515,15 +528,11 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         {/* Filtering Tabs + View toggle - same row, touch-friendly */}
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0 lg:hidden">
-            <div className="flex rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
+            <div className={cn(toolbarSegmentContainer, 'w-full')}>
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'all', page: 1 })}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 sm:gap-2 sm:px-4 ${
-                  activeTab === 'all'
-                    ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={toolbarSegmentButton(activeTab === 'all', 'flex-1')}
               >
                 <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{t('songs.all')}</span>
@@ -531,11 +540,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'recent', page: 1 })}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 sm:gap-2 sm:px-4 ${
-                  activeTab === 'recent'
-                    ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={toolbarSegmentButton(activeTab === 'recent', 'flex-1')}
               >
                 <ClockIcon className="h-4 w-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{t('songs.recent')}</span>
@@ -543,50 +548,37 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'popular', page: 1 })}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium rounded-full min-h-[44px] transition-all duration-200 sm:gap-2 sm:px-4 ${
-                  activeTab === 'popular'
-                    ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={toolbarSegmentButton(activeTab === 'popular', 'flex-1')}
               >
                 <FireIcon className="h-4 w-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{t('songs.popular')}</span>
               </button>
             </div>
           </div>
-          <div className="flex items-center gap-1 rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 shrink-0 lg:ml-auto">
+          <div className={cn(toolbarSegmentContainer, 'shrink-0 lg:ml-auto')}>
             {(view === 'table' || isSelectMode) && (
               <SelectModeToggleButton
                 isSelectMode={isSelectMode}
                 onToggle={toggleSelectMode}
                 t={t}
-                className="mr-0.5"
               />
             )}
             <button
               type="button"
-              className={`flex min-h-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-sm font-medium transition-all duration-200 sm:gap-1.5 sm:px-4 ${
-                view === 'gallery'
-                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={toolbarSegmentButton(view === 'gallery')}
               onClick={() => applyQuery({ view: 'gallery', page: 1 })}
               title={t('songs.galleryView')}
             >
-              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Squares2X2Icon className="h-4 w-4 flex-shrink-0" />
               <span className="hidden sm:inline">{t('songs.galleryView')}</span>
             </button>
             <button
               type="button"
-              className={`flex min-h-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-sm font-medium transition-all duration-200 sm:gap-1.5 sm:px-4 ${
-                view === 'table'
-                  ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+              className={toolbarSegmentButton(view === 'table')}
               onClick={() => applyQuery({ view: 'table', page: 1 })}
               title={t('songs.tableView')}
             >
-              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <TableCellsIcon className="h-4 w-4 flex-shrink-0" />
               <span className="hidden sm:inline">{t('songs.tableView')}</span>
             </button>
           </div>

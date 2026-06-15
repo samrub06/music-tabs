@@ -5,6 +5,7 @@ import { Song } from '@/types'
 import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSongCover } from '@/lib/hooks/useSongCover'
+import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
 
 interface FeaturedSongCardProps {
   song: Song
@@ -19,9 +20,6 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
   const description = song.versionDescription || song.genre || t('library.DISCOVER_THIS_SONG')
 
   const coverUrl = useSongCover(song)
-  const imageUrl =
-    coverUrl ||
-    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=600&fit=crop'
 
   return (
     <div className="mb-8">
@@ -29,11 +27,15 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
         {cardTitle}
       </h2>
       <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group">
-        <img
-          src={imageUrl}
-          alt={song.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={song.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <SongCoverPlaceholder />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
         
         {/* Overlay content */}

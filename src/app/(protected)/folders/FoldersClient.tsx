@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
 import { FolderIcon, PlusIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { FolderShape } from '@/components/presentational/FolderShape'
 import { Folder } from '@/types'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -26,20 +27,17 @@ interface FoldersClientProps {
 
 interface SortableFolderItemProps {
   folder: Folder
-  songCount: number
   onFolderClick: (folderId: string) => void
   isDragMode: boolean
 }
 
 interface SortableFolderTableRowProps {
   folder: Folder
-  songCount: number
   onFolderClick: (folderId: string) => void
   isDragMode: boolean
 }
 
-function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: SortableFolderTableRowProps) {
-  const { t } = useLanguage()
+function FolderListRow({ folder, onFolderClick, isDragMode }: SortableFolderTableRowProps) {
   const {
     attributes,
     listeners,
@@ -53,9 +51,6 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
     transform: CSS.Transform.toString(transform),
     transition,
   }
-
-  const songCountLabel =
-    songCount === 1 ? `1 ${t('songs.songCount')}` : `${songCount} ${t('songs.songCountPlural')}`
 
   return (
     <li ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50')}>
@@ -87,15 +82,13 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">{folder.name}</p>
-          <p className="text-xs text-muted-foreground">{songCountLabel}</p>
         </div>
       </div>
     </li>
   )
 }
 
-function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: SortableFolderItemProps) {
-  const { t } = useLanguage()
+function SortableFolderItem({ folder, onFolderClick, isDragMode }: SortableFolderItemProps) {
   const {
     attributes,
     listeners,
@@ -110,9 +103,6 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
     transition,
   }
 
-  const songCountLabel =
-    songCount === 1 ? `1 ${t('songs.songCount')}` : `${songCount} ${t('songs.songCountPlural')}`
-
   return (
     <div
       ref={setNodeRef}
@@ -120,10 +110,8 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
       className={cn('group flex min-w-0 cursor-pointer flex-col gap-1.5', isDragging && 'opacity-50')}
       onClick={() => onFolderClick(folder.id)}
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-primary/10">
-        <div className="flex h-full w-full items-center justify-center">
-          <FolderIcon className="h-8 w-8 text-primary/80 sm:h-9 sm:w-9" />
-        </div>
+      <div className="relative w-full">
+        <FolderShape className="transition-transform duration-200 group-hover:scale-[1.03]" />
         {isDragMode && (
           <div
             {...attributes}
@@ -138,7 +126,6 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
       </div>
       <div className="min-w-0">
         <h3 className="truncate text-xs font-medium text-foreground">{folder.name}</h3>
-        <p className="truncate text-[10px] text-muted-foreground">{songCountLabel}</p>
       </div>
     </div>
   )
@@ -158,7 +145,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
-  const [view, setView] = useState<'grid' | 'table'>('table')
+  const [view, setView] = useState<'grid' | 'table'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [localSearchValue, setLocalSearchValue] = useState('')
   const [isInputFocused, setIsInputFocused] = useState(false)
@@ -483,12 +470,11 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 items={filteredFolders.map((f) => f.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                   {filteredFolders.map((folder) => (
                     <SortableFolderItem
                       key={folder.id}
                       folder={folder}
-                      songCount={getSongCount(folder.id)}
                       onFolderClick={handleFolderClick}
                       isDragMode={isDragMode}
                     />
@@ -496,12 +482,11 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 </div>
               </SortableContext>
             ) : (
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {filteredFolders.map((folder) => (
                   <SortableFolderItem
                     key={folder.id}
                     folder={folder}
-                    songCount={getSongCount(folder.id)}
                     onFolderClick={handleFolderClick}
                     isDragMode={isDragMode}
                   />
@@ -518,7 +503,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   <FolderListRow
                     key={folder.id}
                     folder={folder}
-                    songCount={getSongCount(folder.id)}
                     onFolderClick={handleFolderClick}
                     isDragMode={isDragMode}
                   />
@@ -531,7 +515,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 <FolderListRow
                   key={folder.id}
                   folder={folder}
-                  songCount={getSongCount(folder.id)}
                   onFolderClick={handleFolderClick}
                   isDragMode={isDragMode}
                 />
@@ -563,12 +546,11 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         {draggedFolder ? (
           <div className="bg-background/95 rounded-lg p-3 shadow-lg backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <FolderIcon className="h-5 w-5 text-primary" />
+              <div className="w-12 shrink-0">
+                <FolderShape />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium text-foreground">{draggedFolder.name}</div>
-                <div className="text-xs text-muted-foreground">{getSongCount(draggedFolder.id)}</div>
               </div>
             </div>
           </div>

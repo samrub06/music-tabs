@@ -642,21 +642,8 @@ export default function AddSongForm({
                   }}
                   placeholder={t('songForm.searchPlaceholder')}
                   disabled={isSearching || isSaving}
-                  className="h-11 pl-10 pr-12"
+                  className="h-11 pl-10 pr-3"
                 />
-                <button
-                  type="button"
-                  onClick={() => handleSearch()}
-                  disabled={isSearching || isSaving || !searchQuery.trim()}
-                  className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
-                  aria-label={t('songForm.search')}
-                >
-                  {isSearching ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  ) : (
-                    <MagnifyingGlassIcon className="h-5 w-5" />
-                  )}
-                </button>
               </div>
               {renderSearchResults()}
             </div>
