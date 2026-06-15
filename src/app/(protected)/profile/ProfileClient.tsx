@@ -16,6 +16,7 @@ import type { UserBadge } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { usePageHeader } from '@/context/PageHeaderContext'
 
 interface ProfileClientProps {
   initialProfile: Profile | null
@@ -48,6 +49,8 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const [stats, setStats] = useState<UserStats | null>(initialStats)
   const [badges, setBadges] = useState<UserBadge[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  usePageHeader(t('navigation.profile'), '/')
 
   // Load badges
   useEffect(() => {

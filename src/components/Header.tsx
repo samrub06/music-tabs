@@ -11,7 +11,7 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
-import { BackChevronIcon } from '@/components/icons/DirectionalIcons'
+import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useScrollChromeOptional } from '@/context/ScrollChromeContext'
@@ -190,7 +190,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             className="flex min-w-0 items-center gap-0.5 text-foreground -ms-1 py-1 pe-2 ps-1 rounded-lg hover:opacity-80 active:opacity-70 transition-opacity"
             aria-label={t('common.back')}
           >
-            <BackChevronIcon className="h-6 w-6 shrink-0" />
+            <BackArrowIcon className="h-5 w-5 shrink-0" />
             <h1 className="truncate text-base font-semibold">
               {pageHeaderOverride?.title ??
                 (isCreatePlaylistPage

@@ -59,7 +59,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
       if (path.match(/^\/playlist\/[^/]+$/)) return undefined
       return t('createMenu.createPlaylist')
     }
-    if (path === '/profile' || path.startsWith('/profile/')) return t('navigation.profile')
+    if (path === '/profile' || path.startsWith('/profile/')) return undefined
     if (path === '/leaderboard' || path.startsWith('/leaderboard/')) return t('navigation.leaderboard')
     return undefined
   }

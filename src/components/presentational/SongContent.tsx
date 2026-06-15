@@ -263,89 +263,162 @@ export default function SongContent({
     </>
   );
 
-  const songActionButtons = (
-    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-      {transposedSong?.rating != null && (
-        <div className="flex h-14 min-h-14 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3">
-          <StarRatingDisplay rating={Number(transposedSong.rating)} size="md" />
-        </div>
+  const songCoverVignette = (
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16">
+      {coverUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={coverUrl}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <SongCoverPlaceholder iconClassName="min-h-7 min-w-7 max-h-10 max-w-10" />
       )}
-      {transposedSong?.viewCount != null && transposedSong.viewCount > 0 && (
-        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-border/80 bg-white px-2 shadow-sm dark:bg-gray-900">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icons/eyeview_icon.jpeg"
-            alt=""
-            className="h-8 w-8 object-contain"
-            aria-hidden
-          />
-          <span className="text-[10px] font-semibold tabular-nums leading-none text-foreground">
-            {transposedSong.viewCount}
-          </span>
-        </div>
-      )}
-      {onToggleEdit && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onToggleEdit}
-          className="h-14 min-h-14 w-14 shrink-0 gap-1.5 rounded-xl px-0 text-sm font-medium sm:w-auto sm:px-3"
-          aria-label={t('songHeader.edit')}
-        >
-          <PencilSquareIcon className="h-5 w-5" />
-          <span className="hidden sm:inline">{t('songHeader.edit')}</span>
-        </Button>
-      )}
-      {isInLibrary && (
-        <div
-          className="inline-flex h-14 min-h-14 w-14 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-green-600/25 bg-green-500/10 px-2.5 text-green-700 sm:w-auto dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400"
-          title={t('library.inYourLibrary')}
-        >
-          <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
-          <span className="hidden text-xs font-medium sm:inline">
-            {t('library.inYourLibrary')}
-          </span>
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isInLibrary) {
-            onAddToLibrary?.();
-            return;
-          }
-          onToggleFavorite?.();
-        }}
-        disabled={
-          isTogglingFavorite ||
-          (!isInLibrary && !onAddToLibrary) ||
-          (isInLibrary && !onToggleFavorite)
-        }
-        className="inline-flex h-14 w-14 min-h-14 min-w-14 shrink-0 items-center justify-center rounded-xl border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70"
-        aria-label={
-          isInLibrary
-            ? isLiked
-              ? t('library.removeFromFavorites')
-              : t('library.addToFavorites')
-            : t('library.addToLibrary')
-        }
-        title={
-          isInLibrary
-            ? isLiked
-              ? t('library.removeFromFavorites')
-              : t('library.addToFavorites')
-            : t('library.addToLibrary')
-        }
-      >
-        {isLiked ? (
-          <HeartSolidIcon className="h-6 w-6" />
-        ) : (
-          <HeartIcon className="h-6 w-6" />
-        )}
-      </button>
     </div>
   );
+
+  const folderControl =
+    isInLibrary && isAuthenticated && onFolderChange ? (
+      <div
+        className="min-w-0 flex-1"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <FolderDropdown
+          currentFolderId={currentFolderId}
+          folders={folders}
+          onFolderChange={onFolderChange}
+          size="comfortable"
+          fullWidth
+        />
+      </div>
+    ) : null;
+
+  const titleRowStatHeight = 'h-14 min-h-14 sm:h-16 sm:min-h-16';
+
+  const ratingDisplay =
+    transposedSong?.rating != null ? (
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3',
+          titleRowStatHeight
+        )}
+      >
+        <StarRatingDisplay rating={Number(transposedSong.rating)} size="md" />
+      </div>
+    ) : null;
+
+  const viewsDisplay =
+    transposedSong?.viewCount != null && transposedSong.viewCount > 0 ? (
+      <div
+        className={cn(
+          'flex w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-border/80 bg-white px-2 shadow-sm dark:bg-gray-900 sm:w-16',
+          titleRowStatHeight
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icons/eyeview_icon.jpeg"
+          alt=""
+          className="h-8 w-8 object-contain"
+          aria-hidden
+        />
+        <span className="text-[10px] font-semibold tabular-nums leading-none text-foreground">
+          {transposedSong.viewCount}
+        </span>
+      </div>
+    ) : null;
+
+  const metaRowActionSize = 'h-11 min-h-11 w-11';
+
+  const inLibraryBadge = isInLibrary ? (
+    <div
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-lg border border-green-600/25 bg-green-500/10 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400',
+        metaRowActionSize
+      )}
+      title={t('library.inYourLibrary')}
+    >
+      <CheckIcon className="h-4 w-4 shrink-0" aria-hidden />
+    </div>
+  ) : null;
+
+  const favoriteButton = (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!isInLibrary) {
+          onAddToLibrary?.();
+          return;
+        }
+        onToggleFavorite?.();
+      }}
+      disabled={
+        isTogglingFavorite ||
+        (!isInLibrary && !onAddToLibrary) ||
+        (isInLibrary && !onToggleFavorite)
+      }
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70',
+        metaRowActionSize
+      )}
+      aria-label={
+        isInLibrary
+          ? isLiked
+            ? t('library.removeFromFavorites')
+            : t('library.addToFavorites')
+          : t('library.addToLibrary')
+      }
+      title={
+        isInLibrary
+          ? isLiked
+            ? t('library.removeFromFavorites')
+            : t('library.addToFavorites')
+          : t('library.addToLibrary')
+      }
+    >
+      {isLiked ? (
+        <HeartSolidIcon className="h-5 w-5" />
+      ) : (
+        <HeartIcon className="h-5 w-5" />
+      )}
+    </button>
+  );
+
+  const editButton = onToggleEdit ? (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onToggleEdit}
+      className={cn(
+        'shrink-0 gap-1 rounded-lg px-0 text-xs font-medium sm:w-auto sm:px-2.5',
+        metaRowActionSize
+      )}
+      aria-label={t('songHeader.edit')}
+    >
+      <PencilSquareIcon className="h-4 w-4" />
+      <span className="hidden sm:inline">{t('songHeader.edit')}</span>
+    </Button>
+  ) : null;
+
+  const titleRowTrailingActions =
+    ratingDisplay || viewsDisplay ? (
+      <div className="flex shrink-0 items-stretch gap-2 self-stretch">
+        {ratingDisplay}
+        {viewsDisplay}
+      </div>
+    ) : null;
+
+  const songMetaRow =
+    folderControl || inLibraryBadge || favoriteButton || editButton ? (
+      <div className="flex w-full items-center gap-1.5">
+        {folderControl}
+        {inLibraryBadge}
+        {favoriteButton}
+        {editButton}
+      </div>
+    ) : null;
 
   return (
     <div 
@@ -361,64 +434,24 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
-            {isInLibrary && (
-              <div className="flex flex-col gap-2 sm:hidden">
-                <div className="aspect-[2/1] w-full max-h-44 overflow-hidden rounded-xl bg-muted">
-                  {coverUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={coverUrl}
-                      alt={transposedSong?.title || ''}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <SongCoverPlaceholder />
-                  )}
-                </div>
-                <div className="min-w-0 w-full">{songTitleBlock}</div>
-              </div>
-            )}
-
-            <div
-              className={cn(
-                'flex gap-2',
-                isInLibrary
-                  ? 'flex-col sm:flex-row sm:items-center'
-                  : 'items-start sm:items-center'
-              )}
-            >
-              <div className={cn('min-w-0 flex-1', isInLibrary && 'hidden sm:block')}>
-                {songTitleBlock}
-              </div>
-              <div
-                className={cn(
-                  'flex shrink-0 flex-col items-stretch gap-2 md:flex-row md:items-center md:gap-2',
-                  isInLibrary ? 'w-full sm:w-auto sm:items-end' : 'items-end'
-                )}
-              >
-                {songActionButtons}
-                {isAuthenticated && onFolderChange && (
-                  <div className="hidden w-full sm:block md:w-auto md:min-w-[10rem]">
-                    <FolderDropdown
-                      currentFolderId={currentFolderId}
-                      folders={folders}
-                      onFolderChange={onFolderChange}
-                      size="comfortable"
-                      fullWidth={false}
-                    />
+            {isInLibrary ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-stretch gap-3">
+                  {songCoverVignette}
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <div className="min-w-0 flex-1">{songTitleBlock}</div>
+                    {titleRowTrailingActions}
                   </div>
-                )}
+                </div>
+                {songMetaRow}
               </div>
-            </div>
-            {isAuthenticated && onFolderChange && (
-              <div className="mt-1 w-full sm:hidden">
-                <FolderDropdown
-                  currentFolderId={currentFolderId}
-                  folders={folders}
-                  onFolderChange={onFolderChange}
-                  size="comfortable"
-                  fullWidth
-                />
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="flex min-w-0 items-stretch gap-2">
+                  <div className="flex min-w-0 flex-1 items-center">{songTitleBlock}</div>
+                  {titleRowTrailingActions}
+                </div>
+                {songMetaRow}
               </div>
             )}
           </div>
