@@ -1,8 +1,9 @@
 import { redirect, notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { folderRepo } from '@/lib/services/folderRepo'
-import { songRepo } from '@/lib/services/songRepo'
-import FolderSongsClient from './FolderSongsClient'
+import FolderSongsData from './FolderSongsData'
+import FolderSongsSkeleton from './FolderSongsSkeleton'
 
 export default async function FolderSongsPage({
   params,
@@ -26,28 +27,23 @@ export default async function FolderSongsPage({
   const q = searchParamsResolved?.q || ''
   const sortOrder = (searchParamsResolved?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
 
-  const folderRepoInstance = folderRepo(supabase)
-  const songRepoInstance = songRepo(supabase)
-
-  const [folder, { songs, total }] = await Promise.all([
-    folderRepoInstance.getFolderById(id, user.id),
-    songRepoInstance.getSongsByFolder(id, page, limit, q, user.id),
-  ])
+  const folder = await folderRepo(supabase).getFolderById(id, user.id)
 
   if (!folder) {
     notFound()
   }
 
   return (
-    <FolderSongsClient
-      folder={folder}
-      songs={songs}
-      total={total}
-      page={page}
-      limit={limit}
-      initialView={view}
-      initialQuery={q}
-      initialSortOrder={sortOrder}
-    />
+    <Suspense fallback={<FolderSongsSkeleton />}>
+      <FolderSongsData
+        folder={folder}
+        page={page}
+        limit={limit}
+        view={view}
+        q={q}
+        sortOrder={sortOrder}
+        userId={user.id}
+      />
+    </Suspense>
   )
 }

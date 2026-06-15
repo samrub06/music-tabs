@@ -64,11 +64,22 @@ export default function PlaylistLayout({ children }: { children: ReactNode }) {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const [foldersData, songsData, playlistsData] = await Promise.all([
+        const [foldersData, songsData, playlistsLightweight] = await Promise.all([
           folderRepo(supabase).getAllFolders(),
-          songRepo(supabase).getAllSongs(),
-          playlistRepo(supabase).getAllPlaylists()
+          songRepo(supabase).getSongsForSidebar(),
+          playlistRepo(supabase).getAllPlaylistsLightweight()
         ])
+
+        const playlistsData: Playlist[] = playlistsLightweight.map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: undefined,
+          createdAt: p.createdAt,
+          updatedAt: p.createdAt,
+          songIds: [],
+          imageUrl: p.imageUrl,
+          songCount: p.songCount,
+        }))
         
         // Mettre à jour le cache
         playlistSidebarDataCache = {

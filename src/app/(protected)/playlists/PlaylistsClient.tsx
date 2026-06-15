@@ -16,7 +16,7 @@ import {
 import { useLanguage } from '@/context/LanguageContext';
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll';
 import { cn } from '@/lib/utils';
-import { Song, Playlist } from '@/types';
+import { Playlist } from '@/types';
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,6 @@ type SortField = 'name' | 'songCount' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 interface PlaylistsClientProps {
-  songs: Song[];
   playlists: Playlist[];
 }
 
@@ -127,7 +126,7 @@ function PlaylistListRow({
   );
 }
 
-export default function PlaylistsClient({ songs, playlists }: PlaylistsClientProps) {
+export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
   const router = useRouter();
   const { t } = useLanguage();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -201,41 +200,7 @@ export default function PlaylistsClient({ songs, playlists }: PlaylistsClientPro
 
   const handleStartSavedPlaylist = (e: React.MouseEvent, playlist: Playlist) => {
     e.stopPropagation();
-    if (!playlist.songIds?.length) {
-      router.push(`/playlist/${playlist.id}`);
-      return;
-    }
-    const playlistSongs = (playlist.songIds as string[])
-      .map((id) => songs.find((s) => s.id === id))
-      .filter((s): s is Song => s !== undefined);
-    if (playlistSongs.length === 0) {
-      router.push(`/playlist/${playlist.id}`);
-      return;
-    }
-    if (typeof window !== 'undefined') {
-      const songList = playlistSongs.map((s) => s.id);
-      const playlistContext = {
-        isPlaylist: true,
-        targetKey: '',
-        songs: playlistSongs.map((s) => ({
-          id: s.id,
-          keyAdjustment: 0,
-          originalKey: s.key || '',
-          targetKey: s.key || '',
-        })),
-      };
-      sessionStorage.setItem(
-        'songNavigation',
-        JSON.stringify({
-          songList,
-          currentIndex: 0,
-          sourceUrl: '/playlists',
-          playlistContext,
-        })
-      );
-      sessionStorage.removeItem('hasUsedNext');
-      router.push(`/song/${playlistSongs[0].id}`);
-    }
+    router.push(`/playlist/${playlist.id}`);
   };
 
   const getSongCount = (p: Playlist) => (p as Playlist & { songCount?: number }).songCount ?? p.songIds?.length ?? 0;

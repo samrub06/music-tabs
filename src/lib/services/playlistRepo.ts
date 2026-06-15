@@ -40,7 +40,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
 
     const { data, error } = await client
       .from('playlists')
-      .select('*')
+      .select('id, name, description, created_at, updated_at, song_ids, image_url, is_public')
       .eq('id', id)
       .single()
 
@@ -111,6 +111,24 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
       const { data: { user } } = await client.auth.getUser()
       if (!user) return []
       resolvedUserId = user.id
+    }
+
+    const { data: rpcData, error: rpcError } = await (client as any).rpc('get_playlist_list_lightweight')
+
+    if (!rpcError && rpcData) {
+      return (rpcData as Array<{
+        id: string
+        name: string
+        created_at: string
+        image_url: string | null
+        song_count: number
+      }>).map((p) => ({
+        id: p.id,
+        name: p.name,
+        songCount: Number(p.song_count),
+        createdAt: new Date(p.created_at),
+        imageUrl: p.image_url || undefined,
+      }))
     }
 
     const { data, error } = await client

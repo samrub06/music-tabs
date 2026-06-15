@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { createSafeServerClient } from '@/lib/supabase/server';
-import { songRepo } from '@/lib/services/songRepo';
 import { playlistRepo } from '@/lib/services/playlistRepo';
 import PlaylistsClient from './PlaylistsClient';
 
@@ -28,7 +27,7 @@ export default async function PlaylistsPage() {
     songCount: p.songCount,
   }));
 
-  // Don't load all songs initially - they'll be loaded when needed
-  return <PlaylistsClient songs={[]} playlists={playlistsFormatted as any} />;
+  // Songs load on playlist detail; list view only needs playlist names + counts
+  return <PlaylistsClient playlists={playlistsFormatted as any} />;
 }
 

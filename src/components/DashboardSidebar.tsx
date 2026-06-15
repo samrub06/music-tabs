@@ -417,7 +417,7 @@ export default function DashboardSidebar({
                       <MusicalNoteIcon className="mr-3 h-5 w-5" />
                       <span className="truncate flex-1 text-left">{p.name}</span>
                       <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
-                        {p.songIds?.length || 0}
+                        {(p as Playlist & { songCount?: number }).songCount ?? p.songIds?.length ?? 0}
                       </span>
                     </button>
                   ))}

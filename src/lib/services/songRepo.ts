@@ -83,6 +83,12 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
 const LIGHTWEIGHT_LIST_COLUMNS =
   'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, is_liked'
 
+const LIBRARY_LIST_COLUMNS =
+  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, is_liked, key, capo, difficulty'
+
+const SIDEBAR_SONG_COLUMNS =
+  'id, title, author, folder_id, created_at, updated_at, view_count'
+
 const EXPLORE_LIST_COLUMNS =
   `${LIGHTWEIGHT_LIST_COLUMNS}, difficulty, decade, capo, is_trending, is_public`
 
@@ -754,7 +760,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }
 
     const [{ data, error }, { count, error: countError }] = await Promise.all([
-      applyFilters((client.from('songs') as any).select(EXPLORE_LIST_COLUMNS))
+      applyFilters((client.from('songs') as any).select(LIBRARY_LIST_COLUMNS))
         .order('created_at', { ascending: false })
         .range(from, to),
       applyFilters((client.from('songs') as any).select('id', { count: 'planned', head: true })),
@@ -820,6 +826,23 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     } as Song))
   },
 
+  // Sidebar: metadata only (no sections/content) for folder counts and recent/popular lists
+  async getSongsForSidebar(): Promise<Song[]> {
+    const { data: { user } } = await client.auth.getUser()
+
+    if (!user) {
+      return []
+    }
+
+    const { data, error } = await (client.from('songs') as any)
+      .select(SIDEBAR_SONG_COLUMNS)
+      .eq('user_id', user.id)
+
+    if (error) throw error
+
+    return (data || []).map((dbSong: any) => mapDbSongToList(dbSong))
+  },
+
   // Lightweight method for fetching songs by IDs (for playlists, etc.)
   async getSongsByIds(songIds: string[]): Promise<Song[]> {
     const { data: { user } } = await client.auth.getUser()
@@ -829,7 +852,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }
 
     const { data, error } = await (client.from('songs') as any)
-      .select('id, title, author, folder_id, created_at, updated_at, key, song_image_url')
+      .select(LIBRARY_LIST_COLUMNS)
       .eq('user_id', user.id)
       .in('id', songIds)
 
