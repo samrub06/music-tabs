@@ -3,27 +3,10 @@ import { createSafeServerClient } from '@/lib/supabase/server'
 import { songService } from '@/lib/services/songService'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import SongsClient from './SongsClient'
+import SongsPageSkeleton from '@/components/library/SongsPageSkeleton'
 import type { Playlist } from '@/types'
 
 type OrderByOption = 'created_at' | 'updated_at' | 'view_count'
-
-function SongsSkeleton() {
-  return (
-    <div className="p-3 sm:p-6">
-      <div className="h-10 bg-gray-100 rounded-lg w-full max-w-2xl mb-6 animate-pulse"></div>
-      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b">
-          <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-        </div>
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="px-6 py-4 border-b">
-            <div className="h-5 bg-gray-100 rounded w-1/3 animate-pulse"></div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export default async function SongsData({
   searchParams,
@@ -41,14 +24,16 @@ export default async function SongsData({
   const initialSongId = params?.songId || undefined
   const initialFolder = params?.folder || undefined
   const initialSortOrder = (params?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
-  const view = (params?.view === 'table' ? 'table' : 'table') as 'gallery' | 'table'
+  const view = (params?.view === 'gallery' ? 'gallery' : 'table') as 'gallery' | 'table'
   const easyChord = params?.easyChord === '1' || params?.easyChord === 'true'
   const capoParam = params?.capo as string | undefined
   const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'
   const likedOnly = params?.filter === 'liked'
 
+  const catalogKey = `${page}:${limit}:${q}:${tab}:${view}:${initialFolder ?? ''}:${initialSortOrder}:${easyChord}:${capoFilter}:${likedOnly}`
+
   return (
-    <Suspense fallback={<SongsSkeleton />}>
+    <Suspense key={catalogKey} fallback={<SongsPageSkeleton view={view} />}>
       <SongsDataWrapper
         userId={userId}
         page={page}
