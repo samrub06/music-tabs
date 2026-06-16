@@ -19,6 +19,7 @@ import { normalizeChordNameForComparison } from '@/utils/chords';
 import { generateAllKeys } from '@/utils/chords';
 import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
+import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Piano, Guitar } from 'lucide-react';
@@ -827,6 +828,47 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     
     return parts;
   };
+
+  const renderSectionLines = (lines: any[]) => {
+    return groupLinesForDisplay(lines).map((group, groupIndex) => {
+      if (group.kind === 'repeat') {
+        return (
+          <div
+            key={`repeat-${groupIndex}`}
+            dir="ltr"
+            className={cn(
+              'my-2 flex gap-0 overflow-hidden rounded-xl',
+              'border border-amber-200/80 dark:border-amber-800/40',
+              'bg-amber-50/50 dark:bg-amber-950/20'
+            )}
+          >
+            <div
+              className={cn(
+                'flex shrink-0 flex-col items-center border-e border-amber-300/70 px-2 py-2',
+                'bg-amber-100/70 dark:border-amber-700/50 dark:bg-amber-900/30',
+                'text-amber-700 dark:text-amber-400'
+              )}
+              aria-hidden
+            >
+              <span className="text-[11px] font-bold tabular-nums leading-none">
+                {group.repeatCount}×
+              </span>
+              <span className="mt-1 text-lg font-light leading-none text-amber-500/90">[</span>
+            </div>
+            <div className="min-w-0 flex-1 space-y-1 py-1 pe-1">
+              {group.lines.map((line, lineIndex) =>
+                renderSongLine(line, group.startIndex + lineIndex + 1)
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      return group.lines.map((line, lineIndex) =>
+        renderSongLine(line, group.startIndex + lineIndex)
+      );
+    });
+  };
   
   const optimalFontSize = getOptimalFontSize(fontSize);
   const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
@@ -880,9 +922,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="space-y-1 w-full pt-2" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                {section.lines.map((line: any, lineIndex: number) =>
-                  renderSongLine(line, lineIndex)
-                )}
+                {renderSectionLines(section.lines)}
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -978,6 +1018,31 @@ function groupChordsByPosition(
   return result;
 }
 
+/** Map lyric character index to horizontal pixel offset for chord buttons. */
+function getChordPixelOffset(
+  position: number,
+  chord: string,
+  lyrics: string,
+  charWidth: number,
+  isHebrew: boolean,
+  horizontalOffset: number,
+  containerWidth: number
+): number {
+  const safePosition = Math.min(Math.max(0, position), lyrics.length);
+  const textWidth = lyrics.length * charWidth;
+  const effectiveWidth = Math.max(containerWidth, textWidth);
+  const maxOffset = Math.max(0, effectiveWidth - 50);
+
+  if (isHebrew) {
+    // RTL: logical index 0 is the rightmost glyph; index increases toward the left.
+    const lineStart = Math.max(0, effectiveWidth - textWidth);
+    const base = lineStart + Math.max(0, lyrics.length - safePosition - 1) * charWidth;
+    return Math.max(0, Math.min(base - horizontalOffset, maxOffset));
+  }
+
+  return Math.min(safePosition * charWidth + horizontalOffset, maxOffset);
+}
+
 // Component for precise chord-over-lyrics alignment
 interface ChordOverLyricsLineProps {
   line: any;
@@ -1019,12 +1084,12 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
   if (!needsWrappingCheck) {
     // Simple case: no wrapping needed
     return (
-      <div ref={containerRef} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+      <div ref={containerRef} className="mb-2 w-full" dir="ltr" style={{ 
         fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
         maxWidth: '100%',
         overflow: 'hidden'
       }}>
-        {/* Chord line */}
+        {/* Chord line — always LTR for absolute positioning */}
         <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
           fontSize: `${fontSize}px`, 
           lineHeight: 1.4,
@@ -1032,15 +1097,18 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
           overflow: 'hidden'
         }}>
           {(() => {
-            // Group chords by position and calculate horizontal offsets
             const groupedChords = groupChordsByPosition(line.chords, fontSize, charWidth);
             
             return groupedChords.map((chordWithOffset, chordIndex) => {
-              // Ensure chord doesn't go beyond lyrics length
-              const safePosition = Math.min(chordWithOffset.position, line.lyrics.length);
-              const baseLeftOffset = Math.min(safePosition * charWidth, containerWidth - 50); // Prevent overflow
-              // Add horizontal offset for chords at the same position
-              const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
+              const leftOffset = getChordPixelOffset(
+                chordWithOffset.position,
+                chordWithOffset.chord,
+                line.lyrics,
+                charWidth,
+                isHebrew,
+                chordWithOffset.horizontalOffset,
+                containerWidth
+              );
               
               return (
                 <button
@@ -1048,8 +1116,8 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
                   onClick={() => onChordClick(chordWithOffset.chord)}
                   className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
                   style={{ 
-                    left: isHebrew ? 'auto' : `${leftOffset}px`,
-                    right: isHebrew ? `${leftOffset}px` : 'auto',
+                    left: `${leftOffset}px`,
+                    right: 'auto',
                     fontSize: `${fontSize}px`,
                     lineHeight: 1.4,
                     maxWidth: 'calc(100vw - 40px)'
@@ -1062,7 +1130,7 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
           })()}
         </div>
         {/* Lyrics line */}
-        <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
+        <div className={cn('text-gray-900 min-h-[1.8rem] w-full', isHebrew && 'text-end')} dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
           fontSize: `${fontSize}px`, 
           lineHeight: 1.4,
           wordBreak: 'break-word',
@@ -1105,7 +1173,7 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
     const lineHeight = getOptimalLineHeight(fontSize);
     
     return (
-      <div ref={ref} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+      <div ref={ref} className="mb-2 w-full" dir="ltr" style={{ 
         fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
         maxWidth: '100%',
         overflow: 'hidden'
@@ -1125,9 +1193,15 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
                 const groupedChords = groupChordsByPosition(wrappedLine.chords, fontSize, charWidth);
                 
                 return groupedChords.map((chordWithOffset, chordIndex) => {
-                  const baseLeftOffset = Math.max(0, Math.min(chordWithOffset.position * charWidth, measurementOptions.containerWidth - 50));
-                  // Add horizontal offset for chords at the same position
-                  const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
+                  const leftOffset = getChordPixelOffset(
+                    chordWithOffset.position,
+                    chordWithOffset.chord,
+                    wrappedLine.lyrics,
+                    charWidth,
+                    isHebrew,
+                    chordWithOffset.horizontalOffset,
+                    measurementOptions.containerWidth
+                  );
                   
                   return (
                     <button
@@ -1135,8 +1209,8 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
                       onClick={() => onChordClick(chordWithOffset.chord)}
                       className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
                       style={{ 
-                        left: isHebrew ? 'auto' : `${leftOffset}px`,
-                        right: isHebrew ? `${leftOffset}px` : 'auto',
+                        left: `${leftOffset}px`,
+                        right: 'auto',
                         fontSize: `${fontSize}px`,
                         lineHeight,
                         maxWidth: 'calc(100vw - 40px)'
@@ -1149,7 +1223,7 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
               })()}
             </div>
             {/* Lyrics line */}
-            <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
+            <div className={cn('text-gray-900 min-h-[1.8rem] w-full', isHebrew && 'text-end')} dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
               fontSize: `${fontSize}px`, 
               lineHeight,
               wordBreak: 'break-word',

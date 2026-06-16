@@ -38,33 +38,36 @@ function kardunerSong(
 export const KARDUNER_SONGS_PART1: KardunerSong[] = [
   kardunerSong(
     'az',
-    'Da (דא)',
+    'Da (דע)',
     'C',
-    `[דא]
+    `[דע]
+C
+דע,
+
 2x [
-C                  G
+        Am                 G
 כי צריך לדון את כל אדם לכף זכות,
 
-Am             F
+          F        G
 ואפילו מי שהוא רשע גמור,
 
-C                   G
+     Em                      C
 צריך לחפש ולמצוא בו איזה מעט טוב,
 
-Em               F
+       F         G
 שבאותו המעט אינו רשע,
 
-C                   G
-ועל ידי זה שמוצא בו איזה מעט טוב,
+    Em                  C
+ועל ידי זה שמוצא בו מעט טוב,
 
-Am       Em
+    Em       Am
 ודן אותו לכף זכות,
 
-C                  G
-על ידי זה הוא מעלה אותו באמת לכף זכות,
+   Em               Am
+על ידי זה מעלה אותו באמת לכף זכות,
 
-Em    F      G
-ויכול להשיבו בתשובה.
+      F      G
+ויוכל להשיבו בתשובה.
 `,
     { versionDescription: 'Likutey Moharan 282 · C · Am · F · G · Em' }
   ),
@@ -75,21 +78,27 @@ Em    F      G
     'Em',
     `[ה' מלך]
 2x [
-Em
+   Em
 ה' מלך
-C
+
+   C
 ה' מלך
-Am              Em
+
+   Am         Em
 ה' ימלך לעולם ועד:
 
 2x [
-Am              Em
+Am      Em
 והיה ה' למלך
-Am              Em
+
+Am    Em
 על כל הארץ
-C
+]
+
+     C
 ביום ההוא
-G               D
+
+        G        D
 יהיה ה' אחד ושמו אחד:
 `,
     { versionDescription: 'Shacharit prayer · Em · C · Am · G · D' }
@@ -100,18 +109,20 @@ G               D
     'Hashivenu (השיבנו)',
     'D',
     `[השיבנו]
-D6              Em
+Em           D6
 השיבנו אבינו לתורתך
-D6              Em
+
+Em           D6
 וקרבנו מלכנו לעבודתך,
 
 2x [
-D7              G       C           Em/B  Am
+AmEm/B   C      C    G   D7
 והחזירנו בתשובה שלמה לפניך,
-Am              Em
+
+Em                Am
 ברוך אתה ד', הרוצה בתשובה:
 `,
-    { versionDescription: 'Amidah prayer · D6 · Em · D7 · G · C · Am' }
+    { versionDescription: 'Amidah prayer · D6 · Em · Em/B · C · G · D7 · Am' }
   ),
 
   kardunerSong(
@@ -119,24 +130,31 @@ Am              Em
     'Mekimi (מקימי)',
     'Em',
     `[מקימי]
-Em              Am
+Am     Em
 מי כד' אלוקינו
-Am              F
+
+F       Am
 המגביהי לשבת:
-G       C       G
+
+G      CG
 המשפילי לראות,
-G       Am      F
+
+F     Am  G
 בשמים ובארץ
-Am      G/B     C       G       F
+
+F     G    C  G/B Am
 מקימי מעפר דל,
-C       G       F
+
+F      G    C
 מאשפות ירים אביון:
-Am      G/B     C       G       F
-להושיבי עם נדיבים,
-C       G       F
+
+F       G  C G/B  Am
+להושיבי עם נ די בים,
+
+F  G     C
 עם נדיבי עמו:
 `,
-    { versionDescription: 'Psalms 113 · Em · Am · F · G · C' }
+    { versionDescription: 'Psalms 113 · Em · Am · F · G · C · G/B' }
   ),
 
   kardunerSong(
@@ -144,35 +162,43 @@ C       G       F
     'Tismach (תשמח)',
     'G',
     `[בית א']
-G6  Am  Em7  G6  Fmaj7
+G6    Am Em7  G6    Fmaj7
 תשמח, אל תראה רק את הרע,
-G6  Am  Em7  G6  Fmaj7  G6  Am  G6  Fmaj7
+
+G6    Am Em7G6  Fmaj7 G6 Am  G6       Fmaj7
 תשמח, תראה את הטוב כי גם ברע יש דבר נסתר,
-G6  Am  G6  Fmaj7
+
+G6  Am   G6 Fmaj7
 חפש ומצא את הטוב.
-G6  Am  Em7  G6  Fmaj7
+
+G6    Am Em7  G6    Fmaj7
 תשמח, אל תראה רק את הרע,
-G6  Am  G6  Fmaj7
+
+G6    Am    G6  Fmaj7
 תשמח, תראה את הטוב.
-G  Am  G6  Fmaj7  G6  Am  Em7  G6  Fmaj7
+
+G   Am  G6 Fmaj7G6   Am  Em7  G6 Fmaj7
 בכל אדם יש דבר נסתר, חפש ומצא את הטוב.
 
 [פזמון]
 2x [
-C  G  Dm  Am
+Am    DmG           C
 תשמח, יש תקוה ידידי. תראה סימנים בדרך
-C  G  Dm  Am
+
+Am    Dm G     C
 תשמח, כי לכל יהודי יש חלק לעולם הבא.
 
 [בית ב']
-G6  Am  Em7  G6  Fmaj7
+G6    Am Em7  G6    Fmaj7
 תשמח, אל תראה רק את הרע.
-G6  Am  Em7  G6  Fmaj7  G6  Am  G6  Fmaj7
+
+G6    Am Em7    G6    Fmaj7G6Am  G6   Fmaj7
 תשמח, תראה את הטוב וגם בך יש דבר נסתר,
-G  Am  G6  Fmaj7
+
+G   Am   G6 Fmaj7
 חפש ומצא את הטוב.
 `,
-    { versionDescription: 'G6 · Am · Em7 · Fmaj7 · C · G · Dm' }
+    { versionDescription: 'G6 · Am · Em7 · Fmaj7 · Am · Dm · G · C' }
   ),
 
   kardunerSong(
