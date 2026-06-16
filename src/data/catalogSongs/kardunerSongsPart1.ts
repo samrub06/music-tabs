@@ -38,26 +38,33 @@ function kardunerSong(
 export const KARDUNER_SONGS_PART1: KardunerSong[] = [
   kardunerSong(
     'az',
-    'Az (עז)',
+    'Da (דא)',
     'C',
-    `[עז]
+    `[דא]
 2x [
-Am
+C                  G
 כי צריך לדון את כל אדם לכף זכות,
-F      G
+
+Am             F
 ואפילו מי שהוא רשע גמור,
-Em      C
+
+C                   G
 צריך לחפש ולמצוא בו איזה מעט טוב,
-F      G
+
+Em               F
 שבאותו המעט אינו רשע,
-Em      C
-ועל ידי זה שמוצא בו מעט טוב
-Am
+
+C                   G
+ועל ידי זה שמוצא בו איזה מעט טוב,
+
+Am       Em
 ודן אותו לכף זכות,
-Em      Am
-על ידי זה מעלה אותו באמת לכף זכות,
-F      G
-ויוכל להשיבו בתשובה..
+
+C                  G
+על ידי זה הוא מעלה אותו באמת לכף זכות,
+
+Em    F      G
+ויכול להשיבו בתשובה.
 `,
     { versionDescription: 'Likutey Moharan 282 · C · Am · F · G · Em' }
   ),
