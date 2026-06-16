@@ -10,6 +10,7 @@ export const SHIR_LAMAALOT_CATALOG_SONG_SLUG = 'shir-lamaalot'
 /**
  * Curated arrangement from the user's chord sheet (Psalms 121).
  * Music: Yosef Karduner · Key Am
+ * Chord positions aligned to Hebrew lyrics (RTL) per the printed partition.
  */
 export const SHIR_LAMAALOT_CATALOG_SONG: NewSongData & {
   slug: string
@@ -28,31 +29,31 @@ export const SHIR_LAMAALOT_CATALOG_SONG: NewSongData & {
   sourceSite: 'Curated',
   tabId: `curated:${SHIR_LAMAALOT_CATALOG_SONG_SLUG}`,
   content: `[שיר למעלות]
-Am              Em        F
+F           Em  Am
 שיר למעלות, אשא עיני
 
-Am                    Dm6        Am
+Am        Dm6  Am
 אל ההרים, מאין יבוא עזרי:
 
-Am         Em    F              Am
+Am   F            Em   Am
 עזרי מעם ד', עושה שמים וארץ:
 
-Dm6    Am              Dm    G         Am
+       Am   G      Dm Am    Dm6
 אל יתן למוט רגלך, אל ינום שמרך:
 
-G         C         G         Dm        Am
+Am  Dm      G       C     G
 הנה לא ינום ולא ישן שומר ישראל:
 
-Dm6    Am         Dm    G           Am
+Am G      Dm Am        Dm6
 ד' שמרך, ד' צלך על יד ימינך:
 
-G         C              G         Dm        Am
+Am   Dm    G        C    G
 יומם השמש לא יככה וירח בלילה:
 
-Dm6    Am         Dm    G         Am
+Am G      Dm       Am        Dm6
 ד' ישמרך מכל רע, ישמר את נפשך:
 
-Dm6    Am              Dm         G         Am
+Am G    Dm            Am        Dm6
 ד' ישמר צאתך ובואך, מעתה ועד עולם:
 `,
 }
