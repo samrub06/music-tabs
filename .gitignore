@@ -16,6 +16,9 @@
 # Production
 /build
 
+# PDF extraction output (large PNGs)
+/output/
+
 # Misc
 .DS_Store
 *.pem

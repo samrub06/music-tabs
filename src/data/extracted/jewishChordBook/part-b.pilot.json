@@ -1,0 +1,333 @@
+{
+  "meta": {
+    "bookId": "jewish-chord-book",
+    "bookTitleHebrew": "ספר האקורדים היהודי",
+    "part": "חלק ב",
+    "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+    "extractedAt": "2026-06-17T22:00:00.000Z",
+    "extractionMethod": "ai-vision",
+    "reviewStatus": "complete"
+  },
+  "songs": [
+    {
+      "slug": "tzama-nafshi",
+      "title": "Tzama Nafshi",
+      "titleHebrew": "צמאה נפשי",
+      "author": "Hamadregot (Ilan Damri & Hod Dayan)",
+      "key": "Am",
+      "capo": null,
+      "content": "[צמאה נפשי]\n[בית]\nAm    Am9    Am         C/G\nאל אחד בראני ואמר חי אני\nDm     (Am)   Fmaj7  Am/E  (Esus4) E\nכי לא יראני האדם וחי\nAm    Am9    Am         C/G\nברא כל בחכמה, בעצה ובמזימה\nDm      Am     Fmaj7   E    Am    G\nמאוד נעלמה מעיני כל חי\n\n[פזמון]\nC         G/B     Am     Em7/G\nצמאה, צמאה נפשי לאלוקים לאל חי\nDm      Am     Fmaj7     Gsus4   G\nלבי, לבי ובשרי ירננו לאל חי\nC         G/B     Am     Em7/G\nצמאה, צמאה נפשי לאלוקים לאל חי\nDm      Am     Fmaj7   E    Am\nלבי, לבי ובשרי ירננו לאל חי\n\n[בית ב']\nרם על כל כבודו / וכל פה יחווה הודו / ברוך אשר בידו / נפש כל חי\nהבדיל ניני תם / חוקים להורותם / אשר יעשה אותם / האדם וחי (פזמון)\nמי זה יצטדק / נמשל כאבק דק / אמת, כי לא יצדק / לפניך כל חי",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.1 · מילים: ר' אברהם אבן עזרא · לחן: לא ידוע · אלבום: מעיין חיים (2003) · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 1,
+        "tabId": "jewish-chord-book:part-b:tzama-nafshi"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "niggun-tzemach-tzedek",
+      "title": "Niggun HaTzemach Tzedek",
+      "titleHebrew": "ניגון הצמח צדק (הניגון האבוד)",
+      "author": "Chabad (Beri Weber version)",
+      "key": "F#m",
+      "capo": null,
+      "content": "[ניגון הצמח צדק]\n[פתיחה]\nAm | B | Am | Am\nAm | E7 B | Am | Am\n\n[בית]\n2x [\nG Dm | Dm Am\n- Am Em Dm | Am\n]\n\n[פזמון]\n2x [\nG | C | Am | Dm\nAm | Bb C - Dm | Dm | A Gm\n]",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.2 · לפי גרסת ברי ובר · אקורדים: דניאל ישי · Instrumental niggun",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 2,
+        "tabId": "jewish-chord-book:part-b:niggun-tzemach-tzedek"
+      },
+      "review": { "status": "ai_transcribed", "notes": "Chord chart only; original scale F#m" }
+    },
+    {
+      "slug": "niggun-tzemach-tzedek-capo2",
+      "title": "Niggun HaTzemach Tzedek (Capo 2)",
+      "titleHebrew": "ניגון הצמח צדק (קאפו 2)",
+      "author": "Chabad (Beri Weber version)",
+      "key": "F#m",
+      "capo": 2,
+      "content": "[ניגון הצמח צדק]\n[פתיחה]\nEm | F# | Em | Em\nEm | B7 F# | Em | Em\n\n[בית]\n2x [\nD Am | Am Em\n- Em Bm Am | Em\n]\n\n[פזמון]\n2x [\nD | G | Em | Am\nEm | F G - Am | Am | E Dm\n]",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.3 · לפי גרסת ברי ובר · אקורדים: דניאל ישי · קאפו 2 · Instrumental niggun",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 3,
+        "tabId": "jewish-chord-book:part-b:niggun-tzemach-tzedek-capo2"
+      },
+      "review": { "status": "ai_transcribed", "notes": "Capo 2 version of page 2 chart" }
+    },
+    {
+      "slug": "mi-kamoni-yeled",
+      "title": "Mi Kamoni Yeled",
+      "titleHebrew": "מי כמוני ילד",
+      "author": "Ido Kapten",
+      "key": "Em",
+      "capo": null,
+      "content": "[מי כמוני ילד]\n[פתיחה]\nCmaj7 | Bm Em | Am C | Bm Em\n\nD/F#  G       C   Bm      Em\nמי כמוני ילד, מה אני יכול\nD  Dsus4      C   Bm      Em\nמי כמוני יודע להמשיך בלי לחדול\n      C           Bm          Em\nכמה חלומות אצטרך לחלום עד שאותם אגשים\n      D   C           Am  G/B\nמי שיודע מהם זה רק אני ואלוקים\n\nD/F#  G       C   Bm7     Em\nמי כמוני ילד לומד את העולם\nD  Dsus4      C   Bm      Em\nמי כמוני יודע להרשים את כולם\n      C           Bm          Em\nכמה פעמים עוד אפול, אקום, אך לעולם אחזיק\nD7    D   C           Am  G/B\nכי אבא אומר לי תמיד: \"שבע ייפול צדיק\"\n\n[פזמון]\n2x [\nG       Bm/F#     Em      C      Cm      Cm/Eb     G\nרוצה לבנות ארמונות, הפעם לא מקלפים / כי אני כבר מבין ורואה מה ממני מצפים\n]\n\n[מעבר]\nAm        D           G     D/F#  Em      C           D\nעולמי הצעיר קורן ומזהיר תן בי עוד כח כן עוד ועוד להמשיך ולצעוד, את כולם לאהוב",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.4 · מילים: ליטל סלם · לחן: ניר קפטן · סינגל (2016) · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 4,
+        "tabId": "jewish-chord-book:part-b:mi-kamoni-yeled"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "hashem-echad",
+      "title": "Hashem Echad",
+      "titleHebrew": "ה' אחד",
+      "author": "Ishay Ben Zvi",
+      "key": "Em",
+      "capo": null,
+      "content": "[ה' אחד]\n[פתיחה]\nD G | C | G | Em\nEm | D Am | G | Em | D | G C | G | Em\nEm | D Am | G | Em | D | C | G | Em\n\nD Em F G C D Em\nעם קטן שעומד איתן / שר שיר אמונה שלא נדם\nD Em F G C D Em\nהנה לא ינום וגם לא יישן / הוא השומר אותנו מכולם\nD Em Am G C\nיש לנו שמים מעל / יש לנו גם שמש טובה\nB Am G C\nרק נרים עיניים לשם / ונרגיש את האהבה\nD Em Am G C\nמי הוא שיודע הכל / מי הוא שנותן התשובה\nB Am G C\nאלוקים אחד הגדול / הוא עושה הכל לטובה\n\n[פזמון]\n2x [\nD G              C\nה' אחד שמו אחד\nD G              C\nאין לנו עוד אף אחד\nD G              C\nכולנו יחד, לא לבד\nEm D              C\nעם ישראל חי\n]\n\n[סיום]\nEm | D Am | G | Em | D | C | G | Em",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.5 · מילים: ישי בן צבי ומרים ישראלי · לחן: אחיה אשר הכהן – אלורו · סינגל (2016) · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 5,
+        "tabId": "jewish-chord-book:part-b:hashem-echad"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "kol-haderech",
+      "title": "Kol HaDerech",
+      "titleHebrew": "כל הדרך",
+      "author": "Mordechai Shapiro",
+      "key": "F#m",
+      "capo": 2,
+      "content": "[כל הדרך]\n[פתיחה]\n3x [\nC | Dm7 | Am | G\n]\nC | Dm7 | Am | G  Em7\n\n      Am      Em          F           C      G\nאנא מלך, אנא מלך, אנא מלך מלכי המלכים\n      Am      Em          F           C      G\nאנא מלך מלכי המלכים, הקדוש ברוך הוא, אנא מלך\n\n[פזמון]\n   C             Em        Am\nכל הדרך שהלכנו, שמך לא שכחנו\n      C   G   F\nכי בך בטחנו ק-ל קיים\n      Am          Em\nאליך בכינו, אליך קיווינו\n      G   F       C   Dm7  Am   G\nכי אתה אבינו, אב הרחמן    אב הרחמן\n\n[פזמון אחרון]\n   C             Em          Am          F      G\nאנא לך איתנו וגם אם חטאנו אל תשכח אותנו לעולם\n      C             Em\nאנו עבדיך ומבלעדיך\n   Am             G  F | Am | Em | C     G   F           Am\nאין, אין לנו מלך אלא אלא אתה\n   C             Em        Am      F   G       C\nאליך בכינו, אליך קיווינו, כי אתה אבינו, אב הרחמן",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.6 · מילים: בנצי מרקוס · לחן: איציק וולדנר · סינגל (2016) · אקורדים: דניאל ישי · קאפו 2",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 6,
+        "tabId": "jewish-chord-book:part-b:kol-haderech"
+      },
+      "review": { "status": "ai_transcribed", "notes": "Original scale F#m; chart with capo 2" }
+    },
+    {
+      "slug": "maamin-benisim",
+      "title": "Maamin Benisim",
+      "titleHebrew": "מאמין בניסים",
+      "author": "Yaakov Shwekey",
+      "key": "Em",
+      "capo": null,
+      "content": "[מאמין בניסים]\n[פתיחה]\n2x [\nD | C | G | Em\n]\n\n[בית]\n2x [\nEm\nלפעמים מרגישים שהחיים כל כך קשים\nC\nמה יהיה עוד יום, עוד שנה\nEm\nאבל אני מחייך, לא דואג להמשך\nC          G          D\nכי יש לי, יש לי אמונה\n]\n\n[פזמון]\nEm              C              D              Bm\nאני מאמין בניסים, אני יודע שיש אלוקים\nAm              C              Bm             D\nוהוא בורא עולם, הכח של כולם, שומע את קולי\nEm              C              D              Bm\nאני מאמין בניסים, אני יודע שיש אלוקים\nAm              C              Bm             D              Em\nוהוא בורא עולם, הכח של כולם, ישלח לי את הנס, ישלח לי את הנס שלי\n\n[בית ב']\nתן חיוך בן אדם / יש נסים כל הזמן\nלא לבכות, הכל לטובה\nאסור לך להתייאש / רק תמשיך לבקש\nתשמור, תשמור את התקווה",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.7 · מילים: מרים ישראלי · לחן: איציק וולדנר · אלבום: מאמין בניסים / We are a Miracle · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 7,
+        "tabId": "jewish-chord-book:part-b:maamin-benisim"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "ivri-anochi",
+      "title": "Ivri Anochi",
+      "titleHebrew": "עברי אנוכי",
+      "author": "Benny Friedman",
+      "key": "Dm",
+      "capo": 5,
+      "content": "[עברי אנוכי]\n[פתיחה]\nG C | F Am | G C | F Am\n\nG       C       F       Am\nרבות עבר העם הזה בדרך / ואני הולך עם ראש למעלה\nG       C       F       Am\nכל אחד הוא בן או בת של מלך / כך היה וככה זה גם הלאה\nG       C       F       Am\nיהודי עם נשמה בוערת / בכל מקום ובכל ארץ\nAm      G       C       F       Am\nלא רוצה שיהיה אחרת / יהודי אני – זה משהו נצחי\n\n[פזמון]\nG       F       Em      Dm\nבני אברהם יצחק ויעקב בני שרה רבקה רחל ולאה\nG       F       Em      Dm\nבני אברהם יצחק ויעקב בני שרה רבקה רחל ולאה\n\nG       C       F       Am\nעברי אנוכי ואת ה' אלוקי השמים אני ירא\nAm      Em      Dm      F       Am\nעברי אנוכי ואת ה' אלוקי השמים אני ירא",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.8 · מילים: ארי גולדוואג, שמואל מרקוס ומרים ישראל · לחן: ארי גולדוואג · אלבום: Fill the World with Light · אקורדים: דניאל ישי · קאפו 5",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 8,
+        "tabId": "jewish-chord-book:part-b:ivri-anochi"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "beemet",
+      "title": "Be'emet",
+      "titleHebrew": "באמת",
+      "author": "Yosef Nativ & Yonatan Razel",
+      "key": "C#",
+      "capo": null,
+      "content": "[באמת]\nC              F              Em              C\nקיוויתי שאבוא, רציתי להפתיע\nC              Fm              F/A              Bb              Em\nהאדמה תרגיע, רציתי להגיע, רציתי לב לשפוך\nAm              F              Em\nקיוויתי שאבוא, חשבתי להגיע\nG7              G              Gsus4              F/A              Bb              Em\nאורות מהרקיע, שמחה אתה משפיע, הכנתי הכל\n\n[פזמון]\nFmaj7              C\nאלך רחוק בשתי רגליים, ארים גבוה תי'דיים\nE              Esus4              G              Gsus4              Dm\nאצעק חזק עד השמים, ואעצום את העיניים\nAm              E              D/F#              C/E              F              G              Am\nעד שמילה אחת תצא באמת, ב א מ ת\nAm              E              D/F#              C/E              F              G              Am\nעד שניגון אחד יצא באמת, ב א מ ת\n\nC / Fm / F/A / Bb / Em / C / F / Em / C\nרציתי כמו גיבור / לצאת למרות הגשם / להרטב עד עצם / נגד כוון הזרם / רציתי לב לשפוך\nG / Gsus4 / F/A / Bb / Em / Am / F / Em\nקיוויתי שאבוא / מוכן למסור את הנפש / אפילו בלי שום רגש / רציתי להמשיך ולבוא",
+      "genre": "hebrew-songbook",
+      "difficulty": "Advanced",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.9 · מילים ולחן: יוסף נטיב · סינגל (2019) · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 9,
+        "tabId": "jewish-chord-book:part-b:beemet"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "lev-nishbar",
+      "title": "Lev Nishbar",
+      "titleHebrew": "לב נשבר",
+      "author": "Naftali Kempeh",
+      "key": "Am",
+      "capo": null,
+      "content": "[לב נשבר]\n[פתיחה]\nAm\n\nAm          Fmaj7          Am\nלב נשבר ועצבות אינו עניין אחד\nAm          E          Dm          C\nכי לב נשבר יקר מאוד יקר בעיני ה'\n\n[פזמון]\n          Fmaj7          Am7\nכי אין דבר שלם מלב שבור\n          Am7          Dm\nאין דבר שלם מלב שבור\nAm7          E  Dm  Am7          E  Dm\nקרוב ה' לנשברי לב, קרוב ה' לנשברי לב\n\n          Fmaj7          Am7\nכי אין דבר שלם מלב שבור\n          Am          Dm\nאין דבר שלם מלב שבור\nAm          E          Bdim  Fmaj7          E  Dm\nקרוב ה' לנשברי לב, כי אין דבר שלם מלב שבור",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.10 · מילים: רבי נחמן מברסלב, הרבי מקוצק · לחן: נפתלי קמפה · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 10,
+        "tabId": "jewish-chord-book:part-b:lev-nishbar"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "haneshama-yoredet",
+      "title": "HaNeshama Yoredet",
+      "titleHebrew": "הנשמה יורדת",
+      "author": "Shuli Rand",
+      "key": "Am",
+      "capo": null,
+      "content": "[הנשמה יורדת]\n[פתיחה]\nDm | B | Am/C Dm | E7 FMaj7 | Am\n\nF C Am B C Am Am Dm F Am\nהנשמה יורדת אל תוך הגוף וצועקת ויי ויי, וצועקת ויי ויי\n\n[פזמון]\nAm E Esus4 Dm F Am E F Dm\nירידה זו צורך עלייה, עד שכל זה הוא כדאי\nAm E Esus4 F Dm F Dm C Am\nירידה זו צורך עלייה, עד שכל זה הוא כדאי\n\nAm B C Am Am B C Am Am Dm F Am\nהנשמה יורדת אל תוך הגוף וצועקת ויי ויי, וצועקת ויי ויי\n\n[פזמון 2]\n2x [\nAm E Esus4 F Dm FMaj7 D C Am\nירידה זו צורך עלייה, עד שכל זה הוא כדאי\n]\n\n[מעבר]\n2x [\nG Gsus4 Fsus2 BbMaj7 C\nירידה צורך עלייה, עלייה\n]",
+      "genre": "hebrew-songbook",
+      "difficulty": "Advanced",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.11 · מילים ולחן: חסידי חב\"ד · מתוך \"צמא\" · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 11,
+        "tabId": "jewish-chord-book:part-b:haneshama-yoredet"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "ahavat-olam",
+      "title": "Ahavat Olam",
+      "titleHebrew": "אהבת עולם",
+      "author": "R' Shlomo Carlebach",
+      "key": "Am",
+      "capo": null,
+      "content": "[אהבת עולם]\n[פתיחה]\n2x [\nAm | C/G | D/F# | E F\n]\n\nAm          Dm        F    Am      E Am\nאהבת עולם תביא להם, תביא, תביא להם\nAm          Dm        F    Am      E Am\nאהבת עולם תביא להם, תביא, תביא להם\n\n[פזמון]\nDm   Am  Dm  Am  Bdim    Bb   Am\nאהבת עולם תביא להם אהבת עולם תביא להם\n*Abdim7  Am  Abdim7  Am   Dm   E   F   (G)\nאהבת עולם תביא להם תביא עולם אהבת עולם תביא להם\n\n[מעבר]\nC  Caug  Fm  Bdim  Bb   Am  (G)  Gm  A7  Dm  Bdim  Bb  Am\nוברית אבות לבנים תזכור וברית אבות לבנים תזכור",
+      "genre": "hebrew-songbook",
+      "difficulty": "Advanced",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.12 · לחן: ר' שלמה קרליבך · לפי גרסת להקת מזמור שיר (מארחים את עקיבא) · אקורדים: דניאל ישי · *Abdim7 replaceable with Bdim or Dm · end on Am instead of F",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 12,
+        "tabId": "jewish-chord-book:part-b:ahavat-olam"
+      },
+      "review": { "status": "needs_review", "notes": "Return to chorus; end on Am not F" }
+    },
+    {
+      "slug": "beesh-uvamaim",
+      "title": "Be'esh Uvamaim",
+      "titleHebrew": "באש ובמים (אתך אני)",
+      "author": "Avraham Fried",
+      "key": "F#m",
+      "capo": 2,
+      "content": "[באש ובמים]\n[פתיחה]\nEm | Em | Em | D\nEm | Em | Em | Em - D Em\n\nEm\nכי תעבור במים אתך אני\nC G\nובנהרות לא ישטפוך\nEm Am Am Em/G B/F# Em\nכי תלך במו אש לא תכוו\nEm B Em\nולהבה לא תבער בך\n\n[פזמון]\nEm D G\nבאש ובמים – עם ישראל חי\nEm D G\nמתחת השמים – עם ישראל חי\nC G/B Am Em\nעם הבורא, עם התורה, בלי שום מורא (איי)\nAm F#m7-5 Bsus4 B\nעם ישראל חי לעולם\n\n[מעבר]\nAm D Em Am D Em\nאו או או, או או או או, או או או או, או או או או או או\nAm D Em Am D Em\nאו או או, או או או או, או או או או, או או או או או או",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.13 · לחן: אברהם פריד ויצחק וולדנר · אלבום: אוצר של יראת שמיים (2016) · אקורדים: דניאל ישי · קאפו 2",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 13,
+        "tabId": "jewish-chord-book:part-b:beesh-uvamaim"
+      },
+      "review": { "status": "ai_transcribed", "notes": "Original scale F#m; chart with capo 2" }
+    },
+    {
+      "slug": "yesh-tikva",
+      "title": "Yesh Tikva",
+      "titleHebrew": "יש תקווה",
+      "author": "Benny Friedman",
+      "key": "Am",
+      "capo": null,
+      "content": "[יש תקווה]\n      Am      Dm          Am\nתסתכל פה ושם מסביב לעולם\n      G           C\nיש צרות, דאגות, החיוך נעלם\n      Am  Dm          Am\nאך אל תראה רק שחור כי גם זה יעבור\n      G           C\nוהכל יסתדר כי ה' יעזור\n\n[פזמון]\n            Am          Dm\nיש תקווה אם נשיר כולנו יחד\n            C           Dm\nיש אמונה חזקה מכל הפחד\n      C     Am          Dm\nלא ניפול, לא נרעד, כי אנחנו לא לבד\n            Am  G   F\nיש לנו ה' אחד\n\n[בית ב']\nהיי אחי בוא איתי, שים ידך בידי\nאל תדאג, אל תפחד, כי נצעד יד ביד\nהקדוש ברוך הוא את כולנו אוהב\nעוד תראה שמחר יגמר הכאב",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.14 · מילים: מרים ישראלי · לחן: ארי גולדוואג · אלבום: יש תקווה (2012) · אקורדים: דניאל ישי",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 14,
+        "tabId": "jewish-chord-book:part-b:yesh-tikva"
+      },
+      "review": { "status": "ai_transcribed", "notes": "" }
+    },
+    {
+      "slug": "halev-sheli",
+      "title": "HaLev Sheli",
+      "titleHebrew": "הלב שלי",
+      "author": "Ishay Ribo",
+      "key": "Am",
+      "capo": null,
+      "content": "[הלב שלי]\nAm              C\nהלב שלי נקרע לשניים, מה שלא ראתה שפחה על המים\nF        Am Dm        F        Am Dm        Em\nכמו סופה מן הים הולם, כמו תופה של מרים פעם, ואין תרופה בעולם\n\nAm              C\nהלב שלי מרים ידיים, כבר מועד לא עומד על הרגליים\nF        Am Dm        F        Am Dm\nשבר כלי שאין בו כבר מה, והשמים הם לי חומה\n\nEm7\nאיך אעבור בתוך הים ביבשה\n\n[פזמון]\nF              C              Em              G Am\nורק אתה יכול להפוך מספדי למחול, לזכך את החול לרכך בי ה כ ל\nF              C              Em\nורק אתה מבין איך לגשת ללב שלי, משכך כל כאב שבי\nG Am              (Em C F)\nמרפא את ה ל ב\n\nF        Am Dm        F        Am Dm        Em\nויש עוד צר שמציק לצאן, ואין ציר שיצעק לצור, רק אני מול ים שלם ולב שבור",
+      "genre": "hebrew-songbook",
+      "difficulty": "Advanced",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.15 · מילים ולחן: ישי ריבו · אקורדים: דניאל ישי · 1st time add parenthetical chords and return to verse",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 15,
+        "tabId": "jewish-chord-book:part-b:halev-sheli"
+      },
+      "review": { "status": "needs_review", "notes": "Complex repeat structure per book notes" }
+    },
+    {
+      "slug": "medaber-elecha",
+      "title": "Medaber Elecha",
+      "titleHebrew": "מדבר אליך",
+      "author": "Udi Davidi",
+      "key": "Fm",
+      "capo": 1,
+      "content": "[מדבר אליך]\n[פתיחה]\nF | C | F | G Gsus4\nEm | Am | F | G Gsus4\n\nAm\nבחצות הליל גם כשלא ממש קר\nEm\nמוצא ת'עצמי עם סוודר, זה נראה לי די מוזר\nF\nמסתובב בחוץ, כאב רודף\nG Gsus4              D\nכשירח מבטו מישיר, את הפחד אני הודף\n\n[פזמון]\nEm Esus2\nמדבר אליך דיבורים פשוטים\nAm\nמדבר אליך מעומקי מעמקים\nF\nכשהנשמה זורקת אור\nG Gsus4\nערפל נמוג אחור\n\n[בית ב']\nבחצות הליל מחפש נחמה\nאומרים שהעצב לא עושה טוב לנשמה\nמנסה לומר ומשתתק\nכמו עומד על צוק, אני פוחד כל כך, אתה שומע? אני צועק\n\nבחצות הליל נשמה בודדה\nמחפשת עיר מקלט, שתציל ממצוקתה\nצעקה תמימה שוברת קצת\nאוי, הלב הזה כמו אבן, הוא נמס כל כך לאט",
+      "genre": "hebrew-songbook",
+      "difficulty": "Intermediate",
+      "versionDescription": "ספר האקורדים היהודי · חלק ב · p.16 · מילים ולחן: אודי ולילך דוידי · אלבום: בן אהוב (2011) · אקורדים: דניאל ישי · קאפו 1",
+      "source": {
+        "sourceSite": "Jewish Chord Book",
+        "sourceLabel": "ספר האקורדים היהודי · חלק ב",
+        "sourceFile": "ספר-האקורדים-היהודי-המשך.pdf",
+        "page": 16,
+        "tabId": "jewish-chord-book:part-b:medaber-elecha"
+      },
+      "review": { "status": "ai_transcribed", "notes": "Original scale Fm; chart with capo 1" }
+    }
+  ]
+}

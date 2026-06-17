@@ -105,6 +105,45 @@ export const adminUserSongsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 })
 
+export const jewishChordBookSourceSchema = z.object({
+  sourceSite: z.string().min(1),
+  sourceLabel: z.string().min(1),
+  sourceFile: z.string().min(1),
+  page: z.number().int().positive(),
+  tabId: z.string().min(1),
+})
+
+export const jewishChordBookSongSchema = z.object({
+  slug: z.string().min(1),
+  title: z.string().min(1),
+  titleHebrew: z.string().min(1),
+  author: z.string().min(1),
+  key: z.string().min(1),
+  capo: z.number().int().nullable().optional(),
+  content: z.string().min(1),
+  genre: z.string().min(1),
+  difficulty: z.string().min(1),
+  versionDescription: z.string().optional(),
+  source: jewishChordBookSourceSchema,
+  review: z.object({
+    status: z.enum(['ai_transcribed', 'needs_review', 'approved']),
+    notes: z.string().optional(),
+  }),
+})
+
+export const jewishChordBookExtractSchema = z.object({
+  meta: z.object({
+    bookId: z.string().min(1),
+    bookTitleHebrew: z.string().min(1),
+    part: z.string().min(1),
+    sourceFile: z.string().min(1),
+    extractedAt: z.string().min(1),
+    extractionMethod: z.string().min(1),
+    reviewStatus: z.string().min(1),
+  }),
+  songs: z.array(jewishChordBookSongSchema).min(1),
+})
+
 export type SelectableSongIdsInput = z.infer<typeof selectableSongIdsSchema>
 
 export type CreateFolderInput = z.infer<typeof createFolderSchema>

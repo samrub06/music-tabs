@@ -17,6 +17,10 @@
     "seed:karduner-catalog": "npx tsx scripts/seed-karduner-catalog.ts",
     "seed:hebrew-playlists": "npx tsx scripts/seed-hebrew-playlists.ts",
     "seed:songbook": "npx tsx scripts/seed-songbook.ts",
+    "seed:jewish-chord-book": "npx tsx scripts/seed-jewish-chord-book.ts",
+    "seed:jewish-chord-book:b": "npx tsx scripts/seed-jewish-chord-book.ts --part=b",
+    "validate:jcb-extract": "npx tsx scripts/validate-jcb-extract.ts",
+    "validate:jcb-extract:b": "npx tsx scripts/validate-jcb-extract.ts --part=b",
     "clean:catalog-duplicates": "npx tsx scripts/clean-duplicate-catalog-songs.ts",
     "sync:explore-catalog": "NODE_ENV=development npx tsx scripts/sync-explore-catalog.ts"
   },
