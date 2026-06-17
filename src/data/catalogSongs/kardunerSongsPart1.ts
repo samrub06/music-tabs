@@ -208,16 +208,16 @@ Fmaj7 G6 Am G
     'Tachnun (תחנון)',
     'Em',
     `[תחנון]
-Em      D6      Cmaj7     D6
+D6      Cmaj7     D6      Em
 אנא ד' אלקינו ואלקי אבותינו,
-Em      D6      Cmaj7     D6
+D6      Cmaj7     D6      Em
 תבא לפניך תפלתנו,
-Em      D6      Cmaj7     D6
+D6      Cmaj7     D6      Em
 ואל תתעלם מתחנתנו 2x
-Em      D6      Cmaj7     D6
+D6      Cmaj7     D6      Em
 אוי איי.... 2x
 `,
-    { versionDescription: 'Shacharit & Mincha · Em · D6 · Cmaj7' }
+    { versionDescription: 'Shacharit & Mincha · D6 · Cmaj7 · D6 · Em' }
   ),
 
   kardunerSong(
@@ -242,16 +242,16 @@ F  C  G  Dm  G  Am
     'V\'taher Libenu (וטהר לבנו)',
     'C',
     `[וטהר לבנו]
-C       F       C       F
+F       C       F       C
 וטהר לבנו לעבדך באמת,
-C       F       Em      Am      C       F
+F       C       Am      Em      F       C
 והנחילנו ד' אלקינו באהבה וברצון
-C       F       C       F
+F       C       F       C
 שבת קדשך, וינוחו בם כל ישראל
-C       G       F
+F       G       C
 מקדשי שמך.
 `,
-    { versionDescription: 'Shabbat Mincha · C · F · Em · Am · G' }
+    { versionDescription: 'Shabbat Mincha · F · C · Am · Em · G' }
   ),
 
   kardunerSong(
@@ -260,18 +260,18 @@ C       G       F
     'F#m',
     `[כל העולם]
 2x [
-B7      Em
+Em      B7
 כי, צריך כל אדם לומר:
-C       Am      B7      Em
+Em      B7      Am      C
 כל העולם לא נברא אלא בשבילי (סנהדרין ל"ז)
-Bm      Am      Em
+Em      Am      Bm
 נמצא כשהעולם נברא בשבילי,
-D/F#    G       Am      Em
+Em      Am      G       D/F#
 צריך אני לראות ולעין בכל עת בתקון העולם.
-Bb°     Am      B7      Em
+Em      B7      Am      Bb°
 ולמלאות חסרון העולם ולהתפלל בעבורם
 ]`,
-    { capo: 2, versionDescription: 'Likutey Moharan 5 · Capo 2 · F#m · Em · Am · B7' }
+    { capo: 2, versionDescription: 'Likutey Moharan 5 · Capo 2 · B7 · Am · Em · F#m' }
   ),
 
   kardunerSong(
@@ -279,21 +279,21 @@ Bb°     Am      B7      Em
     'Ish HaYisraeli (איש הישראלי)',
     'A',
     `[איש הישראלי]
-C       G       C       G
+G       C       G       C
 כי איש הישראלי צריך תמיד להסתכל בהשכל,
-C       G       C       G
+G       C       G       C
 ולקשר עצמו אל החכמה והשכל
-C       D       C       G
+G       C       D       C
 שיש בכל דבר כדי שיאיר לו השכל,
-C       G       C       D
+D       C       G       C
 שיש בכל דבר להתקרב להשם יתברך
-B7      Em      C       G
+G       C       Em      B7
 על ידי אותו הדבר, כי השכל הוא אור גדול
-Em      Am      F
+F       Am      Em
 ומאיר לו בכל דרכיו, כמו שכתוב
-C       B7
+B7      C
 "חכמת אדם תאיר פניו" (קהלת ח')
 `,
-    { capo: 2, versionDescription: 'Likutey Moharan I · Capo 2 · A · C · G · Em' }
+    { capo: 2, versionDescription: 'Likutey Moharan I · Capo 2 · Em · G · C · A' }
   ),
 ]

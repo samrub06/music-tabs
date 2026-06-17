@@ -41,28 +41,28 @@ export const KARDUNER_SONGS_PART2: KardunerSong[] = [
     'L\'ma\'et B\'khavod (למעט בכבוד)',
     'D',
     `[למעט בכבוד]
-Dsus4 D       Am7 Dsus4       D       Am7
+Am7       D       Dsus4      Am7       D       Dsus4       
 כי צריך כל אדם למעט בכבוד עצמו ולהרבות בכבוד המקום
-Am7       Dsus4 D       Am7
+Am7       D       Dsus4       Am7
 כי מי שרודף אחר הכבוד, אינו זוכה לכבוד אלקים
-Dm  G  C       D
+D       C       G  Dm
 אלא לכבוד של מלכים, שנאמר בו (משלי כ"ה) "כבוד מלכים חקר דבר",
-G       Dm  G       Am
+Am       G       Dm  G
 והכל חוקרים אחריו ושואלים: מי הוא זה ואיזהו שחולקים לו כבוד הזה
-Dsus4 D       Am7       Dm  G  Am
+Am  G  Dm       Am7       D       Dsus4       D
 וחולקים עליו שאומרים שאינו ראוי לכבוד הזה.
-Dsus4 D       Am7 Dsus4 D       Am7
+Am7       D       Dsus4       D       Am7       Dsus4       D
 אבל מי שבורח מן הכבוד, שממעט בכבוד עצמו ומרבה בכבוד המקום,
-Am7 Dsus4       D       Am7
+Am7       D       Dsus4       Am7
 אזי הוא זוכה לכבוד אלקים ואז אין בני אדם חוקרים על כבודו
 D
 אם הוא ראוי אם לאו, ועליו נאמר: (שם):
-Am  G       Dm  G       C
+C       G       Dm  G       Am
 "כבוד אלקים הסתר דבר", כי אסור לחקור על הכבוד הזה.] 3x
-Am7 Dsus4       D       Am7
+Am7       D       Dsus4       Am7
 ואי אפשר לזכות לכבוד הזה, אלא ע"י תשובה.
 `,
-    { versionDescription: 'Likutey Moharan 6 · D · Am7 · Dm · G · C' }
+    { versionDescription: 'Likutey Moharan 6 · C · G · Dm · Am7 · D' }
   ),
 
   kardunerSong(
@@ -70,9 +70,9 @@ Am7 Dsus4       D       Am7
     'Lamnatzeach BiNeginot (למנצח בנגינות)',
     'Ab',
     `[למנצח בנגינות]
-G  C  G  C
+C  G  C  G
 למנצח בנגינות מזמור שיר
-Em  Am  Em  Am
+Am  Em  Am  Em
 אלקים יחננו ויברכנו יאר פניו אתנו סלה
 D  C  D
 לדעת בארץ דרכך בכל גוים ישועתך
@@ -80,21 +80,21 @@ Dsus4
 ענו ואמרו:
 
 2x [
-G  C  G  C
+C  G  C  G
 אם אתה מאמין, שיכולים לקלקל
 Em  D  Em
 אם אתה מאמין, שיכולים לקלקל
-B7  Am  B7  Am
+Am  B7  Am  B7
 תאמין שיכולים לתקן:
 ]
 
 2x [
-G  C  G  C
+C  G  C  G
 אם אתה מאמין, שיכולים לקלקל
-Em  B7  Am  Em  B7  Am
+Am  B7  Em  Am  B7  Em
 תאמין שיכולים לתקן:
 ]`,
-    { capo: 1, versionDescription: 'Psalms 67 · Likutey Moharan 112 · Capo 1 · Ab · G · Em · Am' }
+    { capo: 1, versionDescription: 'Psalms 67 · Likutey Moharan 112 · Capo 1 · Am · Em · G · Ab' }
   ),
 
   kardunerSong(
@@ -105,15 +105,15 @@ Em  B7  Am  Em  B7  Am
 2x [
 Em              Am              Em
 ודע שהאדם צריך לעבור
-Em      B7      Am      Em      Am
+Am      Em      Am      B7      Em
 על גשר צר מאוד על גשר צר מאוד
 ]
 
 2x [
-Em      B7      Am      Em      B7      G       C       G
+G       C       G       B7      Em      Am      B7      Em
 והעיקר שלא יתפחד שלא יתפחד כלל
 ]`,
-    { capo: 1, versionDescription: 'Likutey Moharan II #48 · Capo 1 · Fm · Em · Am · B7' }
+    { capo: 1, versionDescription: 'Likutey Moharan II #48 · Capo 1 · B7 · Am · Em · Fm' }
   ),
 
   kardunerSong(
@@ -126,9 +126,9 @@ Em              Am              Em
 Em              Am              Em
 ה' אבא, הן אבא הן, סלח לי על עוונותיי
 
-Em              Am              Em              Am
+Am              Em              Am              Em
 עוונותיי רבים המה, לילה ויום בוכים
-Em              Am              Em              Am
+Am              Em              Am              Em
 להתקרב אליך הם מחכים, משמים נשמע קולם
 
 Em              Am              Em
@@ -136,19 +136,19 @@ Em              Am              Em
 Em              Am              Em
 ה' אבא, הן אבא הן, אנא חסד כל עולמים
 
-Em              Am              Em              Am
+Am              Em              Am              Em
 ועננו אור אבותינו, בתוך הגולה, במהרה בימינו
-Em              Am              Em              Am
+Am              Em              Am              Em
 ונשמור על האחדות בקרב חברינו
 
 Em              Am              Em
 ה' אבא, הן אבא הן, אבא השלם אותי
-Em              Am
+Am              Em
 ענני
 Em              Am              Em
 ה' אבא, הן אבא הן, אנא שמע את נפשי
 `,
-    { capo: 2, versionDescription: 'Capo 2 · F#m · Em · Am' }
+    { capo: 2, versionDescription: 'Capo 2 · Am · Em · F#m' }
   ),
 
   kardunerSong(
@@ -157,19 +157,19 @@ Em              Am              Em
     'C',
     `[כל הנשמה]
 2x [
-C6  Em/D  Em  B7  G  D7  Am7
+Am7  D7  G  B7  Em  Em/D  C6
 כל הנשמה תהלל יה
-Em  B7
+B7  Em
 ונשמת כל חי
 ]
 
 2x [
-C6  Em/D  Em  B7  G  D7  Am7
+Am7  D7  G  B7  Em  Em/D  C6
 הללויה הללויה...
-Em  B7
+B7  Em
 הללויה...
 ]`,
-    { versionDescription: 'C6 · Em · B7 · G · D7 · Am7' }
+    { versionDescription: 'Am7 · D7 · G · B7 · Em · C6' }
   ),
 
   kardunerSong(
@@ -178,34 +178,34 @@ Em  B7
     'Bm',
     `[שיר המעלות]
 2x [
-Bm  F#m
+F#m  Bm
 אשא עיני אל ההרים,
-G  D
+D  G
 מאין יבוא עזרי.
-G  A
+A  G
 עזרי מעם ה',
-D  A
+A  D
 עושה שמים וארץ.
 ]
 
-G  A
+A  G
 אל יתן למוט רגלך,
-D  A
+A  D
 אל ינום שומרך.
-G  A
+A  G
 הנה לא ינום ולא יישן,
-D  A
+A  D
 שומר ישראל.
 
 2x [
-Bm  F#m
+F#m  Bm
 ה' ישמרך,
-G  D  A
+A  D  G
 ה' צלך על יד ימינך.
-Bm  F#m  G  D  A
-נה נה נה נה נה נה
+A  D  G  F#m  Bm
+נה נה נה נה נה נה נה נה
 ]`,
-    { versionDescription: 'Psalms 121 · Bm · F#m · G · D · A' }
+    { versionDescription: 'Psalms 121 · A · D · G · F#m · Bm' }
   ),
 
   kardunerSong(
@@ -214,29 +214,29 @@ Bm  F#m  G  D  A
     'E',
     `[מצוה גדולה]
 2x [
-E  F  G  Am
+Am  G  F  E
 מצוה גדולה להיות בשמחה תמיד
-G  Am
+Am  G
 ולהתגבר להרחיק העצבות
-E  F
+F  E
 והדאגה בכל לבב,
-G  Am
+Am  G
 וכל הפלאות הבאות על האדם,
-E  F
+F  E
 כולם באים רק מקלקול השמחה
 ]
 
 ...מצוה גדולה
-C  F
+F  C
 נננ נננ ננננ
-Dm  G
+G  Dm
 ננננ ננ נננ
-C  F
+F  C
 תי נננ נננ
 G
 תי נננננ...
 `,
-    { versionDescription: 'Likutey Moharan II #24 · E · F · G · Am · C · Dm' }
+    { versionDescription: 'Likutey Moharan II #24 · Dm · G · F · Am · E · C' }
   ),
 
   kardunerSong(
@@ -244,25 +244,25 @@ G
     'Shir LaMa\'alot — Bbm (שיר למעלות)',
     'Bbm',
     `[שיר למעלות]
-C  F  Em  Am
+Am  Em  F  C
 אשא עיני אל ההרים מאין יבוא עזרי
-G6  Am  E7  Bø
+Bø  E7  Am  G6
 עזרי מעם ה' עושה שמים וארץ
 
 2x [
-Em  G  F
+F  G  Em
 אל יתן למוט רגלך אל ינום שומרך
-Am  G  F  Am/G  Am
+Am  Am/G  F  G  Am
 הנה לא ינום ולא יישן שומר ישראל.
 ]
 
 2x [
-A  D  E  F#m
+F#m  E  D  A
 ה' שומרך ה' צלך על יד ימינך
-A  Bm  E
+E  Bm  A
 יומם השמש לא יככה וירח בלילה.
 ]`,
-    { capo: 1, versionDescription: 'Psalms 121 · Capo 1 · Bbm · Em · Am · G · F' }
+    { capo: 1, versionDescription: 'Psalms 121 · Capo 1 · F · G · Em · Am · Bbm' }
   ),
 
   kardunerSong(
@@ -270,31 +270,31 @@ A  Bm  E
     'Mizmor LeTodah — Yonatan Razel (מזמור לתודה)',
     'A',
     `[בית א']
-D  C  G
+G  C  D
 הריעו לה' כל הארץ
-D  C  G
+G  C  D
 עבדו את ה' בשמחה
-Am7  Cmaj7
+Cmaj7  Am7
 באו לפניו ברננה
-Bm7  Am7  Em7  Bm7
+Bm7  Em7  Am7  Bm7
 דעו כי ה' הוא אלוהים הוא עשנו ולו אנחנו עמו וצאן מרעיתו
 
 [פזמון]
-Bm7  Am7  Em
+Em  Am7  Bm7
 נה נה נה נה נה נה נה 3x
-Em  Bm7  Am7  Em
+Em  Am7  Bm7  Em
 נה נה נה נה נה נה נה
 
 [בית ב']
-D  C  G
+G  C  D
 באו שעריו בתודה חצרותיו בתהילה
-D  C  G
+G  C  D
 הודו לו ברכו שמו
-Am7  Cmaj7
+Cmaj7  Am7
 כי טוב ה' לעולם חסדו
-Bm7  Am7  Em7  Bm7
+Bm7  Em7  Am7  Bm7
 ועד דור ודור אמונתו
 `,
-    { capo: 2, versionDescription: 'Psalms 100 · Yonatan Razel arr. · Capo 2 · A · D · C · G · Em' }
+    { capo: 2, versionDescription: 'Psalms 100 · Yonatan Razel arr. · Capo 2 · Em · G · C · D · A' }
   ),
 ]

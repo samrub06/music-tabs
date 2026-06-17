@@ -402,7 +402,7 @@ export default function SongViewerContainerSSR({
       try {
         const navigationData = JSON.parse(navigationDataStr)
         if (navigationData.sourceUrl) {
-          router.back()
+          router.push(navigationData.sourceUrl)
           return
         }
       } catch (error) {
