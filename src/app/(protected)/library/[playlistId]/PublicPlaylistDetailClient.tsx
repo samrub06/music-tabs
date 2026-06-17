@@ -5,6 +5,8 @@ import {
   PlayIcon,
   MusicalNoteIcon,
   PlusIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
@@ -15,7 +17,259 @@ import { cn } from '@/lib/utils'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
-import { useState, useCallback } from 'react'
+import {
+  createContext,
+  useState,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useEffect,
+  type ReactNode,
+  type RefObject,
+} from 'react'
+
+interface PublicPlaylistSearchContextValue {
+  isSearchOpen: boolean
+  searchQuery: string
+  setSearchQuery: (query: string) => void
+  toggleSearch: () => void
+  closeSearch: () => void
+  searchInputRef: RefObject<HTMLInputElement>
+  songs: Song[]
+  setSongs: (songs: Song[]) => void
+  handleStartPlaylist: () => void
+}
+
+const PublicPlaylistSearchContext = createContext<PublicPlaylistSearchContextValue | null>(null)
+
+function usePublicPlaylistSearch() {
+  const context = useContext(PublicPlaylistSearchContext)
+  if (!context) {
+    throw new Error('usePublicPlaylistSearch must be used within PublicPlaylistSearchProvider')
+  }
+  return context
+}
+
+function filterPlaylistSongs(songs: Song[], searchQuery: string) {
+  const q = searchQuery.trim().toLowerCase()
+  if (!q) return songs
+  return songs.filter(
+    (song) =>
+      song.title.toLowerCase().includes(q) ||
+      (song.author || '').toLowerCase().includes(q)
+  )
+}
+
+function storePlaylistNavigation(
+  playlist: Playlist,
+  songs: Song[],
+  songId: string,
+  sourceUrl: string
+) {
+  if (typeof window === 'undefined') return
+
+  const songList = songs.map((s) => s.id)
+  const currentIndex = songList.indexOf(songId)
+  const playlistContext = {
+    isPlaylist: true,
+    targetKey: '',
+    songs: songs.map((s) => ({
+      id: s.id,
+      title: s.title,
+      author: s.author,
+      songImageUrl: s.songImageUrl,
+      artistImageUrl: s.artistImageUrl,
+      keyAdjustment: 0,
+      originalKey: s.key || '',
+      targetKey: s.key || '',
+    })),
+  }
+
+  sessionStorage.setItem(
+    'songNavigation',
+    JSON.stringify({
+      songList,
+      currentIndex: currentIndex >= 0 ? currentIndex : 0,
+      sourceUrl,
+      playlistContext,
+    })
+  )
+  sessionStorage.removeItem('hasUsedNext')
+}
+
+export function PublicPlaylistSearchProvider({
+  playlist,
+  children,
+}: {
+  playlist: Playlist
+  children: ReactNode
+}) {
+  const router = useRouter()
+  const [songs, setSongs] = useState<Song[]>([])
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true)
+    window.requestAnimationFrame(() => searchInputRef.current?.focus())
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false)
+    setSearchQuery('')
+    searchInputRef.current?.blur()
+  }, [])
+
+  const toggleSearch = useCallback(() => {
+    if (isSearchOpen) {
+      closeSearch()
+    } else {
+      openSearch()
+    }
+  }, [isSearchOpen, closeSearch, openSearch])
+
+  const handleStartPlaylist = useCallback(() => {
+    if (songs.length === 0) return
+    storePlaylistNavigation(playlist, songs, songs[0].id, `/library/${playlist.id}`)
+    router.push(`/song/${songs[0].id}`)
+  }, [songs, playlist, router])
+
+  const value = useMemo(
+    () => ({
+      isSearchOpen,
+      searchQuery,
+      setSearchQuery,
+      toggleSearch,
+      closeSearch,
+      searchInputRef,
+      songs,
+      setSongs,
+      handleStartPlaylist,
+    }),
+    [
+      isSearchOpen,
+      searchQuery,
+      toggleSearch,
+      closeSearch,
+      songs,
+      handleStartPlaylist,
+    ]
+  )
+
+  return (
+    <PublicPlaylistSearchContext.Provider value={value}>
+      {children}
+    </PublicPlaylistSearchContext.Provider>
+  )
+}
+
+function PublicPlaylistExpandableSearch() {
+  const { t } = useLanguage()
+  const {
+    isSearchOpen,
+    searchQuery,
+    setSearchQuery,
+    toggleSearch,
+    closeSearch,
+    searchInputRef,
+  } = usePublicPlaylistSearch()
+
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 items-center overflow-hidden rounded-full border border-border bg-muted/40 transition-all duration-200',
+        isSearchOpen ? 'min-w-0 flex-1' : 'w-10 shrink-0 border-transparent bg-transparent'
+      )}
+    >
+      <button
+        type="button"
+        onClick={toggleSearch}
+        className={cn(
+          'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+          isSearchOpen && 'text-primary'
+        )}
+        aria-label={isSearchOpen ? t('common.close') : t('common.search')}
+      >
+        <MagnifyingGlassIcon className="h-5 w-5" />
+      </button>
+      <input
+        ref={searchInputRef}
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') closeSearch()
+        }}
+        placeholder={t('songs.search')}
+        tabIndex={isSearchOpen ? 0 : -1}
+        aria-hidden={!isSearchOpen}
+        className={cn(
+          'min-w-0 border-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all duration-200',
+          isSearchOpen ? 'w-full pe-3 opacity-100' : 'w-0 pe-0 opacity-0'
+        )}
+      />
+      {isSearchOpen && searchQuery ? (
+        <button
+          type="button"
+          onClick={() => setSearchQuery('')}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={t('common.clear')}
+        >
+          <XMarkIcon className="h-4 w-4" />
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function PublicPlaylistHeader({
+  playlist,
+  songCount,
+}: {
+  playlist: Playlist
+  songCount: number
+}) {
+  const { t } = useLanguage()
+  const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
+
+  const songCountLabel =
+    songCount === 1
+      ? `1 ${t('playlistView.songs').slice(0, -1)}`
+      : `${songCount} ${t('playlistView.songs')}`
+
+  return (
+    <div className="px-4 pt-4 sm:px-6">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <h1
+          className={cn(
+            'min-w-0 text-2xl font-bold tracking-tight text-foreground transition-all duration-200 sm:text-3xl',
+            isSearchOpen
+              ? 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
+              : 'flex-1 truncate'
+          )}
+        >
+          {playlist.name}
+        </h1>
+
+        <PublicPlaylistExpandableSearch />
+
+        <button
+          type="button"
+          onClick={handleStartPlaylist}
+          disabled={songs.length === 0}
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
+          aria-label={t('playlistView.startPlaylist')}
+        >
+          <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
+        </button>
+      </div>
+
+      <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
+    </div>
+  )
+}
 
 interface PublicPlaylistDetailShellProps {
   playlist: Playlist
@@ -31,13 +285,8 @@ export function PublicPlaylistDetailShell({
 
   const coverUrl = getPlaylistDisplayCoverUrl(playlist) ?? null
 
-  const songCountLabel =
-    songCount === 1
-      ? `1 ${t('playlistView.songs').slice(0, -1)}`
-      : `${songCount} ${t('playlistView.songs')}`
-
   return (
-  <>
+    <>
       <div className="relative h-72 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[28rem]">
         {coverUrl ? (
           <>
@@ -61,19 +310,8 @@ export function PublicPlaylistDetailShell({
         </button>
       </div>
 
-      <div className="px-4 pt-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {playlist.name}
-          </h1>
-          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/50 text-primary-foreground sm:h-14 sm:w-14">
-            <PlayIcon className="h-6 w-6 translate-x-0.5 opacity-50 sm:h-7 sm:w-7" />
-          </div>
-        </div>
-
-        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
-      </div>
-  </>
+      <PublicPlaylistHeader playlist={playlist} songCount={songCount} />
+    </>
   )
 }
 
@@ -107,6 +345,19 @@ export function PublicPlaylistSongList({
   const { t } = useLanguage()
   const router = useRouter()
   const [addingId, setAddingId] = useState<string | null>(null)
+  const { searchQuery, setSongs } = usePublicPlaylistSearch()
+
+  useEffect(() => {
+    setSongs(songs)
+    return () => setSongs([])
+  }, [songs, setSongs])
+
+  const displayedSongs = useMemo(
+    () => filterPlaylistSongs(songs, searchQuery),
+    [songs, searchQuery]
+  )
+
+  const isFiltering = searchQuery.trim().length > 0
 
   const handleAddToLibrary = useCallback(
     async (song: Song) => {
@@ -130,39 +381,10 @@ export function PublicPlaylistSongList({
 
   const navigateToSong = useCallback(
     (songId: string) => {
-      if (typeof window === 'undefined') return
-
-      const songList = songs.map((s) => s.id)
-      const currentIndex = songList.indexOf(songId)
-      const playlistContext = {
-        isPlaylist: true,
-        targetKey: '',
-        songs: songs.map((s) => ({
-          id: s.id,
-          title: s.title,
-          author: s.author,
-          songImageUrl: s.songImageUrl,
-          artistImageUrl: s.artistImageUrl,
-          keyAdjustment: 0,
-          originalKey: s.key || '',
-          targetKey: s.key || '',
-        })),
-      }
-
-      sessionStorage.setItem(
-        'songNavigation',
-        JSON.stringify({
-          songList,
-          currentIndex: currentIndex >= 0 ? currentIndex : 0,
-          sourceUrl: `/library/${playlist.id}`,
-          playlistContext,
-        })
-      )
-      sessionStorage.removeItem('hasUsedNext')
-
+      storePlaylistNavigation(playlist, songs, songId, `/library/${playlist.id}`)
       router.push(`/song/${songId}`)
     },
-    [songs, playlist.id, router]
+    [songs, playlist, router]
   )
 
   if (songs.length === 0) {
@@ -179,9 +401,18 @@ export function PublicPlaylistSongList({
     )
   }
 
+  if (isFiltering && displayedSongs.length === 0) {
+    return (
+      <div className="px-4 py-16 text-center sm:px-6">
+        <MagnifyingGlassIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+        <h3 className="text-base font-medium text-foreground">{t('songs.noResults')}</h3>
+      </div>
+    )
+  }
+
   return (
     <ul className="mt-4">
-      {songs.map((song) => {
+      {displayedSongs.map((song) => {
         const isAdding = addingId === song.id
 
         return (
@@ -265,86 +496,36 @@ export default function PublicPlaylistDetailClient({
     songs[0]?.artistImageUrl ??
     null
 
-  const handleStartPlaylist = () => {
-    if (songs.length === 0) return
-    const songList = songs.map((s) => s.id)
-    const playlistContext = {
-      isPlaylist: true,
-      targetKey: '',
-      songs: songs.map((s) => ({
-        id: s.id,
-        title: s.title,
-        author: s.author,
-        songImageUrl: s.songImageUrl,
-        artistImageUrl: s.artistImageUrl,
-        keyAdjustment: 0,
-        originalKey: s.key || '',
-        targetKey: s.key || '',
-      })),
-    }
-    sessionStorage.setItem(
-      'songNavigation',
-      JSON.stringify({
-        songList,
-        currentIndex: 0,
-        sourceUrl: `/library/${playlist.id}`,
-        playlistContext,
-      })
-    )
-    sessionStorage.removeItem('hasUsedNext')
-    router.push(`/song/${songs[0].id}`)
-  }
-
-  const songCountLabel =
-    songs.length === 1
-      ? `1 ${t('playlistView.songs').slice(0, -1)}`
-      : `${songs.length} ${t('playlistView.songs')}`
-
   return (
-    <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-      <div className="relative h-72 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[28rem]">
-        {coverUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverUrl} alt="" className="h-full w-full object-cover object-top" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/25 via-primary/10 to-muted">
-            <MusicalNoteIcon className="h-16 w-16 text-muted-foreground/40" />
-          </div>
-        )}
+    <PublicPlaylistSearchProvider playlist={playlist}>
+      <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+        <div className="relative h-72 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[28rem]">
+          {coverUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={coverUrl} alt="" className="h-full w-full object-cover object-top" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+            </>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/25 via-primary/10 to-muted">
+              <MusicalNoteIcon className="h-16 w-16 text-muted-foreground/40" />
+            </div>
+          )}
 
-        <button
-          type="button"
-          onClick={() => router.push('/')}
-          className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
-          aria-label={t('common.back')}
-        >
-          <BackArrowIcon className="h-5 w-5" />
-        </button>
-      </div>
-
-      <div className="px-4 pt-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {playlist.name}
-          </h1>
           <button
             type="button"
-            onClick={handleStartPlaylist}
-            disabled={songs.length === 0}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
-            aria-label={t('playlistView.startPlaylist')}
+            onClick={() => router.push('/')}
+            className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+            aria-label={t('common.back')}
           >
-            <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
+            <BackArrowIcon className="h-5 w-5" />
           </button>
         </div>
 
-        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
-      </div>
+        <PublicPlaylistHeader playlist={playlist} songCount={songs.length} />
 
-      <PublicPlaylistSongList playlist={playlist} songs={songs} userId={userId} />
-    </div>
+        <PublicPlaylistSongList playlist={playlist} songs={songs} userId={userId} />
+      </div>
+    </PublicPlaylistSearchProvider>
   )
 }

@@ -45,17 +45,17 @@ Am7       D       Dsus4      Am7       D       Dsus4
 כי צריך כל אדם למעט בכבוד עצמו ולהרבות בכבוד המקום
 Am7       D       Dsus4       Am7
 כי מי שרודף אחר הכבוד, אינו זוכה לכבוד אלקים
-D       C       G  Dm
+Dm       C       G  Dm
 אלא לכבוד של מלכים, שנאמר בו (משלי כ"ה) "כבוד מלכים חקר דבר",
 Am       G       Dm  G
 והכל חוקרים אחריו ושואלים: מי הוא זה ואיזהו שחולקים לו כבוד הזה
-Am  G  Dm       Am7       D       Dsus4       D
+Am  G  Dm       Am7       D       Dsus4       
 וחולקים עליו שאומרים שאינו ראוי לכבוד הזה.
 Am7       D       Dsus4       D       Am7       Dsus4       D
 אבל מי שבורח מן הכבוד, שממעט בכבוד עצמו ומרבה בכבוד המקום,
 Am7       D       Dsus4       Am7
 אזי הוא זוכה לכבוד אלקים ואז אין בני אדם חוקרים על כבודו
-D
+                  D
 אם הוא ראוי אם לאו, ועליו נאמר: (שם):
 C       G       Dm  G       Am
 "כבוד אלקים הסתר דבר", כי אסור לחקור על הכבוד הזה.] 3x
@@ -98,6 +98,40 @@ Am  B7  Em  Am  B7  Em
   ),
 
   kardunerSong(
+    'leinyan-hitchazkut',
+    'Le\'inyan Hitchazkut (לענין התחזקות)',
+    'Ab',
+    `[לענין התחזקות]
+G       C
+לענין התחזקות
+Am      Em      C       G
+לבל יפל האדם בדעתו מחמת ריבוי הפגמים
+D
+והקלקולים שקלקל על ידי מעשיו,
+Dsus4
+ענה ואמר:
+
+2x [
+G       C
+אם אתה מאמין,
+Em      D
+שיכולין לקלקל,
+Em      B7      Am
+תאמין שיכולין לתקן:
+]
+
+2x [
+G
+אם אתה מאמין,
+G       C
+שיכולין לקלקל,
+Em      B7      Am
+תאמין שיכולין לתקן:
+]`,
+    { capo: 1, versionDescription: 'Likutey Moharan II #112 · Capo 1 · G · Em · Am · B7 · Ab' }
+  ),
+
+  kardunerSong(
     'gesher-tzar-meod',
     'Gesher Tzar Me\'od (גשר צר מאוד)',
     'Fm',
@@ -117,38 +151,36 @@ G       C       G       B7      Em      Am      B7      Em
   ),
 
   kardunerSong(
-    'ana-aba',
-    'Ana Aba (ה\' אבא)',
+    'ho-abba',
+    'Ho Abba (הו אבא)',
     'F#m',
-    `[ה' אבא]
+    `[הו אבא]
 Em              Am              Em
-ה' אבא, הן אבא הן, אנא כפר על חטאתי
+הו אבא, הו אבא, אנא כפר על חטאתנו
 Em              Am              Em
-ה' אבא, הן אבא הן, סלח לי על עוונותיי
+הו אבא, הו אבא, סלח לנו על עוונותינו
 
-Am              Em              Am              Em
-עוונותיי רבים המה, לילה ויום בוכים
-Am              Em              Am              Em
-להתקרב אליך הם מחכים, משמים נשמע קולם
+Em              Am              Em              Am
+מעכשיו אנו מתחיילים להיות יהודים טובים
+Em              Am              Em              Am
+להקשיב לצדיקים שמסרו נפשם עלינו
 
 Em              Am              Em
-ה' אבא, הן אבא הן, אנא האר את דרכי
-Em              Am              Em
-ה' אבא, הן אבא הן, אנא חסד כל עולמים
+הו אבא, הו אבא, אנא הצלח את דרכנו
+Em              Am              Em              Am
+הו אבא, הו אבא, אנא הסר כל מכשולנו
 
-Am              Em              Am              Em
-ועננו אור אבותינו, בתוך הגולה, במהרה בימינו
-Am              Em              Am              Em
+Em              Am              Em              Am
+נעבוד אותך בזריזות, בתמימות ובפשיטות
+Em              Am              Em              Am
 ונשמור על האחדות בקרב חברינו
 
 Em              Am              Em
-ה' אבא, הן אבא הן, אבא השלם אותי
-Am              Em
-ענני
-Em              Am              Em
-ה' אבא, הן אבא הן, אנא שמע את נפשי
+הו אבא, הו אבא, הטה אזנך עננו
+Em              Am              Em              Am
+הו אבא, הו אבא, אנא שמח את נפשנו
 `,
-    { capo: 2, versionDescription: 'Capo 2 · Am · Em · F#m' }
+    { capo: 2, versionDescription: 'Capo 2 · Em · Am · F#m' }
   ),
 
   kardunerSong(
@@ -173,39 +205,36 @@ B7  Em
   ),
 
   kardunerSong(
-    'shir-hamaalot-bm',
-    'Shir HaMa\'alot — Bm (שיר המעלות)',
+    'tzadik-katamar',
+    'Tzadik Katamar (צדיק כתמר)',
     'Bm',
-    `[שיר המעלות]
+    `[צדיק כתמר]
 2x [
-F#m  Bm
-אשא עיני אל ההרים,
-D  G
-מאין יבוא עזרי.
+Bm  F#m
+צדיק כתמר יפרח,
+G  D
+כארז בלבנון ישגה
 A  G
-עזרי מעם ה',
-A  D
-עושה שמים וארץ.
+שתולים בבית ד',
+D  A
+בחצרות אלקינו יפריחו:
+A  G
+עוד ינובון בשיבה,
+D  A
+דשנים ורעננים יהיו:
+A  G
+להגיד כי ישר ד',
+D  A
+צורי ולא עולתה בו:
 ]
 
-A  G
-אל יתן למוט רגלך,
-A  D
-אל ינום שומרך.
-A  G
-הנה לא ינום ולא יישן,
-A  D
-שומר ישראל.
-
 2x [
-F#m  Bm
-ה' ישמרך,
-A  D  G
-ה' צלך על יד ימינך.
-A  D  G  F#m  Bm
-נה נה נה נה נה נה נה נה
+Bm  F#m
+תי ננני נני
+G  D  A
+תי ננני נני
 ]`,
-    { versionDescription: 'Psalms 121 · A · D · G · F#m · Bm' }
+    { versionDescription: 'Psalms 92:13 · Bm · F#m · G · D · A' }
   ),
 
   kardunerSong(
@@ -219,82 +248,87 @@ Am  G  F  E
 Am  G
 ולהתגבר להרחיק העצבות
 F  E
-והדאגה בכל לבב,
+והמרה שחורה בכל כחו,
 Am  G
-וכל הפלאות הבאות על האדם,
+וכל החולאת הבאין על האדם,
 F  E
-כולם באים רק מקלקול השמחה
+כולם באין רק מקלקול השמחה
 ]
 
 ...מצוה גדולה
+
+2x [
 F  C
-נננ נננ ננננ
+תיי ננני ננני
 G  Dm
-ננננ ננ נננ
+תנננ נני ננני
 F  C
-תי נננ נננ
+תי ננני נני
 G
-תי נננננ...
+תי נננני...
 `,
-    { versionDescription: 'Likutey Moharan II #24 · Dm · G · F · Am · E · C' }
+    { versionDescription: 'Likutey Moharan II #24 · E · F · G · Am · C · Dm' }
   ),
 
   kardunerSong(
-    'shir-lamaalot-bbm',
-    'Shir LaMa\'alot — Bbm (שיר למעלות)',
+    'ani-maamin',
+    'Ani Ma\'amin (אני מאמין)',
     'Bbm',
-    `[שיר למעלות]
-Am  Em  F  C
-אשא עיני אל ההרים מאין יבוא עזרי
-Bø  E7  Am  G6
-עזרי מעם ה' עושה שמים וארץ
+    `[אני מאמין]
+C  F  Em  Am
+אני מאמין באמונה שלמה
+G6  Am  E7  Bø
+בביאת המשיח אני מאמין
 
 2x [
-F  G  Em
-אל יתן למוט רגלך אל ינום שומרך
-Am  Am/G  F  G  Am
-הנה לא ינום ולא יישן שומר ישראל.
+Em  G  F
+ואף על פי שיתמהמה
+Am  G  F  Am/G  Am
+עם כל זה, אחכה לו בכל יום שיבוא.
 ]
 
 2x [
-F#m  E  D  A
-ה' שומרך ה' צלך על יד ימינך
-E  Bm  A
-יומם השמש לא יככה וירח בלילה.
+A  D  E  F#m
+...תנני
+A  Bm  E
+...תנני
 ]`,
-    { capo: 1, versionDescription: 'Psalms 121 · Capo 1 · F · G · Em · Am · Bbm' }
+    { capo: 1, versionDescription: 'Thirteen Principles · Capo 1 · Bbm · C · F · Em · Am · G' }
   ),
 
   kardunerSong(
-    'mizmor-letoda-yonatan',
-    'Mizmor LeTodah — Yonatan Razel (מזמור לתודה)',
+    'mekor-chochma',
+    'Mekor Chochma (מקור חכמה)',
     'A',
     `[בית א']
 G  C  D
-הריעו לה' כל הארץ
+הוא רבנו מקור חכמה
 G  C  D
-עבדו את ה' בשמחה
+ואמרתם כה לחי
 Cmaj7  Am7
-באו לפניו ברננה
-Bm7  Em7  Am7  Bm7
-דעו כי ה' הוא אלוהים הוא עשנו ולו אנחנו עמו וצאן מרעיתו
+אדוננו מקור חכמה
+Bm7  Am7  Em7  Bm7
+הוא ראש בני ישראל הוא איש חי
 
 [פזמון]
 Em  Am7  Bm7
-נה נה נה נה נה נה נה 3x
+נחל נובע מקור חכמה 3x
 Em  Am7  Bm7  Em
-נה נה נה נה נה נה נה
+נחל נובע מקור חכמה
 
 [בית ב']
 G  C  D
-באו שעריו בתודה חצרותיו בתהילה
+להתחזק בשמחה כל הזמן
 G  C  D
-הודו לו ברכו שמו
+להתקרב לרבנו רבי נחמן
 Cmaj7  Am7
-כי טוב ה' לעולם חסדו
-Bm7  Em7  Am7  Bm7
-ועד דור ודור אמונתו
+גם כשנפלת אתה קם
+Bm7  Am7  Em7  Bm7
+בזכות הצדיק יסוד עולם
+
+[פזמון]
+נחל נובע...
 `,
-    { capo: 2, versionDescription: 'Psalms 100 · Yonatan Razel arr. · Capo 2 · Em · G · C · D · A' }
+    { capo: 2, versionDescription: 'R\' Yitzchak Breiter · Shir Yedidut · Capo 2 · A · G · C · D · Em' }
   ),
 ]

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   PlayIcon,
@@ -9,6 +9,8 @@ import {
   EllipsisHorizontalIcon,
   TrashIcon,
   ShareIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
@@ -61,15 +63,18 @@ function SortableSongItem({
   onRemove,
   onPlaySong,
   t,
+  dragDisabled = false,
 }: {
   song: Song
   isDragging: boolean
   onRemove: (songId: string) => void
   onPlaySong: (songId: string) => void
   t: (key: string) => string
+  dragDisabled?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: song.id,
+    disabled: dragDisabled,
   })
 
   const style = {
@@ -84,15 +89,17 @@ function SortableSongItem({
       className={cn(isDragging && 'relative z-50 opacity-50')}
     >
       <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
-        <div
-          {...attributes}
-          {...listeners}
-          className="flex shrink-0 cursor-grab touch-none rounded-md p-1 active:cursor-grabbing"
-          style={{ touchAction: 'none' }}
-          aria-label="Reorder"
-        >
-          <Bars3Icon className="h-4 w-4 text-muted-foreground" />
-        </div>
+        {!dragDisabled ? (
+          <div
+            {...attributes}
+            {...listeners}
+            className="flex shrink-0 cursor-grab touch-none rounded-md p-1 active:cursor-grabbing"
+            style={{ touchAction: 'none' }}
+            aria-label="Reorder"
+          >
+            <Bars3Icon className="h-4 w-4 text-muted-foreground" />
+          </div>
+        ) : null}
 
         <SongThumbnail
           songImageUrl={song.songImageUrl}
@@ -169,6 +176,9 @@ export default function PlaylistDetailClient({
   const [shareOpen, setShareOpen] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const [linkCopied, setLinkCopied] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const openShareDialog = useCallback(() => {
     const url =
@@ -200,6 +210,38 @@ export default function PlaylistDetailClient({
   )
 
   const songIds = useMemo(() => songs.map((s) => s.id), [songs])
+
+  const filteredSongs = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return songs
+    return songs.filter(
+      (song) =>
+        song.title.toLowerCase().includes(q) ||
+        (song.author || '').toLowerCase().includes(q)
+    )
+  }, [songs, searchQuery])
+
+  const isFiltering = searchQuery.trim().length > 0
+  const displayedSongs = isFiltering ? filteredSongs : songs
+
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true)
+    window.requestAnimationFrame(() => searchInputRef.current?.focus())
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false)
+    setSearchQuery('')
+    searchInputRef.current?.blur()
+  }, [])
+
+  const toggleSearch = useCallback(() => {
+    if (isSearchOpen) {
+      closeSearch()
+    } else {
+      openSearch()
+    }
+  }, [isSearchOpen, closeSearch, openSearch])
 
   const coverUrl =
     getPlaylistDisplayCoverUrl(playlist) ??
@@ -328,29 +370,83 @@ export default function PlaylistDetailClient({
       </div>
 
       <div className="px-4 pt-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h1
+            className={cn(
+              'min-w-0 text-2xl font-bold tracking-tight text-foreground transition-all duration-200 sm:text-3xl',
+              isSearchOpen
+                ? 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
+                : 'flex-1 truncate'
+            )}
+          >
             {playlist.name}
           </h1>
-          <div className="flex shrink-0 items-center gap-2">
+
+          {!isSearchOpen ? (
             <button
               type="button"
               onClick={openShareDialog}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-11 sm:w-11"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-11 sm:w-11"
               aria-label={t('playlistView.sharePlaylist')}
             >
               <ShareIcon className="h-5 w-5" />
             </button>
+          ) : null}
+
+          <div
+            className={cn(
+              'flex min-w-0 items-center overflow-hidden rounded-full border border-border bg-muted/40 transition-all duration-200',
+              isSearchOpen ? 'min-w-0 flex-1' : 'w-10 shrink-0 border-transparent bg-transparent'
+            )}
+          >
             <button
               type="button"
-              onClick={handleStartPlaylist}
-              disabled={songs.length === 0}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
-              aria-label={t('playlistView.startPlaylist')}
+              onClick={toggleSearch}
+              className={cn(
+                'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+                isSearchOpen && 'text-primary'
+              )}
+              aria-label={isSearchOpen ? t('common.close') : t('common.search')}
             >
-              <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
+              <MagnifyingGlassIcon className="h-5 w-5" />
             </button>
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') closeSearch()
+              }}
+              placeholder={t('songs.search')}
+              tabIndex={isSearchOpen ? 0 : -1}
+              aria-hidden={!isSearchOpen}
+              className={cn(
+                'min-w-0 border-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all duration-200',
+                isSearchOpen ? 'w-full pe-3 opacity-100' : 'w-0 pe-0 opacity-0'
+              )}
+            />
+            {isSearchOpen && searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label={t('common.clear')}
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
+
+          <button
+            type="button"
+            onClick={handleStartPlaylist}
+            disabled={songs.length === 0}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
+            aria-label={t('playlistView.startPlaylist')}
+          >
+            <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
+          </button>
         </div>
 
         {playlist.description ? (
@@ -384,6 +480,32 @@ export default function PlaylistDetailClient({
             {t('playlistView.addSongsToPlaylist')}
           </p>
         </div>
+      ) : isFiltering && displayedSongs.length === 0 ? (
+        <div className="px-4 py-16 text-center sm:px-6">
+          <MagnifyingGlassIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
+          <h3 className="text-base font-medium text-foreground">{t('songs.noResults')}</h3>
+        </div>
+      ) : isFiltering ? (
+        <DndContext sensors={sensors} collisionDetection={closestCenter}>
+          <SortableContext
+            items={displayedSongs.map((song) => song.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="mt-4">
+              {displayedSongs.map((song) => (
+                <SortableSongItem
+                  key={song.id}
+                  song={song}
+                  isDragging={false}
+                  onRemove={handleRemoveSong}
+                  onPlaySong={navigateToSong}
+                  t={t}
+                  dragDisabled
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       ) : (
         <DndContext
           sensors={sensors}
@@ -393,7 +515,7 @@ export default function PlaylistDetailClient({
         >
           <SortableContext items={songIds} strategy={verticalListSortingStrategy}>
             <ul className="mt-4">
-              {songs.map((song) => (
+              {displayedSongs.map((song) => (
                 <SortableSongItem
                   key={song.id}
                   song={song}

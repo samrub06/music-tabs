@@ -3,6 +3,7 @@ import { createSafeServerClient } from '@/lib/supabase/server'
 import PublicPlaylistSongsData from './PublicPlaylistSongsData'
 import {
   PublicPlaylistDetailShell,
+  PublicPlaylistSearchProvider,
   PublicPlaylistSongListSkeleton,
 } from './PublicPlaylistDetailClient'
 import { getCachedPublicPlaylist } from './loadPublicPlaylist'
@@ -43,15 +44,17 @@ export default async function PublicPlaylistDetailPage({
     const playlist = await getCachedPublicPlaylist(playlistId)
 
     return (
-      <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-        <PublicPlaylistDetailShell
-          playlist={playlist}
-          songCount={playlist.songIds.length}
-        />
-        <Suspense fallback={<PublicPlaylistSongListSkeleton />}>
-          <PublicPlaylistSongsData playlist={playlist} userId={user?.id} />
-        </Suspense>
-      </div>
+      <PublicPlaylistSearchProvider playlist={playlist}>
+        <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+          <PublicPlaylistDetailShell
+            playlist={playlist}
+            songCount={playlist.songIds.length}
+          />
+          <Suspense fallback={<PublicPlaylistSongListSkeleton />}>
+            <PublicPlaylistSongsData playlist={playlist} userId={user?.id} />
+          </Suspense>
+        </div>
+      </PublicPlaylistSearchProvider>
     )
   } catch {
     notFound()

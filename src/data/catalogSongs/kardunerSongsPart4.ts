@@ -168,7 +168,7 @@ E7 G D7 Am7 Am Cmaj7
 ...תננני
 2x [
 B7 Am6 Cmaj7 Em Am
-תיניניניי
+תיניניני
 ]`,
     { capo: 2, versionDescription: 'Capo 2 · F#m · Em · Bm · D · Am · Cmaj7' }
   ),
@@ -212,9 +212,9 @@ Dm Bb
 F C7 Gm7 Dm Bb
 מדלות תבצעני מיום ועד לילה
 
-Dm A7 Gm Bb
+Dm  A7  Gm  Bb
 טהר טנוף מעשי, פן יאמרו מכעיסי,
-Dm Bb
+A7  Dm  Bb
 איה נא אלו-ה עושי, הנותן זמירות בלילה.
 Dm Bb Dm Gm Dm
 נחנו בידך כחומר, סלח נא על כל חומר,
@@ -248,7 +248,7 @@ B7 Am G D7
 G D7 G D7
 לחזות בנועם ד' ולבקר בהיכלו
 B7 F#ø G D7
-לחזות בנועם ד' ולבקר בהיכלו או...
+...לחזות בנועם ד' ולבקר בהיכלו או
 `,
     { versionDescription: 'Psalms 27 · G · D7 · Am7 · Em · B7 · Am' }
   ),
@@ -258,20 +258,20 @@ B7 F#ø G D7
     'Mizmor LeTodah (מזמור לתודה)',
     'Am',
     `[מזמור לתודה]
-Am Em Am Em
-מזמור לתודה הריעו לד' כל הארץ:
-Am Em Fmaj7 Em Em
-עבדו את ד' בשמחה בואו לפניו ברננה:
-Dm Em F G
-דעו כי ד' הוא אלוקים הוא עשנו ולו אנחנו
-Dm Em Am Em
-עמו וצאן מרעיתו:
-Am Em Am Em
-בואו שעריו בתודה חצרותיו בתהילה
-Am Em Fmaj7 Em Dm Em
-הודו לו ברכו שמו: כי טוב ד' לעולם חסדו
-F G Dm Em Am
-ועד דור ודור אמונתו:
+Em  Am  Em  Am
+מזמור לתודה הריעו לד' כל הארץ
+Em  Fmaj7  Em  Am
+עבדו את ד' בשמחה באו לפניו ברננה
+G  F  Em  Dm
+דעו כי ד' הוא אלקים הוא עשנו ולו אנחנו
+Em  Am  Em  Dm
+עמו וצאן מרעיתו
+Em  Am  Em  Am
+באו שעריו בתודה חצרותיו בתהילה
+Em  Dm  Em  Fmaj7  Em  Am
+הודו לו ברכו שמו כי טוב ד' לעולם חסדו
+Am  Em  Dm  G  F
+ועד דור ודור אמונתו
 `,
     { versionDescription: 'Psalms 100 · Am · Em · Fmaj7 · Dm · G' }
   ),
@@ -281,15 +281,19 @@ F G Dm Em Am
     'Hayiti Holech Elav (הייתי הולך אליו)',
     'Em',
     `[הייתי הולך אליו]
-2x  Em Bm Am  Em Bm Am  Em Bm Am  Em Bm Am
+2x [
+Em  Bm  Am  Em  Bm  Am
 אילו היה לי רבי כמו שלכם
-2x  Em Bm Am  Em Bm Am  Cmaj7  D6
+]
+2x [
+Em  Bm  Am  Em  Bm  Am  Cmaj7  D6
 הייתי הולך אליו 3x ברגל
+]
 
 2x [
-Em  D G  D7  C
+Em  D  G  D7  C
 ובחזרה הייתי רץ הייתי רץ
-Am  Em
+Em  Am
 לעבוד אותו יתברך כפי מה שקיבלתי מרבי
 ]`,
     { versionDescription: 'Siach Sarfei Kodesh II #112 · Em · Bm · Am · Cmaj7 · D6' }

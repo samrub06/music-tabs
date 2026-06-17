@@ -46,7 +46,6 @@ export const HEBREW_PLAYLISTS: HebrewPlaylistDefinition[] = [
       { searchQuery: 'ניגון הנשמות', authorIncludes: 'חנן' },
       { searchQuery: 'הושיעה', authorIncludes: 'שלומי שבת' },
       { searchQuery: 'באתי לגן', authorIncludes: 'חב' },
-      { catalogTabId: 'curated:ki-leckha-nae' },
       { searchQuery: 'הללויה', authorIncludes: 'משה פרץ' },
       { searchQuery: 'ניגון', titleIncludes: 'ניגון' },
     ],
