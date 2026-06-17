@@ -8,6 +8,7 @@ import { parseTextToStructuredSong } from '../src/utils/songParser'
 import { extractAllChords } from '../src/utils/structuredSong'
 import type { Database } from '../src/types/db'
 import type { NewSongData } from '../src/types'
+import { revalidateSongCache } from './revalidateSongCache'
 
 dotenv.config({ path: '.env.local' })
 
@@ -97,6 +98,7 @@ async function run() {
 
   for (const song of KARDUNER_CATALOG_SONGS) {
     const result = await upsertCatalogSong(supabase, song)
+    await revalidateSongCache(result.id)
     const icon = result.action === 'created' ? '+' : '↻'
     console.log(`${icon} ${result.title} (${result.slug})`)
   }

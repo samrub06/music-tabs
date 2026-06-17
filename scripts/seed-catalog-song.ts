@@ -9,6 +9,7 @@ import { parseTextToStructuredSong } from '../src/utils/songParser'
 import { extractAllChords } from '../src/utils/structuredSong'
 import type { Database } from '../src/types/db'
 import type { NewSongData } from '../src/types'
+import { revalidateSongCache } from './revalidateSongCache'
 
 dotenv.config({ path: '.env.local' })
 
@@ -117,7 +118,8 @@ async function run() {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  await upsertCatalogSong(supabase, song)
+  const songId = await upsertCatalogSong(supabase, song)
+  await revalidateSongCache(songId)
 }
 
 run().catch((error) => {

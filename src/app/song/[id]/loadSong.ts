@@ -4,12 +4,18 @@ import { createPublicCatalogClient, createSafeServerClient } from '@/lib/supabas
 import { songRepo } from '@/lib/services/songRepo'
 import type { Song } from '@/types'
 
+async function fetchPublicCatalogSong(id: string): Promise<Song | null> {
+  const supabase = createPublicCatalogClient()
+  return songRepo(supabase).getSong(id)
+}
+
 function getCachedPublicCatalogSong(id: string): Promise<Song | null> {
+  if (process.env.NODE_ENV === 'development') {
+    return fetchPublicCatalogSong(id)
+  }
+
   return unstable_cache(
-    async () => {
-      const supabase = createPublicCatalogClient()
-      return songRepo(supabase).getSong(id)
-    },
+    async () => fetchPublicCatalogSong(id),
     [`public-song-${id}`],
     { revalidate: 3600, tags: [`song-${id}`] }
   )()
