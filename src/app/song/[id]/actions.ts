@@ -3,6 +3,7 @@
 import { createActionServerClient } from '@/lib/supabase/server'
 import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { songRepo } from '@/lib/services/songRepo'
+import { assertCanDeleteSong, assertCanEditSong } from '@/lib/services/songPermissions'
 import { songService } from '@/lib/services/songService'
 import { toggleSongFavoriteSchema, updateSongSchema } from '@/lib/validation/schemas'
 import type { SongEditData, SongProgressResult } from '@/types'
@@ -119,6 +120,7 @@ export async function toggleSongFavoriteAction(songId: string) {
 export async function updateSongAction(id: string, updates: SongEditData) {
   const validatedUpdates = updateSongSchema.parse(updates)
   const supabase = await createActionServerClient()
+  await assertCanEditSong(supabase, id)
   const repo = songRepo(supabase)
   const normalizedUpdates: SongEditData = {
     ...validatedUpdates,
@@ -146,6 +148,7 @@ export async function updateSongAction(id: string, updates: SongEditData) {
 
 export async function deleteSongAction(id: string) {
   const supabase = await createActionServerClient()
+  await assertCanDeleteSong(supabase, id)
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
   revalidatePath('/songs')

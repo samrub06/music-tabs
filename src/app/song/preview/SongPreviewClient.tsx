@@ -199,6 +199,7 @@ export default function SongPreviewClient({
         onDelete={mockDeleteAction}
         isAuthenticated={!!userId}
         isInLibrary={false}
+        canEdit={false}
         onAddToLibrary={handleAddToLibrary}
       />
     </div>

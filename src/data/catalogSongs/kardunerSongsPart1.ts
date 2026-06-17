@@ -162,43 +162,45 @@ F  G     C
     'Tismach (תשמח)',
     'G',
     `[בית א']
-G6    Am Em7  G6    Fmaj7
+Fmaj7   G6  Em7  Am  G6
 תשמח, אל תראה רק את הרע,
 
-G6    Am Em7G6  Fmaj7 G6 Am  G6       Fmaj7
+Fmaj7   G6  Em7  Am  G6
 תשמח, תראה את הטוב כי גם ברע יש דבר נסתר,
 
-G6  Am   G6 Fmaj7
+Fmaj7   G6  Em7  Am  G6
 חפש ומצא את הטוב.
 
-G6    Am Em7  G6    Fmaj7
+Fmaj7   G6  Em7  Am  G6
 תשמח, אל תראה רק את הרע,
 
-G6    Am    G6  Fmaj7
+Fmaj7   G6  Em7  Am  G6
 תשמח, תראה את הטוב.
 
-G   Am  G6 Fmaj7G6   Am  Em7  G6 Fmaj7
+Fmaj7   G6  Em7  Am  G6 Fmaj7 G6 Am G
 בכל אדם יש דבר נסתר, חפש ומצא את הטוב.
 
 [פזמון]
 2x [
-Am    DmG           C
+Am   Dm    G      C
 תשמח, יש תקוה ידידי. תראה סימנים בדרך
 
-Am    Dm G     C
+Am   Dm    G      C
 תשמח, כי לכל יהודי יש חלק לעולם הבא.
 
 [בית ב']
-G6    Am Em7  G6    Fmaj7
+Fmaj7   G6  Em7  Am  G6
 תשמח, אל תראה רק את הרע.
 
-G6    Am Em7    G6    Fmaj7G6Am  G6   Fmaj7
+Fmaj7   G6  Em7  Am  G6 Fmaj7 G6 Am G
 תשמח, תראה את הטוב וגם בך יש דבר נסתר,
 
-G   Am   G6 Fmaj7
+Fmaj7 G6 Am G
 חפש ומצא את הטוב.
+
+...תשמח
 `,
-    { versionDescription: 'G6 · Am · Em7 · Fmaj7 · Am · Dm · G · C' }
+    { versionDescription: 'G6 · Am · Em7 · Fmaj7 · C · G · Dm' }
   ),
 
   kardunerSong(

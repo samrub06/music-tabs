@@ -36,7 +36,7 @@ interface SongViewerProps {
   contentRef: RefObject<HTMLDivElement>;
   onEditContentChange: (content: string) => void;
   onSave: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
   onChordClick: (chord: string) => void;
   onToggleAutoScroll: () => void;
   onIncreaseFontSize: () => void;
@@ -44,7 +44,7 @@ interface SongViewerProps {
   onResetFontSize: () => void;
   onResetScroll: () => void;
   onCancelEdit: () => void;
-  onToggleEdit: () => void;
+  onToggleEdit?: () => void;
   onCloseChordDiagram: () => void;
   onSetSelectedInstrument: (instrument: 'piano' | 'guitar') => void;
   onSetTransposeValue: (value: number) => void;
@@ -69,8 +69,11 @@ interface SongViewerProps {
   chordNameToIdMap?: Map<string, string>;
   chords?: Chord[];
   isInLibrary?: boolean;
+  isOwnedByUser?: boolean;
+  librarySongId?: string;
   isLiked?: boolean;
   onAddToLibrary?: () => void;
+  isAddingToLibrary?: boolean;
   onToggleFavorite?: () => void;
   isTogglingFavorite?: boolean;
   onFontSizeChange?: (value: number) => void;
@@ -133,8 +136,11 @@ export default function SongViewer({
     chordNameToIdMap = new Map(),
     chords = [],
     isInLibrary,
+    isOwnedByUser,
+    librarySongId,
     isLiked,
     onAddToLibrary,
+    isAddingToLibrary,
     onToggleFavorite,
     isTogglingFavorite,
     onFontSizeChange,
@@ -204,8 +210,10 @@ export default function SongViewer({
               onFontSizeChange={onFontSizeChange}
               onToggleEdit={onToggleEdit}
               isInLibrary={isInLibrary}
+              librarySongId={librarySongId}
               isLiked={isLiked}
               onAddToLibrary={onAddToLibrary}
+              isAddingToLibrary={isAddingToLibrary}
               onToggleFavorite={onToggleFavorite}
               isTogglingFavorite={isTogglingFavorite}
               selectedInstrument={selectedInstrument}

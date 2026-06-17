@@ -81,6 +81,7 @@ export interface StructuredSong {
   bpm?: number;
   allChords?: string[];
   isLiked?: boolean;
+  isPublic?: boolean;
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)

@@ -2,8 +2,6 @@
 
 import { Song } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
-import { useSongCover } from '@/lib/hooks/useSongCover';
-import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
 import {
   MinusIcon,
   PlusIcon,
@@ -48,17 +46,15 @@ export default function SongHeader({
   onNextSong,
   canPrevSong,
   canNextSong,
-  nextSongInfo,
   onToggleToolsBar,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
-  const coverUrl = useSongCover(song);
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
       {/* Single row: back, cover, auto-scroll, tools, prev/next, saved or add */}
       <div
-        className="flex items-center justify-between gap-2 p-2 sm:p-3 md:p-4 w-full min-w-0"
+        className="flex items-center justify-between gap-2 p-2 w-full min-w-0"
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         <Button
@@ -71,21 +67,6 @@ export default function SongHeader({
           <BackArrowIcon className="h-5 w-5" />
         </Button>
 
-        <div className="hidden min-w-0 flex-1 items-center sm:flex">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted">
-            {coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={coverUrl}
-                alt=""
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <SongCoverPlaceholder iconClassName="min-h-5 min-w-5 max-h-6 max-w-6" />
-            )}
-          </div>
-        </div>
-
         {/* Capo: show in header on all breakpoints (including mobile), same height as other buttons (h-10) */}
         {song.capo !== undefined && song.capo !== null && (
           <span className="flex-shrink-0 flex items-center h-10 text-xs font-medium text-muted-foreground bg-muted/60 dark:bg-muted/40 px-2.5 rounded-md" title={t('songHeader.capo')}>
@@ -94,15 +75,12 @@ export default function SongHeader({
         )}
 
         {/* Auto-scroll + song tools — grouped, minimal gap */}
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-1 sm:justify-start">
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
           <div
-            className={cn(
-              'flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30',
-              'sm:flex-initial sm:min-w-[11rem] md:min-w-[13rem]'
-            )}
+            className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30"
             dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <div className="flex min-w-0 flex-1 items-center gap-0.5 px-1.5 py-0.5 sm:gap-1 sm:px-2">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5 px-1.5 py-0.5">
               <Button
                 variant={autoScroll.isActive ? 'default' : 'ghost'}
                 size="icon"
@@ -120,7 +98,7 @@ export default function SongHeader({
                   <PlayIcon className={cn('h-4 w-4', isRtl && '-scale-x-100')} />
                 )}
               </Button>
-              <span className="order-1 hidden min-w-0 truncate whitespace-nowrap px-0.5 text-xs text-muted-foreground sm:inline">
+              <span className="order-1 hidden min-w-0 truncate whitespace-nowrap px-0.5 text-xs text-muted-foreground">
                 {t('songHeader.AUTO_SCROLL_LABEL')}
               </span>
               <span className="order-3 min-w-[2.25rem] shrink-0 text-center text-xs font-semibold tabular-nums">
@@ -171,16 +149,6 @@ export default function SongHeader({
             <Button variant="ghost" size="icon" onClick={onPrevSong} disabled={!canPrevSong} className="h-10 w-10" aria-label={t('common.back')}>
               <BackArrowIcon className="h-5 w-5" />
             </Button>
-            {nextSongInfo && canNextSong && (
-              <div
-                className="hidden min-w-0 max-w-[7rem] flex-col md:flex text-start"
-                dir={isRtl ? 'rtl' : 'ltr'}
-              >
-                <span className="truncate text-xs font-medium text-foreground">
-                  {nextSongInfo.title}
-                </span>
-              </div>
-            )}
             <Button
               variant="default"
               onClick={onNextSong}

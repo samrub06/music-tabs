@@ -43,6 +43,7 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     bpm: dbSong.bpm || undefined,
     allChords: dbSong.all_chords || undefined,
     isLiked: dbSong.is_liked ?? false,
+    isPublic: dbSong.is_public ?? false,
   } as Song
 }
 

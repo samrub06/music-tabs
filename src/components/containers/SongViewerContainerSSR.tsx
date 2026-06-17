@@ -26,7 +26,7 @@ import { xpLog } from '@/utils/xpLog';
 import { triggerXpConfetti } from '@/utils/triggerXpConfetti';
 import { mountXpCelebration } from '@/utils/mountXpCelebration';
 import type { SongProgressResult } from '@/types';
-import { updateSongFolderAction } from '@/app/(protected)/dashboard/actions';
+import { updateSongFolderAction, cloneSongAction } from '@/app/(protected)/dashboard/actions';
 import { useLanguage } from '@/context/LanguageContext';
 import { useFoldersContext } from '@/context/FoldersContext';
 
@@ -38,6 +38,9 @@ interface SongViewerContainerSSRProps {
   onDelete: (id: string) => Promise<void>;
   isAuthenticated?: boolean;
   isInLibrary?: boolean;
+  isOwnedByUser?: boolean;
+  librarySongId?: string;
+  canEdit?: boolean;
   onAddToLibrary?: () => void;
   initialInstrument?: 'piano' | 'guitar';
 }
@@ -48,6 +51,9 @@ export default function SongViewerContainerSSR({
   onDelete,
   isAuthenticated = false,
   isInLibrary = true,
+  isOwnedByUser = true,
+  librarySongId,
+  canEdit = true,
   onAddToLibrary,
   initialInstrument,
 }: SongViewerContainerSSRProps) {
@@ -98,22 +104,45 @@ export default function SongViewerContainerSSR({
     setCurrentFolderId(song.folderId);
   }, [song.id, song.folderId]);
 
+  const librarySongIdForActions = librarySongId ?? song.id;
+
   const handleFolderChange = async (folderId: string | undefined) => {
-    if (!isInLibrary) return;
-    await updateSongFolderAction(song.id, folderId);
+    if (!isOwnedByUser && !librarySongId) return;
+    await updateSongFolderAction(librarySongIdForActions, folderId);
     setCurrentFolderId(folderId);
   };
 
   const handleToggleFavorite = async () => {
-    if (!isInLibrary) return;
+    if (!isOwnedByUser && !librarySongId) return;
     setIsTogglingFavorite(true);
     try {
-      const { isLiked: next } = await toggleSongFavoriteAction(song.id);
+      const { isLiked: next } = await toggleSongFavoriteAction(librarySongIdForActions);
       setIsLiked(next);
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
     } finally {
       setIsTogglingFavorite(false);
+    }
+  };
+
+  const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
+
+  const handleAddToLibrary = async () => {
+    if (onAddToLibrary) {
+      onAddToLibrary();
+      return;
+    }
+    if (!isAuthenticated || isInLibrary) return;
+
+    setIsAddingToLibrary(true);
+    try {
+      const created = await cloneSongAction(song.id);
+      router.push(`/song/${created.id}`);
+    } catch (error) {
+      console.error('Failed to add song to library:', error);
+      alert(t('errors.failedToSave'));
+    } finally {
+      setIsAddingToLibrary(false);
     }
   };
 
@@ -567,7 +596,7 @@ export default function SongViewerContainerSSR({
     contentRef,
     onEditContentChange: setEditContent,
     onSave: handleSave,
-    onDelete: handleDelete,
+    onDelete: canEdit ? handleDelete : undefined,
     onChordClick: handleChordClick,
     onToggleAutoScroll: handleToggleAutoScroll,
     onIncreaseFontSize: increaseFontSize,
@@ -575,7 +604,7 @@ export default function SongViewerContainerSSR({
     onResetFontSize: resetFontSize,
     onResetScroll: resetScroll,
     onCancelEdit: handleCancelEdit,
-    onToggleEdit: handleToggleEdit,
+    onToggleEdit: canEdit ? handleToggleEdit : undefined,
     onCloseChordDiagram: handleCloseChordDiagram,
     onSetSelectedInstrument: setSelectedInstrument,
     onSetTransposeValue: handleSetTransposeValue,
@@ -598,8 +627,11 @@ export default function SongViewerContainerSSR({
     chordNameToIdMap,
     chords,
     isInLibrary,
+    isOwnedByUser,
+    librarySongId,
     isLiked,
-    onAddToLibrary,
+    onAddToLibrary: isInLibrary ? undefined : handleAddToLibrary,
+    isAddingToLibrary,
     onToggleFavorite: handleToggleFavorite,
     isTogglingFavorite,
     onFontSizeChange: setFontSize,
@@ -607,9 +639,9 @@ export default function SongViewerContainerSSR({
     setBottomBarHeight,
     onToggleToolsBar: () =>
       setBottomBarHeight((prev) => (prev > 0 ? 0 : getDefaultToolsBarHeight())),
-    folders: isInLibrary ? folders : [],
+    folders: isOwnedByUser || librarySongId ? folders : [],
     currentFolderId,
-    onFolderChange: isInLibrary ? handleFolderChange : undefined,
+    onFolderChange: isOwnedByUser || librarySongId ? handleFolderChange : undefined,
   };
 
   return (

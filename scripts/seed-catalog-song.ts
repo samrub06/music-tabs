@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
+import { KARDUNER_SONGS_PART1 } from '../src/data/catalogSongs/kardunerSongsPart1'
 import { SHIR_LAMAALOT_CATALOG_SONG } from '../src/data/catalogSongs/shirLamaalot'
 import { YAARAT_DVASH_CATALOG_SONG } from '../src/data/catalogSongs/yaaratDvash'
 import { FEATURED_CATALOG_SONG } from '../src/data/featuredCatalogSong'
@@ -11,6 +12,8 @@ import type { NewSongData } from '../src/types'
 
 dotenv.config({ path: '.env.local' })
 
+const TISMACH_CATALOG_SONG = KARDUNER_SONGS_PART1.find((song) => song.slug === 'tismach')
+
 const CATALOG_SONGS: Record<
   string,
   NewSongData & { slug: string; genre: string; difficulty: string; decade: number }
@@ -18,6 +21,7 @@ const CATALOG_SONGS: Record<
   'ki-leckha-nae': FEATURED_CATALOG_SONG,
   'yaarat-dvash': YAARAT_DVASH_CATALOG_SONG,
   'shir-lamaalot': SHIR_LAMAALOT_CATALOG_SONG,
+  ...(TISMACH_CATALOG_SONG ? { tismach: TISMACH_CATALOG_SONG } : {}),
 }
 
 async function upsertCatalogSong(

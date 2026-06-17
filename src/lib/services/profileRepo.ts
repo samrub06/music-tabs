@@ -66,6 +66,16 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     return (data as { spotify_id?: string | null } | null)?.spotify_id ?? null
   },
 
+  async isAdmin(userId: string): Promise<boolean> {
+    const { data, error } = await (client.from('profiles') as any)
+      .select('is_admin')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    return Boolean((data as { is_admin?: boolean | null } | null)?.is_admin)
+  },
+
   async getProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await client
       .from('profiles')

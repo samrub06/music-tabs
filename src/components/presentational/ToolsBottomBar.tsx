@@ -51,8 +51,8 @@ interface ToolsBottomBarProps {
   onDecreaseFontSize: () => void;
   onResetFontSize: () => void;
   onToggleEasyChordMode: () => void;
-  onToggleEdit: () => void;
-  onDelete: () => void;
+  onToggleEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export default function ToolsBottomBar({
@@ -279,14 +279,20 @@ export default function ToolsBottomBar({
           </Button>
         </div>
 
-        <div className="flex gap-2.5 pt-0.5">
-          <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
-            <PencilIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.edit')}
-          </Button>
-          <Button variant="destructive" size="sm" onClick={onDelete} className="h-10 rounded-xl font-medium px-4">
-            <TrashIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.delete')}
-          </Button>
-        </div>
+        {(onToggleEdit || onDelete) && (
+          <div className="flex gap-2.5 pt-0.5">
+            {onToggleEdit && (
+              <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
+                <PencilIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.edit')}
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="destructive" size="sm" onClick={onDelete} className="h-10 rounded-xl font-medium px-4">
+                <TrashIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.delete')}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

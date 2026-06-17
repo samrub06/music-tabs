@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache'
 import type { NewSongData, SongEditData, Folder } from '@/types'
 import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
+import { assertCanDeleteSong, assertCanEditSong } from '@/lib/services/songPermissions'
 import { renderStructuredSong } from '@/utils/structuredSong'
 import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
 import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
@@ -84,6 +85,7 @@ export async function addSongAction(payload: NewSongData) {
 export async function updateSongAction(id: string, updates: SongEditData) {
   const validatedUpdates = updateSongSchema.parse(updates)
   const supabase = await createActionServerClient()
+  await assertCanEditSong(supabase, id)
   const repo = songRepo(supabase)
   const normalizedUpdates: SongEditData = {
     ...validatedUpdates,
@@ -158,6 +160,7 @@ export async function deleteAllSongsAction() {
 
 export async function deleteSongAction(id: string) {
   const supabase = await createActionServerClient()
+  await assertCanDeleteSong(supabase, id)
   const repo = songRepo(supabase)
   await repo.deleteSong(id)
   revalidatePath('/songs')

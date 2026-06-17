@@ -4,6 +4,9 @@ import { profileRepo } from '@/lib/services/profileRepo'
 import SongViewerContainerSSR from '@/components/containers/SongViewerContainerSSR'
 import { updateSongAction, deleteSongAction } from './actions'
 import { getCachedSong } from './loadSong'
+import { songRepo } from '@/lib/services/songRepo'
+import { findUserSongMatch } from '@/lib/utils/songLibraryMatch'
+import { canEditSong } from '@/lib/utils/songEditPermissions'
 
 interface SongPageDataProps {
   songId: string
@@ -28,7 +31,17 @@ export default async function SongPageData({ songId }: SongPageDataProps) {
     redirect('/')
   }
 
-  const isInLibrary = user ? song.userId === user.id : false
+  const isOwnedByUser = user ? song.userId === user.id : false
+  let librarySongId: string | undefined
+
+  if (user && !isOwnedByUser) {
+    const userSongs = await songRepo(supabase).getAllSongsLightweight()
+    librarySongId = findUserSongMatch(song, userSongs)?.id
+  }
+
+  const isAdmin = user ? await profileRepo(supabase).isAdmin(user.id) : false
+  const canEdit = canEditSong(song, { userId: user?.id, isAdmin })
+  const isInLibrary = isOwnedByUser || Boolean(librarySongId)
   const initialInstrument = preferredInstrument === 'guitar' ? 'guitar' : 'piano'
 
   return (
@@ -38,6 +51,9 @@ export default async function SongPageData({ songId }: SongPageDataProps) {
       onDelete={deleteSongAction}
       isAuthenticated={!!user}
       isInLibrary={isInLibrary}
+      isOwnedByUser={isOwnedByUser}
+      librarySongId={librarySongId}
+      canEdit={canEdit}
       initialInstrument={initialInstrument}
     />
   )
