@@ -20,6 +20,7 @@ import { SongBulkActions } from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
 import SongTableEmptyState from './song-table/SongTableEmptyState';
 import MoveToFolderModal from './MoveToFolderModal';
+import MoveToPlaylistModal from './MoveToPlaylistModal';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import Snackbar from './Snackbar';
 import { addFolderAction } from '@/app/(protected)/dashboard/actions';
@@ -51,6 +52,16 @@ interface SongTableProps {
   onToggleSelectMode?: () => void;
   totalMatchingCount?: number;
   selectionFilters?: SelectableSongIdsInput;
+  onMoveToPlaylist?: () => void;
+  onBulkRemoveFromPlaylist?: () => void;
+  showPlaylistBulkActions?: boolean;
+  playlistsForMove?: Playlist[];
+  onBulkMoveToPlaylist?: (
+    playlistId: string,
+    songIds: string[],
+    removeFromSource: boolean
+  ) => Promise<void>;
+  onBulkRemoveFromPlaylistAction?: (songIds: string[]) => Promise<void>;
 }
 
 export default function SongTable({
@@ -73,6 +84,12 @@ export default function SongTable({
   onToggleSelectMode: externalOnToggleSelectMode,
   totalMatchingCount,
   selectionFilters,
+  onMoveToPlaylist,
+  onBulkRemoveFromPlaylist,
+  showPlaylistBulkActions = false,
+  playlistsForMove = [],
+  onBulkMoveToPlaylist,
+  onBulkRemoveFromPlaylistAction,
 }: SongTableProps) {
   const { t } = useLanguage();
   
@@ -89,6 +106,7 @@ export default function SongTable({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
+  const [showMovePlaylistModal, setShowMovePlaylistModal] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [expandedCoverSongId, setExpandedCoverSongId] = useState<string | null>(null);
@@ -356,6 +374,28 @@ export default function SongTable({
     setDeleteType(null);
   };
 
+  const handleBulkRemoveFromPlaylist = async () => {
+    if (!onBulkRemoveFromPlaylistAction || selectedSongs.size === 0) return;
+    try {
+      await onBulkRemoveFromPlaylistAction(Array.from(selectedSongs));
+      setSelectedSongs(new Set());
+      setSuccessMessage(t('admin.removeFromPlaylist'));
+      router.refresh();
+    } catch (error) {
+      console.error('Error removing from playlist:', error);
+      alert(t('songs.moveError'));
+    }
+  };
+
+  const handleBulkMoveToPlaylist = async (playlistId: string, removeFromSource: boolean) => {
+    if (!onBulkMoveToPlaylist) return;
+    const songIds = Array.from(selectedSongs);
+    await onBulkMoveToPlaylist(playlistId, songIds, removeFromSource);
+    setSelectedSongs(new Set());
+    setSuccessMessage(t('songs.songsMoved').replace('{count}', String(songIds.length)));
+    router.refresh();
+  };
+
   // Clear selected songs when select mode is turned off
   useEffect(() => {
     if (!isSelectMode) {
@@ -397,8 +437,18 @@ export default function SongTable({
                   onCancelSelection={() => setSelectedSongs(new Set())}
                   onDeleteSelected={() => handleBulkDelete('selected')}
                   onDeleteAll={() => handleBulkDelete('all')}
-                  onMoveToFolder={() => setShowMoveModal(true)}
-                  onCreatePlaylist={() => setShowPlaylistModal(true)}
+                  onMoveToFolder={showPlaylistBulkActions ? undefined : () => setShowMoveModal(true)}
+                  onMoveToPlaylist={
+                    showPlaylistBulkActions
+                      ? () => setShowMovePlaylistModal(true)
+                      : onMoveToPlaylist
+                  }
+                  onBulkRemoveFromPlaylist={
+                    showPlaylistBulkActions && onBulkRemoveFromPlaylistAction
+                      ? () => void handleBulkRemoveFromPlaylist()
+                      : onBulkRemoveFromPlaylist
+                  }
+                  onCreatePlaylist={showPlaylistBulkActions ? undefined : () => setShowPlaylistModal(true)}
                   t={t}
                 />
               </div>
@@ -499,6 +549,17 @@ export default function SongTable({
         onCreateFolderAndMove={handleBulkCreateFolderAndMove}
         songCount={selectedSongs.size}
       />
+
+      {onBulkMoveToPlaylist && (
+        <MoveToPlaylistModal
+          isOpen={showMovePlaylistModal}
+          onClose={() => setShowMovePlaylistModal(false)}
+          playlists={playlistsForMove}
+          onMove={handleBulkMoveToPlaylist}
+          songCount={selectedSongs.size}
+          currentPlaylistId={currentPlaylistId}
+        />
+      )}
 
       <CreatePlaylistModal
         isOpen={showPlaylistModal}

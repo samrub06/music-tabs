@@ -25,13 +25,15 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/explore/') ||
     pathname.startsWith('/library/')
 
+  const requiresAuth = !isPublicRoute
+
   useEffect(() => {
     if (authLoading) return
-    if (pathname === '/' || isPublicRoute) return
+    if (!requiresAuth) return
     if (!user) {
       router.push('/')
     }
-  }, [user, authLoading, pathname, isPublicRoute, router])
+  }, [user, authLoading, pathname, requiresAuth, router])
 
   useEffect(() => {
     if (!user || authLoading) return
@@ -61,6 +63,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     }
     if (path === '/profile' || path.startsWith('/profile/')) return undefined
     if (path === '/leaderboard' || path.startsWith('/leaderboard/')) return t('navigation.leaderboard')
+    if (path.startsWith('/admin')) return t('navigation.admin')
     return undefined
   }
 

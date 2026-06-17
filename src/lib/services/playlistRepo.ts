@@ -148,7 +148,6 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     }))
   },
 
-  // Public playlists for Library (no auth required, RLS filters)
   async getPublicPlaylistsLightweight(): Promise<Array<{ id: string; name: string; imageUrl?: string; songCount: number; createdAt: Date; curatedSlug?: string; displayOrder: number }>> {
     const { data, error } = await client
       .from('playlists')
@@ -193,6 +192,42 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     if (error || !data) throw new Error('Playlist not found')
 
     return mapDbPlaylistToDomain(data as Database['public']['Tables']['playlists']['Row'] & { image_url?: string | null; is_public?: boolean })
-  }
+  },
+
+  async getPublicPlaylistsForAdmin(): Promise<Playlist[]> {
+    const { data, error } = await client
+      .from('playlists')
+      .select('id, name, description, created_at, updated_at, song_ids, image_url, is_public, curated_slug')
+      .eq('is_public', true)
+      .not('curated_slug', 'is', null)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return (data || []).map((row) =>
+      mapDbPlaylistToDomain(row as Database['public']['Tables']['playlists']['Row'])
+    )
+  },
+
+  async updatePublicPlaylist(
+    id: string,
+    updates: { songIds?: string[]; name?: string; description?: string }
+  ): Promise<Playlist> {
+    const updateData: Database['public']['Tables']['playlists']['Update'] = {
+      updated_at: new Date().toISOString(),
+    }
+    if (updates.name !== undefined) updateData.name = updates.name
+    if (updates.description !== undefined) updateData.description = updates.description
+    if (updates.songIds !== undefined) updateData.song_ids = updates.songIds
+
+    const { data, error } = await (client.from('playlists') as any)
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    return mapDbPlaylistToDomain(data)
+  },
 })
 

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
   Home,
   Library,
@@ -9,6 +10,7 @@ import {
   FolderOpen,
   Music,
   Trophy,
+  ShieldCheck,
 } from 'lucide-react'
 import { AppLogo } from '@/components/AppLogo'
 import { useLanguage } from '@/context/LanguageContext'
@@ -24,6 +26,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
+import { getIsAdminAction } from '@/app/(protected)/admin/actions'
 
 const MAIN_NAV = [
   { href: '/', labelKey: 'navigation.home', icon: Home, match: (p: string) => p === '/' || p === '/search' || p.startsWith('/search/') },
@@ -40,6 +43,13 @@ const SECONDARY_NAV = [
 export function AppSidebar() {
   const pathname = usePathname()
   const { t, isRtl } = useLanguage()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    getIsAdminAction()
+      .then(setIsAdmin)
+      .catch(() => setIsAdmin(false))
+  }, [])
 
   return (
     <Sidebar collapsible="icon" side={isRtl ? 'right' : 'left'}>
@@ -99,6 +109,20 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith('/admin')}
+                    tooltip={t('navigation.admin')}
+                  >
+                    <Link href="/admin/songs" prefetch>
+                      <ShieldCheck />
+                      <span>{t('navigation.admin')}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

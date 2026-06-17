@@ -52,6 +52,7 @@
     "chords": "אקורדים",
     "profile": "פרופיל",
     "leaderboard": "לוח תוצאות",
+    "admin": "ניהול",
     "more": "עוד",
     "MENU": "תפריט"
   },
@@ -708,5 +709,28 @@
     "nextInList": "הבא ברשימה שלך",
     "sameArtist": "עוד מ-{artist}",
     "sameGenre": "עוד ב-{genre}"
+  },
+  "admin": {
+    "title": "ניהול",
+    "songsTitle": "שירי קטלוג",
+    "usersTitle": "משתמשים",
+    "filterArtist": "אמן",
+    "filterPlaylist": "פלייליסט",
+    "allArtists": "כל האמנים",
+    "allPlaylists": "כל הפלייליסטים",
+    "clearFilters": "נקה מסננים",
+    "addSong": "הוסף שיר לקטלוג",
+    "moveToPlaylist": "העבר לפלייליסט",
+    "removeFromPlaylist": "הסר מהפלייליסט",
+    "moveSongsTitle": "העבר {count} שירים לפלייליסט",
+    "selectDestinationPlaylist": "בחר פלייליסט יעד",
+    "removeFromCurrentPlaylist": "הסר מהפלייליסט הנוכחי",
+    "importTab": "ייבוא",
+    "manualTab": "הזנה ידנית",
+    "searchCatalog": "חפש ב-Tab4U / Ultimate Guitar",
+    "userSongs": "שירי משתמש",
+    "songCount": "{count} שירים",
+    "viewSongs": "צפה בשירים",
+    "noUsers": "לא נמצאו משתמשים"
   }
 }

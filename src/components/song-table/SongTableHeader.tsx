@@ -3,6 +3,7 @@
 import {
   EllipsisHorizontalIcon,
   FolderIcon,
+  QueueListIcon,
   TrashIcon,
   XMarkIcon,
   SparklesIcon,
@@ -102,6 +103,8 @@ export function SongBulkActions({
   onDeleteSelected,
   onDeleteAll,
   onMoveToFolder,
+  onMoveToPlaylist,
+  onBulkRemoveFromPlaylist,
   onCreatePlaylist,
   t,
 }: {
@@ -110,11 +113,26 @@ export function SongBulkActions({
   onDeleteSelected: () => void
   onDeleteAll: () => void
   onMoveToFolder?: () => void
+  onMoveToPlaylist?: () => void
+  onBulkRemoveFromPlaylist?: () => void
   onCreatePlaylist?: () => void
   t: (key: string) => string
 }) {
   return (
     <div className="flex shrink-0 items-center gap-2">
+      {onMoveToPlaylist && (
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={onMoveToPlaylist}
+          className="h-8 w-8"
+          aria-label={t('admin.moveToPlaylist')}
+          title={t('admin.moveToPlaylist')}
+        >
+          <QueueListIcon className="h-4 w-4" />
+        </Button>
+      )}
       {onMoveToFolder && (
         <Button
           type="button"
@@ -145,6 +163,12 @@ export function SongBulkActions({
             <DropdownMenuItem onClick={onCreatePlaylist}>
               <SparklesIcon className="h-4 w-4" />
               {t('songs.createPlaylist')}
+            </DropdownMenuItem>
+          )}
+          {onBulkRemoveFromPlaylist && (
+            <DropdownMenuItem onClick={onBulkRemoveFromPlaylist}>
+              <QueueListIcon className="h-4 w-4" />
+              {t('admin.removeFromPlaylist')}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem

@@ -121,5 +121,57 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     }
 
     return mapDbProfileToDomain(data)
-  }
+  },
+
+  async listProfilesForAdmin(options: {
+    search?: string
+    page: number
+    limit: number
+  }): Promise<{
+    profiles: Array<Profile & { songCount: number }>
+    total: number
+  }> {
+    const { search, page, limit } = options
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    let builder = (client.from('profiles') as any)
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, created_at, updated_at', {
+        count: 'exact',
+      })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (search?.trim()) {
+      const term = `%${search.trim()}%`
+      builder = builder.or(`email.ilike.${term},full_name.ilike.${term}`)
+    }
+
+    const { data, error, count } = await builder
+    if (error) throw error
+
+    const rows = (data || []) as Database['public']['Tables']['profiles']['Row'][]
+    const userIds = rows.map((r) => r.id)
+
+    const songCounts = new Map<string, number>()
+    if (userIds.length > 0) {
+      const { data: songsData, error: songsError } = await (client.from('songs') as any)
+        .select('user_id')
+        .in('user_id', userIds)
+
+      if (songsError) throw songsError
+      for (const row of songsData || []) {
+        const uid = row.user_id as string
+        songCounts.set(uid, (songCounts.get(uid) ?? 0) + 1)
+      }
+    }
+
+    return {
+      profiles: rows.map((row) => ({
+        ...mapDbProfileToDomain(row),
+        songCount: songCounts.get(row.id) ?? 0,
+      })),
+      total: count ?? 0,
+    }
+  },
 })

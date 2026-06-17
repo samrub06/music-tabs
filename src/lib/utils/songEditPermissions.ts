@@ -12,7 +12,7 @@ export function canEditSong(
 ): boolean {
   if (!options.userId) return false
   if (song.userId === options.userId) return true
-  if (options.isAdmin && isCatalogSong(song)) return true
+  if (options.isAdmin) return true
   return false
 }
 

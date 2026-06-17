@@ -52,6 +52,7 @@
     "chords": "Chords",
     "profile": "Profile",
     "leaderboard": "Leaderboard",
+    "admin": "Admin",
     "more": "More",
     "MENU": "Menu"
   },
@@ -708,5 +709,28 @@
     "nextInList": "Next in your list",
     "sameArtist": "More by {artist}",
     "sameGenre": "More in {genre}"
+  },
+  "admin": {
+    "title": "Admin",
+    "songsTitle": "Catalog songs",
+    "usersTitle": "Users",
+    "filterArtist": "Artist",
+    "filterPlaylist": "Playlist",
+    "allArtists": "All artists",
+    "allPlaylists": "All playlists",
+    "clearFilters": "Clear filters",
+    "addSong": "Add catalog song",
+    "moveToPlaylist": "Move to playlist",
+    "removeFromPlaylist": "Remove from playlist",
+    "moveSongsTitle": "Move {count} song(s) to playlist",
+    "selectDestinationPlaylist": "Select destination playlist",
+    "removeFromCurrentPlaylist": "Remove from current playlist",
+    "importTab": "Import",
+    "manualTab": "Manual entry",
+    "searchCatalog": "Search Tab4U / Ultimate Guitar",
+    "userSongs": "User songs",
+    "songCount": "{count} songs",
+    "viewSongs": "View songs",
+    "noUsers": "No users found"
   }
 }

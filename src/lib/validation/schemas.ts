@@ -68,6 +68,43 @@ export const selectableSongIdsSchema = z.object({
   scopeFolderId: z.string().uuid().optional(),
 })
 
+export const adminSongListQuerySchema = z.object({
+  author: z.string().optional(),
+  playlist: z.string().uuid().optional(),
+  q: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+})
+
+export const adminBulkPlaylistMutationSchema = z.object({
+  playlistId: z.string().uuid(),
+  songIds: z.array(z.string().uuid()).min(1),
+})
+
+export const adminBulkMovePlaylistSchema = z.object({
+  toPlaylistId: z.string().uuid(),
+  songIds: z.array(z.string().uuid()).min(1),
+  fromPlaylistId: z.string().uuid().optional(),
+  removeFromSource: z.boolean().optional(),
+})
+
+export const adminUserListQuerySchema = z.object({
+  search: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+})
+
+export const adminDeleteSongsSchema = z.object({
+  songIds: z.array(z.string().uuid()).min(1),
+})
+
+export const adminUserSongsQuerySchema = z.object({
+  author: z.string().optional(),
+  q: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+})
+
 export type SelectableSongIdsInput = z.infer<typeof selectableSongIdsSchema>
 
 export type CreateFolderInput = z.infer<typeof createFolderSchema>

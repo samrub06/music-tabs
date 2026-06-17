@@ -327,25 +327,25 @@ E Dm F E F E E Fmaj7 G Am
     'Lev Nishbar (לב נשבר)',
     'C#m',
     `[לב נשבר]
-Dm  Am  F  Gm
-תיי נניי
-Bb  F  Gm  Dm
+Gm  F  Am  Dm
+תיי נני
+Dm  Gm  F  Bb
 אוי נני....
 
 2x [
-Dm  Gm
+Gm  Dm
 חזקו ויאמץ לבבכם
-Gm  C  Dm
-כל המיחלים להשם:
+Dm  C  Gm
+כל המיחלים להשם
 ]
-Bb  F  Gm  Dm
+Dm  Gm  F  Bb
 לב נשבר ונדכה
-Gm  Am  Dm  C6
-אלוקים לא תבזה:
-Bb  F  Gm
+C6  Dm  Am  Gm
+אלוקים לא תבזה
+Gm  F  Bb
 לב נשבר ונדכה
-Eø  Am  Dm
-אלוקים לא תבזה:
+Dm  Am  Eø
+אלוקים לא תבזה
 `,
     { versionDescription: 'Psalms 31 & 51 · C#m · Dm · Gm · F · Bb · Am' }
   ),

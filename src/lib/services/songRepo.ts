@@ -925,5 +925,131 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       artistImageUrl: data.artist_image_url || undefined,
       userId: data.user_id || undefined,
     }
-  }
+  },
+
+  async getDistinctCatalogAuthors(limit: number = 200): Promise<string[]> {
+    const { data, error } = await (client.from('songs') as any)
+      .select('author')
+      .or('is_public.eq.true,user_id.is.null')
+      .order('author', { ascending: true })
+      .limit(2000)
+
+    if (error) throw error
+
+    const seen = new Set<string>()
+    const authors: string[] = []
+    for (const row of data || []) {
+      const author = (row.author as string | null)?.trim()
+      if (!author) continue
+      const key = author.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      authors.push(author)
+      if (authors.length >= limit) break
+    }
+    return authors
+  },
+
+  async listAdminCatalogSongs(options: {
+    author?: string
+    playlistId?: string
+    q?: string
+    page: number
+    limit: number
+  }): Promise<{ songs: Song[]; total: number }> {
+    const { author, playlistId, q, page, limit } = options
+
+    if (playlistId) {
+      const { data: playlistRow, error: playlistError } = await (client.from('playlists') as any)
+        .select('song_ids')
+        .eq('id', playlistId)
+        .eq('is_public', true)
+        .single()
+
+      if (playlistError || !playlistRow) {
+        return { songs: [], total: 0 }
+      }
+
+      const orderedIds = (playlistRow.song_ids as string[] | null) || []
+      if (orderedIds.length === 0) {
+        return { songs: [], total: 0 }
+      }
+
+      let songs = await this.getSongsByIdsForPublicPlaylist(orderedIds)
+
+      if (author?.trim()) {
+        const needle = author.trim().toLowerCase()
+        songs = songs.filter((s) => s.author.toLowerCase().includes(needle))
+      }
+      if (q?.trim()) {
+        const needle = q.trim().toLowerCase()
+        songs = songs.filter(
+          (s) =>
+            s.title.toLowerCase().includes(needle) ||
+            s.author.toLowerCase().includes(needle)
+        )
+      }
+
+      const total = songs.length
+      const start = (page - 1) * limit
+      return { songs: songs.slice(start, start + limit), total }
+    }
+
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    let builder = (client.from('songs') as any)
+      .select(LIGHTWEIGHT_LIST_COLUMNS, { count: 'exact' })
+      .or('is_public.eq.true,user_id.is.null')
+
+    if (author?.trim()) {
+      builder = builder.ilike('author', `%${author.trim()}%`)
+    }
+    if (q?.trim()) {
+      const term = q.trim()
+      builder = builder.or(`title.ilike.%${term}%,author.ilike.%${term}%`)
+    }
+
+    builder = builder.order('title', { ascending: true }).range(from, to)
+
+    const { data, error, count } = await builder
+    if (error) throw error
+
+    return {
+      songs: (data || []).map(mapDbSongToList),
+      total: count ?? 0,
+    }
+  },
+
+  async getSongsByUserIdForAdmin(
+    userId: string,
+    options: { author?: string; q?: string; page?: number; limit?: number } = {}
+  ): Promise<{ songs: Song[]; total: number }> {
+    const page = options.page ?? 1
+    const limit = options.limit ?? 50
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    let builder = (client.from('songs') as any)
+      .select(LIGHTWEIGHT_LIST_COLUMNS, { count: 'exact' })
+      .eq('user_id', userId)
+
+    if (options.author?.trim()) {
+      builder = builder.ilike('author', `%${options.author.trim()}%`)
+    }
+    if (options.q?.trim()) {
+      const term = options.q.trim()
+      builder = builder.or(`title.ilike.%${term}%,author.ilike.%${term}%`)
+    }
+
+    builder = builder.order('updated_at', { ascending: false }).range(from, to)
+
+    const { data, error, count } = await builder
+    if (error) throw error
+
+    return {
+      songs: (data || []).map(mapDbSongToList),
+      total: count ?? 0,
+    }
+  },
 })
