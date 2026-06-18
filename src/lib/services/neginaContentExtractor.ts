@@ -1,4 +1,5 @@
-import type { Cheerio, CheerioAPI, Element } from 'cheerio'
+import type { Cheerio, CheerioAPI } from 'cheerio'
+import type { Element } from 'domhandler'
 
 /** Map Negina Hebrew section labels → bracket names (UG-compatible). */
 const SECTION_HEADER_MAP: Record<string, string> = {
