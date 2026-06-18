@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { Song, Playlist } from '@/types'
 import { useFoldersContext } from '@/context/FoldersContext'
-import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '../dashboard/actions'
+import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '../dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAddSongModal } from '@/context/AddSongModalContext'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -615,7 +615,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   setCurrentFolder(folderId)
                   handleFolderChange(folderId || undefined)
                 }}
-                onUpdateSong={updateSongAction}
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSortChange={handleSortChange}

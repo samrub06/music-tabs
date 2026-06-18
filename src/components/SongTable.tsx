@@ -15,7 +15,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import EditSongForm from './EditSongForm';
 import { SongBulkActions } from './song-table/SongTableHeader';
 import SongTableRow from './song-table/SongTableRow';
 import SongTableEmptyState from './song-table/SongTableEmptyState';
@@ -42,7 +41,6 @@ interface SongTableProps {
   onDeleteSongs: (ids: string[]) => Promise<void>;
   onDeleteAllSongs: () => Promise<void>;
   onCurrentFolderChange?: (folderId: string | null) => void;
-  onUpdateSong?: (id: string, updates: any) => Promise<any>;
   // External sort state (optional - for backward compatibility)
   sortField?: SortField;
   sortDirection?: SortDirection;
@@ -76,7 +74,6 @@ export default function SongTable({
   onDeleteSongs,
   onDeleteAllSongs,
   onCurrentFolderChange,
-  onUpdateSong,
   sortField: externalSortField,
   sortDirection: externalSortDirection,
   onSortChange,
@@ -99,8 +96,6 @@ export default function SongTable({
   
   const sortField = externalSortField ?? internalSortField;
   const sortDirection = externalSortDirection ?? internalSortDirection;
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
   const [isSelectingAll, setIsSelectingAll] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -225,12 +220,6 @@ export default function SongTable({
    
     const folder = folders.find(f => f.id === folderId);
     return folder ? folder.name : t('songs.unknownFolder');
-  };
-
-
-  const handleCloseEditForm = () => {
-    setShowEditForm(false);
-    setSelectedSong(null);
   };
 
   const handleFolderChange = async (songId: string, newFolderId: string | undefined) => {
@@ -492,15 +481,6 @@ export default function SongTable({
           ))
         )}
       </ul>
-
-      {/* Edit Song Modal */}
-      <EditSongForm 
-        isOpen={showEditForm}
-        onClose={handleCloseEditForm}
-        song={selectedSong}
-        folders={folders}
-        onUpdate={onUpdateSong || (async () => {})}
-      />
 
       <Dialog
         open={showDeleteConfirm}

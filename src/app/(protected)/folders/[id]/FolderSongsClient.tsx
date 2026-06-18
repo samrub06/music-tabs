@@ -10,7 +10,7 @@ import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Ic
 import { usePageHeader } from '@/context/PageHeaderContext'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Song, Folder } from '@/types'
-import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction, updateSongAction } from '@/app/(protected)/dashboard/actions'
+import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '@/app/(protected)/dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
@@ -367,7 +367,6 @@ export default function FolderSongsClient({
                 onDeleteSongs={deleteSongsAction}
                 onDeleteAllSongs={deleteAllSongsAction}
                 onCurrentFolderChange={setCurrentFolder}
-                onUpdateSong={updateSongAction}
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSortChange={handleSortChange}
