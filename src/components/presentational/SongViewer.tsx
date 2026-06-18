@@ -1,6 +1,6 @@
 'use client';
 
-import { Song, Chord } from '@/types';
+import { Song, Chord, SongLine, SongSection } from '@/types';
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
 import React, { RefObject } from 'react';
@@ -17,7 +17,7 @@ interface SongViewerProps {
   transposedSong: any;
   transposedContent: string;
   isEditing: boolean;
-  editContent: string;
+  editSections: SongSection[];
   selectedChord: string | null;
   showChordDiagram: boolean;
   isSaving: boolean;
@@ -34,7 +34,12 @@ interface SongViewerProps {
   };
   onToggleMetronome: () => void;
   contentRef: RefObject<HTMLDivElement>;
-  onEditContentChange: (content: string) => void;
+  onUpdateLine: (sectionIndex: number, lineIndex: number, line: SongLine) => void;
+  onAddSection: (name: string) => void;
+  onDeleteSection: (sectionIndex: number) => void;
+  onAddLine: (sectionIndex: number, lineType: SongLine['type']) => void;
+  onDeleteLine: (sectionIndex: number, lineIndex: number) => void;
+  onMoveLine: (sectionIndex: number, lineIndex: number, direction: 'up' | 'down') => void;
   onSave: () => void;
   onDelete?: () => void;
   onChordClick: (chord: string) => void;
@@ -90,7 +95,7 @@ export default function SongViewer({
   transposedSong,
   transposedContent,
   isEditing,
-  editContent,
+  editSections,
   selectedChord,
   showChordDiagram,
   isSaving,
@@ -101,7 +106,12 @@ export default function SongViewer({
   metronome,
   onToggleMetronome,
   contentRef,
-  onEditContentChange,
+  onUpdateLine,
+  onAddSection,
+  onDeleteSection,
+  onAddLine,
+  onDeleteLine,
+  onMoveLine,
   onSave,
   onDelete,
   onChordClick,
@@ -191,13 +201,18 @@ export default function SongViewer({
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <SongContent
               isEditing={isEditing}
-              editContent={editContent}
+              editSections={editSections}
               transposedSong={transposedSong}
               transposedContent={transposedContent}
               fontSize={fontSize}
               contentRef={contentRef}
               isSaving={isSaving}
-              onEditContentChange={onEditContentChange}
+              onUpdateLine={onUpdateLine}
+              onAddSection={onAddSection}
+              onDeleteSection={onDeleteSection}
+              onAddLine={onAddLine}
+              onDeleteLine={onDeleteLine}
+              onMoveLine={onMoveLine}
               onSave={onSave}
               onCancelEdit={onCancelEdit}
               onChordClick={onChordClick}

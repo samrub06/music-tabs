@@ -151,6 +151,41 @@ export function renderStructuredSong(
   return output;
 }
 
+const CHORD_PATTERN =
+  /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+
+/** First/last chord in section order plus unique chord list (for saves from structured editor). */
+export function extractChordMetadataFromSections(sections: SongSection[]): {
+  allChords: string[];
+  firstChord?: string;
+  lastChord?: string;
+} {
+  const allChords = extractAllChords({ sections } as StructuredSong);
+  let firstChord: string | undefined;
+  let lastChord: string | undefined;
+
+  for (const section of sections) {
+    for (const line of section.lines) {
+      if (line.type === 'chords_only' && line.chord_line) {
+        const matchedChords = line.chord_line.match(CHORD_PATTERN) ?? [];
+        if (matchedChords[0] && !firstChord) {
+          firstChord = matchedChords[0];
+        }
+        if (matchedChords.length > 0) {
+          lastChord = matchedChords[matchedChords.length - 1];
+        }
+      } else if (line.type === 'chord_over_lyrics' && line.chords && line.chords.length > 0) {
+        if (!firstChord) {
+          firstChord = line.chords[0].chord;
+        }
+        lastChord = line.chords[line.chords.length - 1].chord;
+      }
+    }
+  }
+
+  return { allChords, firstChord, lastChord };
+}
+
 // Extract all unique chords from a song for diagram display
 export function extractAllChords(song: StructuredSong): string[] {
   const chords = new Set<string>();

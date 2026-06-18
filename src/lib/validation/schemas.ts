@@ -41,12 +41,36 @@ export const requestChordSchema = z.object({
   instrument: z.enum(['guitar', 'piano']),
 })
 
+const chordPositionSchema = z.object({
+  chord: z.string().min(1),
+  position: z.number().int().min(0),
+})
+
+const songLineSchema = z.object({
+  type: z.enum(['chords_only', 'lyrics_only', 'chord_over_lyrics']),
+  lyrics: z.string().optional(),
+  chords: z.array(chordPositionSchema).optional(),
+  chord_line: z.string().optional(),
+})
+
+const songSectionSchema = z.object({
+  type: z.string(),
+  name: z.string(),
+  lines: z.array(songLineSchema),
+})
+
 export const updateSongSchema = createSongSchema.partial().extend({
   title: z.string().min(1, 'Title is required'),
   author: z.string().min(1, 'Author is required'),
-  content: z.string().min(1, 'Content is required'),
-  folderId: z.string().uuid().optional().nullable()
-})
+  content: z.string().min(1).optional(),
+  sections: z.array(songSectionSchema).min(1).optional(),
+  folderId: z.string().uuid().optional().nullable(),
+}).refine(
+  (data) =>
+    (data.sections !== undefined && data.sections.length > 0) ||
+    (data.content !== undefined && data.content.length > 0),
+  { message: 'Either sections or content is required', path: ['content'] }
+)
 
 // Playlist Schemas
 export const createPlaylistSchema = z.object({

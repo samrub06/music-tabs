@@ -26,7 +26,13 @@ export function PageHeaderProvider({ children }: { children: ReactNode }) {
   const [override, setOverrideState] = useState<PageHeaderOverride | null>(null)
 
   const setOverride = useCallback((next: PageHeaderOverride | null) => {
-    setOverrideState(next)
+    setOverrideState((prev) => {
+      if (prev === next) return prev
+      if (prev && next && prev.title === next.title && prev.backHref === next.backHref) {
+        return prev
+      }
+      return next
+    })
   }, [])
 
   const value = useMemo(
@@ -53,11 +59,11 @@ export function usePageHeaderOptional() {
 
 /** Sets the app header back button + title for detail pages (e.g. folder). */
 export function usePageHeader(title: string, backHref: string) {
-  const context = usePageHeaderOptional()
+  const setOverride = usePageHeaderOptional()?.setOverride
 
   useEffect(() => {
-    if (!context) return
-    context.setOverride({ title, backHref })
-    return () => context.setOverride(null)
-  }, [context, title, backHref])
+    if (!setOverride) return
+    setOverride({ title, backHref })
+    return () => setOverride(null)
+  }, [setOverride, title, backHref])
 }

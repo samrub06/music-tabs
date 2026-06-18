@@ -634,6 +634,32 @@
     "FULL_SONG_HIDDEN_TITLE": "השיר המלא מוסתר",
     "FULL_SONG_HIDDEN_DESCRIPTION": "התחבר כדי לגשת לכל השיר ולהוסיף אותו לספרייה שלך."
   },
+  "songEditor": {
+    "unsavedChangesConfirm": "לבטל שינויים שלא נשמרו?",
+    "sectionNamePrompt": "שם החלק (למשל בית 2)",
+    "deleteSectionConfirm": "למחוק את החלק ואת כל השורות שלו?",
+    "deleteLineConfirm": "למחוק שורה זו?",
+    "deleteSection": "מחק חלק",
+    "deleteLine": "מחק שורה",
+    "moveUp": "הזז שורה למעלה",
+    "moveDown": "הזז שורה למטה",
+    "addSection": "הוסף חלק",
+    "addLyricsLine": "שורת מילים",
+    "addChordsLine": "שורת אקורדים",
+    "addChordLyricsLine": "אקורדים + מילים",
+    "tapLyricsHint": "הקש על התצוגה המקדימה למטה כדי למקם אקורד",
+    "chordLinePlaceholder": "C  G  Am  F",
+    "lyricsPlaceholder": "מילים...",
+    "chordDialogTitle": "אקורד במיקום זה",
+    "deleteChord": "הסר אקורד",
+    "nudgeLeft": "הזז אקורד שמאלה",
+    "nudgeRight": "הזז אקורד ימינה",
+    "lineType": {
+      "lyrics_only": "מילים",
+      "chords_only": "אקורדים",
+      "chord_over_lyrics": "אקורדים על מילים"
+    }
+  },
   "songSections": {
     "section": "חלק",
     "content": "תוכן",

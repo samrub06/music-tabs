@@ -112,11 +112,12 @@ export interface NewSongData {
   bpm?: number;
 }
 
-// Type pour l'édition de chanson (avec contenu texte)
+// Type pour l'édition de chanson (contenu texte legacy ou sections structurées)
 export interface SongEditData {
   title: string;
   author: string;
-  content: string;
+  content?: string;
+  sections?: SongSection[];
   folderId?: string;
   reviews?: number;
   capo?: number;

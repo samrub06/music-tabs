@@ -634,6 +634,32 @@
     "FULL_SONG_HIDDEN_TITLE": "Chanson complète masquée",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque."
   },
+  "songEditor": {
+    "unsavedChangesConfirm": "Abandonner les modifications non enregistrées ?",
+    "sectionNamePrompt": "Nom de section (ex. Couplet 2)",
+    "deleteSectionConfirm": "Supprimer cette section et toutes ses lignes ?",
+    "deleteLineConfirm": "Supprimer cette ligne ?",
+    "deleteSection": "Supprimer la section",
+    "deleteLine": "Supprimer la ligne",
+    "moveUp": "Monter la ligne",
+    "moveDown": "Descendre la ligne",
+    "addSection": "Ajouter une section",
+    "addLyricsLine": "Ligne paroles",
+    "addChordsLine": "Ligne accords",
+    "addChordLyricsLine": "Accords + paroles",
+    "tapLyricsHint": "Appuyez sur l'aperçu ci-dessous pour placer un accord sur les paroles",
+    "chordLinePlaceholder": "C  G  Am  F",
+    "lyricsPlaceholder": "Paroles...",
+    "chordDialogTitle": "Accord à cette position",
+    "deleteChord": "Retirer l'accord",
+    "nudgeLeft": "Décaler l'accord à gauche",
+    "nudgeRight": "Décaler l'accord à droite",
+    "lineType": {
+      "lyrics_only": "Paroles",
+      "chords_only": "Accords",
+      "chord_over_lyrics": "Accords sur paroles"
+    }
+  },
   "songSections": {
     "section": "Section",
     "content": "Contenu",

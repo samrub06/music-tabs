@@ -3,7 +3,7 @@ import type { NewSongData, Song, SongEditData, SongSection } from '@/types'
 import type { Database } from '@/types/db'
 import { parseTextToStructuredSong } from '@/utils/songParser'
 import { structuredSongToText } from '@/utils/structuredToText'
-import { extractAllChords } from '@/utils/structuredSong'
+import { extractAllChords, extractChordMetadataFromSections } from '@/utils/structuredSong'
 import { fetchAllSongIdsFromQuery } from '@/lib/services/songListFilters'
 import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
 import { FEATURED_CATALOG_SONG_SLUG } from '@/data/featuredCatalogSong'
@@ -298,8 +298,13 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       throw new Error('User must be authenticated to update songs')
     }
 
-    let sections = undefined as any
-    if (updates.content) {
+    let sections: SongSection[] | undefined
+    let chordMetadata: ReturnType<typeof extractChordMetadataFromSections> | undefined
+
+    if (updates.sections && updates.sections.length > 0) {
+      sections = updates.sections
+      chordMetadata = extractChordMetadataFromSections(sections)
+    } else if (updates.content) {
       const structuredSong = parseTextToStructuredSong(
         updates.title,
         updates.author,
@@ -307,6 +312,11 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         updates.folderId
       )
       sections = structuredSong.sections
+      chordMetadata = {
+        allChords: extractAllChords(structuredSong),
+        firstChord: structuredSong.firstChord,
+        lastChord: structuredSong.lastChord,
+      }
     }
 
     const updateData: Database['public']['Tables']['songs']['Update'] = {
@@ -329,7 +339,15 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       bpm: updates.bpm ?? null
     }
     if (sections) {
-      updateData.sections = sections
+      updateData.sections = sections as unknown as Database['public']['Tables']['songs']['Update']['sections']
+    }
+    if (chordMetadata) {
+      updateData.all_chords = chordMetadata.allChords.length > 0 ? chordMetadata.allChords : null
+      updateData.first_chord = chordMetadata.firstChord ?? null
+      updateData.last_chord = chordMetadata.lastChord ?? null
+      if (!updates.key && chordMetadata.firstChord) {
+        updateData.key = chordMetadata.firstChord
+      }
     }
 
     const { data, error } = await (client

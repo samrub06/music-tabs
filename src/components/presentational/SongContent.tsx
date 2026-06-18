@@ -12,9 +12,12 @@ import { useLanguage } from '@/context/LanguageContext';
 import dynamic from 'next/dynamic';
 import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { getOptimalLineHeight, getResponsiveFontSize, needsWrapping, wrapLyricsWithChords, type TextMeasurementOptions } from '@/utils/textMeasurement';
+import ChordOverLyricsLine from '@/components/presentational/ChordOverLyricsLine';
+import SongStructuredEditor from '@/components/presentational/SongStructuredEditor';
+import { getOptimalLineHeight, getResponsiveFontSize } from '@/utils/textMeasurement';
+import { getSongChordFontFamily, getSongLyricsFontFamily } from '@/utils/songFonts';
 import type { ChordInstrument } from '@/components/chords/InstrumentToggle';
-import type { Chord, Folder } from '@/types';
+import type { Chord, Folder, SongLine, SongSection } from '@/types';
 import FolderDropdown from '@/components/FolderDropdown';
 import { normalizeChordNameForComparison } from '@/utils/chords';
 import { generateAllKeys } from '@/utils/chords';
@@ -67,13 +70,18 @@ const toolPillClass = (active: boolean) =>
 
 interface SongContentProps {
   isEditing: boolean;
-  editContent: string;
+  editSections: SongSection[];
   transposedSong: any;
   transposedContent: string;
   fontSize: number;
   contentRef: RefObject<HTMLDivElement>;
   isSaving: boolean;
-  onEditContentChange: (content: string) => void;
+  onUpdateLine: (sectionIndex: number, lineIndex: number, line: SongLine) => void;
+  onAddSection: (name: string) => void;
+  onDeleteSection: (sectionIndex: number) => void;
+  onAddLine: (sectionIndex: number, lineType: SongLine['type']) => void;
+  onDeleteLine: (sectionIndex: number, lineIndex: number) => void;
+  onMoveLine: (sectionIndex: number, lineIndex: number, direction: 'up' | 'down') => void;
   onSave: () => void;
   onCancelEdit: () => void;
   onChordClick: (chord: string) => void;
@@ -109,13 +117,18 @@ interface SongContentProps {
 
 export default function SongContent({
   isEditing,
-  editContent,
+  editSections,
   transposedSong,
   transposedContent,
   fontSize,
   contentRef,
   isSaving,
-  onEditContentChange,
+  onUpdateLine,
+  onAddSection,
+  onDeleteSection,
+  onAddLine,
+  onDeleteLine,
+  onMoveLine,
   onSave,
   onCancelEdit,
   onChordClick,
@@ -148,7 +161,7 @@ export default function SongContent({
   currentFolderId,
   onFolderChange,
 }: SongContentProps) {
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const pathname = usePathname();
   const { signInWithGoogle } = useAuthContext();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -207,35 +220,6 @@ export default function SongContent({
   const [chordSectionOpen, setChordSectionOpen] = useState(true);
   const [showTransposeControls, setShowTransposeControls] = useState(false);
 
-  if (isEditing) {
-    return (
-      <div className="flex-1 flex flex-col p-4">
-        <textarea
-          value={editContent}
-          onChange={(e) => onEditContentChange(e.target.value)}
-          dir={getTextDirection(editContent)}
-          className="flex-1 w-full p-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder={t('songForm.lyrics')}
-        />
-        <div className="flex justify-end space-x-3 mt-4">
-          <button
-            onClick={onCancelEdit}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-          >
-            {t('common.cancel')}
-          </button>
-          <button
-            onClick={onSave}
-            disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving ? t('songContent.saving') : t('songContent.save')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return 0;
     return Math.hypot(touches[1].clientX - touches[0].clientX, touches[1].clientY - touches[0].clientY);
@@ -268,17 +252,14 @@ export default function SongContent({
   const coverUrl = useSongCover(transposedSong);
 
   const songTitleBlock = (
-    <div
-      className="min-w-0 text-start"
-      dir={getTextDirection(`${transposedSong?.title ?? ''} ${transposedSong?.author ?? ''}`)}
-    >
+    <div className="min-w-0 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
       <h2 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base">
         {transposedSong?.title || ''}
       </h2>
       {transposedSong?.author && (
         <Link
           href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
-          className="mt-0.5 block max-w-full truncate text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
+          className="mt-0.5 block max-w-full truncate text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
         >
           {transposedSong.author}
         </Link>
@@ -466,6 +447,26 @@ export default function SongContent({
       </div>
     ) : null;
 
+  if (isEditing) {
+    return (
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+        <SongStructuredEditor
+          sections={editSections}
+          fontSize={fontSize}
+          isSaving={isSaving}
+          onUpdateLine={onUpdateLine}
+          onAddSection={onAddSection}
+          onDeleteSection={onDeleteSection}
+          onAddLine={onAddLine}
+          onDeleteLine={onDeleteLine}
+          onMoveLine={onMoveLine}
+          onSave={onSave}
+          onCancel={onCancelEdit}
+        />
+      </div>
+    );
+  }
+
   return (
     <div 
       ref={contentRef}
@@ -481,10 +482,10 @@ export default function SongContent({
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
             <div className="flex flex-col gap-3">
-              <div className={cn('flex items-stretch gap-3', titleRowHeight)}>
+              <div className={cn('flex items-center gap-2', titleRowHeight)}>
                 {songCoverVignette}
-                <div className="flex min-w-0 flex-1 items-stretch gap-2">
-                  <div className="flex min-w-0 flex-1 flex-col justify-center">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
                     {songTitleBlock}
                   </div>
                   {titleRowTrailingActions}
@@ -702,7 +703,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
       getTextDirection(
         song.sections
           .flatMap((section: { lines?: Array<{ lyrics?: string }> }) => section.lines ?? [])
-          .map((line) => line.lyrics ?? '')
+          .map((line: { lyrics?: string }) => line.lyrics ?? '')
           .join('\n') || song.title || ''
       ),
     [song]
@@ -735,7 +736,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     const context = canvas.getContext('2d');
     if (!context) return text.length * getCharWidth(fontSize);
     
-    context.font = `${fontSize}px Monaco, "Lucida Console", "Courier New", monospace`;
+    context.font = `${fontSize}px ${getSongLyricsFontFamily(songTextDirection === 'rtl')}`;
     return context.measureText(text).width;
   };
 
@@ -778,13 +779,16 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
   const renderSongLine = (line: any, lineIndex: number) => {
     const optimalFontSize = getOptimalFontSize(fontSize);
     const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
+    const isHebrewLine = containsHebrew(line.lyrics ?? line.chord_line ?? '');
+    const lyricsFontFamily = getSongLyricsFontFamily(isHebrewLine);
+    const chordFontFamily = getSongChordFontFamily();
     
     if (line.type === 'lyrics_only') {
       return (
         <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={getTextDirection(line.lyrics)} style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
-          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+          fontFamily: lyricsFontFamily,
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
           maxWidth: '100%',
@@ -800,7 +804,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
         <div key={lineIndex} dir={songTextDirection} className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
-          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+          fontFamily: chordFontFamily,
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
           maxWidth: '100%',
@@ -812,12 +816,10 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     }
     
     if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
-      const isHebrew = containsHebrew(line.lyrics);
       return (
         <ChordOverLyricsLine 
           key={lineIndex}
           line={line}
-          isHebrew={isHebrew}
           fontSize={optimalFontSize}
           onChordClick={onChordClick}
         />
@@ -901,12 +903,13 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
   
   const optimalFontSize = getOptimalFontSize(fontSize);
   const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
+  const songHasHebrew = songTextDirection === 'rtl';
 
   return (
     <div className="leading-relaxed space-y-1 w-full overflow-x-hidden" style={{ 
       fontSize: `${optimalFontSize}px`,
       lineHeight: optimalLineHeight,
-      fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
+      fontFamily: getSongLyricsFontFamily(songHasHebrew),
       maxWidth: '100%',
       width: '100%'
     }}>
@@ -916,7 +919,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
         className="absolute -top-[9999px] left-0 opacity-0 pointer-events-none whitespace-pre"
         style={{ 
           fontSize: `${optimalFontSize}px`,
-          fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace'
+          fontFamily: getSongLyricsFontFamily(songHasHebrew)
         }}
         aria-hidden="true"
       />
@@ -960,278 +963,3 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     </div>
   );
 }
-
-// Helper function to group chords by position and calculate horizontal offsets
-interface ChordWithOffset {
-  chord: string;
-  position: number;
-  horizontalOffset: number;
-  originalIndex: number;
-}
-
-function groupChordsByPosition(
-  chords: Array<{ chord: string; position: number }>,
-  fontSize: number,
-  charWidth: number,
-  spacing: number = 50
-): ChordWithOffset[] {
-  // Create a map to group chords by position
-  const positionGroups = new Map<number, Array<{ chord: string; originalIndex: number }>>();
-  
-  chords.forEach((chordPos, index) => {
-    if (!positionGroups.has(chordPos.position)) {
-      positionGroups.set(chordPos.position, []);
-    }
-    positionGroups.get(chordPos.position)!.push({
-      chord: chordPos.chord,
-      originalIndex: index
-    });
-  });
-  
-  // Calculate text width for a chord using canvas for precise measurement (client-only; SSR uses fallback)
-  const getChordWidth = (chord: string): number => {
-    if (typeof document === 'undefined') {
-      return chord.length * charWidth * 1.1;
-    }
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) {
-      // Fallback: estimate width based on character count with better approximation
-      return chord.length * charWidth * 1.1; // Slight padding for safety
-    }
-    context.font = `${fontSize}px Monaco, "Lucida Console", "Courier New", monospace`;
-    const measuredWidth = context.measureText(chord).width;
-    // Add a small padding to ensure no overlap
-    return measuredWidth + 2;
-  };
-  
-  // Process each position group and calculate offsets
-  const result: ChordWithOffset[] = [];
-  
-  positionGroups.forEach((chordGroup, position) => {
-    // If only one chord at this position, no offset needed
-    if (chordGroup.length === 1) {
-      result.push({
-        chord: chordGroup[0].chord,
-        position,
-        horizontalOffset: 0,
-        originalIndex: chordGroup[0].originalIndex
-      });
-      return;
-    }
-    
-    // Multiple chords at same position - place them sequentially
-    let cumulativeOffset = 0;
-    
-    chordGroup.forEach(({ chord, originalIndex }, index) => {
-      result.push({
-        chord,
-        position,
-        horizontalOffset: cumulativeOffset,
-        originalIndex
-      });
-      
-      // Calculate the width of this chord
-      const chordWidth = getChordWidth(chord);
-      
-      // Add this chord's width plus spacing for the next chord
-      // Use dynamic spacing based on font size for better visual separation
-      const dynamicSpacing = Math.max(spacing, fontSize * 0.3);
-      cumulativeOffset += chordWidth + dynamicSpacing;
-    });
-  });
-  
-  // Sort by original index to maintain order
-  result.sort((a, b) => a.originalIndex - b.originalIndex);
-  
-  return result;
-}
-
-// Component for precise chord-over-lyrics alignment
-interface ChordOverLyricsLineProps {
-  line: any;
-  isHebrew: boolean;
-  fontSize: number;
-  onChordClick: (chord: string) => void;
-}
-
-function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOverLyricsLineProps) {
-  const [containerWidth, setContainerWidth] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Measure container width for responsive chord positioning
-  useEffect(() => {
-    const measureWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
-    };
-    
-    measureWidth();
-    window.addEventListener('resize', measureWidth);
-    return () => window.removeEventListener('resize', measureWidth);
-  }, [fontSize]);
-
-  // Calculate character width based on font size (monospace)
-  const charWidth = fontSize * 0.58;
-  
-  // Check if line needs wrapping using the utility function
-  const measurementOptions: TextMeasurementOptions = {
-    fontSize,
-    fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
-    containerWidth: Math.max(containerWidth, 300),
-    padding: 20
-  };
-  
-  const needsWrappingCheck = needsWrapping(line.lyrics, measurementOptions);
-  
-  if (!needsWrappingCheck) {
-    // Simple case: no wrapping needed
-    return (
-      <div ref={containerRef} className="mb-2 w-full" dir={getTextDirection(line.lyrics)} style={{ 
-        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
-        maxWidth: '100%',
-        overflow: 'hidden'
-      }}>
-        {/* Chord line inherits direction from parent lyrics container */}
-        <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
-          fontSize: `${fontSize}px`, 
-          lineHeight: 1.4,
-          maxWidth: '100%',
-          overflow: 'hidden'
-        }}>
-          {(() => {
-            // Group chords by position and calculate horizontal offsets
-            const groupedChords = groupChordsByPosition(line.chords, fontSize, charWidth);
-            
-            return groupedChords.map((chordWithOffset, chordIndex) => {
-              // Ensure chord doesn't go beyond lyrics length
-              const safePosition = Math.min(chordWithOffset.position, line.lyrics.length);
-              const baseLeftOffset = Math.min(safePosition * charWidth, containerWidth - 50); // Prevent overflow
-              // Add horizontal offset for chords at the same position
-              const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
-              
-              return (
-                <button
-                  key={chordIndex}
-                  onClick={() => onChordClick(chordWithOffset.chord)}
-                  className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
-                  style={{ 
-                    left: isHebrew ? 'auto' : `${leftOffset}px`,
-                    right: isHebrew ? `${leftOffset}px` : 'auto',
-                    fontSize: `${fontSize}px`,
-                    lineHeight: 1.4,
-                    maxWidth: 'calc(100vw - 40px)'
-                  }}
-                >
-                  {chordWithOffset.chord}
-                </button>
-              );
-            });
-          })()}
-        </div>
-        {/* Lyrics line */}
-        <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
-          fontSize: `${fontSize}px`, 
-          lineHeight: 1.4,
-          wordBreak: 'break-word',
-          overflowWrap: 'anywhere',
-          maxWidth: '100%'
-        }}>
-          {line.lyrics}
-        </div>
-      </div>
-    );
-  }
-  
-  // Complex case: wrapping needed
-  return (
-    <WrappedChordLyricsLine 
-      ref={containerRef}
-      line={line}
-      isHebrew={isHebrew}
-      fontSize={fontSize}
-      measurementOptions={measurementOptions}
-      onChordClick={onChordClick}
-    />
-  );
-}
-
-// Component for handling wrapped chord-lyrics lines
-interface WrappedChordLyricsLineProps {
-  line: any;
-  isHebrew: boolean;
-  fontSize: number;
-  measurementOptions: TextMeasurementOptions;
-  onChordClick: (chord: string) => void;
-}
-
-const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyricsLineProps>(
-  ({ line, isHebrew, fontSize, measurementOptions, onChordClick }, ref) => {
-    // Use the utility function for intelligent wrapping
-    const wrappedLines = wrapLyricsWithChords(line.lyrics, line.chords, measurementOptions);
-    
-    const lineHeight = getOptimalLineHeight(fontSize);
-    
-    return (
-      <div ref={ref} className="mb-2 w-full" dir={getTextDirection(line.lyrics)} style={{ 
-        fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
-        maxWidth: '100%',
-        overflow: 'hidden'
-      }}>
-        {wrappedLines.map((wrappedLine, lineIndex) => (
-          <div key={lineIndex} className="mb-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-            {/* Chord line inherits direction from parent lyrics container */}
-            <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
-              fontSize: `${fontSize}px`, 
-              lineHeight,
-              maxWidth: '100%',
-              overflow: 'hidden'
-            }}>
-              {(() => {
-                // Group chords by position and calculate horizontal offsets
-                const charWidth = fontSize * 0.58;
-                const groupedChords = groupChordsByPosition(wrappedLine.chords, fontSize, charWidth);
-                
-                return groupedChords.map((chordWithOffset, chordIndex) => {
-                  const baseLeftOffset = Math.max(0, Math.min(chordWithOffset.position * charWidth, measurementOptions.containerWidth - 50));
-                  // Add horizontal offset for chords at the same position
-                  const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
-                  
-                  return (
-                    <button
-                      key={chordIndex}
-                      onClick={() => onChordClick(chordWithOffset.chord)}
-                      className="absolute hover:text-blue-800 hover:underline cursor-pointer whitespace-nowrap z-10"
-                      style={{ 
-                        left: isHebrew ? 'auto' : `${leftOffset}px`,
-                        right: isHebrew ? `${leftOffset}px` : 'auto',
-                        fontSize: `${fontSize}px`,
-                        lineHeight,
-                        maxWidth: 'calc(100vw - 40px)'
-                      }}
-                    >
-                      {chordWithOffset.chord}
-                    </button>
-                  );
-                });
-              })()}
-            </div>
-            {/* Lyrics line */}
-            <div className="text-gray-900 min-h-[1.8rem] w-full" style={{ 
-              fontSize: `${fontSize}px`, 
-              lineHeight,
-              wordBreak: 'break-word',
-              overflowWrap: 'anywhere',
-              maxWidth: '100%'
-            }}>
-              {wrappedLine.lyrics}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-);
-
-WrappedChordLyricsLine.displayName = 'WrappedChordLyricsLine';

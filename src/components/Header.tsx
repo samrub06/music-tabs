@@ -8,7 +8,6 @@ import {
   Moon,
   Search,
   Sun,
-  Trophy,
   User,
 } from 'lucide-react'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
@@ -19,6 +18,7 @@ import { usePageHeaderOptional } from '@/context/PageHeaderContext'
 import { useTheme } from '@/context/ThemeContext'
 import { AppLogo } from '@/components/AppLogo'
 import CompactStatsDisplay from './gamification/CompactStatsDisplay'
+import HeaderLevelProgress from './gamification/HeaderLevelProgress'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -252,13 +252,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {user && (
-          <Button variant="ghost" size="icon" className="lg:hidden" asChild>
-            <Link href="/leaderboard" aria-label={t('navigation.leaderboard')}>
-              <Trophy className="h-5 w-5" />
-            </Link>
-          </Button>
-        )}
+        {user && <HeaderLevelProgress />}
 
         {!loading && (
           user ? (

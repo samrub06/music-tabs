@@ -634,6 +634,32 @@
     "FULL_SONG_HIDDEN_TITLE": "Full song hidden",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Sign in to access the full song and add it to your library."
   },
+  "songEditor": {
+    "unsavedChangesConfirm": "Discard unsaved changes?",
+    "sectionNamePrompt": "Section name (e.g. Verse 2)",
+    "deleteSectionConfirm": "Delete this section and all its lines?",
+    "deleteLineConfirm": "Delete this line?",
+    "deleteSection": "Delete section",
+    "deleteLine": "Delete line",
+    "moveUp": "Move line up",
+    "moveDown": "Move line down",
+    "addSection": "Add section",
+    "addLyricsLine": "Lyrics line",
+    "addChordsLine": "Chords line",
+    "addChordLyricsLine": "Chords + lyrics",
+    "tapLyricsHint": "Tap the preview below to place a chord on the lyrics",
+    "chordLinePlaceholder": "C  G  Am  F",
+    "lyricsPlaceholder": "Lyrics...",
+    "chordDialogTitle": "Chord at this position",
+    "deleteChord": "Remove chord",
+    "nudgeLeft": "Move chord left",
+    "nudgeRight": "Move chord right",
+    "lineType": {
+      "lyrics_only": "Lyrics",
+      "chords_only": "Chords",
+      "chord_over_lyrics": "Chords over lyrics"
+    }
+  },
   "songSections": {
     "section": "Section",
     "content": "Content",

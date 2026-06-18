@@ -1,10 +1,11 @@
 import { Providers } from '@/components/Providers'
 import { defaultMetadata } from '@/lib/seo/site'
-import { Inter } from 'next/font/google'
+import { Inter, Heebo } from 'next/font/google'
 import type { Metadata } from 'next'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+const heebo = Heebo({ subsets: ['latin', 'hebrew'], variable: '--font-heebo' })
 
 export const metadata: Metadata = defaultMetadata
 
@@ -42,7 +43,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${heebo.variable}`}>
         <Providers>
           {children}
         </Providers>

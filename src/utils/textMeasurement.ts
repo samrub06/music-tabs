@@ -232,3 +232,20 @@ export function needsWrapping(
   const maxWidth = (options.containerWidth - (options.padding || 20)) * 0.95;
   return textWidth > maxWidth;
 }
+
+/**
+ * Pixel offset for a chord position inside a lyrics string.
+ */
+export function getLyricOffsetPx(
+  lyrics: string,
+  position: number,
+  fontSize: number,
+  fontFamily: string,
+  proportional: boolean,
+  charWidth: number
+): number {
+  if (proportional) {
+    return measureTextWidth(lyrics.slice(0, position), fontSize, fontFamily);
+  }
+  return position * charWidth;
+}
