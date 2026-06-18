@@ -40,11 +40,31 @@ const VARIANT_GROUP_UI: Array<{
   { id: 'g-major', searchKeys: ['g', 'g major', 'sol', 'sol majeur'], hideDbNames: ['G Major'] },
   { id: 'c-major', searchKeys: ['c', 'c major', 'do', 'do majeur'], hideDbNames: ['C Major'] },
   {
+    id: 'cmaj7',
+    searchKeys: ['cmaj7', 'c maj7', 'do maj7', 'c major 7', 'do majeur 7'],
+    hideDbNames: [],
+  },
+  {
     id: 'em-minor',
     searchKeys: ['em', 'e minor', 'e min', 'mi mineur', 'mi min'],
     hideDbNames: ['E Minor'],
   },
+  {
+    id: 'e-major',
+    searchKeys: ['e', 'e major', 'mi', 'mi majeur', 'mi maj'],
+    hideDbNames: ['E Major'],
+  },
+  {
+    id: 'emaj7',
+    searchKeys: ['emaj7', 'e maj7', 'mi maj7', 'e major 7', 'mi majeur 7'],
+    hideDbNames: [],
+  },
   { id: 'd-major', searchKeys: ['d', 'd major', 'ré', 're majeur'], hideDbNames: ['D Major'] },
+  {
+    id: 'dm-minor',
+    searchKeys: ['dm', 'd minor', 'd min', 'ré mineur', 're min', 're mineur'],
+    hideDbNames: ['D Minor'],
+  },
   {
     id: 'd7',
     searchKeys: ['d7', 'd 7', 'ré 7', 're 7', 'd dominant 7'],
@@ -55,6 +75,11 @@ const VARIANT_GROUP_UI: Array<{
     searchKeys: ['am', 'a minor', 'a min', 'la mineur', 'la min'],
     hideDbNames: ['A Minor'],
   },
+  {
+    id: 'a-major',
+    searchKeys: ['a', 'a major', 'la', 'la majeur', 'la maj'],
+    hideDbNames: ['A Major'],
+  },
   { id: 'b-major', searchKeys: ['b', 'b major', 'si', 'si majeur'], hideDbNames: ['B Major'] },
   {
     id: 'd-fsharp',
@@ -64,6 +89,11 @@ const VARIANT_GROUP_UI: Array<{
   {
     id: 'fmaj7',
     searchKeys: ['fmaj7', 'f maj7', 'fa maj7', 'f major 7'],
+    hideDbNames: [],
+  },
+  {
+    id: 'fsharp7',
+    searchKeys: ['f#7', 'f# 7', 'fa#7', 'fa dièse 7', 'f sharp 7'],
     hideDbNames: [],
   },
   { id: 'fm-minor', searchKeys: ['fm', 'f minor', 'f min', 'fa mineur'], hideDbNames: ['F Minor'] },

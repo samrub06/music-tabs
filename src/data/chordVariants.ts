@@ -279,19 +279,25 @@ const gMajorVariants = [
 
 const TOTAL = gMajorVariants.length;
 
+import { aMajorVariantGroup } from './aMajorVariants';
 import { amMinorVariantGroup } from './amMinorVariants';
 import { bDimVariantGroup } from './bDimVariants';
 import { bMajorVariantGroup } from './bMajorVariants';
 import { bbMajorVariantGroup } from './bbMajorVariants';
 import { cadd9VariantGroup } from './cadd9Variants';
+import { cMaj7VariantGroup } from './cMaj7Variants';
 import { cMajorVariantGroup } from './cMajorVariants';
 import { cmMinorVariantGroup } from './cmMinorVariants';
 import { d4VariantGroup } from './d4Variants';
 import { d7VariantGroup } from './d7Variants';
 import { dFSharpVariantGroup } from './dFSharpVariants';
 import { dMajorVariantGroup } from './dMajorVariants';
+import { dmMinorVariantGroup } from './dmMinorVariants';
+import { eMajorVariantGroup } from './eMajorVariants';
+import { eMaj7VariantGroup } from './eMaj7Variants';
 import { em7VariantGroup } from './em7Variants';
 import { emMinorVariantGroup } from './emMinorVariants';
+import { fSharp7VariantGroup } from './fSharp7Variants';
 import { fMajorVariantGroup } from './fMajorVariants';
 import { fMaj7VariantGroup } from './fMaj7Variants';
 import { fmMinorVariantGroup } from './fmMinorVariants';
@@ -313,13 +319,19 @@ const chordVariantsFr = [
     showCarousel: true,
   },
   cMajorVariantGroup,
+  cMaj7VariantGroup,
   emMinorVariantGroup,
+  eMajorVariantGroup,
+  eMaj7VariantGroup,
   dMajorVariantGroup,
+  dmMinorVariantGroup,
   d7VariantGroup,
   amMinorVariantGroup,
+  aMajorVariantGroup,
   bMajorVariantGroup,
   dFSharpVariantGroup,
   fMaj7VariantGroup,
+  fSharp7VariantGroup,
   fmMinorVariantGroup,
   bDimVariantGroup,
   bbMajorVariantGroup,

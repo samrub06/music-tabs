@@ -8,7 +8,7 @@ const dFSharpVariants = [
   {
     id: 'df-01',
     label: 'Barré (2e case)',
-    description: 'Barré case 2 sur les 6 cordes ; La case 4, Ré case 4, Si case 3, Mi aigu case 5.',
+    description: 'Barré case 2 sur les 6 cordes ; La case 4 (auriculaire), Ré case 4, Si case 3.',
     chord: dfVariant('barré case 2', {
       chord: [[5, 4, 4], [4, 4, 3], [2, 3, 2]],
       position: 2,
@@ -33,7 +33,9 @@ export const dFSharpVariantGroup: ChordVariantGroup = {
   id: 'd-fsharp',
   symbol: 'D/F#',
   title: 'Ré / Fa# (D/F#) — positions',
-  intro: `${DF_TOTAL} positions de D/F# capturées depuis l’app source.`,
+  intro:
+    `${DF_TOTAL} premières positions de D/F# (n° 1 sur 20 dans l’app source). `
+    + 'Barré case 2 et variante étendue.',
   variants: dFSharpVariants.map((v, i) => ({
     ...v,
     label: `${i + 1} / ${DF_TOTAL} — ${v.label}`,
