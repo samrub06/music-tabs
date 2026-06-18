@@ -1,4 +1,4 @@
-import { scrapeSongFromUrl, searchAndScrapeSong, searchSong, searchTab4UOnly, searchUltimateGuitarOnly } from '@/lib/services/scraperService';
+import { scrapeSongFromUrl, searchAndScrapeSong, searchNeginaOnly, searchSong, searchTab4UOnly, searchUltimateGuitarOnly } from '@/lib/services/scraperService';
 import { wasUgLastFetchBlocked, getLastUgFetchMeta, buildUgSearchErrorMessage } from '@/lib/services/ugFetch';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,7 +9,12 @@ export const runtime = 'nodejs';
  * GET /api/songs/search?q=titre+de+la+chanson
  * GET /api/songs/search?q=titre&source=ultimate-guitar
  * GET /api/songs/search?q=titre&source=tab4u
+ * GET /api/songs/search?q=titre&source=negina
  */
+function isHebrewQuery(query: string): boolean {
+  return /[\u0590-\u05FF]/.test(query);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -71,8 +76,13 @@ export async function GET(request: NextRequest) {
 
       if (source === 'ultimate-guitar') {
         results = await searchUltimateGuitarOnly(query);
+      } else if (source === 'negina') {
+        results = await searchNeginaOnly(query);
       } else if (source === 'tab4u') {
         results = await searchTab4UOnly(query);
+        if (results.length === 0 && isHebrewQuery(query)) {
+          results = await searchNeginaOnly(query);
+        }
       } else {
         // Par défaut, recherche sur les deux sites
         results = await searchSong(query);

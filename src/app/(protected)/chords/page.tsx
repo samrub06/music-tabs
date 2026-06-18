@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
-import { createSafeServerClient } from '@/lib/supabase/server'
+import { createPublicCatalogClient, createSafeServerClient } from '@/lib/supabase/server'
 import { chordService } from '@/lib/services/chordService'
 import { knownChordService } from '@/lib/services/knownChordService'
 import ChordsClient from './ChordsClient'
 
 const getCachedChords = unstable_cache(
   async () => {
-    const supabase = await createSafeServerClient()
+    const supabase = createPublicCatalogClient()
     return chordService.getAllChords(supabase)
   },
   ['chord-catalog'],

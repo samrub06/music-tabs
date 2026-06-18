@@ -53,6 +53,8 @@
     "profile": "פרופיל",
     "leaderboard": "לוח תוצאות",
     "admin": "ניהול",
+    "adminSongs": "שירי קטלוג",
+    "adminUsers": "משתמשים",
     "more": "עוד",
     "MENU": "תפריט"
   },
@@ -631,6 +633,26 @@
     "BPM_LABEL": "{bpm} BPM",
     "FULL_SONG_HIDDEN_TITLE": "השיר המלא מוסתר",
     "FULL_SONG_HIDDEN_DESCRIPTION": "התחבר כדי לגשת לכל השיר ולהוסיף אותו לספרייה שלך."
+  },
+  "songSections": {
+    "section": "חלק",
+    "content": "תוכן",
+    "metadata": "מטא-דאטה",
+    "intro": "פתיחה",
+    "introNumbered": "פתיחה {n}",
+    "outro": "סיום",
+    "outroNumbered": "סיום {n}",
+    "bridge": "גשר",
+    "bridgeNumbered": "גשר {n}",
+    "chorus": "פזמון",
+    "chorusNumbered": "פזמון {n}",
+    "verse": "בית",
+    "verseNumbered": "בית {n}",
+    "preChorus": "לפני הפזמון",
+    "instrumental": "אינסטרומנטלי",
+    "solo": "סולו",
+    "hook": "הוק",
+    "interlude": "ביניים"
   },
   "explore": {
     "TRENDING_TITLE": "טרנדים 📈",

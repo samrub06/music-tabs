@@ -161,7 +161,7 @@ export function SongEndSuggestions({
   if (!nextSong && !isInLibrary) return null
 
   return (
-    <div ref={sentinelRef} className="mt-8 space-y-3 border-t border-border pt-6">
+    <div ref={sentinelRef} className="mt-8 space-y-3 pt-6">
       <h3
         className={cn('text-sm font-semibold text-foreground', UI_TEXT_ALIGN)}
         dir={isRtl ? 'rtl' : 'ltr'}

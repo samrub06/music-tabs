@@ -10,7 +10,8 @@ import {
   FolderOpen,
   Music,
   Trophy,
-  ShieldCheck,
+  Users,
+  Disc3,
 } from 'lucide-react'
 import { AppLogo } from '@/components/AppLogo'
 import { useLanguage } from '@/context/LanguageContext'
@@ -38,6 +39,21 @@ const SECONDARY_NAV = [
   { href: '/folders', labelKey: 'navigation.folders', icon: FolderOpen, match: (p: string) => p === '/folders' || p.startsWith('/folders/') },
   { href: '/chords', labelKey: 'navigation.chords', icon: Music, match: (p: string) => p === '/chords' || p.startsWith('/chords/') },
   { href: '/leaderboard', labelKey: 'navigation.leaderboard', icon: Trophy, match: (p: string) => p === '/leaderboard' || p.startsWith('/leaderboard/') },
+] as const
+
+const ADMIN_NAV = [
+  {
+    href: '/admin/songs',
+    labelKey: 'navigation.adminSongs',
+    icon: Disc3,
+    match: (p: string) => p === '/admin/songs' || p.startsWith('/admin/songs/'),
+  },
+  {
+    href: '/admin/users',
+    labelKey: 'navigation.adminUsers',
+    icon: Users,
+    match: (p: string) => p === '/admin/users' || p.startsWith('/admin/users/'),
+  },
 ] as const
 
 export function AppSidebar() {
@@ -109,23 +125,29 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {isAdmin && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname.startsWith('/admin')}
-                    tooltip={t('navigation.admin')}
-                  >
-                    <Link href="/admin/songs" prefetch>
-                      <ShieldCheck />
-                      <span>{t('navigation.admin')}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t('navigation.admin')}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {ADMIN_NAV.map(({ href, labelKey, icon: Icon, match }) => (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton asChild isActive={match(pathname)} tooltip={t(labelKey)}>
+                      <Link href={href} prefetch>
+                        <Icon />
+                        <span>{t(labelKey)}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarRail />

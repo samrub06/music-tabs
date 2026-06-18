@@ -52,6 +52,9 @@
     "chords": "Accords",
     "profile": "Profil",
     "leaderboard": "Classement",
+    "admin": "Administration",
+    "adminSongs": "Chansons du catalogue",
+    "adminUsers": "Utilisateurs",
     "more": "Plus",
     "MENU": "Menu"
   },
@@ -630,6 +633,26 @@
     "BPM_LABEL": "{bpm} BPM",
     "FULL_SONG_HIDDEN_TITLE": "Chanson complète masquée",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque."
+  },
+  "songSections": {
+    "section": "Section",
+    "content": "Contenu",
+    "metadata": "Métadonnées",
+    "intro": "Intro",
+    "introNumbered": "Intro {n}",
+    "outro": "Outro",
+    "outroNumbered": "Outro {n}",
+    "bridge": "Pont",
+    "bridgeNumbered": "Pont {n}",
+    "chorus": "Refrain",
+    "chorusNumbered": "Refrain {n}",
+    "verse": "Couplet",
+    "verseNumbered": "Couplet {n}",
+    "preChorus": "Pré-refrain",
+    "instrumental": "Instrumental",
+    "solo": "Solo",
+    "hook": "Hook",
+    "interlude": "Interlude"
   },
   "explore": {
     "TRENDING_TITLE": "Tendances 📈",

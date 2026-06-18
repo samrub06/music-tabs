@@ -63,6 +63,8 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     }
     if (path === '/profile' || path.startsWith('/profile/')) return undefined
     if (path === '/leaderboard' || path.startsWith('/leaderboard/')) return t('navigation.leaderboard')
+    if (path === '/admin/songs' || path.startsWith('/admin/songs/')) return t('navigation.adminSongs')
+    if (path === '/admin/users' || path.startsWith('/admin/users/')) return t('navigation.adminUsers')
     if (path.startsWith('/admin')) return t('navigation.admin')
     return undefined
   }

@@ -1,5 +1,13 @@
 import * as cheerio from 'cheerio';
+import { fetchNeginaHtml } from './neginaFetch';
+import { extractNeginaContent } from './neginaContentExtractor';
 import { fetchUltimateGuitarHtml } from './ugFetch';
+import {
+  buildTab4uCategoryUrl,
+  parseTab4uCoverImages,
+  parseTab4uLinkText,
+  parseTab4uTotalResults,
+} from './tab4uUtils';
 import { songService } from './songService';
 
 /**
@@ -621,10 +629,7 @@ export async function searchUltimateGuitarOnly(query: string): Promise<SearchRes
 async function scrapeTab4U(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
   try {
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
-      },
+      headers: TAB4U_HEADERS,
     });
 
     if (!response.ok) {
@@ -700,6 +705,7 @@ async function scrapeTab4U(url: string, searchResult?: SearchResult): Promise<Sc
     // Détecter la tonalité et le capo dans le contenu
     const key = detectKey(content);
     const capo = detectCapo(content);
+    const { artistImageUrl, songImageUrl } = parseTab4uCoverImages(html);
     
     console.log(`🎵 Extracted from Tab4U: "${title || 'Sans titre'}" by "${author || 'Auteur inconnu'}"${key ? ` (Key: ${key})` : ''}${capo ? ` (Capo: ${capo})` : ''}`);
 
@@ -711,7 +717,9 @@ async function scrapeTab4U(url: string, searchResult?: SearchResult): Promise<Sc
       url,
       reviews: searchResult?.reviews || 0,
       capo,
-      key
+      key,
+      artistImageUrl: searchResult?.artistImageUrl ?? artistImageUrl,
+      songImageUrl: searchResult?.songImageUrl ?? songImageUrl,
     };
   } catch (error) {
     console.error('Error scraping Tab4U:', error);
@@ -719,66 +727,280 @@ async function scrapeTab4U(url: string, searchResult?: SearchResult): Promise<Sc
   }
 }
 
+const TAB4U_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+  'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
+};
+
+const NEGINA_JEWISH_GENRE_PATH =
+  '/%D7%96%D7%90%D7%A0%D7%A8/%D7%9E%D7%95%D7%A1%D7%99%D7%A7%D7%94-%D7%99%D7%94%D7%95%D7%93%D7%99%D7%AA';
+
+function parseTab4uSearchResultsFromHtml(html: string, limit?: number): SearchResult[] {
+  const $ = cheerio.load(html);
+  const results: SearchResult[] = [];
+  const seenUrls = new Set<string>();
+
+  $('a[href*="tabs/songs/"]').each((_i: number, elem: unknown) => {
+    if (limit !== undefined && results.length >= limit) return false;
+
+    const $link = $(elem as any);
+    const href = $link.attr('href');
+    const parsed = parseTab4uLinkText($link.text());
+    if (!href || !parsed) return;
+
+    const fullUrl = href.startsWith('http') ? href : `https://www.tab4u.com/${href.replace(/^\//, '')}`;
+    if (seenUrls.has(fullUrl)) return;
+    seenUrls.add(fullUrl);
+
+    results.push({
+      title: parsed.title,
+      author: parsed.author,
+      url: fullUrl,
+      source: 'Tab4U',
+      reviews: 0,
+    });
+  });
+
+  return results;
+}
+
+export interface Tab4uCategoryListOptions {
+  cat: number;
+  offset?: number;
+  pageSize?: number;
+}
+
+export interface Tab4uCategoryListResult {
+  songs: SearchResult[];
+  totalResults?: number;
+  nextOffset?: number;
+}
+
+export interface NeginaGenreSongEntry {
+  title: string;
+  author: string;
+  url: string;
+}
+
 /**
  * Recherche sur Tab4U (site israélien)
  */
 export async function searchTab4UOnly(query: string): Promise<SearchResult[]> {
-  const results: SearchResult[] = [];
-
   try {
     const searchUrl = `https://www.tab4u.com/resultsSimple?tab=songs&q=${encodeURIComponent(query)}`;
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
-      },
-    });
+    const response = await fetch(searchUrl, { headers: TAB4U_HEADERS });
 
     if (!response.ok) {
-      return results;
+      return [];
     }
 
     const html = await response.text();
-    const $ = cheerio.load(html);
+    return parseTab4uSearchResultsFromHtml(html, 10);
+  } catch (error) {
+    console.error('Error searching Tab4U:', error);
+    return [];
+  }
+}
 
-    // Tab4U structure: <a href="tabs/songs/...">Title / Artist</a>
-    const songLinks = $('a[href*="tabs/songs/"]');
-    
-    songLinks.slice(0, 10).each((i: number, elem: any) => {
-      const $link = $(elem);
-      const href = $link.attr('href');
-      const fullText = $link.text().trim();
-      
-      // Ignorer les liens avec "ללא אקורדים" (sans accords)
-      if (fullText.includes('ללא אקורדים')) {
-        return;
-      }
-      
-      // Format du texte: "Titre / Artiste" ou "Titre - Artiste"
-      const parts = fullText.split(/[/\-]/).map(p => p.trim());
-      const title = parts[0] || fullText;
-      const author = parts[1] || '';
-      
-      if (href && title) {
-        const fullUrl = href.startsWith('http') 
-          ? href 
-          : `https://www.tab4u.com/${href}`;
-          
-        results.push({
+/**
+ * Liste les chansons d'une catégorie Tab4U (ex. cat=1 שירים חסידיים).
+ */
+export async function listTab4uCategorySongs(
+  options: Tab4uCategoryListOptions
+): Promise<Tab4uCategoryListResult> {
+  const offset = options.offset ?? 0;
+  const pageSize = options.pageSize ?? 30;
+  const url = buildTab4uCategoryUrl(options.cat, offset, pageSize);
+
+  try {
+    const response = await fetch(url, { headers: TAB4U_HEADERS });
+    if (!response.ok) {
+      return { songs: [] };
+    }
+
+    const html = await response.text();
+    const songs = parseTab4uSearchResultsFromHtml(html);
+    const totalResults = parseTab4uTotalResults(html);
+    const nextOffset =
+      totalResults !== undefined && offset + pageSize < totalResults
+        ? offset + pageSize
+        : songs.length > 0
+          ? offset + pageSize
+          : undefined;
+
+    return { songs, totalResults, nextOffset };
+  } catch (error) {
+    console.error('Error listing Tab4U category:', error);
+    return { songs: [] };
+  }
+}
+
+function parseNeginaTitleAuthor(h1: string): { title: string; author: string } {
+  const match = h1.match(/^אקורדים לשיר\s+(.+?)\s+של\s+(.+)$/);
+  if (match) {
+    return { title: match[1].trim(), author: match[2].trim() };
+  }
+  return { title: h1.replace(/^אקורדים לשיר\s*/, '').trim(), author: 'Unknown' };
+}
+
+function parseNeginaTabId(url: string): string | undefined {
+  try {
+    const pathname = new URL(url).pathname;
+    const parts = pathname.split('/').filter(Boolean);
+    const chordsIndex = parts.indexOf('chords');
+    if (chordsIndex === -1 || parts.length < chordsIndex + 3) return undefined;
+    return `negina:${parts[chordsIndex + 1]}:${parts[chordsIndex + 2]}`;
+  } catch {
+    return undefined;
+  }
+}
+
+async function scrapeNegina(url: string, searchResult?: SearchResult): Promise<ScrapedSong | null> {
+  try {
+    const response = await fetchNeginaHtml(url, { referer: 'https://negina.co.il/chords', pageKind: 'chord' });
+    if (!response.ok || response.blocked) {
+      return null;
+    }
+
+    const $ = cheerio.load(response.body);
+    const h1 = $('h1.song-breadcrumbs__title, h1').first().text().trim();
+    const parsed = parseNeginaTitleAuthor(h1);
+
+    let title = searchResult?.title || parsed.title;
+    let author = searchResult?.author || parsed.author;
+
+    if (!searchResult?.title && title.includes('של')) {
+      const fromH1 = parseNeginaTitleAuthor(h1);
+      title = fromH1.title;
+      author = fromH1.author;
+    }
+
+    const content = extractNeginaContent($, title);
+    if (!content || content.length < 50) {
+      return null;
+    }
+
+    const key = detectKey(content);
+    const capo = detectCapo(content);
+
+    return {
+      title: title || 'Sans titre',
+      author: author || 'Auteur inconnu',
+      content: cleanSongContent(content),
+      source: 'Negina',
+      url,
+      reviews: 0,
+      capo,
+      key,
+    };
+  } catch (error) {
+    console.error('Error scraping Negina:', error);
+    return null;
+  }
+}
+
+function parseNeginaGenreCards(html: string): NeginaGenreSongEntry[] {
+  const $ = cheerio.load(html);
+  const entries: NeginaGenreSongEntry[] = [];
+  const seenUrls = new Set<string>();
+
+  $('#songsContent .song-list__card').each((_i: number, card: unknown) => {
+    const $card = $(card as any);
+    const title =
+      $card.find('.song-list__text_1 span[title]').attr('title')?.trim() ||
+      $card.find('.song-list__text_1 span').last().text().trim();
+    const author = $card.find('.song-list__text_2 a').text().trim();
+    const href = $card.find('.song-list__lyrics a[href*="/chords/"]').attr('href');
+    if (!title || !href) return;
+
+    const fullUrl = href.startsWith('http') ? href : `https://negina.co.il${href.startsWith('/') ? href : `/${href}`}`;
+    if (seenUrls.has(fullUrl)) return;
+    seenUrls.add(fullUrl);
+
+    entries.push({ title, author: author || 'Unknown', url: fullUrl });
+  });
+
+  return entries;
+}
+
+/**
+ * Liste les chansons avec accords d'une page genre Negina.
+ */
+export async function listNeginaGenreSongs(page = 1): Promise<NeginaGenreSongEntry[]> {
+  const pageSuffix = page > 1 ? `?page=${page}` : '';
+  const url = `https://negina.co.il${NEGINA_JEWISH_GENRE_PATH}${pageSuffix}`;
+
+  try {
+    const response = await fetchNeginaHtml(url, { pageKind: 'listing' });
+    if (!response.ok || response.blocked) {
+      return [];
+    }
+    return parseNeginaGenreCards(response.body);
+  } catch (error) {
+    console.error('Error listing Negina genre:', error);
+    return [];
+  }
+}
+
+/**
+ * Recherche sur Negina — filtre les liens /chords/ contenant la requête.
+ */
+export async function searchNeginaOnly(query: string): Promise<SearchResult[]> {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return [];
+
+  const searchUrls = [
+    `https://negina.co.il/chords?search=${encodeURIComponent(query)}`,
+    `https://negina.co.il/chords?q=${encodeURIComponent(query)}`,
+    'https://negina.co.il/chords',
+  ];
+
+  const merged = new Map<string, SearchResult>();
+
+  for (const url of searchUrls) {
+    try {
+      const response = await fetchNeginaHtml(url, { pageKind: 'any' });
+      if (!response.ok || response.blocked) continue;
+
+      const $ = cheerio.load(response.body);
+      $('a[href*="/chords/"]').each((_i: number, elem: unknown) => {
+        const $link = $(elem as any);
+        const href = $link.attr('href');
+        if (!href || href === '/chords') return;
+
+        const fullUrl = href.startsWith('http') ? href : `https://negina.co.il${href.startsWith('/') ? href : `/${href}`}`;
+        const linkText = $link.text().trim();
+        const slugText = decodeURIComponent(fullUrl).toLowerCase();
+
+        if (
+          !slugText.includes(normalizedQuery) &&
+          !linkText.toLowerCase().includes(normalizedQuery)
+        ) {
+          return;
+        }
+
+        const pathParts = new URL(fullUrl).pathname.split('/').filter(Boolean);
+        const songSlug = pathParts[pathParts.length - 1] ?? '';
+        const artistSlug = pathParts[pathParts.length - 2] ?? '';
+        const title = linkText && linkText !== 'אקורדים' ? linkText : songSlug.replace(/-/g, ' ');
+        const author = artistSlug.replace(/-/g, ' ');
+
+        merged.set(fullUrl, {
           title,
           author: author || 'Unknown',
           url: fullUrl,
-          source: 'Tab4U',
-          reviews: 0, // Tab4U ne fournit pas de données de reviews
+          source: 'Negina',
+          reviews: 0,
         });
-      }
-    });
+      });
 
-  } catch (error) {
-    console.error('Error searching Tab4U:', error);
+      if (merged.size >= 10) break;
+    } catch (error) {
+      console.error('Error searching Negina:', url, error);
+    }
   }
 
-  return results;
+  return Array.from(merged.values()).slice(0, 10);
 }
 
 /**
@@ -826,6 +1048,11 @@ export async function scrapeSongFromUrl(url: string, searchResult?: SearchResult
     // Tab4U
     if (hostname.includes('tab4u.com')) {
       return await scrapeTab4U(url, searchResult);
+    }
+
+    // Negina
+    if (hostname.includes('negina.co.il')) {
+      return await scrapeNegina(url, searchResult);
     }
 
     // Pour les autres sites, utiliser le scraper générique

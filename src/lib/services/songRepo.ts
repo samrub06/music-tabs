@@ -81,6 +81,9 @@ const LIGHTWEIGHT_LIST_COLUMNS =
 const PUBLIC_PLAYLIST_LIST_COLUMNS =
   'id, title, author, song_image_url, artist_image_url, genre, key'
 
+/** PostgREST `.in()` via GET breaks on very large playlists (URL length). */
+const PUBLIC_PLAYLIST_ID_CHUNK_SIZE = 100
+
 const LIBRARY_LIST_COLUMNS =
   'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, is_liked, key, capo, difficulty'
 
@@ -879,25 +882,27 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getSongsByIdsForPublicPlaylist(songIds: string[]): Promise<Song[]> {
     if (songIds.length === 0) return []
 
-    const { data, error } = await (client.from('songs') as any)
-      .select(PUBLIC_PLAYLIST_LIST_COLUMNS)
-      .in('id', songIds)
+    const songMap = new Map<string, Song>()
 
-    if (error) throw error
+    for (let i = 0; i < songIds.length; i += PUBLIC_PLAYLIST_ID_CHUNK_SIZE) {
+      const chunk = songIds.slice(i, i + PUBLIC_PLAYLIST_ID_CHUNK_SIZE)
+      const { data, error } = await (client.from('songs') as any)
+        .select(PUBLIC_PLAYLIST_LIST_COLUMNS)
+        .in('id', chunk)
 
-    const songMap = new Map((data || []).map((dbSong: any) => {
-      const mappedSong = mapDbSongToList(dbSong)
-      return [
-        dbSong.id,
-        {
+      if (error) throw error
+
+      for (const dbSong of data || []) {
+        const mappedSong = mapDbSongToList(dbSong)
+        songMap.set(dbSong.id, {
           ...mappedSong,
-          key: dbSong.key || undefined
-        }
-      ]
-    }))
+          key: dbSong.key || undefined,
+        })
+      }
+    }
 
     return songIds
-      .map(id => songMap.get(id))
+      .map((id) => songMap.get(id))
       .filter((song): song is Song => song !== undefined)
   },
 

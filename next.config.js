@@ -38,6 +38,21 @@ const nextConfig = {
         hostname: '**.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.tab4u.com',
+        pathname: '/additions/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.tab4u.com',
+        pathname: '/songsNotes/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.tab4u.com',
+        pathname: '/images/proPicture/**',
+      },
     ],
   },
   

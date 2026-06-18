@@ -5,14 +5,14 @@ import {
   type HebrewPlaylistDefinition,
   type HebrewPlaylistSongEntry,
 } from '@/data/hebrewPlaylists'
-import { songRepo } from '@/lib/services/songRepo'
+import { upsertCatalogSongFromNegina, upsertCatalogSongFromTab4u } from '@/lib/services/catalogSongUpsert'
 import {
   scrapeSongFromUrl,
+  searchNeginaOnly,
   searchTab4UOnly,
   type SearchResult,
 } from '@/lib/services/scraperService'
-import { parseTextToStructuredSong } from '@/utils/songParser'
-import { extractAllChords } from '@/utils/structuredSong'
+import { cleanTab4uAuthor } from '@/lib/services/tab4uUtils'
 import type { Database } from '@/types/db'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 
@@ -35,13 +35,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/** Strip Tab4U rating suffixes like "4(1 דירוג)" from artist names. */
-export function cleanTab4uAuthor(author: string): string {
-  return author
-    .replace(/\d+(?:\.\d+)?\([\d\sמדרגיםדירוג.]+\)/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
+export { cleanTab4uAuthor } from '@/lib/services/tab4uUtils'
 
 function normalizeMatchText(value: string): string {
   return value.toLowerCase().replace(/\s+/g, ' ').trim()
@@ -76,80 +70,6 @@ function pickBestTab4uResult(
   }
 
   return withChords[0] ?? null
-}
-
-async function upsertCatalogSongFromTab4u(
-  client: SupabaseClient<Database>,
-  result: SearchResult,
-  catalogGenre: HebrewCatalogGenre
-): Promise<{ songId: string; action: 'added' | 'updated' }> {
-  const repo = songRepo(client)
-  const existing = await repo.findExistingSystemCatalogSong({
-    sourceUrl: result.url,
-    title: result.title,
-    author: cleanTab4uAuthor(result.author),
-  })
-
-  const scraped = await scrapeSongFromUrl(result.url, result)
-  if (!scraped?.content?.trim()) {
-    throw new Error('empty scrape content')
-  }
-
-  const author = cleanTab4uAuthor(scraped.author || result.author)
-  const now = new Date().toISOString()
-
-  const row = {
-    title: scraped.title || result.title,
-    author,
-    source_url: result.url,
-    source_site: 'Tab4U',
-    is_public: true,
-    is_trending: true,
-    genre: catalogGenre,
-    updated_at: now,
-  }
-
-  if (existing) {
-    const structuredSong = parseTextToStructuredSong(
-      row.title,
-      author,
-      scraped.content,
-      undefined,
-      undefined,
-      scraped.capo,
-      scraped.key
-    )
-    const allChords = extractAllChords(structuredSong)
-
-    await (client.from('songs') as any)
-      .update({
-        ...row,
-        sections: structuredSong.sections,
-        key: scraped.key ?? structuredSong.firstChord,
-        capo: scraped.capo ?? null,
-        first_chord: structuredSong.firstChord ?? null,
-        last_chord: structuredSong.lastChord ?? null,
-        all_chords: allChords.length > 0 ? allChords : null,
-      })
-      .eq('id', existing.id)
-
-    return { songId: existing.id, action: 'updated' }
-  }
-
-  const created = await repo.createSystemSong(
-    {
-      title: row.title,
-      author,
-      content: scraped.content,
-      key: scraped.key,
-      capo: scraped.capo,
-      sourceUrl: result.url,
-      sourceSite: 'Tab4U',
-    },
-    { isPublic: true, isTrending: true, genre: catalogGenre }
-  )
-
-  return { songId: created.id, action: 'added' }
 }
 
 async function linkExistingCatalogSong(
@@ -200,17 +120,27 @@ async function seedPlaylistSong(
     }
 
     const results = await searchTab4UOnly(entry.searchQuery)
-    const match = pickBestTab4uResult(results, entry)
+    let match = pickBestTab4uResult(results, entry)
+    let source: 'Tab4U' | 'Negina' = 'Tab4U'
+
+    if (!match) {
+      const neginaResults = await searchNeginaOnly(entry.searchQuery)
+      match = pickBestTab4uResult(neginaResults, entry)
+      source = 'Negina'
+    }
 
     if (!match) {
       return {
         status: 'skipped',
-        reason: 'no Tab4U result',
+        reason: 'no Tab4U or Negina result',
         query: entry.searchQuery,
       }
     }
 
-    const { songId, action } = await upsertCatalogSongFromTab4u(client, match, catalogGenre)
+    const { songId, action } =
+      source === 'Negina'
+        ? await upsertCatalogSongFromNegina(client, match, catalogGenre)
+        : await upsertCatalogSongFromTab4u(client, match, catalogGenre)
     return {
       status: action,
       songId,
@@ -296,6 +226,7 @@ export const hebrewPlaylistSeedService = (client: SupabaseClient<Database>) => (
   async seedAllHebrewPlaylists(): Promise<HebrewPlaylistSeedResult[]> {
     const results: HebrewPlaylistSeedResult[] = []
     for (const definition of HEBREW_PLAYLISTS) {
+      if (definition.songs.length === 0) continue
       results.push(await this.seedPlaylist(definition))
     }
     return results

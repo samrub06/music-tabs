@@ -10,6 +10,8 @@ export const HEBREW_CATALOG_GENRES = {
   akiva: 'hebrew-akiva',
   ribo: 'hebrew-ribo',
   songbook: 'hebrew-songbook',
+  neginaJewish: 'hebrew-negina-jewish',
+  tab4uHassidic: 'hebrew-tab4u-hassidic',
 } as const
 
 export type HebrewCatalogGenre =

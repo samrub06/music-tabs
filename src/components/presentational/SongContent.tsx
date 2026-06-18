@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Piano, Guitar } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
+import { containsHebrew, getTextDirection } from '@/utils/rtl';
 
 const ChordDiagramsGrid = dynamic(
   () => import('./ChordDiagramsGrid').then((mod) => mod.ChordDiagramsGrid),
@@ -147,7 +148,7 @@ export default function SongContent({
   currentFolderId,
   onFolderChange,
 }: SongContentProps) {
-  const { t, isRtl } = useLanguage();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const { signInWithGoogle } = useAuthContext();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
@@ -212,6 +213,7 @@ export default function SongContent({
         <textarea
           value={editContent}
           onChange={(e) => onEditContentChange(e.target.value)}
+          dir={getTextDirection(editContent)}
           className="flex-1 w-full p-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder={t('songForm.lyrics')}
         />
@@ -266,7 +268,10 @@ export default function SongContent({
   const coverUrl = useSongCover(transposedSong);
 
   const songTitleBlock = (
-    <div className="min-w-0 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div
+      className="min-w-0 text-start"
+      dir={getTextDirection(`${transposedSong?.title ?? ''} ${transposedSong?.author ?? ''}`)}
+    >
       <h2 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base">
         {transposedSong?.title || ''}
       </h2>
@@ -499,9 +504,9 @@ export default function SongContent({
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full font-semibold text-gray-900 dark:text-gray-100 py-3 px-4 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px]"
+                className="w-full font-semibold text-gray-900 dark:text-gray-100 py-3 px-4 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px] text-start"
               >
-                <MusicalNoteIcon className="w-5 h-5 mr-2 shrink-0" />
+                <MusicalNoteIcon className="w-5 h-5 me-2 shrink-0" />
                 {t('songContent.CHORDS_USED_TITLE')}
               </div>
             </CollapsibleTrigger>
@@ -690,7 +695,18 @@ interface StructuredSongContentProps {
 }
 
 function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongContentProps) {
+  const { t } = useLanguage();
   const measurementRef = useRef<HTMLDivElement>(null);
+  const songTextDirection = useMemo(
+    () =>
+      getTextDirection(
+        song.sections
+          .flatMap((section: { lines?: Array<{ lyrics?: string }> }) => section.lines ?? [])
+          .map((line) => line.lyrics ?? '')
+          .join('\n') || song.title || ''
+      ),
+    [song]
+  );
   const [openSections, setOpenSections] = useState<Set<number>>(() => {
     const indices = new Set<number>();
     song.sections.forEach((s: { name: string }, i: number) => {
@@ -706,11 +722,6 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
       else next.delete(sectionIndex);
       return next;
     });
-  };
-
-  // Detect if content contains Hebrew/RTL text
-  const containsHebrew = (text: string) => {
-    return /[\u0590-\u05FF\u200F\u200E]/.test(text);
   };
 
   // Calculate character width based on font size for precise alignment
@@ -769,9 +780,8 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
     
     if (line.type === 'lyrics_only') {
-      const isHebrew = line.lyrics && containsHebrew(line.lyrics);
       return (
-        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={getTextDirection(line.lyrics)} style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
           fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
@@ -787,7 +797,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     
     if (line.type === 'chords_only') {
       return (
-        <div key={lineIndex} dir="ltr" className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
+        <div key={lineIndex} dir={songTextDirection} className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
           fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
@@ -926,8 +936,8 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
               <div
                 role="button"
                 tabIndex={0}
-                dir="ltr"
-                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-gray-100 px-3 py-2.5 text-right font-medium text-gray-700 hover:bg-gray-200/90 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                dir={getTextDirection(section.name)}
+                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-gray-100 px-3 py-2.5 text-start font-medium text-gray-700 hover:bg-gray-200/90 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 style={{
                   fontSize: `${Math.min(optimalFontSize + 2, 16)}px`,
                   fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -936,7 +946,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
                   maxWidth: '100%',
                 }}
               >
-                {formatSectionDisplayName(section.name)}
+                {formatSectionDisplayName(section.name, t)}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -1078,13 +1088,13 @@ function ChordOverLyricsLine({ line, isHebrew, fontSize, onChordClick }: ChordOv
   if (!needsWrappingCheck) {
     // Simple case: no wrapping needed
     return (
-      <div ref={containerRef} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+      <div ref={containerRef} className="mb-2 w-full" dir={getTextDirection(line.lyrics)} style={{ 
         fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
         maxWidth: '100%',
         overflow: 'hidden'
       }}>
-        {/* Chord line — always LTR for positioning and chord names */}
-        <div dir="ltr" className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
+        {/* Chord line inherits direction from parent lyrics container */}
+        <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
           fontSize: `${fontSize}px`, 
           lineHeight: 1.4,
           maxWidth: '100%',
@@ -1164,15 +1174,15 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
     const lineHeight = getOptimalLineHeight(fontSize);
     
     return (
-      <div ref={ref} className="mb-2 w-full" dir={isHebrew ? 'rtl' : 'ltr'} style={{ 
+      <div ref={ref} className="mb-2 w-full" dir={getTextDirection(line.lyrics)} style={{ 
         fontFamily: 'Monaco, "Lucida Console", "Courier New", monospace',
         maxWidth: '100%',
         overflow: 'hidden'
       }}>
         {wrappedLines.map((wrappedLine, lineIndex) => (
           <div key={lineIndex} className="mb-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-            {/* Chord line for this wrapped line — always LTR */}
-            <div dir="ltr" className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
+            {/* Chord line inherits direction from parent lyrics container */}
+            <div className="text-blue-600 font-semibold min-h-[1.8rem] relative w-full" style={{ 
               fontSize: `${fontSize}px`, 
               lineHeight,
               maxWidth: '100%',

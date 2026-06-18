@@ -98,7 +98,7 @@ const LYRICS_SECTIONS = [
 
 function EndSuggestionsSkeleton() {
   return (
-    <div className="mt-8 space-y-3 border-t border-border pt-6">
+    <div className="mt-8 space-y-3 pt-6">
       <Bone className="h-4 w-32" />
       <div className="flex gap-3 overflow-hidden">
         {Array.from({ length: 2 }).map((_, i) => (

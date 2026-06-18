@@ -53,6 +53,8 @@
     "profile": "Profile",
     "leaderboard": "Leaderboard",
     "admin": "Admin",
+    "adminSongs": "Catalog songs",
+    "adminUsers": "Users",
     "more": "More",
     "MENU": "Menu"
   },
@@ -631,6 +633,26 @@
     "BPM_LABEL": "{bpm} BPM",
     "FULL_SONG_HIDDEN_TITLE": "Full song hidden",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Sign in to access the full song and add it to your library."
+  },
+  "songSections": {
+    "section": "Section",
+    "content": "Content",
+    "metadata": "Metadata",
+    "intro": "Intro",
+    "introNumbered": "Intro {n}",
+    "outro": "Outro",
+    "outroNumbered": "Outro {n}",
+    "bridge": "Bridge",
+    "bridgeNumbered": "Bridge {n}",
+    "chorus": "Chorus",
+    "chorusNumbered": "Chorus {n}",
+    "verse": "Verse",
+    "verseNumbered": "Verse {n}",
+    "preChorus": "Pre-chorus",
+    "instrumental": "Instrumental",
+    "solo": "Solo",
+    "hook": "Hook",
+    "interlude": "Interlude"
   },
   "explore": {
     "TRENDING_TITLE": "Trending 📈",

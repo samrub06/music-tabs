@@ -295,11 +295,33 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     seedMode: 'manual',
   },
   {
+    slug: 'negina-jewish-music',
+    name: 'Negina — מוסיקה יהודית',
+    description: 'מוסיקה יהודית — catalog scraped from Negina.co.il',
+    section: 'jewish',
+    displayOrder: 10,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.neginaJewish },
+    gradientFrom: 'from-violet-600',
+    gradientTo: 'to-purple-900',
+    seedMode: 'manual',
+  },
+  {
+    slug: 'tab4u-hassidic-full',
+    name: 'Tab4U — שירים חסידיים',
+    description: 'שירים חסידיים — full Tab4U category (cat=1)',
+    section: 'jewish',
+    displayOrder: 11,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.tab4uHassidic },
+    gradientFrom: 'from-amber-700',
+    gradientTo: 'to-orange-900',
+    seedMode: 'manual',
+  },
+  {
     slug: 'jewish-songbook',
     name: 'Songbook',
     description: '',
     section: 'jewish',
-    displayOrder: 10,
+    displayOrder: 12,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.songbook },
     gradientFrom: 'from-teal-700',
     gradientTo: 'to-cyan-900',
@@ -430,12 +452,19 @@ const SONGBOOK_HUB_SLUGS = new Set([
   'jewish-songbook',
   'chabad-nigunim',
   'hassidic',
+  'tab4u-hassidic-full',
   'carlebach',
   'moroccan-piyut',
   'tunisian',
 ])
 
-const ISRAELI_HUB_SLUGS = new Set(['modern-israeli', 'ishay-ribo', 'yosef-karduner', 'akiva'])
+const ISRAELI_HUB_SLUGS = new Set([
+  'modern-israeli',
+  'ishay-ribo',
+  'yosef-karduner',
+  'akiva',
+  'negina-jewish-music',
+])
 
 export function getHubZoneForSlug(slug: string): HubZone | undefined {
   if (SONGBOOK_HUB_SLUGS.has(slug)) return 'songbook'

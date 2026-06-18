@@ -30,6 +30,8 @@ export const CURATED_PLAYLIST_COVER_FILES: Record<string, string> = {
   'ishay-ribo': 'ribo.jpg',
   'yosef-karduner': 'yosef.jpeg',
   akiva: 'akiva.jpeg',
+  'negina-jewish-music': 'israel.jpeg',
+  'tab4u-hassidic-full': 'hassidim.jpeg',
   // Decades
   '60s': '60s.jpeg',
   '70s': '70s.jpeg',

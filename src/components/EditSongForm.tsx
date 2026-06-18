@@ -3,6 +3,7 @@
 import { useLanguage } from '@/context/LanguageContext';
 import { Song, Folder, SongEditData } from '@/types';
 import { structuredSongToText } from '@/utils/structuredToText';
+import { getTextDirection } from '@/utils/rtl';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 
@@ -160,6 +161,7 @@ export default function EditSongForm({ isOpen, onClose, song, folders = [], onUp
               <textarea
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                dir={getTextDirection(formData.content)}
                 rows={8}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               placeholder={`[Intro]

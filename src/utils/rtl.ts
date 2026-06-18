@@ -10,6 +10,10 @@ export function containsHebrew(text: string): boolean {
   return HEBREW_REGEX.test(text)
 }
 
+export function getTextDirection(text: string): 'rtl' | 'ltr' {
+  return containsHebrew(text) ? 'rtl' : 'ltr'
+}
+
 export function applyDocumentLanguage(language: Language): void {
   if (typeof document === 'undefined') return
 
