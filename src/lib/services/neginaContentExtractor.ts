@@ -1,23 +1,28 @@
 import type { Cheerio, CheerioAPI } from 'cheerio'
 import type { Element } from 'domhandler'
+import type { ChordPosition } from '@/types'
+import { buildSpacedChordLine } from '@/utils/chordLineBuilder'
 
-/** Map Negina Hebrew section labels → bracket names (UG-compatible). */
-const SECTION_HEADER_MAP: Record<string, string> = {
-  פתיחה: 'Intro',
-  בית: 'Verse',
-  פזמון: 'Chorus',
-  מעבר: 'Bridge',
-  סיום: 'Outro',
-  סולו: 'Solo',
-  אינטרו: 'Intro',
-  אאוטרו: 'Outro',
+const KNOWN_SECTION_HEADERS = new Set([
+  'פתיחה',
+  'בית',
+  'פזמון',
+  'מעבר',
+  'סיום',
+  'סולו',
+  'אינטרו',
+  'אאוטרו',
+])
+
+interface LyricPart {
+  text: string
+  isJoin: boolean
+  chord?: string
 }
-
-const KNOWN_SECTION_HEADERS = new Set(Object.keys(SECTION_HEADER_MAP))
 
 interface ParsedRow {
   sectionHeader?: string
-  chords: string[]
+  chordPositions: ChordPosition[]
   lyrics: string
 }
 
@@ -66,10 +71,6 @@ function extractLyricFromNode($: CheerioAPI, $lyric: Cheerio<Element>): string {
   return normalizeLyric(result)
 }
 
-function mapSectionHeader(label: string): string {
-  return SECTION_HEADER_MAP[label] ?? label
-}
-
 function isSongTitle(text: string, songTitle?: string): boolean {
   if (!songTitle) return false
   return normalizeLyric(text) === normalizeLyric(songTitle)
@@ -101,7 +102,6 @@ function trimJoinOverflow(previous: string, joinLyric: string): string {
   const completed = normalizeLyric(previous + syllablePart)
   if (rest === completed) return syllablePart
 
-  // Multi-word tail that repeats an already-complete phrase (not intentional single-word repeats like "לרצות לרצות").
   if (rest.includes(' ') && completed.endsWith(rest) && completed.length > rest.length) {
     return syllablePart
   }
@@ -109,10 +109,41 @@ function trimJoinOverflow(previous: string, joinLyric: string): string {
   return joinLyric
 }
 
-function joinRowLyrics(parts: { text: string; isJoin: boolean }[]): string {
+/**
+ * Each Negina `.phrase` cell starts at a specific column in the grid. The chord
+ * of a cell sounds at the beginning of that cell's contribution to the lyric:
+ * - non-join phrase: position = start of this phrase in the accumulated lyric
+ * - join phrase: position = current end of accumulated lyric (the join stitches
+ *   directly onto the previous syllable, with no leading space)
+ */
+function chordPositionForPart(result: string, part: LyricPart): number {
+  if (!part.text) return result.length
+  if (part.isJoin) return result.length
+  return result ? result.length + 1 : 0
+}
+
+function deduplicateChordPositions(positions: ChordPosition[]): ChordPosition[] {
+  const seen = new Set<number>()
+  return positions.map((cp) => {
+    let pos = cp.position
+    while (seen.has(pos)) pos++
+    seen.add(pos)
+    return pos === cp.position ? cp : { ...cp, position: pos }
+  })
+}
+
+function joinRowWithChordPositions(parts: LyricPart[]): {
+  lyrics: string
+  chordPositions: ChordPosition[]
+} {
   let result = ''
+  const chordPositions: ChordPosition[] = []
 
   for (const part of parts) {
+    if (part.chord) {
+      chordPositions.push({ chord: part.chord, position: chordPositionForPart(result, part) })
+    }
+
     if (!part.text) continue
 
     if (!result) {
@@ -124,7 +155,10 @@ function joinRowLyrics(parts: { text: string; isJoin: boolean }[]): string {
     result += part.isJoin ? text : ` ${text}`
   }
 
-  return dedupeConsecutivePhrase(normalizeLyric(result))
+  return {
+    lyrics: dedupeConsecutivePhrase(normalizeLyric(result)),
+    chordPositions: deduplicateChordPositions(chordPositions),
+  }
 }
 
 function isRedundantLyricRow(current: string, previousLyric?: string): boolean {
@@ -134,8 +168,7 @@ function isRedundantLyricRow(current: string, previousLyric?: string): boolean {
 }
 
 function parseDataColRow($: CheerioAPI, $row: Cheerio<Element>): ParsedRow {
-  const chords: string[] = []
-  const lyricParts: { text: string; isJoin: boolean }[] = []
+  const lyricParts: LyricPart[] = []
   let sectionHeader: string | undefined
 
   $row.find('.phrase').each((_, phraseEl) => {
@@ -154,22 +187,27 @@ function parseDataColRow($: CheerioAPI, $row: Cheerio<Element>): ParsedRow {
       sectionHeader = h3
     }
 
-    if (chord) chords.push(chord)
-
-    if (!lyric || lyric === '*') return
+    if (!lyric || lyric === '*') {
+      if (chord) {
+        lyricParts.push({ text: '', isJoin, chord })
+      }
+      return
+    }
 
     if (KNOWN_SECTION_HEADERS.has(lyric)) {
       sectionHeader = lyric
       return
     }
 
-    lyricParts.push({ text: lyric, isJoin })
+    lyricParts.push({ text: lyric, isJoin, ...(chord ? { chord } : {}) })
   })
+
+  const { lyrics, chordPositions } = joinRowWithChordPositions(lyricParts)
 
   return {
     sectionHeader,
-    chords,
-    lyrics: joinRowLyrics(lyricParts),
+    chordPositions,
+    lyrics,
   }
 }
 
@@ -178,24 +216,15 @@ function emitSection(
   lines: string[],
   sectionCounts: Map<string, number>
 ): void {
-  const base = mapSectionHeader(label)
-  const count = (sectionCounts.get(base) ?? 0) + 1
-  sectionCounts.set(base, count)
-
-  const numberedBases = new Set(['Verse', 'Chorus', 'Bridge', 'Intro', 'Outro'])
-  const display =
-    count > 1 && numberedBases.has(base)
-      ? `${base} ${count}`
-      : count === 1 && base === 'Verse'
-        ? 'Verse 1'
-        : base
-
+  const count = (sectionCounts.get(label) ?? 0) + 1
+  sectionCounts.set(label, count)
+  const display = count > 1 ? `${label} ${count}` : label
   lines.push(`[${display}]`)
 }
 
 function flushParsedRow(row: ParsedRow, lines: string[]): void {
-  if (row.chords.length > 0) {
-    lines.push(row.chords.join(' '))
+  if (row.chordPositions.length > 0 && row.lyrics) {
+    lines.push(buildSpacedChordLine(row.chordPositions, row.lyrics))
   }
   if (row.lyrics) {
     lines.push(row.lyrics)
@@ -233,12 +262,12 @@ export function extractNeginaContent($: CheerioAPI, songTitle?: string): string 
       }
     }
 
-    if (!parsed.chords.length && !parsed.lyrics) return
+    if (!parsed.chordPositions.length && !parsed.lyrics) return
     if (parsed.lyrics && isSongTitle(parsed.lyrics, songTitle)) return
 
     if (
       parsed.lyrics &&
-      !parsed.chords.length &&
+      !parsed.chordPositions.length &&
       isRedundantLyricRow(parsed.lyrics, lastLyricLine)
     ) {
       return
@@ -260,17 +289,17 @@ export function extractNeginaContent($: CheerioAPI, songTitle?: string): string 
 function extractNeginaContentLegacy($: CheerioAPI, songTitle?: string): string {
   const lines: string[] = []
   const sectionCounts = new Map<string, number>()
-  const chords: string[] = []
-  const lyricParts: { text: string; isJoin: boolean }[] = []
+  const lyricParts: LyricPart[] = []
 
   const wrp = $('.song-text__wrp[data-version="original"]').first()
   const container = wrp.length ? wrp : $('#song-container')
 
   const flush = () => {
-    const lyrics = joinRowLyrics(lyricParts)
-    if (chords.length > 0) lines.push(chords.join(' '))
+    const { lyrics, chordPositions } = joinRowWithChordPositions(lyricParts)
+    if (chordPositions.length > 0 && lyrics) {
+      lines.push(buildSpacedChordLine(chordPositions, lyrics))
+    }
     if (lyrics) lines.push(lyrics)
-    chords.length = 0
     lyricParts.length = 0
   }
 
@@ -293,7 +322,7 @@ function extractNeginaContentLegacy($: CheerioAPI, songTitle?: string): string {
     if (isSongTitle(lyric, songTitle) || isSongTitle(h3, songTitle)) return
 
     if (isBlank) {
-      if (chord) chords.push(chord)
+      if (chord) lyricParts.push({ text: '', isJoin, chord })
       else flush()
       return
     }
@@ -304,12 +333,16 @@ function extractNeginaContentLegacy($: CheerioAPI, songTitle?: string): string {
       return
     }
 
-    if (!isJoin && lyricParts.length > 0 && chords.length > 0 && !lyricParts[lyricParts.length - 1].isJoin) {
+    if (
+      !isJoin &&
+      lyricParts.length > 0 &&
+      lyricParts.some((p) => p.chord) &&
+      !lyricParts[lyricParts.length - 1].isJoin
+    ) {
       flush()
     }
 
-    if (chord) chords.push(chord)
-    lyricParts.push({ text: lyric, isJoin })
+    lyricParts.push({ text: lyric, isJoin, ...(chord ? { chord } : {}) })
   })
 
   flush()

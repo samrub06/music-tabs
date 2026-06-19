@@ -193,47 +193,45 @@ function parseLinePattern(currentLine: string, nextLine?: string): SongLine | nu
 function calculateChordPositions(chordLine: string, lyricLine: string): ChordPosition[] {
   const positions: ChordPosition[] = [];
   const chordPattern = /([A-G][#b]?(?:m(?!aj)|maj|min|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g;
-  
-  // Track positions to avoid duplicates
-  const positionMap = new Map<number, ChordPosition>();
-  
+
   let match;
   while ((match = chordPattern.exec(chordLine)) !== null) {
     const chord = match[1];
     const chordPos = match.index;
-    
-    // Map chord position to lyric position
-    // For spaced alignment, use the chord position directly
-    // For concatenated chords, distribute evenly
+
+    // Map chord position to lyric position.
+    // For spaced alignment, use the chord position directly.
     let lyricPosition = chordPos;
-    
+
     // Adjust for leading spaces in lyrics
     const lyricStart = lyricLine.search(/\S/);
     if (lyricStart > 0) {
       lyricPosition = Math.max(0, chordPos - lyricStart);
     }
-    
+
     // Ensure position doesn't exceed lyrics length
     const maxPos = lyricLine.trim().length;
     lyricPosition = Math.min(lyricPosition, maxPos);
-    
-    // Check if we already have a chord at this exact position
-    // If yes, skip this duplicate (keep the first one found)
-    if (!positionMap.has(lyricPosition)) {
-      const chordPosition: ChordPosition = {
-        chord,
-        position: lyricPosition
-      };
-      positionMap.set(lyricPosition, chordPosition);
-      positions.push(chordPosition);
-    }
-    // If duplicate found at same position, skip it
-    // This prevents multiple chords from being displayed at the same position
+
+    // Multiple chords may legitimately share the same lyric position (e.g.
+    // trailing chords beyond a short lyric). Allow them all — the renderer
+    // handles same-position chords via horizontal offsets.
+    positions.push({ chord, position: lyricPosition });
   }
-  
+
   // Sort positions by position value to maintain order
   positions.sort((a, b) => a.position - b.position);
-  
+
+  // Spread any positions that collided due to maxPos clamping so no two chords
+  // share the same lyric position (the renderer groups by position and spreads
+  // via horizontalOffset, but only when positions are identical — deduplicated
+  // positions yield cleaner per-character alignment).
+  const seen = new Set<number>();
+  for (const pos of positions) {
+    while (seen.has(pos.position)) pos.position++;
+    seen.add(pos.position);
+  }
+
   return positions;
 }
 

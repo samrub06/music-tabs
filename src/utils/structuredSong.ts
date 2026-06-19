@@ -1,4 +1,5 @@
 import { ChordPosition, SongLine, SongSection, StructuredSong } from '@/types';
+import { buildSpacedChordLine } from '@/utils/chordLineBuilder';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -305,32 +306,7 @@ function renderChordLyricPair(
 }
 
 function renderChordsForLyrics(chords: ChordPosition[], lyrics: string): string {
-  let chordLine = '';
-  
-  chords.forEach(chordPos => {
-    // Ensure chord line is long enough
-    while (chordLine.length < chordPos.position) {
-      chordLine += ' ';
-    }
-    
-    // Add chord, handling overlaps
-    const endPos = chordPos.position + chordPos.chord.length;
-    if (endPos > chordLine.length) {
-      chordLine += chordPos.chord;
-    } else {
-      // Handle chord overlap by inserting
-      chordLine = chordLine.substring(0, chordPos.position) + 
-                 chordPos.chord + 
-                 chordLine.substring(endPos);
-    }
-  });
-  
-  // Ensure chord line is at least as long as lyrics
-  while (chordLine.length < lyrics.length) {
-    chordLine += ' ';
-  }
-  
-  return chordLine;
+  return buildSpacedChordLine(chords, lyrics);
 }
 
 function renderChordLyricWithWrap(line: SongLine, maxWidth: number): string {

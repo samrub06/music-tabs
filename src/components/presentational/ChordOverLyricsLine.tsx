@@ -26,18 +26,23 @@ interface ChordWithOffset {
 
 function groupChordsByPosition(
   chords: ChordPosition[],
+  lyrics: string,
   fontSize: number,
   charWidth: number,
   chordFontFamily: string,
   spacing: number = 50
 ): ChordWithOffset[] {
+  // Clamp to lyrics length so chords that overflow the lyric end are grouped
+  // together and spread via horizontalOffset instead of stacking at the same pixel.
+  const lyricsLength = lyrics.length;
   const positionGroups = new Map<number, Array<{ chord: string; originalIndex: number }>>();
 
   chords.forEach((chordPos, index) => {
-    if (!positionGroups.has(chordPos.position)) {
-      positionGroups.set(chordPos.position, []);
+    const groupKey = Math.min(chordPos.position, lyricsLength);
+    if (!positionGroups.has(groupKey)) {
+      positionGroups.set(groupKey, []);
     }
-    positionGroups.get(chordPos.position)!.push({
+    positionGroups.get(groupKey)!.push({
       chord: chordPos.chord,
       originalIndex: index,
     });
@@ -163,7 +168,7 @@ function ChordButtons({
   onChordClick,
   onChordChipClick,
 }: ChordButtonsProps) {
-  const groupedChords = groupChordsByPosition(chords, fontSize, charWidth, chordFontFamily);
+  const groupedChords = groupChordsByPosition(chords, lyrics, fontSize, charWidth, chordFontFamily);
 
   return (
     <>
