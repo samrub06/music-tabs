@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, ReactNode, useContext, useState, useEffect } from 'react';
-import { applyDocumentLanguage, type Language } from '@/utils/rtl';
+import { applyDocumentLanguage, detectBrowserLanguage, type Language } from '@/utils/rtl';
 
 export type { Language };
 
@@ -31,7 +31,7 @@ function getStoredLanguage(): Language {
   if (typeof window === 'undefined') return 'en';
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === 'fr' || stored === 'he' || stored === 'en') return stored;
-  return 'en';
+  return detectBrowserLanguage();
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {

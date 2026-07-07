@@ -702,6 +702,8 @@
     "guitarMode": "Guitar tutorials",
     "pianoMode": "Piano tutorials",
     "openYoutube": "Open in YouTube",
+    "loading": "Searching for a tutorial…",
+    "loadError": "Could not load a tutorial video",
     "minimize": "Min",
     "open": "Open",
     "expand": "Expand",

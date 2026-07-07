@@ -26,14 +26,22 @@ export default function RootLayout({
                   if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');
                   }
-                  const language = localStorage.getItem('language');
+                  const storedLanguage = localStorage.getItem('language');
+                  let language = storedLanguage;
+                  if (language !== 'he' && language !== 'fr' && language !== 'en') {
+                    const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+                    const code = nav.split('-')[0];
+                    if (code === 'fr') language = 'fr';
+                    else if (code === 'he' || code === 'iw') language = 'he';
+                    else language = 'en';
+                  }
                   if (language === 'he') {
                     document.documentElement.lang = 'he';
                     document.documentElement.dir = 'rtl';
                   } else if (language === 'fr') {
                     document.documentElement.lang = 'fr';
                     document.documentElement.dir = 'ltr';
-                  } else if (language === 'en') {
+                  } else {
                     document.documentElement.lang = 'en';
                     document.documentElement.dir = 'ltr';
                   }

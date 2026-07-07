@@ -9,10 +9,12 @@ import {
 import { Youtube } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
+import type { YoutubeTutorialVideo } from '@/lib/services/youtubeService'
 import {
-  buildYoutubeSearchEmbedUrl,
   buildYoutubeSearchPageUrl,
   buildYoutubeTutorialQuery,
+  buildYoutubeVideoEmbedUrl,
+  buildYoutubeWatchUrl,
 } from '@/utils/youtubeTutorial'
 
 interface FloatingYoutubeTutorialProps {
@@ -29,6 +31,12 @@ const DEFAULT_WIDTH = 340
 const DEFAULT_HEIGHT = 260
 const LARGE_WIDTH = 420
 const LARGE_HEIGHT = 320
+
+type FetchState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; video: YoutubeTutorialVideo }
+  | { status: 'error'; message: string }
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
@@ -47,6 +55,7 @@ export default function FloatingYoutubeTutorial({
   const [isLarge, setIsLarge] = useState(false)
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
   const [position, setPosition] = useState({ x: 16, y: 72 })
+  const [fetchState, setFetchState] = useState<FetchState>({ status: 'idle' })
   const dragStateRef = useRef<{
     pointerId: number
     startX: number
@@ -73,7 +82,6 @@ export default function FloatingYoutubeTutorial({
     [songTitle, songAuthor, selectedInstrument, language]
   )
 
-  const embedUrl = useMemo(() => buildYoutubeSearchEmbedUrl(searchQuery), [searchQuery])
   const youtubePageUrl = useMemo(() => buildYoutubeSearchPageUrl(searchQuery), [searchQuery])
 
   const placeBottomRight = useCallback(() => {
@@ -98,8 +106,46 @@ export default function FloatingYoutubeTutorial({
       setIsMinimized(false)
       setIsLarge(false)
       setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
+      setFetchState({ status: 'idle' })
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const controller = new AbortController()
+
+    async function loadTutorial() {
+      setFetchState({ status: 'loading' })
+
+      try {
+        const params = new URLSearchParams({
+          q: searchQuery,
+          lang: language,
+        })
+        const response = await fetch(`/api/youtube/tutorial?${params.toString()}`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { error?: string } | null
+          throw new Error(payload?.error ?? 'Failed to load tutorial')
+        }
+
+        const payload = (await response.json()) as { video: YoutubeTutorialVideo }
+        setFetchState({ status: 'success', video: payload.video })
+      } catch (error) {
+        if (controller.signal.aborted) return
+        const message =
+          error instanceof Error ? error.message : t('youtubeTutorial.loadError')
+        setFetchState({ status: 'error', message })
+      }
+    }
+
+    void loadTutorial()
+
+    return () => controller.abort()
+  }, [isOpen, searchQuery, language, t])
 
   const clampPosition = useCallback(
     (next: { x: number; y: number }, panelWidth: number, panelHeight: number) => {
@@ -189,6 +235,12 @@ export default function FloatingYoutubeTutorial({
 
   const panelWidth = isLarge ? LARGE_WIDTH : size.width
   const panelHeight = isMinimized ? 44 : isLarge ? LARGE_HEIGHT : size.height
+  const video =
+    fetchState.status === 'success'
+      ? fetchState.video
+      : null
+  const embedUrl = video ? buildYoutubeVideoEmbedUrl(video.videoId) : null
+  const watchUrl = video ? buildYoutubeWatchUrl(video.videoId) : youtubePageUrl
 
   return (
     <div
@@ -223,7 +275,9 @@ export default function FloatingYoutubeTutorial({
               {t('youtubeTutorial.title')}
             </p>
             {!isMinimized && (
-              <p className="truncate text-[10px] text-muted-foreground">{searchQuery}</p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {video?.title ?? searchQuery}
+              </p>
             )}
           </div>
         </div>
@@ -267,28 +321,48 @@ export default function FloatingYoutubeTutorial({
       {!isMinimized && (
         <>
           <div className="relative min-h-0 flex-1 bg-black">
-            <iframe
-              key={`${embedUrl}-${selectedInstrument}`}
-              title={t('youtubeTutorial.title')}
-              src={embedUrl}
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
+            {fetchState.status === 'loading' && (
+              <div className="flex h-full items-center justify-center px-4 text-center">
+                <p className="text-xs text-white/80">{t('youtubeTutorial.loading')}</p>
+              </div>
+            )}
+            {fetchState.status === 'error' && (
+              <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
+                <p className="text-xs text-white/80">{t('youtubeTutorial.loadError')}</p>
+                <a
+                  href={youtubePageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-medium text-red-300 hover:underline"
+                >
+                  {t('youtubeTutorial.openYoutube')}
+                </a>
+              </div>
+            )}
+            {embedUrl && (
+              <iframe
+                key={embedUrl}
+                title={video?.title ?? t('youtubeTutorial.title')}
+                src={embedUrl}
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border/70 px-2.5 py-1.5">
-            <span className="text-[10px] text-muted-foreground">
+            <span className="truncate text-[10px] text-muted-foreground">
               {selectedInstrument === 'piano'
                 ? t('youtubeTutorial.pianoMode')
                 : t('youtubeTutorial.guitarMode')}
             </span>
             <a
-              href={youtubePageUrl}
+              href={watchUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] font-medium text-primary hover:underline"
+              className="shrink-0 text-[10px] font-medium text-primary hover:underline"
             >
               {t('youtubeTutorial.openYoutube')}
             </a>

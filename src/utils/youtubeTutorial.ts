@@ -27,8 +27,17 @@ export function buildYoutubeTutorialQuery(
   return parts.join(' ')
 }
 
-export function buildYoutubeSearchEmbedUrl(query: string): string {
-  return `https://www.youtube.com/embed/videoseries?listType=search&list=${encodeURIComponent(query)}`
+export function buildYoutubeVideoEmbedUrl(videoId: string): string {
+  const params = new URLSearchParams({
+    rel: '0',
+    modestbranding: '1',
+    playsinline: '1',
+  })
+  return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`
+}
+
+export function buildYoutubeWatchUrl(videoId: string): string {
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`
 }
 
 export function buildYoutubeSearchPageUrl(query: string): string {

@@ -21,6 +21,19 @@ const LANGUAGE_LABELS: Record<SongStoryInput['language'], string> = {
   he: 'Hebrew',
 }
 
+const MAX_STORY_SENTENCES = 3
+
+function limitSentences(text: string, max: number): string {
+  if (max <= 0) return ''
+  const matches = text.match(/[^.!?…]+[.!?…]+(?:\s|$)|[^.!?…]+$/g)
+  if (!matches) return text.trim()
+  return matches
+    .slice(0, max)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .join(' ')
+}
+
 function parseStoryJson(raw: string): SongStory | null {
   try {
     const parsed = JSON.parse(raw) as Partial<SongStory>
@@ -28,18 +41,23 @@ function parseStoryJson(raw: string): SongStory | null {
       typeof parsed.anecdotes === 'string' &&
       parsed.anecdotes.trim() &&
       typeof parsed.about === 'string' &&
-      parsed.about.trim() &&
-      typeof parsed.meaning === 'string' &&
-      parsed.meaning.trim()
+      parsed.about.trim()
     ) {
+      const anecdotes = limitSentences(parsed.anecdotes.trim(), 2)
+      const about = limitSentences(parsed.about.trim(), 1)
+      const meaning =
+        typeof parsed.meaning === 'string' && parsed.meaning.trim()
+          ? limitSentences(
+              parsed.meaning.trim(),
+              Math.max(0, MAX_STORY_SENTENCES - 2 - 1)
+            )
+          : ''
+
       return {
-        anecdotes: parsed.anecdotes.trim(),
-        about: parsed.about.trim(),
-        meaning: parsed.meaning.trim(),
-        chordsInsight:
-          typeof parsed.chordsInsight === 'string' && parsed.chordsInsight.trim()
-            ? parsed.chordsInsight.trim()
-            : undefined,
+        anecdotes,
+        about,
+        meaning,
+        chordsInsight: undefined,
       }
     }
   } catch {
@@ -54,36 +72,23 @@ async function generateSongStoryWithAI(
     return { story: null, error: 'AI not configured' }
   }
 
-  const chordHint =
-    input.chordProgression && input.chordProgression.length > 0
-      ? input.chordProgression.slice(0, 8).join(' – ')
-      : undefined
-
   const prompt = `Song: "${input.title}" by ${input.author}
 ${input.genre ? `Genre: ${input.genre}` : ''}
-${input.key ? `Key: ${input.key}` : ''}
-${chordHint ? `Chord progression (excerpt): ${chordHint}` : ''}
 
-Write like an expert music journalist answering a web search for: "${input.author} ${input.title} song history anecdotes".
 Respond ENTIRELY in ${LANGUAGE_LABELS[input.language]}.
 
-GOAL: A rich, factual, vivid answer — NOT a generic music-app blurb.
+Write a brief, factual song story in EXACTLY 3 sentences total:
+- "anecdotes": exactly 2 sentences — genesis context + one concrete documented fact (year, album, or behind-the-scenes detail).
+- "about": exactly 1 sentence — what the lyrics are about.
+- "meaning": always an empty string.
 
-STRICT RULES:
-- The "anecdotes" field is THE MOST IMPORTANT (60–70% of total content).
-- Start with GENESIS: the personal/career/era context in which the song was born, and why it mattered for the artist.
-- Follow with 3–5 CONCRETE anecdotes. Each should have a short thematic label (e.g. "An anthem of freedom", "The natural look") then specific facts: release year, album name, music-video stories, artistic choices, chart success, real lyric quotes in quotation marks.
-- Quote REAL lyrics from this song when they support the point.
-- NEVER use hollow phrases like "reflective period", "resonated with audiences", "universal themes", "captures the tension", "recorded in a single take" unless it is a well-documented famous fact.
-- NEVER invent facts. If unsure, omit or briefly note uncertainty.
-- Be specific to THIS artist and THIS song only.
+Rules: be specific to this song only; never invent facts; no filler; no chord analysis.
 
-Return ONLY valid JSON (no markdown wrapper):
+Return ONLY valid JSON:
 {
-  "anecdotes": "Multi-paragraph text separated by \\n\\n. Paragraph 1 = genesis (2-3 sentences). Then 3-5 anecdotes with short titles, each 2-3 sentences with precise details.",
-  "about": "1-2 sentences: what the lyrics are concretely about",
-  "meaning": "1-2 sentences: documented cultural or career impact (charts, era, milestone)",
-  "chordsInsight": "1-2 sentences on harmony ONLY if genuinely interesting; otherwise empty string"
+  "anecdotes": "Two sentences.",
+  "about": "One sentence.",
+  "meaning": ""
 }`
 
   try {
@@ -98,12 +103,12 @@ Return ONLY valid JSON (no markdown wrapper):
         messages: [
           {
             role: 'system',
-            content: `You are an expert music journalist specializing in song history and anecdotes (like a high-quality Google/Gemini answer to "[artist] [song] histoire anecdote"). You write with concrete facts, real lyric quotes, genesis context, and memorable behind-the-scenes details. You never produce generic filler or invent undocumented facts. Always respond with valid JSON only.`,
+            content: `You are a concise music journalist. You write short, factual song stories in exactly 3 sentences total. You never invent facts or use filler. Always respond with valid JSON only.`,
           },
           { role: 'user', content: prompt },
         ],
         temperature: 0.35,
-        max_tokens: 1100,
+        max_tokens: 180,
         response_format: { type: 'json_object' },
       }),
     })

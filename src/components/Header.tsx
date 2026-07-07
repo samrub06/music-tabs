@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  Globe,
   LogOut,
   Menu,
   Moon,
@@ -29,6 +30,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
@@ -138,7 +142,27 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
   const isLandingPage = pathname === '/'
-  const currentLanguage = LANGUAGES.find((lang) => lang.code === language) || LANGUAGES[0]
+  const currentLanguage = LANGUAGES.find((lang) => lang.code === language) ?? LANGUAGES[0]
+
+  const languageMenuItems = (
+    <DropdownMenuRadioGroup
+      value={language}
+      onValueChange={(value) => setLanguage(value as 'en' | 'fr' | 'he')}
+    >
+      {LANGUAGES.map((lang) => (
+        <DropdownMenuRadioItem
+          key={lang.code}
+          value={lang.code}
+          className="pl-2 data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground [&>span:first-child]:hidden"
+        >
+          <span className="flex items-center gap-2">
+            <span>{lang.flag}</span>
+            <span>{lang.name}</span>
+          </span>
+        </DropdownMenuRadioItem>
+      ))}
+    </DropdownMenuRadioGroup>
+  )
 
   return (
     <header
@@ -225,40 +249,6 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
       </Link>
 
       <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="min-w-9 text-base sm:text-lg"
-              aria-label={t('common.selectLanguage')}
-            >
-              {currentLanguage.flag}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>{t('common.selectLanguage')}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={language}
-              onValueChange={(value) => setLanguage(value as 'en' | 'fr' | 'he')}
-            >
-              {LANGUAGES.map((lang) => (
-                <DropdownMenuRadioItem
-                  key={lang.code}
-                  value={lang.code}
-                  className="pl-2 data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground [&>span:first-child]:hidden"
-                >
-                  <span className="flex items-center gap-2">
-                    <span>{lang.flag}</span>
-                    <span>{lang.name}</span>
-                  </span>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
         {user && <HeaderLevelProgress />}
 
         {user && <NotificationBell />}
@@ -313,6 +303,18 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   )}
                   {theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
                 </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Globe className="h-4 w-4" />
+                    {t('common.selectLanguage')}
+                    <span className="ms-auto text-xs text-muted-foreground">
+                      {currentLanguage.flag}
+                    </span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-48">
+                    {languageMenuItems}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="h-4 w-4" />
@@ -321,15 +323,34 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button
-              variant="outline"
-              onClick={() => signInWithGoogle(pathname)}
-              className="h-9 gap-1.5 px-3 text-xs font-medium sm:h-8 sm:gap-2 sm:px-3"
-            >
-              <GoogleIcon className="h-4 w-4 shrink-0" />
-              <span className="inline sm:hidden">{t('auth.signIn')}</span>
-              <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
-            </Button>
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="min-w-9"
+                    aria-label={t('common.selectLanguage')}
+                  >
+                    <Globe className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>{t('common.selectLanguage')}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {languageMenuItems}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="outline"
+                onClick={() => signInWithGoogle(pathname)}
+                className="h-9 gap-1.5 px-3 text-xs font-medium sm:h-8 sm:gap-2 sm:px-3"
+              >
+                <GoogleIcon className="h-4 w-4 shrink-0" />
+                <span className="inline sm:hidden">{t('auth.signIn')}</span>
+                <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
+              </Button>
+            </>
           )
         )}
       </div>

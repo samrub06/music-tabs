@@ -27,17 +27,20 @@ interface FoldersClientProps {
 
 interface SortableFolderItemProps {
   folder: Folder
+  songCount: number
   onFolderClick: (folderId: string) => void
   isDragMode: boolean
 }
 
 interface SortableFolderTableRowProps {
   folder: Folder
+  songCount: number
   onFolderClick: (folderId: string) => void
   isDragMode: boolean
 }
 
-function FolderListRow({ folder, onFolderClick, isDragMode }: SortableFolderTableRowProps) {
+function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: SortableFolderTableRowProps) {
+  const { t } = useLanguage()
   const {
     attributes,
     listeners,
@@ -77,18 +80,21 @@ function FolderListRow({ folder, onFolderClick, isDragMode }: SortableFolderTabl
             <Bars3Icon className="h-4 w-4 text-muted-foreground" />
           </div>
         )}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <FolderIcon className="h-5 w-5 text-primary" />
+        <div className="w-10 shrink-0">
+          <FolderShape count={songCount} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">{folder.name}</p>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
+          </p>
         </div>
       </div>
     </li>
   )
 }
 
-function SortableFolderItem({ folder, onFolderClick, isDragMode }: SortableFolderItemProps) {
+function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: SortableFolderItemProps) {
   const {
     attributes,
     listeners,
@@ -111,7 +117,10 @@ function SortableFolderItem({ folder, onFolderClick, isDragMode }: SortableFolde
       onClick={() => onFolderClick(folder.id)}
     >
       <div className="relative w-full">
-        <FolderShape className="transition-transform duration-200 group-hover:scale-[1.03]" />
+        <FolderShape
+          count={songCount}
+          className="transition-transform duration-200 group-hover:scale-[1.03]"
+        />
         {isDragMode && (
           <div
             {...attributes}
@@ -151,12 +160,12 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [isInputFocused, setIsInputFocused] = useState(false)
   const [isDragMode, setIsDragMode] = useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'songCount'>('name')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-  const [draftSortBy, setDraftSortBy] = useState<'name' | 'createdAt' | 'songCount'>('name')
-  const [draftSortDirection, setDraftSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'songCount'>('songCount')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [draftSortBy, setDraftSortBy] = useState<'name' | 'createdAt' | 'songCount'>('songCount')
+  const [draftSortDirection, setDraftSortDirection] = useState<'asc' | 'desc'>('desc')
 
-  const hasActiveFilters = sortBy !== 'name' || sortDirection !== 'asc'
+  const hasActiveFilters = sortBy !== 'songCount' || sortDirection !== 'desc'
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -289,36 +298,48 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       )
     }
     
-    // Apply sorting
-    filtered.sort((a, b) => {
-      let compareA: any, compareB: any
-      switch (sortBy) {
-        case 'name':
-          compareA = a.name.toLowerCase()
-          compareB = b.name.toLowerCase()
-          break
-        case 'createdAt':
-          compareA = new Date(a.createdAt).getTime()
-          compareB = new Date(b.createdAt).getTime()
-          break
-        case 'songCount':
-          compareA = getSongCount(a.id)
-          compareB = getSongCount(b.id)
-          break
-        default:
-          compareA = a.name.toLowerCase()
-          compareB = b.name.toLowerCase()
-      }
-      
-      if (typeof compareA === 'string' && typeof compareB === 'string') {
-        return sortDirection === 'asc' ? compareA.localeCompare(compareB) : compareB.localeCompare(compareA)
-      } else {
-        return sortDirection === 'asc' ? compareA - compareB : compareB - compareA
-      }
-    })
+    // Apply sorting (manual order while dragging)
+    if (isDragMode) {
+      const orderMap = new Map(folders.map((folder, index) => [folder.id, index]))
+      filtered.sort(
+        (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+      )
+    } else {
+      filtered.sort((a, b) => {
+        let compareA: string | number
+        let compareB: string | number
+        switch (sortBy) {
+          case 'name':
+            compareA = a.name.toLowerCase()
+            compareB = b.name.toLowerCase()
+            break
+          case 'createdAt':
+            compareA = new Date(a.createdAt).getTime()
+            compareB = new Date(b.createdAt).getTime()
+            break
+          case 'songCount':
+            compareA = getSongCount(a.id)
+            compareB = getSongCount(b.id)
+            break
+          default:
+            compareA = a.name.toLowerCase()
+            compareB = b.name.toLowerCase()
+        }
+
+        let result: number
+        if (typeof compareA === 'string' && typeof compareB === 'string') {
+          result = sortDirection === 'asc' ? compareA.localeCompare(compareB) : compareB.localeCompare(compareA)
+        } else {
+          result = sortDirection === 'asc' ? (compareA as number) - (compareB as number) : (compareB as number) - (compareA as number)
+        }
+
+        if (result !== 0) return result
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      })
+    }
     
     return filtered
-  }, [folders, searchQuery, sortBy, sortDirection, getSongCount])
+  }, [folders, searchQuery, sortBy, sortDirection, getSongCount, isDragMode])
   
   const handleClearSearch = () => {
     setLocalSearchValue('')
@@ -332,10 +353,10 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   }
 
   const handleClearFilters = () => {
-    setDraftSortBy('name')
-    setDraftSortDirection('asc')
-    setSortBy('name')
-    setSortDirection('asc')
+    setDraftSortBy('songCount')
+    setDraftSortDirection('desc')
+    setSortBy('songCount')
+    setSortDirection('desc')
     setIsFilterSheetOpen(false)
   }
 
@@ -475,6 +496,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                     <SortableFolderItem
                       key={folder.id}
                       folder={folder}
+                      songCount={getSongCount(folder.id)}
                       onFolderClick={handleFolderClick}
                       isDragMode={isDragMode}
                     />
@@ -487,6 +509,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   <SortableFolderItem
                     key={folder.id}
                     folder={folder}
+                    songCount={getSongCount(folder.id)}
                     onFolderClick={handleFolderClick}
                     isDragMode={isDragMode}
                   />
@@ -503,6 +526,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   <FolderListRow
                     key={folder.id}
                     folder={folder}
+                    songCount={getSongCount(folder.id)}
                     onFolderClick={handleFolderClick}
                     isDragMode={isDragMode}
                   />
@@ -515,6 +539,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 <FolderListRow
                   key={folder.id}
                   folder={folder}
+                  songCount={getSongCount(folder.id)}
                   onFolderClick={handleFolderClick}
                   isDragMode={isDragMode}
                 />
@@ -547,7 +572,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
           <div className="bg-background/95 rounded-lg p-3 shadow-lg backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <div className="w-12 shrink-0">
-                <FolderShape />
+                <FolderShape count={getSongCount(draggedFolder.id)} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium text-foreground">{draggedFolder.name}</div>

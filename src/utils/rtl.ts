@@ -2,6 +2,28 @@ export type Language = 'en' | 'fr' | 'he'
 
 const HEBREW_REGEX = /[\u0590-\u05FF]/
 
+export function parseLanguageCode(code: string): Language | null {
+  const normalized = code.toLowerCase().split('-')[0]
+  if (normalized === 'fr') return 'fr'
+  if (normalized === 'he' || normalized === 'iw') return 'he'
+  if (normalized === 'en') return 'en'
+  return null
+}
+
+export function detectBrowserLanguage(): Language {
+  if (typeof navigator === 'undefined') return 'en'
+
+  const candidates =
+    navigator.languages?.length > 0 ? [...navigator.languages] : [navigator.language]
+
+  for (const candidate of candidates) {
+    const parsed = parseLanguageCode(candidate)
+    if (parsed) return parsed
+  }
+
+  return 'en'
+}
+
 export function isRtlLanguage(language: Language): boolean {
   return language === 'he'
 }

@@ -12,6 +12,8 @@ interface PaginationProps {
   total: number
   showAllLimit?: number
   className?: string
+  onNavigate?: (page: number) => void
+  onShowAll?: () => void
 }
 
 function interpolate(template: string, vars: Record<string, string | number>) {
@@ -21,7 +23,15 @@ function interpolate(template: string, vars: Record<string, string | number>) {
   )
 }
 
-export default function Pagination({ page, limit, total, showAllLimit, className }: PaginationProps) {
+export default function Pagination({
+  page,
+  limit,
+  total,
+  showAllLimit,
+  className,
+  onNavigate,
+  onShowAll,
+}: PaginationProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -36,6 +46,10 @@ export default function Pagination({ page, limit, total, showAllLimit, className
   const progress = totalPages > 1 ? (page / totalPages) * 100 : 100
 
   const navigate = (nextPage: number) => {
+    if (onNavigate) {
+      onNavigate(nextPage)
+      return
+    }
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.set('page', String(nextPage))
     params.set('limit', String(limit))
@@ -43,6 +57,10 @@ export default function Pagination({ page, limit, total, showAllLimit, className
   }
 
   const handleShowAll = () => {
+    if (onShowAll) {
+      onShowAll()
+      return
+    }
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.set('limit', String(showAllLimit!))
     params.set('page', '1')

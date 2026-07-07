@@ -227,7 +227,13 @@ export const getSongStorySchema = z.object({
 })
 
 export type SelectableSongIdsInput = z.infer<typeof selectableSongIdsSchema>
+export const youtubeTutorialSearchSchema = z.object({
+  q: z.string().min(1, 'Search query is required').max(200, 'Search query is too long'),
+  lang: z.enum(['en', 'fr', 'he']).optional(),
+})
+
 export type UserSongsListQueryInput = z.infer<typeof userSongsListQuerySchema>
+export type YoutubeTutorialSearchInput = z.infer<typeof youtubeTutorialSearchSchema>
 
 export type CreateFolderInput = z.infer<typeof createFolderSchema>
 export type UpdateFolderInput = z.infer<typeof updateFolderSchema>

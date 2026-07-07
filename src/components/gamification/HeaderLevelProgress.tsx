@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { TrophyIcon } from '@heroicons/react/24/solid'
 import { getUserStatsAction } from '@/app/(protected)/gamification/actions'
 import { calculateXpProgress } from '@/utils/gamification'
 import { useLanguage } from '@/context/LanguageContext'
@@ -54,16 +55,20 @@ export default function HeaderLevelProgress({ className }: HeaderLevelProgressPr
         type="button"
         onClick={() => setSheetOpen(true)}
         className={cn(
-          'flex min-w-0 max-w-[8.5rem] items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2 py-1 transition-colors hover:bg-muted/70 sm:max-w-[10rem] sm:gap-2 sm:px-2.5',
+          'flex shrink-0 items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2 py-1 transition-colors hover:bg-muted/70 sm:gap-2 sm:px-2.5',
           className
         )}
         aria-label={levelLabel}
       >
+        <TrophyIcon
+          className="size-3.5 shrink-0 text-amber-500 dark:text-amber-400 sm:size-4"
+          aria-hidden
+        />
         <span className="shrink-0 text-[10px] font-bold tabular-nums text-foreground sm:text-xs">
           {stats ? stats.currentLevel : '—'}
         </span>
         <div
-          className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
+          className="h-2 w-10 min-w-10 flex-1 overflow-hidden rounded-full bg-muted-foreground/20 sm:w-12 sm:min-w-12"
           aria-hidden
         >
           <div

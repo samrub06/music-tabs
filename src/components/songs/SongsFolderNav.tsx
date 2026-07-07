@@ -42,15 +42,6 @@ function getTotalSongCount(counts: FolderSongCounts): number {
   return Object.values(counts).reduce((sum, n) => sum + n, 0)
 }
 
-function sortFolders(folders: Folder[]): Folder[] {
-  return [...folders].sort((a, b) => {
-    const orderA = a.displayOrder ?? Infinity
-    const orderB = b.displayOrder ?? Infinity
-    if (orderA !== orderB) return orderA - orderB
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
-}
-
 function isAllActive(currentFolder: string | null): boolean {
   return currentFolder === null
 }
@@ -187,7 +178,10 @@ export function SongsFolderSidebar({
   isDragging = false,
 }: SongsFolderNavProps) {
   const { t } = useLanguage()
-  const sortedFolders = useMemo(() => sortFolders(folders), [folders])
+  const sortedFolders = useMemo(
+    () => sortFoldersBySongCount(folders, folderSongCounts),
+    [folders, folderSongCounts]
+  )
   const totalCount = getTotalSongCount(folderSongCounts)
   const unorganizedCount = getCount(folderSongCounts, 'null')
 
@@ -260,28 +254,31 @@ function FolderChip({
   count,
   isActive,
   onClick,
+  className,
 }: {
   label: string
   count?: number
   isActive: boolean
   onClick: () => void
+  className?: string
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+        'inline-flex min-w-0 items-center justify-center gap-1 rounded-full px-2.5 py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
         isActive
           ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'bg-muted/80 text-foreground hover:bg-muted'
+          : 'bg-muted/80 text-foreground hover:bg-muted',
+        className
       )}
     >
-      <span className="max-w-[9rem] truncate">{label}</span>
+      <span className="min-w-0 truncate">{label}</span>
       {count !== undefined && (
         <span
           className={cn(
-            'rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+            'shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
             isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background/80 text-muted-foreground'
           )}
         >
@@ -303,28 +300,53 @@ type FolderChipItem = {
   onSelect: () => void
 }
 
-function splitMobileChipItems(items: FolderChipItem[]) {
-  if (items.length <= MOBILE_CHIP_LIMIT) {
-    return { visible: items, overflow: [] as FolderChipItem[], overflowActive: false }
+function sortFoldersBySongCount(folders: Folder[], folderSongCounts: FolderSongCounts): Folder[] {
+  return [...folders].sort((a, b) => {
+    const countDiff = getCount(folderSongCounts, b.id) - getCount(folderSongCounts, a.id)
+    if (countDiff !== 0) return countDiff
+    const orderA = a.displayOrder ?? Infinity
+    const orderB = b.displayOrder ?? Infinity
+    if (orderA !== orderB) return orderA - orderB
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+}
+
+function splitMobileChipItems(
+  allItem: FolderChipItem,
+  folderItems: FolderChipItem[],
+  unorganizedItem: FolderChipItem | null
+) {
+  const inlineItems = [allItem, ...folderItems]
+
+  if (inlineItems.length <= MOBILE_CHIP_LIMIT) {
+    const overflow = unorganizedItem ? [unorganizedItem] : []
+    return {
+      visible: inlineItems,
+      overflow,
+      overflowActive: unorganizedItem?.isActive ?? false,
+    }
   }
 
-  const fixedIds = new Set(['all', 'unorganized'])
-  const fixed = items.filter((item) => fixedIds.has(item.id))
-  const folders = items.filter((item) => !fixedIds.has(item.id))
-  const folderSlots = MOBILE_INLINE_WHEN_OVERFLOW - fixed.length
-  const activeFolder = folders.find((item) => item.isActive)
+  const folderSlots = MOBILE_INLINE_WHEN_OVERFLOW - 1
+  const activeFolder = folderItems.find((item) => item.isActive)
 
-  let visibleFolders = folders.slice(0, folderSlots)
+  let visibleFolders = folderItems.slice(0, folderSlots)
   if (activeFolder && !visibleFolders.some((item) => item.id === activeFolder.id)) {
     visibleFolders =
       folderSlots <= 1
         ? [activeFolder]
-        : [...folders.slice(0, folderSlots - 1), activeFolder]
+        : [...folderItems.slice(0, folderSlots - 1), activeFolder]
   }
 
-  const visible = [...fixed, ...visibleFolders]
+  const visible = [allItem, ...visibleFolders]
   const visibleIds = new Set(visible.map((item) => item.id))
-  const overflow = items.filter((item) => !visibleIds.has(item.id))
+  const overflowFolders = folderItems
+    .filter((item) => !visibleIds.has(item.id))
+    .sort((a, b) => b.count - a.count)
+  const overflow = [
+    ...overflowFolders,
+    ...(unorganizedItem ? [unorganizedItem] : []),
+  ]
 
   return {
     visible,
@@ -383,48 +405,54 @@ export function SongsFolderChips({
   folderSongCounts,
   currentFolder,
   onFolderSelect,
-  onCreateFolder,
-}: SongsFolderNavProps) {
+}: Omit<SongsFolderNavProps, 'onCreateFolder' | 'isDragging'>) {
   const { t } = useLanguage()
-  const sortedFolders = useMemo(() => sortFolders(folders), [folders])
+  const foldersBySongCount = useMemo(
+    () => sortFoldersBySongCount(folders, folderSongCounts),
+    [folders, folderSongCounts]
+  )
   const totalCount = getTotalSongCount(folderSongCounts)
   const unorganizedCount = getCount(folderSongCounts, 'null')
 
-  const chipItems = useMemo<FolderChipItem[]>(() => {
-    const items: FolderChipItem[] = [
-      {
-        id: 'all',
-        label: t('sidebar.allSongs'),
-        count: totalCount,
-        isActive: isAllActive(currentFolder),
-        onSelect: () => onFolderSelect(undefined),
-      },
-      {
-        id: 'unorganized',
-        label: t('sidebar.unorganizedSongs'),
-        count: unorganizedCount,
-        isActive: isUnorganizedActive(currentFolder),
-        onSelect: () => onFolderSelect('unorganized'),
-      },
-      ...sortedFolders.map((folder) => ({
-        id: folder.id,
-        label: folder.name,
-        count: getCount(folderSongCounts, folder.id),
-        isActive: currentFolder === folder.id,
-        onSelect: () => onFolderSelect(folder.id),
-      })),
-    ]
-    return items
-  }, [currentFolder, folderSongCounts, onFolderSelect, sortedFolders, t, totalCount, unorganizedCount])
+  const { visible, overflow, overflowActive } = useMemo(() => {
+    const allItem: FolderChipItem = {
+      id: 'all',
+      label: t('sidebar.allSongs'),
+      count: totalCount,
+      isActive: isAllActive(currentFolder),
+      onSelect: () => onFolderSelect(undefined),
+    }
 
-  const { visible, overflow, overflowActive } = useMemo(
-    () => splitMobileChipItems(chipItems),
-    [chipItems]
-  )
+    const unorganizedItem: FolderChipItem = {
+      id: 'unorganized',
+      label: t('sidebar.unorganizedSongs'),
+      count: unorganizedCount,
+      isActive: isUnorganizedActive(currentFolder),
+      onSelect: () => onFolderSelect('unorganized'),
+    }
+
+    const folderItems: FolderChipItem[] = foldersBySongCount.map((folder) => ({
+      id: folder.id,
+      label: folder.name,
+      count: getCount(folderSongCounts, folder.id),
+      isActive: currentFolder === folder.id,
+      onSelect: () => onFolderSelect(folder.id),
+    }))
+
+    return splitMobileChipItems(allItem, folderItems, unorganizedItem)
+  }, [
+    currentFolder,
+    folderSongCounts,
+    foldersBySongCount,
+    onFolderSelect,
+    t,
+    totalCount,
+    unorganizedCount,
+  ])
 
   return (
-    <div className="lg:hidden shrink-0 -mx-1">
-      <div className="flex gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1 scrollbar-none">
+    <div className="lg:hidden w-full min-w-0 shrink-0">
+      <div className="flex w-full min-w-0 items-stretch gap-1.5">
         {visible.map((item) => (
           <FolderChip
             key={item.id}
@@ -432,12 +460,10 @@ export function SongsFolderChips({
             count={item.count}
             isActive={item.isActive}
             onClick={item.onSelect}
+            className="flex-1 basis-0"
           />
         ))}
         <FolderChipOverflowMenu items={overflow} isActive={overflowActive} />
-        {onCreateFolder && (
-          <AddFolderInline onCreateFolder={onCreateFolder} compact />
-        )}
       </div>
     </div>
   )

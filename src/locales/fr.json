@@ -702,6 +702,8 @@
     "guitarMode": "Tutoriels guitare",
     "pianoMode": "Tutoriels piano",
     "openYoutube": "Ouvrir dans YouTube",
+    "loading": "Recherche d'un tutoriel…",
+    "loadError": "Impossible de charger un tutoriel",
     "minimize": "Réduire",
     "open": "Ouvrir",
     "expand": "Agrandir",

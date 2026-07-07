@@ -46,7 +46,7 @@ function readCachedStory(
     const raw = sessionStorage.getItem(cacheKey(title, author, tabId, language))
     if (!raw) return null
     const parsed = JSON.parse(raw) as SongStory
-    if (parsed.anecdotes && parsed.about && parsed.meaning) return parsed
+    if (parsed.anecdotes && parsed.about) return parsed
   } catch {
   }
   return null
@@ -215,12 +215,14 @@ export function SongStoryCard({
                 </p>
                 <p className="text-foreground leading-relaxed">{story.about}</p>
               </div>
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t('songStory.meaning')}
-                </p>
-                <p className="text-foreground leading-relaxed">{story.meaning}</p>
-              </div>
+              {story.meaning ? (
+                <div>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t('songStory.meaning')}
+                  </p>
+                  <p className="text-foreground leading-relaxed">{story.meaning}</p>
+                </div>
+              ) : null}
               {story.chordsInsight ? (
                 <div>
                   <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

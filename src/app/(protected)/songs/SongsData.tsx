@@ -19,7 +19,6 @@ export default async function SongsData({
   const params = await searchParams
   const page = Math.max(1, parseInt(params?.page || '1', 10))
   const limit = Math.max(1, parseInt(params?.limit || '50', 10))
-  const q = params?.searchQuery || ''
   const tabParam = params?.tab as string | undefined
   const tab = (tabParam === 'recent' || tabParam === 'popular' ? tabParam : 'all') as 'all' | 'recent' | 'popular'
   const initialSongId = params?.songId || undefined
@@ -39,7 +38,6 @@ export default async function SongsData({
         userId={userId}
         page={page}
         limit={limit}
-        q={q}
         tab={tab}
         view={view}
         initialSongId={initialSongId}
@@ -57,7 +55,6 @@ async function SongsDataWrapper({
   userId,
   page,
   limit,
-  q,
   tab,
   view,
   initialSongId,
@@ -70,7 +67,6 @@ async function SongsDataWrapper({
   userId: string
   page: number
   limit: number
-  q: string
   tab: 'all' | 'recent' | 'popular'
   view: 'gallery' | 'table'
   initialSongId?: string
@@ -89,7 +85,7 @@ async function SongsDataWrapper({
       supabase,
       page,
       limit,
-      q,
+      '',
       orderBy,
       easyChord,
       capoFilter,
@@ -119,7 +115,6 @@ async function SongsDataWrapper({
       page={page}
       limit={limit}
       initialView={view}
-      initialQuery={q}
       initialTab={tab}
       playlists={playlistsData}
       initialSongId={initialSongId}

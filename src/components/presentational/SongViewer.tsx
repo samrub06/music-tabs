@@ -3,7 +3,7 @@
 import { Song, Chord, SongLine, SongSection } from '@/types';
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
-import React, { RefObject, useState } from 'react';
+import React, { RefObject, useEffect, useState } from 'react';
 import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ToolsBottomBar from './ToolsBottomBar';
@@ -168,7 +168,11 @@ export default function SongViewer({
     currentFolderId,
     onFolderChange,
 }: SongViewerProps) {
-  const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
+  const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(true);
+
+  useEffect(() => {
+    setYoutubeTutorialOpen(true);
+  }, [song?.id]);
 
   if (!song) {
     return (

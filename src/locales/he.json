@@ -702,6 +702,8 @@
     "guitarMode": "מדריכי גיטרה",
     "pianoMode": "מדריכי פסנתר",
     "openYoutube": "פתח ב-YouTube",
+    "loading": "מחפש מדריך…",
+    "loadError": "לא ניתן לטעון סרטון מדריך",
     "minimize": "מזער",
     "open": "פתח",
     "expand": "הגדל",

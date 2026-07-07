@@ -5,10 +5,6 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, PlusIcon } from '@heroicons/react/24/outline'
-import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
-
-const RECENT_SONGS_SEARCHES_KEY = 'recentSongsSearches'
-const MAX_RECENT_SEARCHES = 10
 
 const toolbarSegmentContainer =
   'flex items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800'
@@ -40,6 +36,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { SongsFolderChips, SongsFolderSidebar, type FolderSongCounts } from '@/components/songs/SongsFolderNav'
+import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
 
 export type CapoFilter = 'any' | 'with' | 'without'
 
@@ -49,7 +46,6 @@ interface SongsClientProps {
   page: number
   limit: number
   initialView?: 'gallery' | 'table'
-  initialQuery?: string
   initialTab?: 'all' | 'recent' | 'popular'
   playlists?: Playlist[]
   initialSongId?: string
@@ -61,7 +57,7 @@ interface SongsClientProps {
   folderSongCounts?: FolderSongCounts
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
   const { t } = useLanguage()
   const { folders, refreshFolders } = useFoldersContext()
   
@@ -85,15 +81,16 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   useHideHeaderOnScroll(scrollContainerRef, true)
   
-  // Search state
-  const [searchQuery, setSearchQuery] = useState(initialQuery)
-  const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
+  // Search state (ephemeral — not persisted in URL or localStorage)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [localSearchValue, setLocalSearchValue] = useState('')
+  const [searchPage, setSearchPage] = useState(1)
   const [displaySongs, setDisplaySongs] = useState(songs)
   const [displayTotal, setDisplayTotal] = useState(total)
-  const [isSearching, setIsSearching] = useState(false)
-  const [recentSearches, setRecentSearches] = useState<string[]>([])
+  const [isListLoading, setIsListLoading] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
-  const prevDebouncedSearchRef = useRef(initialQuery)
+  const prevDebouncedSearchRef = useRef('')
+  const initialSearchHandledRef = useRef(false)
   
   // Filter state
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
@@ -143,76 +140,80 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     })
   }
 
-  // Load recent searches from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(RECENT_SONGS_SEARCHES_KEY)
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          setRecentSearches(Array.isArray(parsed) ? parsed : [])
-        } catch (e) {
-          console.error('Error parsing recent songs searches:', e)
-        }
-      }
-    }
-  }, [])
-
-  // Sync state from initialQuery when parent passes new value (e.g. after URL update)
-  useEffect(() => {
-    setLocalSearchValue(initialQuery)
-    setSearchQuery(initialQuery)
-    prevDebouncedSearchRef.current = initialQuery.trim()
-  }, [initialQuery])
-
-  // Sync list from server when URL-backed query matches (e.g. pagination, filters, mutations)
-  useEffect(() => {
-    if (localSearchValue.trim() === (initialQuery || '').trim()) {
-      setDisplaySongs(songs)
-      setDisplayTotal(total)
-    }
-  }, [songs, total, initialQuery, localSearchValue])
-
-  const syncSearchUrl = useCallback(
-    (trimmed: string) => {
+  const replaceQueryParams = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
       const params = new URLSearchParams(searchParams?.toString() || '')
-      if (trimmed) {
-        params.set('searchQuery', trimmed)
-        params.set('page', '1')
-      } else {
-        params.delete('searchQuery')
-        params.delete('page')
-      }
+      mutate(params)
       const query = params.toString()
-      const nextUrl = query ? `${pathname}?${query}` : pathname
-      window.history.replaceState(null, '', nextUrl)
+      window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
     },
     [pathname, searchParams]
   )
 
-  const fetchSongsForSearch = useCallback(
-    async (trimmed: string) => {
-      setIsSearching(true)
+  // One-shot deep link: apply search from URL once, then strip it so it is not cached
+  useEffect(() => {
+    if (initialSearchHandledRef.current) return
+    initialSearchHandledRef.current = true
+
+    const q = searchParams?.get('searchQuery')?.trim()
+    if (!q) return
+
+    setLocalSearchValue(q)
+    replaceQueryParams((params) => {
+      params.delete('searchQuery')
+      params.set('page', '1')
+    })
+  }, [searchParams, replaceQueryParams])
+
+  // Sync list from server when not searching
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setDisplaySongs(songs)
+      setDisplayTotal(total)
+      setSearchPage(page)
+    }
+  }, [songs, total, page, searchQuery])
+
+  const fetchSongList = useCallback(
+    async (overrides?: {
+      page?: number
+      searchQuery?: string
+      folder?: string | undefined
+      tab?: 'all' | 'recent' | 'popular'
+      easyChord?: boolean
+      capo?: CapoFilter
+    }) => {
+      setIsListLoading(true)
       try {
-        const result = await fetchUserSongsListAction({
-          page: 1,
-          limit,
-          searchQuery: trimmed || undefined,
-          tab: activeTab,
-          folder:
-            currentFolder === 'unorganized'
+        const folderValue =
+          overrides?.folder !== undefined
+            ? overrides.folder
+            : currentFolder === 'unorganized'
               ? 'unorganized'
-              : currentFolder || undefined,
-          easyChord: filterEasyChord || undefined,
-          capo: filterCapo,
+              : currentFolder || undefined
+
+        const searchValue =
+          overrides?.searchQuery !== undefined ? overrides.searchQuery : searchQuery.trim()
+
+        const result = await fetchUserSongsListAction({
+          page: overrides?.page ?? 1,
+          limit,
+          searchQuery: searchValue || undefined,
+          tab: overrides?.tab ?? activeTab,
+          folder:
+            folderValue === 'unorganized'
+              ? 'unorganized'
+              : folderValue || undefined,
+          easyChord: overrides?.easyChord ?? (filterEasyChord || undefined),
+          capo: overrides?.capo ?? filterCapo,
           likedOnly: likedOnly || undefined,
         })
         setDisplaySongs(result.songs)
         setDisplayTotal(result.total)
       } catch (error) {
-        console.error('Error searching songs:', error)
+        console.error('Error fetching songs:', error)
       } finally {
-        setIsSearching(false)
+        setIsListLoading(false)
       }
     },
     [
@@ -222,40 +223,31 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       filterEasyChord,
       filterCapo,
       likedOnly,
+      searchQuery,
     ]
   )
 
-  // Debounced search — update table in place without full page navigation
+  // Debounced search — client-side fetch only, no URL persistence
   useEffect(() => {
     const timer = setTimeout(() => {
       const trimmed = localSearchValue.trim()
       setSearchQuery(trimmed)
 
-      if (trimmed) {
-        setRecentSearches((prev) => {
-          const filtered = prev.filter(
-            (s) => s.toLowerCase() !== trimmed.toLowerCase()
-          )
-          const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(
-              RECENT_SONGS_SEARCHES_KEY,
-              JSON.stringify(updated)
-            )
-          }
-          return updated
-        })
-      }
-
       if (trimmed === prevDebouncedSearchRef.current) return
       prevDebouncedSearchRef.current = trimmed
+      setSearchPage(1)
 
-      syncSearchUrl(trimmed)
-      void fetchSongsForSearch(trimmed)
+      if (trimmed) {
+        void fetchSongList({ page: 1, searchQuery: trimmed })
+        return
+      }
+
+      setDisplaySongs(songs)
+      setDisplayTotal(total)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [localSearchValue, syncSearchUrl, fetchSongsForSearch])
+  }, [localSearchValue, fetchSongList, songs, total])
 
   // Handle songId from URL - navigate to song page if present
   useEffect(() => {
@@ -409,13 +401,15 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return sorted
   }, [filteredSongs, searchQuery, activeTab])
 
-  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc'; searchQuery?: string; tab?: 'all' | 'recent' | 'popular'; easyChord?: boolean; capo?: CapoFilter }) => {
+  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc'; tab?: 'all' | 'recent' | 'popular'; easyChord?: boolean; capo?: CapoFilter }) => {
+    setLocalSearchValue('')
+    setSearchQuery('')
+    prevDebouncedSearchRef.current = ''
+    setSearchPage(1)
+
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.delete('q')
-    if (next.searchQuery !== undefined) {
-      if (next.searchQuery) params.set('searchQuery', next.searchQuery)
-      else params.delete('searchQuery')
-    }
+    params.delete('searchQuery')
     if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
@@ -450,7 +444,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const handleFolderChange = (folderId: string | undefined) => {
     setSelectedFolder(folderId)
     setCurrentFolder(folderId || null)
-    applyQuery({ folder: folderId, page: 1 })
+
+    replaceQueryParams((params) => {
+      if (folderId) params.set('folder', folderId)
+      else params.delete('folder')
+      params.set('page', '1')
+    })
+
+    void fetchSongList({ folder: folderId, page: 1 })
   }
 
   const handleCreateFolder = async (name: string) => {
@@ -479,10 +480,21 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     setLocalSearchValue('')
   }
 
-  const handleRecentSearchClick = (query: string) => {
-    setLocalSearchValue(query)
-    searchInputRef.current?.blur()
-  }
+  const isSearching = searchQuery.trim().length > 0
+  const displayPage = isSearching ? searchPage : page
+
+  const handleSearchPaginationNavigate = useCallback(
+    (nextPage: number) => {
+      setSearchPage(nextPage)
+      void fetchSongList({ page: nextPage, searchQuery: searchQuery.trim() })
+    },
+    [fetchSongList, searchQuery]
+  )
+
+  const handleSearchPaginationShowAll = useCallback(() => {
+    setSearchPage(1)
+    void fetchSongList({ page: 1, searchQuery: searchQuery.trim() })
+  }, [fetchSongList, searchQuery])
 
   // Handle filter apply
   const handleApplyFilters = () => {
@@ -568,30 +580,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 </button>
               )}
             </div>
-            {/* Recent searches dropdown */}
-            {isInputFocused && !localSearchValue.trim() && recentSearches.length > 0 && (
-              <div
-                className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-y-auto"
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                <div className="p-2">
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-3 py-2">
-                    {t('songs.recentSearches')}
-                  </div>
-                  {recentSearches.map((query, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => handleRecentSearchClick(query)}
-                      className="w-full flex items-center gap-3 px-3 py-3 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors min-h-[44px]"
-                    >
-                      <ClockIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                      <span className="truncate">{query}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
           <button
             type="button"
@@ -619,7 +607,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           folderSongCounts={folderSongCounts}
           currentFolder={currentFolder}
           onFolderSelect={handleFolderChange}
-          onCreateFolder={handleCreateFolder}
         />
 
         {/* Filtering Tabs + View toggle - same row, touch-friendly */}
@@ -687,7 +674,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           data-main-scroll
           className={cn(
             'relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain transition-opacity duration-150',
-            isSearching && 'opacity-60 pointer-events-none'
+            isListLoading && 'opacity-60 pointer-events-none'
           )}
         >
         {sortedSongs && sortedSongs.length > 0 ? (
@@ -726,7 +713,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                       : currentFolder || undefined,
                 }}
               />
-              <Pagination page={page} limit={limit} total={displayTotal} showAllLimit={10000} />
+              <Pagination
+                page={displayPage}
+                limit={limit}
+                total={displayTotal}
+                showAllLimit={10000}
+                onNavigate={isSearching ? handleSearchPaginationNavigate : undefined}
+                onShowAll={isSearching ? handleSearchPaginationShowAll : undefined}
+              />
               {searchQuery.trim() && (
                 <Button
                   type="button"
@@ -741,7 +735,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           ) : (
             <>
               <SongGallery songs={sortedSongs} />
-              <Pagination page={page} limit={limit} total={displayTotal} showAllLimit={10000} />
+              <Pagination
+                page={displayPage}
+                limit={limit}
+                total={displayTotal}
+                showAllLimit={10000}
+                onNavigate={isSearching ? handleSearchPaginationNavigate : undefined}
+                onShowAll={isSearching ? handleSearchPaginationShowAll : undefined}
+              />
               {searchQuery.trim() && (
                 <Button
                   type="button"
