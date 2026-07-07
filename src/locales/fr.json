@@ -52,6 +52,7 @@
     "chords": "Accords",
     "profile": "Profil",
     "leaderboard": "Classement",
+    "friends": "Amis",
     "admin": "Administration",
     "adminSongs": "Chansons du catalogue",
     "adminUsers": "Utilisateurs",
@@ -93,7 +94,72 @@
     "searchPlaceholder": "Rechercher par nom ou email...",
     "resultsCount": "{count} résultat(s) trouvé(s)",
     "playlist": "playlist",
-    "playlists": "playlists"
+    "playlists": "playlists",
+    "yourRank": "Rang",
+    "rankColumn": "Rang",
+    "playerColumn": "Joueur",
+    "levelColumn": "Niveau",
+    "xpColumn": "XP",
+    "songsColumn": "Chansons"
+  },
+  "friends": {
+    "title": "Amis",
+    "description": "Connectez-vous avec d'autres musiciens et partagez chansons ou playlists.",
+    "moreMenuDescription": "Trouver des amis et gérer les demandes",
+    "myFriends": "Mes amis",
+    "findFriends": "Trouver des amis",
+    "searchPlaceholder": "Rechercher par nom ou email...",
+    "noFriends": "Pas encore d'amis. Recherchez des musiciens pour vous connecter.",
+    "noDiscoverableUsers": "Aucun autre musicien à découvrir pour le moment.",
+    "noSearchResults": "Aucun utilisateur trouvé.",
+    "addFriend": "Ajouter",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "cancelRequest": "Annuler",
+    "remove": "Retirer",
+    "shareWithFriend": "Partager avec un ami",
+    "shareTitle": "Partager avec un ami",
+    "shareSongDescription": "Envoyer « {title} » à un ami.",
+    "sharePlaylistDescription": "Envoyer « {title} » à un ami.",
+    "shareAction": "Envoyer",
+    "shareSent": "Partagé ! Votre ami recevra une notification.",
+    "noFriendsToShare": "Ajoutez des amis pour partager des chansons et playlists."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Restez informé des demandes d'amis, partages et activité.",
+    "empty": "Aucune notification.",
+    "markAllRead": "Tout marquer lu",
+    "seeAll": "Voir toutes les notifications"
+  },
+  "invitations": {
+    "title": "Invitation",
+    "sendTitle": "Inviter sur TABasco",
+    "sendDescription": "Envoyez un lien personnel. À l'inscription, vous deviendrez amis automatiquement.",
+    "emailOptional": "Email de l'ami (optionnel)",
+    "createLink": "Créer un lien d'invitation",
+    "latestLink": "Partagez ce lien",
+    "pendingCount": "{count} invitation(s) en attente",
+    "copy": "Copier",
+    "someone": "Un musicien",
+    "landingTitle": "{name} vous invite sur TABasco",
+    "landingDescription": "Organisez vos chansons, transposez et partagez des playlists.",
+    "invalid": "Cette invitation n'est plus valide.",
+    "joinWithGoogle": "Rejoindre avec Google",
+    "continueOnboarding": "Continuer la configuration",
+    "freeToJoin": "Gratuit. Sans publicité."
+  },
+  "onboarding": {
+    "title": "Bienvenue",
+    "welcomeTitle": "Bienvenue sur TABasco",
+    "welcomeDescription": "Votre songbook pour pratiquer, transposer et créer des playlists.",
+    "inviteConnected": "Vous rejoignez via l'invitation d'un ami.",
+    "getStarted": "Commencer",
+    "instrumentTitle": "Vous jouez de quoi ?",
+    "instrumentDescription": "On adapte l'expérience. Modifiable plus tard.",
+    "guitar": "Guitare",
+    "piano": "Piano",
+    "finish": "Commencer à jouer"
   },
   "songs": {
     "sectionTitle": "Chansons",
@@ -106,6 +172,7 @@
     "songCountPlural": "chansons",
     "inFolder": "dans",
     "allFolders": "Tous les dossiers",
+    "manageFolders": "Gérer les dossiers",
     "unorganized": "Sans dossier",
     "allSongs": "Toutes les chansons",
     "folder": "Dossier",
@@ -630,12 +697,23 @@
     "TOOLS_LABEL": "Outils",
     "CAPO_WITH_VALUE": "Capo {capo}"
   },
+  "youtubeTutorial": {
+    "title": "Tutoriel YouTube",
+    "guitarMode": "Tutoriels guitare",
+    "pianoMode": "Tutoriels piano",
+    "openYoutube": "Ouvrir dans YouTube",
+    "minimize": "Réduire",
+    "open": "Ouvrir",
+    "expand": "Agrandir",
+    "shrink": "Rétrécir"
+  },
   "songContent": {
     "saving": "Sauvegarde...",
     "save": "Sauvegarder",
     "CHORDS_USED_TITLE": "Accords utilisés",
     "TRANSPOSE_LABEL": "Transposer",
     "BPM_LABEL": "{bpm} BPM",
+    "seeThisFolder": "Voir ce dossier",
     "FULL_SONG_HIDDEN_TITLE": "Chanson complète masquée",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque."
   },
@@ -761,6 +839,17 @@
     "continueListening": "Continuer à écouter",
     "nextInList": "Suivante dans votre liste",
     "sameArtist": "Autres titres de {artist}",
-    "sameGenre": "Autres titres {genre}"
+    "sameGenre": "Autres titres {genre}",
+    "moreByArtist": "Autres titres de {artist}",
+    "showAllArtistSongs": "Voir les {count} titres",
+    "seeMoreSongs": "Voir plus de chansons"
+  },
+  "songStory": {
+    "title": "À propos de cette chanson",
+    "loading": "Chargement…",
+    "anecdotes": "Genèse et anecdotes",
+    "about": "L'histoire",
+    "meaning": "Ce qu'elle signifie",
+    "chordsInsight": "Harmonie & accords"
   }
 }

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/db'
-import type { UserStats, XpTransaction, UserBadge, LeaderboardEntry, XpAwardResult, StreakUpdateResult } from '@/types'
+import type { UserStats, XpTransaction, UserBadge, LeaderboardEntry, LeaderboardSheetData, XpAwardResult, StreakUpdateResult } from '@/types'
 import { getBadgeDefinitions } from '@/utils/gamification'
 
 // Helper to map DB result to Domain Entity
@@ -362,6 +362,41 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     })
 
     return entries
+  },
+
+  async getUserSongCount(userId: string): Promise<number> {
+    const { count, error } = await client
+      .from('songs')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) {
+      throw error
+    }
+
+    return count ?? 0
+  },
+
+  async getLeaderboardSheetData(userId: string, limit: number = 50): Promise<LeaderboardSheetData> {
+    const [entries, stats, rank, songCount] = await Promise.all([
+      this.getLeaderboard(limit),
+      this.getUserStats(userId),
+      this.getUserRank(userId),
+      this.getUserSongCount(userId),
+    ])
+
+    return {
+      entries,
+      currentUser: stats
+        ? {
+            userId,
+            rank,
+            currentLevel: stats.currentLevel,
+            totalXp: stats.totalXp,
+            songCount,
+          }
+        : null,
+    }
   },
 
   /**

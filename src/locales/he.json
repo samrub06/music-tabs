@@ -52,6 +52,7 @@
     "chords": "אקורדים",
     "profile": "פרופיל",
     "leaderboard": "לוח תוצאות",
+    "friends": "חברים",
     "admin": "ניהול",
     "adminSongs": "שירי קטלוג",
     "adminUsers": "משתמשים",
@@ -93,7 +94,72 @@
     "searchPlaceholder": "חפש לפי שם או אימייל...",
     "resultsCount": "{count} תוצאה(ות) נמצאו",
     "playlist": "פלייליסט",
-    "playlists": "פלייליסטים"
+    "playlists": "פלייליסטים",
+    "yourRank": "דירוג",
+    "rankColumn": "דירוג",
+    "playerColumn": "שחקן",
+    "levelColumn": "רמה",
+    "xpColumn": "XP",
+    "songsColumn": "שירים"
+  },
+  "friends": {
+    "title": "חברים",
+    "description": "התחברו למוזיקאים אחרים ושתפו שירים או פלייליסטים.",
+    "moreMenuDescription": "מצא חברים ונהל בקשות",
+    "myFriends": "החברים שלי",
+    "findFriends": "מצא חברים",
+    "searchPlaceholder": "חפש לפי שם או אימייל...",
+    "noFriends": "אין עדיין חברים. חפש מוזיקאים להתחבר.",
+    "noDiscoverableUsers": "אין מוזיקאים אחרים לגלות כרגע.",
+    "noSearchResults": "לא נמצאו משתמשים.",
+    "addFriend": "הוסף חבר",
+    "accept": "אשר",
+    "decline": "דחה",
+    "cancelRequest": "בטל בקשה",
+    "remove": "הסר",
+    "shareWithFriend": "שתף עם חבר",
+    "shareTitle": "שתף עם חבר",
+    "shareSongDescription": "שלח את \"{title}\" לחבר.",
+    "sharePlaylistDescription": "שלח את \"{title}\" לחבר.",
+    "shareAction": "שלח",
+    "shareSent": "נשלח! החבר יקבל התראה.",
+    "noFriendsToShare": "הוסף חברים כדי לשתף שירים ופלייליסטים."
+  },
+  "notifications": {
+    "title": "התראות",
+    "description": "הישארו מעודכנים בבקשות חברות, שיתופים ופעילות.",
+    "empty": "אין התראות עדיין.",
+    "markAllRead": "סמן הכל כנקרא",
+    "seeAll": "ראה את כל ההתראות"
+  },
+  "invitations": {
+    "title": "הזמנה",
+    "sendTitle": "הזמן ל-TABasco",
+    "sendDescription": "שלח קישור אישי. בהרשמה תהיו חברים אוטומטית.",
+    "emailOptional": "אימייל של החבר (אופציונלי)",
+    "createLink": "צור קישור הזמנה",
+    "latestLink": "שתף את הקישור",
+    "pendingCount": "{count} הזמנה(ות) ממתינות",
+    "copy": "העתק",
+    "someone": "מוזיקאי",
+    "landingTitle": "{name} מזמין אותך ל-TABasco",
+    "landingDescription": "ארגן שירים, תשנה סולמות ושתף פלייליסטים.",
+    "invalid": "ההזמנה הזו כבר לא תקפה.",
+    "joinWithGoogle": "הצטרף עם Google",
+    "continueOnboarding": "המשך הגדרה",
+    "freeToJoin": "חינם. בלי פרסומות."
+  },
+  "onboarding": {
+    "title": "ברוך הבא",
+    "welcomeTitle": "ברוכים הבאים ל-TABasco",
+    "welcomeDescription": "ספר השירים שלך לתרגול, טרנספוז ופלייליסטים.",
+    "inviteConnected": "הצטרפת דרך הזמנת חבר.",
+    "getStarted": "בואו נתחיל",
+    "instrumentTitle": "מה אתה מנגן?",
+    "instrumentDescription": "נתאים את החוויה. אפשר לשנות אחר כך.",
+    "guitar": "גיטרה",
+    "piano": "פסנתר",
+    "finish": "התחל לנגן"
   },
   "songs": {
     "sectionTitle": "שירים",
@@ -106,6 +172,7 @@
     "songCountPlural": "שירים",
     "inFolder": "בתיקייה",
     "allFolders": "כל התיקיות",
+    "manageFolders": "נהל תיקיות",
     "unorganized": "ללא תיקייה",
     "allSongs": "כל השירים",
     "folder": "תיקייה",
@@ -630,12 +697,23 @@
     "TOOLS_LABEL": "כלים",
     "CAPO_WITH_VALUE": "קאפו {capo}"
   },
+  "youtubeTutorial": {
+    "title": "מדריך YouTube",
+    "guitarMode": "מדריכי גיטרה",
+    "pianoMode": "מדריכי פסנתר",
+    "openYoutube": "פתח ב-YouTube",
+    "minimize": "מזער",
+    "open": "פתח",
+    "expand": "הגדל",
+    "shrink": "הקטן"
+  },
   "songContent": {
     "saving": "שומר...",
     "save": "שמור",
     "CHORDS_USED_TITLE": "אקורדים בשימוש",
     "TRANSPOSE_LABEL": "העבר טון",
     "BPM_LABEL": "{bpm} BPM",
+    "seeThisFolder": "צפה בתיקייה",
     "FULL_SONG_HIDDEN_TITLE": "השיר המלא מוסתר",
     "FULL_SONG_HIDDEN_DESCRIPTION": "התחבר כדי לגשת לכל השיר ולהוסיף אותו לספרייה שלך."
   },
@@ -761,7 +839,18 @@
     "continueListening": "המשך להאזין",
     "nextInList": "הבא ברשימה שלך",
     "sameArtist": "עוד מ-{artist}",
-    "sameGenre": "עוד ב-{genre}"
+    "sameGenre": "עוד ב-{genre}",
+    "moreByArtist": "עוד מ-{artist}",
+    "showAllArtistSongs": "הצג את כל {count} השירים",
+    "seeMoreSongs": "חפש עוד שירים"
+  },
+  "songStory": {
+    "title": "על השיר",
+    "loading": "טוען…",
+    "anecdotes": "מקור ואנקדוטות",
+    "about": "הסיפור",
+    "meaning": "המשמעות",
+    "chordsInsight": "הרמוניה ואקורדים"
   },
   "admin": {
     "title": "ניהול",

@@ -24,7 +24,7 @@ import {
 import MoreMenu from './MoreMenu';
 import { useFoldersContext } from '@/context/FoldersContext';
 
-const MORE_PATHS = ['/leaderboard', '/profile', '/ai-playlist'];
+const MORE_PATHS = ['/leaderboard', '/profile', '/ai-playlist', '/friends'];
 
 export default function BottomNavigation() {
   const pathname = usePathname();

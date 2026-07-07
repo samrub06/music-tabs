@@ -38,6 +38,7 @@ const MAIN_NAV = [
 const SECONDARY_NAV = [
   { href: '/folders', labelKey: 'navigation.folders', icon: FolderOpen, match: (p: string) => p === '/folders' || p.startsWith('/folders/') },
   { href: '/chords', labelKey: 'navigation.chords', icon: Music, match: (p: string) => p === '/chords' || p.startsWith('/chords/') },
+  { href: '/friends', labelKey: 'navigation.friends', icon: Users, match: (p: string) => p === '/friends' || p.startsWith('/friends/') },
   { href: '/leaderboard', labelKey: 'navigation.leaderboard', icon: Trophy, match: (p: string) => p === '/leaderboard' || p.startsWith('/leaderboard/') },
 ] as const
 

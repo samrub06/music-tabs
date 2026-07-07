@@ -7,6 +7,7 @@ import { SongThumbnail } from './SongThumbnail'
 import { useLanguage } from '@/context/LanguageContext'
 import { getLibrarySongRefsAction } from '@/app/song/[id]/actions'
 import {
+  getArtistSongsFromLibrary,
   pickAlternativeSong,
   type LibrarySongRef,
 } from '@/utils/songSuggestions'
@@ -26,7 +27,6 @@ interface SongEndSuggestionsProps {
   currentSongId: string
   currentAuthor: string
   currentGenre?: string
-  isInLibrary?: boolean
   nextSong: NextSongRef | null
   onPlayNext?: () => void
 }
@@ -87,11 +87,37 @@ function SuggestionCard({
   )
 }
 
+function ArtistSongRow({ song }: { song: LibrarySongRef }) {
+  const { isRtl } = useLanguage()
+
+  return (
+    <Link
+      href={`/song/${song.id}`}
+      className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50"
+    >
+      <SongThumbnail
+        songImageUrl={song.songImageUrl}
+        artistImageUrl={song.artistImageUrl}
+        genre={song.genre}
+        alt={song.title}
+        size="sm"
+      />
+      <div
+        className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
+        dir={isRtl ? 'rtl' : 'ltr'}
+      >
+        <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+        <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+      </div>
+      <ForwardChevronIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+    </Link>
+  )
+}
+
 export function SongEndSuggestions({
   currentSongId,
   currentAuthor,
   currentGenre,
-  isInLibrary = false,
   nextSong,
   onPlayNext,
 }: SongEndSuggestionsProps) {
@@ -101,12 +127,11 @@ export function SongEndSuggestions({
   const [shouldLoadLibrary, setShouldLoadLibrary] = useState(false)
 
   useEffect(() => {
-    if (!isInLibrary) {
-      setLibrarySongs([])
-      setShouldLoadLibrary(false)
-      return
-    }
+    setLibrarySongs([])
+    setShouldLoadLibrary(false)
+  }, [currentSongId])
 
+  useEffect(() => {
     const el = sentinelRef.current
     if (!el) return
 
@@ -122,10 +147,10 @@ export function SongEndSuggestions({
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [isInLibrary, currentSongId])
+  }, [currentSongId])
 
   useEffect(() => {
-    if (!shouldLoadLibrary || !isInLibrary) return
+    if (!shouldLoadLibrary) return
 
     let cancelled = false
     getLibrarySongRefsAction()
@@ -139,26 +164,44 @@ export function SongEndSuggestions({
     return () => {
       cancelled = true
     }
-  }, [shouldLoadLibrary, isInLibrary, currentSongId])
+  }, [shouldLoadLibrary, currentSongId])
 
-  const alternative = useMemo(() => {
+  const excludeIds = useMemo(() => {
+    const ids = new Set<string>([currentSongId])
+    if (nextSong) ids.add(nextSong.id)
+    return ids
+  }, [currentSongId, nextSong])
+
+  const artistSongs = useMemo(() => {
+    if (librarySongs.length === 0 || !currentAuthor.trim()) return []
+    return getArtistSongsFromLibrary(
+      { id: currentSongId, author: currentAuthor },
+      librarySongs,
+      excludeIds
+    )
+  }, [currentSongId, currentAuthor, librarySongs, excludeIds])
+
+  const genreAlternative = useMemo(() => {
     if (librarySongs.length === 0) return null
-    const exclude = new Set<string>([currentSongId])
-    if (nextSong) exclude.add(nextSong.id)
+    const genreExclude = new Set(excludeIds)
+    artistSongs.forEach((s) => genreExclude.add(s.id))
     return pickAlternativeSong(
       { id: currentSongId, author: currentAuthor, genre: currentGenre },
       librarySongs,
-      exclude
+      genreExclude
     )
   }, [
     currentSongId,
     currentAuthor,
     currentGenre,
     librarySongs,
-    nextSong,
+    excludeIds,
+    artistSongs,
   ])
 
-  if (!nextSong && !isInLibrary) return null
+  if (!nextSong && artistSongs.length === 0 && !genreAlternative) {
+    return <div ref={sentinelRef} className="h-px" aria-hidden />
+  }
 
   return (
     <div ref={sentinelRef} className="mt-8 space-y-3 pt-6">
@@ -168,6 +211,7 @@ export function SongEndSuggestions({
       >
         {t('songEnd.continueListening')}
       </h3>
+
       {nextSong && (
         <SuggestionCard
           label={t('songEnd.nextInList')}
@@ -180,22 +224,45 @@ export function SongEndSuggestions({
           onNavigate={onPlayNext}
         />
       )}
-      {alternative && (
+
+      {artistSongs.length > 0 && (
+        <div className="rounded-xl border border-border bg-card">
+          <div
+            className={cn(
+              'flex items-center gap-2 border-b border-border px-4 py-3',
+              UI_TEXT_ALIGN
+            )}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
+              {t('songEnd.moreByArtist').replace('{artist}', currentAuthor)}
+            </span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {artistSongs.length}
+            </span>
+          </div>
+          <ul className="px-2 py-1">
+            {artistSongs.map((song) => (
+              <li key={song.id}>
+                <ArtistSongRow song={song} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {genreAlternative && (
         <SuggestionCard
-          label={
-            alternative.reason === 'artist'
-              ? t('songEnd.sameArtist').replace('{artist}', currentAuthor)
-              : t('songEnd.sameGenre').replace(
-                  '{genre}',
-                  alternative.genre ?? currentGenre ?? ''
-                )
-          }
-          title={alternative.title}
-          subtitle={alternative.author}
-          songImageUrl={alternative.songImageUrl}
-          artistImageUrl={alternative.artistImageUrl}
-          genre={alternative.genre}
-          href={`/song/${alternative.id}`}
+          label={t('songEnd.sameGenre').replace(
+            '{genre}',
+            genreAlternative.genre ?? currentGenre ?? ''
+          )}
+          title={genreAlternative.title}
+          subtitle={genreAlternative.author}
+          songImageUrl={genreAlternative.songImageUrl}
+          artistImageUrl={genreAlternative.artistImageUrl}
+          genre={genreAlternative.genre}
+          href={`/song/${genreAlternative.id}`}
         />
       )}
     </div>

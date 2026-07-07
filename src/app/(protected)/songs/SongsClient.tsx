@@ -24,10 +24,11 @@ function toolbarSegmentButton(active: boolean, className?: string) {
 }
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { Song, Playlist } from '@/types'
 import { useFoldersContext } from '@/context/FoldersContext'
-import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '../dashboard/actions'
+import { addFolderAction, updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '../dashboard/actions'
+import { fetchUserSongsListAction } from './actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAddSongModal } from '@/context/AddSongModalContext'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
@@ -38,6 +39,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
+import { SongsFolderChips, SongsFolderSidebar, type FolderSongCounts } from '@/components/songs/SongsFolderNav'
 
 export type CapoFilter = 'any' | 'with' | 'without'
 
@@ -56,11 +58,12 @@ interface SongsClientProps {
   initialEasyChord?: boolean
   initialCapoFilter?: CapoFilter
   likedOnly?: boolean
+  folderSongCounts?: FolderSongCounts
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialQuery = '', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
   const { t } = useLanguage()
-  const { folders } = useFoldersContext()
+  const { folders, refreshFolders } = useFoldersContext()
   
   const sortFieldLabels: Record<SortField, string> = {
     title: t('songs.title'),
@@ -85,8 +88,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   // Search state
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
+  const [displaySongs, setDisplaySongs] = useState(songs)
+  const [displayTotal, setDisplayTotal] = useState(total)
+  const [isSearching, setIsSearching] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const prevDebouncedSearchRef = useRef(initialQuery)
   
   // Filter state
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
@@ -106,7 +113,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
-  const totalPages = Math.max(1, Math.ceil(total / limit))
+  const totalPages = Math.max(1, Math.ceil(displayTotal / limit))
   const searchParamsKey = searchParams?.toString() ?? ''
   const prefetchedRef = useRef<Set<string>>(new Set())
 
@@ -155,23 +162,19 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   useEffect(() => {
     setLocalSearchValue(initialQuery)
     setSearchQuery(initialQuery)
+    prevDebouncedSearchRef.current = initialQuery.trim()
   }, [initialQuery])
 
-  // Debounced search - update searchQuery, save to recent, and sync URL
+  // Sync list from server when URL-backed query matches (e.g. pagination, filters, mutations)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const trimmed = localSearchValue.trim()
-      setSearchQuery(trimmed)
-      if (trimmed) {
-        setRecentSearches(prev => {
-          const filtered = prev.filter(s => s.toLowerCase() !== trimmed.toLowerCase())
-          const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(RECENT_SONGS_SEARCHES_KEY, JSON.stringify(updated))
-          }
-          return updated
-        })
-      }
+    if (localSearchValue.trim() === (initialQuery || '').trim()) {
+      setDisplaySongs(songs)
+      setDisplayTotal(total)
+    }
+  }, [songs, total, initialQuery, localSearchValue])
+
+  const syncSearchUrl = useCallback(
+    (trimmed: string) => {
       const params = new URLSearchParams(searchParams?.toString() || '')
       if (trimmed) {
         params.set('searchQuery', trimmed)
@@ -180,11 +183,79 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         params.delete('searchQuery')
         params.delete('page')
       }
-      router.push(`${pathname}?${params.toString()}`)
+      const query = params.toString()
+      const nextUrl = query ? `${pathname}?${query}` : pathname
+      window.history.replaceState(null, '', nextUrl)
+    },
+    [pathname, searchParams]
+  )
+
+  const fetchSongsForSearch = useCallback(
+    async (trimmed: string) => {
+      setIsSearching(true)
+      try {
+        const result = await fetchUserSongsListAction({
+          page: 1,
+          limit,
+          searchQuery: trimmed || undefined,
+          tab: activeTab,
+          folder:
+            currentFolder === 'unorganized'
+              ? 'unorganized'
+              : currentFolder || undefined,
+          easyChord: filterEasyChord || undefined,
+          capo: filterCapo,
+          likedOnly: likedOnly || undefined,
+        })
+        setDisplaySongs(result.songs)
+        setDisplayTotal(result.total)
+      } catch (error) {
+        console.error('Error searching songs:', error)
+      } finally {
+        setIsSearching(false)
+      }
+    },
+    [
+      limit,
+      activeTab,
+      currentFolder,
+      filterEasyChord,
+      filterCapo,
+      likedOnly,
+    ]
+  )
+
+  // Debounced search — update table in place without full page navigation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const trimmed = localSearchValue.trim()
+      setSearchQuery(trimmed)
+
+      if (trimmed) {
+        setRecentSearches((prev) => {
+          const filtered = prev.filter(
+            (s) => s.toLowerCase() !== trimmed.toLowerCase()
+          )
+          const updated = [trimmed, ...filtered].slice(0, MAX_RECENT_SEARCHES)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(
+              RECENT_SONGS_SEARCHES_KEY,
+              JSON.stringify(updated)
+            )
+          }
+          return updated
+        })
+      }
+
+      if (trimmed === prevDebouncedSearchRef.current) return
+      prevDebouncedSearchRef.current = trimmed
+
+      syncSearchUrl(trimmed)
+      void fetchSongsForSearch(trimmed)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [localSearchValue, pathname, router, searchParams])
+  }, [localSearchValue, syncSearchUrl, fetchSongsForSearch])
 
   // Handle songId from URL - navigate to song page if present
   useEffect(() => {
@@ -204,6 +275,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     if (folderFromUrl !== null) {
       setSelectedFolder(folderFromUrl || undefined)
       setCurrentFolder(folderFromUrl || null)
+    } else {
+      setSelectedFolder(undefined)
+      setCurrentFolder(null)
     }
     if (sortOrderFromUrl === 'desc' || sortOrderFromUrl === 'asc') {
       setSortDirection(sortOrderFromUrl)
@@ -276,7 +350,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
   // Filter songs by folder
   const filteredSongs = useMemo(() => {
-    let filtered = [...songs]
+    let filtered = [...displaySongs]
 
     if (currentFolder === 'unorganized') {
       filtered = filtered.filter(song => !song.folderId)
@@ -285,7 +359,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
 
     return filtered
-  }, [songs, currentFolder])
+  }, [displaySongs, currentFolder])
 
   // Sort and filter by search query and tab
   const sortedSongs = useMemo(() => {
@@ -379,6 +453,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     applyQuery({ folder: folderId, page: 1 })
   }
 
+  const handleCreateFolder = async (name: string) => {
+    await addFolderAction(name)
+    await refreshFolders()
+    router.refresh()
+  }
+
   const handleSortChange = (field: SortField, direction: SortDirection) => {
     setSortField(field)
     setSortDirection(direction)
@@ -397,24 +477,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
   const handleClearSearch = () => {
     setLocalSearchValue('')
-    setSearchQuery('')
-    applyQuery({ searchQuery: '', page: 1 })
   }
 
   const handleRecentSearchClick = (query: string) => {
     setLocalSearchValue(query)
-    setSearchQuery(query)
-    applyQuery({ searchQuery: query, page: 1 })
     searchInputRef.current?.blur()
   }
 
   // Handle filter apply
   const handleApplyFilters = () => {
-    setCurrentFolder(selectedFolder || null)
     setSortField(sortField)
     setSortDirection(sortDirection)
     applyQuery({
-      folder: selectedFolder,
       sortOrder: sortDirection,
       easyChord: filterEasyChord,
       capo: filterCapo,
@@ -425,13 +499,11 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
   // Handle filter clear
   const handleClearFilters = () => {
-    setSelectedFolder(undefined)
-    setCurrentFolder(null)
     setSortField('title')
     setSortDirection('asc')
     setFilterEasyChord(false)
     setFilterCapo('any')
-    applyQuery({ folder: undefined, sortOrder: 'asc', easyChord: false, capo: 'any', page: 1 })
+    applyQuery({ sortOrder: 'asc', easyChord: false, capo: 'any', page: 1 })
   }
 
   return (
@@ -440,10 +512,20 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-3 sm:p-6">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <SongsFolderSidebar
+          folders={folders}
+          folderSongCounts={folderSongCounts}
+          currentFolder={currentFolder}
+          onFolderSelect={handleFolderChange}
+          onCreateFolder={handleCreateFolder}
+          isDragging={activeId !== null}
+        />
+
+        <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-3 sm:p-6 min-w-0">
         <div
           className={cn(
-            'relative shrink-0 space-y-4 pb-4',
+            'relative shrink-0 space-y-3 pb-4',
             isInputFocused && 'z-30'
           )}
         >
@@ -532,6 +614,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </button>
         </div>
 
+        <SongsFolderChips
+          folders={folders}
+          folderSongCounts={folderSongCounts}
+          currentFolder={currentFolder}
+          onFolderSelect={handleFolderChange}
+          onCreateFolder={handleCreateFolder}
+        />
+
         {/* Filtering Tabs + View toggle - same row, touch-friendly */}
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0 lg:hidden">
@@ -595,7 +685,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         <div
           ref={scrollContainerRef}
           data-main-scroll
-          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className={cn(
+            'relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain transition-opacity duration-150',
+            isSearching && 'opacity-60 pointer-events-none'
+          )}
         >
         {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' ? (
@@ -620,7 +713,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 onSortChange={handleSortChange}
                 isSelectMode={isSelectMode}
                 onToggleSelectMode={toggleSelectMode}
-                totalMatchingCount={total}
+                totalMatchingCount={displayTotal}
                 selectionFilters={{
                   q: searchQuery.trim() || undefined,
                   tab: activeTab,
@@ -633,7 +726,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                       : currentFolder || undefined,
                 }}
               />
-              <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              <Pagination page={page} limit={limit} total={displayTotal} showAllLimit={10000} />
               {searchQuery.trim() && (
                 <Button
                   type="button"
@@ -648,7 +741,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           ) : (
             <>
               <SongGallery songs={sortedSongs} />
-              <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              <Pagination page={page} limit={limit} total={displayTotal} showAllLimit={10000} />
               {searchQuery.trim() && (
                 <Button
                   type="button"
@@ -668,6 +761,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </p>
           </div>
         )}
+        </div>
         </div>
       </div>
 
@@ -729,30 +823,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           </SheetHeader>
 
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
-            {/* Folder Selection - card style */}
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="folder" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
-                {t('songs.folder')}
-              </Label>
-              <Select
-                value={selectedFolder || 'all'}
-                onValueChange={(value) => setSelectedFolder(value === 'all' ? undefined : value)}
-              >
-                <SelectTrigger id="folder" className="h-10 rounded-xl">
-                  <SelectValue placeholder={t('songs.allFolders')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('songs.allFolders')}</SelectItem>
-                  <SelectItem value="unorganized">{t('songs.unorganized')}</SelectItem>
-                  {folders.map((folder) => (
-                    <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Sort Field - card style */}
             <div className="space-y-2.5 py-1">
               <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">

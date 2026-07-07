@@ -52,6 +52,7 @@
     "chords": "Chords",
     "profile": "Profile",
     "leaderboard": "Leaderboard",
+    "friends": "Friends",
     "admin": "Admin",
     "adminSongs": "Catalog songs",
     "adminUsers": "Users",
@@ -93,7 +94,72 @@
     "searchPlaceholder": "Search by name or email...",
     "resultsCount": "{count} result(s) found",
     "playlist": "playlist",
-    "playlists": "playlists"
+    "playlists": "playlists",
+    "yourRank": "Rank",
+    "rankColumn": "Rank",
+    "playerColumn": "Player",
+    "levelColumn": "Level",
+    "xpColumn": "XP",
+    "songsColumn": "Songs"
+  },
+  "friends": {
+    "title": "Friends",
+    "description": "Connect with other musicians and share songs or playlists.",
+    "moreMenuDescription": "Find friends and manage requests",
+    "myFriends": "My friends",
+    "findFriends": "Find friends",
+    "searchPlaceholder": "Search by name or email...",
+    "noFriends": "No friends yet. Search for musicians to connect with.",
+    "noDiscoverableUsers": "No other musicians to discover right now.",
+    "noSearchResults": "No users found.",
+    "addFriend": "Add friend",
+    "accept": "Accept",
+    "decline": "Decline",
+    "cancelRequest": "Cancel request",
+    "remove": "Remove",
+    "shareWithFriend": "Share with a friend",
+    "shareTitle": "Share with a friend",
+    "shareSongDescription": "Send \"{title}\" to one of your friends.",
+    "sharePlaylistDescription": "Send \"{title}\" to one of your friends.",
+    "shareAction": "Send",
+    "shareSent": "Shared! Your friend will get a notification.",
+    "noFriendsToShare": "Add friends first to share songs and playlists."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Stay up to date with friend requests, shares, and activity.",
+    "empty": "No notifications yet.",
+    "markAllRead": "Mark all read",
+    "seeAll": "See all notifications"
+  },
+  "invitations": {
+    "title": "Invitation",
+    "sendTitle": "Invite to TABasco",
+    "sendDescription": "Send a personal link. When they sign up, you'll automatically become friends.",
+    "emailOptional": "Friend's email (optional)",
+    "createLink": "Create invitation link",
+    "latestLink": "Share this link",
+    "pendingCount": "{count} pending invitation(s)",
+    "copy": "Copy",
+    "someone": "A musician",
+    "landingTitle": "{name} invited you to TABasco",
+    "landingDescription": "Organize songs, transpose chords, and share playlists with friends.",
+    "invalid": "This invitation is no longer valid.",
+    "joinWithGoogle": "Join with Google",
+    "continueOnboarding": "Continue setup",
+    "freeToJoin": "Free to join. No ads."
+  },
+  "onboarding": {
+    "title": "Welcome",
+    "welcomeTitle": "Welcome to TABasco",
+    "welcomeDescription": "Your songbook for practice, transpose, and playlists — mobile-first and ad-free.",
+    "inviteConnected": "You're joining through a friend's invitation.",
+    "getStarted": "Get started",
+    "instrumentTitle": "What do you play?",
+    "instrumentDescription": "We'll tune the experience for your instrument. You can change this later.",
+    "guitar": "Guitar",
+    "piano": "Piano",
+    "finish": "Start playing"
   },
   "songs": {
     "sectionTitle": "Songs",
@@ -106,6 +172,7 @@
     "songCountPlural": "songs",
     "inFolder": "in",
     "allFolders": "All folders",
+    "manageFolders": "Manage folders",
     "unorganized": "Unorganized",
     "allSongs": "All songs",
     "folder": "Folder",
@@ -630,12 +697,23 @@
     "TOOLS_LABEL": "Tools",
     "CAPO_WITH_VALUE": "Capo {capo}"
   },
+  "youtubeTutorial": {
+    "title": "YouTube tutorial",
+    "guitarMode": "Guitar tutorials",
+    "pianoMode": "Piano tutorials",
+    "openYoutube": "Open in YouTube",
+    "minimize": "Min",
+    "open": "Open",
+    "expand": "Expand",
+    "shrink": "Shrink"
+  },
   "songContent": {
     "saving": "Saving...",
     "save": "Save",
     "CHORDS_USED_TITLE": "Chords used",
     "TRANSPOSE_LABEL": "Transpose",
     "BPM_LABEL": "{bpm} BPM",
+    "seeThisFolder": "See this folder",
     "FULL_SONG_HIDDEN_TITLE": "Full song hidden",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Sign in to access the full song and add it to your library."
   },
@@ -761,7 +839,18 @@
     "continueListening": "Keep playing",
     "nextInList": "Next in your list",
     "sameArtist": "More by {artist}",
-    "sameGenre": "More in {genre}"
+    "sameGenre": "More in {genre}",
+    "moreByArtist": "More by {artist}",
+    "showAllArtistSongs": "Show all {count} songs",
+    "seeMoreSongs": "See more songs"
+  },
+  "songStory": {
+    "title": "About this song",
+    "loading": "Loading…",
+    "anecdotes": "Genesis & anecdotes",
+    "about": "The story",
+    "meaning": "What it means",
+    "chordsInsight": "Harmony & chords"
   },
   "admin": {
     "title": "Admin",

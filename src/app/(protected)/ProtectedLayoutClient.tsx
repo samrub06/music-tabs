@@ -9,6 +9,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import { updateStreakAction } from '@/app/(protected)/gamification/actions'
+import { needsOnboardingAction } from '@/app/(protected)/onboarding/actions'
 import { ScrollChromeProvider } from '@/context/ScrollChromeContext'
 import { PageHeaderProvider } from '@/context/PageHeaderContext'
 
@@ -17,13 +18,16 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage()
   const pathname = usePathname()
   const router = useRouter()
+  const isInviteRoute = pathname.startsWith('/invite/')
+  const isOnboardingRoute = pathname === '/onboarding'
   const isPublicRoute =
     pathname === '/' ||
     pathname === '/search' ||
     pathname.startsWith('/search/') ||
     pathname === '/explore' ||
     pathname.startsWith('/explore/') ||
-    pathname.startsWith('/library/')
+    pathname.startsWith('/library/') ||
+    isInviteRoute
 
   const requiresAuth = !isPublicRoute
 
@@ -34,6 +38,17 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
       router.push('/')
     }
   }, [user, authLoading, pathname, requiresAuth, router])
+
+  useEffect(() => {
+    if (!user || authLoading || isOnboardingRoute || isInviteRoute) return
+    needsOnboardingAction()
+      .then((needs) => {
+        if (needs) {
+          router.push('/onboarding')
+        }
+      })
+      .catch(console.error)
+  }, [user?.id, authLoading, isOnboardingRoute, isInviteRoute, router])
 
   useEffect(() => {
     if (!user || authLoading) return
@@ -63,6 +78,10 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     }
     if (path === '/profile' || path.startsWith('/profile/')) return undefined
     if (path === '/leaderboard' || path.startsWith('/leaderboard/')) return t('navigation.leaderboard')
+    if (path === '/friends' || path.startsWith('/friends/')) return t('navigation.friends')
+    if (path === '/notifications' || path.startsWith('/notifications/')) return t('notifications.title')
+    if (path === '/onboarding') return t('onboarding.title')
+    if (path.startsWith('/invite/')) return t('invitations.title')
     if (path === '/admin/songs' || path.startsWith('/admin/songs/')) return t('navigation.adminSongs')
     if (path === '/admin/users' || path.startsWith('/admin/users/')) return t('navigation.adminUsers')
     if (path.startsWith('/admin')) return t('navigation.admin')

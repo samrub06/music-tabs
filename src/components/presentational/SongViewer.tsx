@@ -3,10 +3,11 @@
 import { Song, Chord, SongLine, SongSection } from '@/types';
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
-import React, { RefObject } from 'react';
+import React, { RefObject, useState } from 'react';
 import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ToolsBottomBar from './ToolsBottomBar';
+import FloatingYoutubeTutorial from './FloatingYoutubeTutorial';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
 
@@ -167,6 +168,8 @@ export default function SongViewer({
     currentFolderId,
     onFolderChange,
 }: SongViewerProps) {
+  const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
+
   if (!song) {
     return (
       <div className="flex flex-1 items-center justify-center bg-background">
@@ -200,6 +203,8 @@ export default function SongViewer({
         nextSongInfo={nextSongInfo}
         onToggleToolsBar={onToggleToolsBar}
         isInLibrary={isInLibrary}
+        youtubeTutorialOpen={youtubeTutorialOpen}
+        onToggleYoutubeTutorial={() => setYoutubeTutorialOpen((prev) => !prev)}
       />
 
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -290,6 +295,14 @@ export default function SongViewer({
           />
         )}
       </div>
+
+      <FloatingYoutubeTutorial
+        songTitle={song.title}
+        songAuthor={song.author}
+        selectedInstrument={selectedInstrument}
+        isOpen={youtubeTutorialOpen}
+        onClose={() => setYoutubeTutorialOpen(false)}
+      />
     </div>
   );
 }

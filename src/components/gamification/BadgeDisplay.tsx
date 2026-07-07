@@ -41,7 +41,7 @@ export default function BadgeDisplay({ badges, showLocked = false, className = '
           <div
             key={badge.key}
             className={`
-              relative p-4 rounded-lg border-2 transition-all
+              p-4 rounded-lg border-2 transition-all
               ${isEarned 
                 ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' 
                 : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 opacity-50'
@@ -69,11 +69,6 @@ export default function BadgeDisplay({ badges, showLocked = false, className = '
                 {badge.name}
               </span>
             </div>
-            {isEarned && (
-              <div className="absolute top-1 right-1">
-                <span className="text-xs text-yellow-600 dark:text-yellow-400">✓</span>
-              </div>
-            )}
           </div>
         )
       })}

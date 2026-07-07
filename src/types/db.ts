@@ -19,6 +19,7 @@ export interface Database {
           spotify_id: string | null
           tsniout_filter_enabled: boolean
           is_admin: boolean
+          onboarding_completed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -31,6 +32,7 @@ export interface Database {
           spotify_id?: string | null
           tsniout_filter_enabled?: boolean
           is_admin?: boolean
+          onboarding_completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +45,7 @@ export interface Database {
           spotify_id?: string | null
           tsniout_filter_enabled?: boolean
           is_admin?: boolean
+          onboarding_completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -392,6 +395,172 @@ export interface Database {
           viewed_date?: string
         }
       }
+      friendships: {
+        Row: {
+          id: string
+          requester_id: string
+          addressee_id: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          requester_id: string
+          addressee_id: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          requester_id?: string
+          addressee_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_notifications: {
+        Row: {
+          id: string
+          user_id: string
+          actor_id: string | null
+          type: string
+          entity_type: string | null
+          entity_id: string | null
+          title: string
+          message: string | null
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          actor_id?: string | null
+          type: string
+          entity_type?: string | null
+          entity_id?: string | null
+          title: string
+          message?: string | null
+          read_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          actor_id?: string | null
+          type?: string
+          entity_type?: string | null
+          entity_id?: string | null
+          title?: string
+          message?: string | null
+          read_at?: string | null
+          created_at?: string
+        }
+      }
+      shared_items: {
+        Row: {
+          id: string
+          owner_id: string
+          shared_with_id: string
+          entity_type: string
+          entity_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          shared_with_id: string
+          entity_type: string
+          entity_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          shared_with_id?: string
+          entity_type?: string
+          entity_id?: string
+          created_at?: string
+        }
+      }
+      app_invitations: {
+        Row: {
+          id: string
+          code: string
+          inviter_id: string
+          invitee_email: string | null
+          inviter_display_name: string
+          status: string
+          accepted_by_user_id: string | null
+          created_at: string
+          accepted_at: string | null
+        }
+        Insert: {
+          id?: string
+          code: string
+          inviter_id: string
+          invitee_email?: string | null
+          inviter_display_name: string
+          status?: string
+          accepted_by_user_id?: string | null
+          created_at?: string
+          accepted_at?: string | null
+        }
+        Update: {
+          id?: string
+          code?: string
+          inviter_id?: string
+          invitee_email?: string | null
+          inviter_display_name?: string
+          status?: string
+          accepted_by_user_id?: string | null
+          created_at?: string
+          accepted_at?: string | null
+        }
+      }
+      song_stories: {
+        Row: {
+          id: string
+          canonical_key: string
+          title: string
+          author: string
+          language: string
+          about: string
+          meaning: string
+          anecdotes: string
+          chords_insight: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          canonical_key: string
+          title: string
+          author: string
+          language: string
+          about: string
+          meaning: string
+          anecdotes: string
+          chords_insight?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          canonical_key?: string
+          title?: string
+          author?: string
+          language?: string
+          about?: string
+          meaning?: string
+          anecdotes?: string
+          chords_insight?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -435,6 +604,28 @@ export interface Database {
           p_counter_name: string
         }
         Returns: void
+      }
+      get_invitation_preview: {
+        Args: {
+          p_code: string
+        }
+        Returns: {
+          code: string
+          inviter_name: string
+          inviter_avatar_url: string | null
+          status: string
+        }[]
+      }
+      create_user_notification: {
+        Args: {
+          p_user_id: string
+          p_type: string
+          p_title: string
+          p_message?: string | null
+          p_entity_type?: string | null
+          p_entity_id?: string | null
+        }
+        Returns: Database['public']['Tables']['user_notifications']['Row']
       }
     }
     Enums: {

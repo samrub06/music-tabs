@@ -19,6 +19,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { AppLogo } from '@/components/AppLogo'
 import CompactStatsDisplay from './gamification/CompactStatsDisplay'
 import HeaderLevelProgress from './gamification/HeaderLevelProgress'
+import NotificationBell from './social/NotificationBell'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -243,9 +244,15 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
               onValueChange={(value) => setLanguage(value as 'en' | 'fr' | 'he')}
             >
               {LANGUAGES.map((lang) => (
-                <DropdownMenuRadioItem key={lang.code} value={lang.code}>
-                  <span>{lang.flag}</span>
-                  <span>{lang.name}</span>
+                <DropdownMenuRadioItem
+                  key={lang.code}
+                  value={lang.code}
+                  className="pl-2 data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground [&>span:first-child]:hidden"
+                >
+                  <span className="flex items-center gap-2">
+                    <span>{lang.flag}</span>
+                    <span>{lang.name}</span>
+                  </span>
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
@@ -253,6 +260,8 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         </DropdownMenu>
 
         {user && <HeaderLevelProgress />}
+
+        {user && <NotificationBell />}
 
         {!loading && (
           user ? (
@@ -272,17 +281,20 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                   />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent
+                align="end"
+                className="w-[min(14rem,calc(100vw-1.5rem))]"
+              >
                 <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none truncate">
+                  <div className="flex min-w-0 flex-col space-y-1">
+                    <p className="truncate text-sm font-medium leading-none">
                       {profile?.full_name || t('common.user')}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground truncate">
+                    <p className="truncate text-xs leading-none text-muted-foreground">
                       {profile?.email}
                     </p>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-border">
+                  <div className="mt-2 min-w-0 border-t border-border pt-2">
                     <CompactStatsDisplay />
                   </div>
                 </DropdownMenuLabel>

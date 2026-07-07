@@ -112,6 +112,13 @@ export interface NewSongData {
   bpm?: number;
 }
 
+export interface SongStory {
+  anecdotes: string;
+  about: string;
+  meaning: string;
+  chordsInsight?: string;
+}
+
 // Type pour l'édition de chanson (contenu texte legacy ou sections structurées)
 export interface SongEditData {
   title: string;
@@ -290,6 +297,17 @@ export interface LeaderboardEntry {
   playlistCount: number;
 }
 
+export interface LeaderboardSheetData {
+  entries: LeaderboardEntry[];
+  currentUser: {
+    userId: string;
+    rank: number | null;
+    currentLevel: number;
+    totalXp: number;
+    songCount: number;
+  } | null;
+}
+
 export interface XpAwardResult {
   totalXp: number;
   currentLevel: number;
@@ -307,4 +325,83 @@ export interface StreakUpdateResult {
   longestStreak: number;
   streakIncremented: boolean;
   dailyBonusAwarded: boolean;
+}
+
+// =============================================
+// SOCIAL TYPES
+// =============================================
+
+export type FriendshipStatus = 'pending' | 'accepted' | 'declined';
+
+export type FriendRelationStatus =
+  | 'none'
+  | 'pending_sent'
+  | 'pending_received'
+  | 'friends'
+  | 'declined';
+
+export interface Friendship {
+  id: string;
+  requesterId: string;
+  addresseeId: string;
+  status: FriendshipStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface FriendProfile {
+  id: string;
+  email: string;
+  fullName: string | null;
+  avatarUrl: string | null;
+  relationStatus: FriendRelationStatus;
+  friendshipId: string | null;
+}
+
+export type NotificationType =
+  | 'friend_request'
+  | 'friend_accepted'
+  | 'song_shared'
+  | 'playlist_shared'
+  | 'invitation_accepted';
+
+export interface UserNotification {
+  id: string;
+  userId: string;
+  actorId: string | null;
+  type: NotificationType;
+  entityType: string | null;
+  entityId: string | null;
+  title: string;
+  message: string | null;
+  readAt: Date | null;
+  createdAt: Date;
+  actor?: {
+    fullName: string | null;
+    email: string;
+    avatarUrl: string | null;
+  } | null;
+}
+
+export type SharedEntityType = 'song' | 'playlist';
+
+export type InvitationStatus = 'pending' | 'accepted' | 'expired';
+
+export interface AppInvitation {
+  id: string;
+  code: string;
+  inviterId: string;
+  inviteeEmail: string | null;
+  inviterDisplayName: string;
+  status: InvitationStatus;
+  acceptedByUserId: string | null;
+  createdAt: Date;
+  acceptedAt: Date | null;
+}
+
+export interface InvitationPreview {
+  code: string;
+  inviterName: string;
+  inviterAvatarUrl: string | null;
+  status: InvitationStatus;
 }

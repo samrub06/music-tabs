@@ -5,8 +5,9 @@ import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { songRepo } from '@/lib/services/songRepo'
 import { assertCanDeleteSong, assertCanEditSong } from '@/lib/services/songPermissions'
 import { songService } from '@/lib/services/songService'
-import { toggleSongFavoriteSchema, updateSongSchema } from '@/lib/validation/schemas'
-import type { SongEditData, SongProgressResult } from '@/types'
+import { getOrCreateSongStory } from '@/lib/services/songStoryService'
+import { toggleSongFavoriteSchema, updateSongSchema, getSongStorySchema } from '@/lib/validation/schemas'
+import type { SongEditData, SongProgressResult, SongStory } from '@/types'
 import { revalidatePath, revalidateTag } from 'next/cache'
 import type { LibrarySongRef } from '@/utils/songSuggestions'
 
@@ -27,6 +28,29 @@ export async function getLibrarySongRefsAction(): Promise<LibrarySongRef[]> {
     songImageUrl: s.songImageUrl,
     artistImageUrl: s.artistImageUrl,
   }))
+}
+
+/** Background-friendly: returns cached shared story or generates once per song+language. */
+export async function getSongStoryAction(
+  payload: unknown
+): Promise<{ story: SongStory | null }> {
+  const validated = getSongStorySchema.parse(payload)
+  const supabase = await createActionServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { story } = await getOrCreateSongStory(
+    supabase,
+    {
+      title: validated.title,
+      author: validated.author,
+      tabId: validated.tabId,
+      genre: validated.genre,
+      key: validated.key,
+      chordProgression: validated.chordProgression,
+      language: validated.language,
+    },
+    { canGenerate: Boolean(user) }
+  )
+  return { story }
 }
 
 const SONG_VIEW_XP = 5

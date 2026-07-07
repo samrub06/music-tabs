@@ -370,9 +370,9 @@ export default function SongViewerContainerSSR({
     setChordNameToIdMap(new Map());
   }, [song.id]);
 
-  // Load chord catalog when easy-chord mode is enabled (authenticated users only)
+  // Load chord catalog in background (non-blocking) for diagram interactions
   useEffect(() => {
-    if (!easyChordMode || !isAuthenticated || chordsLoadedRef.current) {
+    if (!isAuthenticated || chordsLoadedRef.current) {
       return;
     }
 
@@ -412,12 +412,26 @@ export default function SongViewerContainerSSR({
       }
     };
 
-    loadChords();
+    const schedule =
+      typeof window.requestIdleCallback === 'function'
+        ? window.requestIdleCallback
+        : (cb: () => void) => window.setTimeout(cb, 200);
+
+    const cancel =
+      typeof window.cancelIdleCallback === 'function'
+        ? window.cancelIdleCallback
+        : window.clearTimeout;
+
+    let idleId: number | undefined;
+    idleId = schedule(() => {
+      if (!cancelled) loadChords();
+    }) as number;
 
     return () => {
       cancelled = true;
+      if (idleId !== undefined) cancel(idleId);
     };
-  }, [easyChordMode, isAuthenticated, song.id]);
+  }, [isAuthenticated, song.id]);
 
   // Auto-scroll functionality
   useAutoScroll({ 

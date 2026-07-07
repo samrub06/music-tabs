@@ -15,7 +15,24 @@ function normalize(value: string): string {
   return value.trim().toLowerCase()
 }
 
-/** Pick one library song: same artist first, else same genre. Excludes given ids. */
+/** All library songs by the same artist, excluding given ids. */
+export function getArtistSongsFromLibrary(
+  current: { id: string; author: string },
+  library: LibrarySongRef[],
+  excludeIds: Set<string>
+): LibrarySongRef[] {
+  const currentAuthor = normalize(current.author)
+  if (!currentAuthor) return []
+
+  return library
+    .filter(
+      (s) =>
+        !excludeIds.has(s.id) && normalize(s.author) === currentAuthor
+    )
+    .sort((a, b) => a.title.localeCompare(b.title))
+}
+
+/** Pick one library song with the same genre (artist matches handled separately). */
 export function pickAlternativeSong(
   current: { id: string; author: string; genre?: string },
   library: LibrarySongRef[],
@@ -23,14 +40,6 @@ export function pickAlternativeSong(
 ): SongSuggestion | null {
   const candidates = library.filter((s) => !excludeIds.has(s.id))
   if (candidates.length === 0) return null
-
-  const currentAuthor = normalize(current.author)
-  if (currentAuthor) {
-    const byArtist = candidates.find((s) => normalize(s.author) === currentAuthor)
-    if (byArtist) {
-      return { ...byArtist, reason: 'artist' }
-    }
-  }
 
   const currentGenre = current.genre ? normalize(current.genre) : ''
   if (currentGenre) {

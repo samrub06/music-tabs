@@ -42,6 +42,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
+import { SongStoryCard } from './SongStoryCard';
 import { StarRatingDisplay } from './StarRatingDisplay';
 import { useSongCover } from '@/lib/hooks/useSongCover';
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
@@ -296,19 +297,32 @@ export default function SongContent({
     </div>
   );
 
+  const folderViewHref = currentFolderId
+    ? `/songs?folder=${currentFolderId}`
+    : '/songs?folder=unorganized'
+
   const folderControl =
     isInLibrary && isAuthenticated && onFolderChange ? (
       <div
-        className="min-w-0 flex-1"
+        className="flex min-w-0 flex-1 items-center gap-1.5"
         onClick={(e) => e.stopPropagation()}
       >
-        <FolderDropdown
-          currentFolderId={currentFolderId}
-          folders={folders}
-          onFolderChange={onFolderChange}
-          size="comfortable"
-          fullWidth
-        />
+        <div className="min-w-0 flex-1">
+          <FolderDropdown
+            currentFolderId={currentFolderId}
+            folders={folders}
+            onFolderChange={onFolderChange}
+            size="comfortable"
+            fullWidth
+          />
+        </div>
+        <Button
+          asChild
+          variant="outline"
+          className="h-11 shrink-0 whitespace-nowrap rounded-lg px-2.5 text-xs sm:px-3 sm:text-sm"
+        >
+          <Link href={folderViewHref}>{t('songContent.seeThisFolder')}</Link>
+        </Button>
       </div>
     ) : null;
 
@@ -416,48 +430,76 @@ export default function SongContent({
     </button>
   ) : null;
 
-  const editButton = onToggleEdit ? (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onToggleEdit}
-      className={cn(
-        'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
-        titleRowHeight
-      )}
-      aria-label={t('songHeader.edit')}
-    >
-      <PencilSquareIcon className="h-4 w-4" />
-      <span className="hidden sm:inline">{t('songHeader.edit')}</span>
-    </Button>
-  ) : librarySongId ? (
-    <Button
-      asChild
-      variant="outline"
-      className={cn(
-        'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
-        titleRowHeight
-      )}
-    >
-      <Link href={`/song/${librarySongId}`} aria-label={t('library.editYourCopy')}>
+  const editButton =
+    isInLibrary && onToggleEdit ? (
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onToggleEdit}
+        className={cn(
+          'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
+          titleRowHeight
+        )}
+        aria-label={t('songHeader.edit')}
+      >
         <PencilSquareIcon className="h-4 w-4" />
-        <span className="hidden sm:inline">{t('library.editYourCopy')}</span>
-      </Link>
-    </Button>
-  ) : null;
+        <span className="hidden sm:inline">{t('songHeader.edit')}</span>
+      </Button>
+    ) : isInLibrary && librarySongId ? (
+      <Button
+        asChild
+        variant="outline"
+        className={cn(
+          'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
+          titleRowHeight
+        )}
+      >
+        <Link href={`/song/${librarySongId}`} aria-label={t('library.editYourCopy')}>
+          <PencilSquareIcon className="h-4 w-4" />
+          <span className="hidden sm:inline">{t('library.editYourCopy')}</span>
+        </Link>
+      </Button>
+    ) : null;
+
+  const addToLibraryTitleButton =
+    !isInLibrary && isAuthenticated && onAddToLibrary ? (
+      <Button
+        type="button"
+        variant="outline"
+        onClick={(e) => {
+          e.stopPropagation();
+          onAddToLibrary();
+        }}
+        disabled={isAddingToLibrary}
+        className={cn(
+          'shrink-0 rounded-lg px-2.5 sm:px-3',
+          titleRowHeight,
+          'w-11 sm:w-12'
+        )}
+        aria-label={t('library.addToLibrary')}
+        title={t('library.addToLibrary')}
+      >
+        {isAddingToLibrary ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <PlusIcon className="h-4 w-4 shrink-0" aria-hidden />
+        )}
+      </Button>
+    ) : null;
 
   const titleRowTrailingActions =
-    ratingDisplay || viewsDisplay || favoriteButton || editButton ? (
+    ratingDisplay || viewsDisplay || favoriteButton || editButton || addToLibraryTitleButton ? (
       <div className="flex shrink-0 items-stretch gap-1.5 self-stretch sm:gap-2">
         {ratingDisplay}
         {viewsDisplay}
         {favoriteButton}
         {editButton}
+        {addToLibraryTitleButton}
       </div>
     ) : null;
 
   const songMetaRow =
-    folderControl || libraryToggleButton || libraryActionFeedback ? (
+    folderControl || (isInLibrary ? libraryToggleButton : null) || libraryActionFeedback ? (
       <div className="flex w-full flex-col gap-1.5">
         <div className="flex w-full items-center gap-1.5">
           {folderControl}
@@ -674,6 +716,16 @@ export default function SongContent({
             </CollapsibleContent>
           </Collapsible>
 
+          <SongStoryCard
+            songId={transposedSong.id}
+            title={transposedSong.title}
+            author={transposedSong.author ?? ''}
+            tabId={transposedSong.tabId}
+            genre={transposedSong.genre}
+            songKey={transposedSong.key}
+            chordProgression={transposedSong.chordProgression}
+          />
+
           {/* Song Content */}
           <StructuredSongContent 
             song={transposedSong} 
@@ -687,7 +739,6 @@ export default function SongContent({
                 currentSongId={transposedSong.id}
                 currentAuthor={transposedSong.author ?? ''}
                 currentGenre={transposedSong.genre}
-                isInLibrary={isInLibrary}
                 nextSong={nextSong}
                 onPlayNext={onPlayNext}
               />

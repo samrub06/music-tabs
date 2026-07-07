@@ -15,6 +15,7 @@ import {
 } from '@/components/icons/DirectionalIcons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Youtube } from 'lucide-react';
 
 interface SongHeaderProps {
   song: Song;
@@ -33,6 +34,8 @@ interface SongHeaderProps {
   nextSongInfo?: { title: string; author?: string } | null;
   onToggleToolsBar?: () => void;
   isInLibrary?: boolean;
+  youtubeTutorialOpen?: boolean;
+  onToggleYoutubeTutorial?: () => void;
 }
 
 export default function SongHeader({
@@ -47,6 +50,8 @@ export default function SongHeader({
   canPrevSong,
   canNextSong,
   onToggleToolsBar,
+  youtubeTutorialOpen,
+  onToggleYoutubeTutorial,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
 
@@ -129,6 +134,21 @@ export default function SongHeader({
             {onToggleToolsBar && (
               <>
                 <div className="h-8 w-px shrink-0 bg-border/80" aria-hidden />
+                {onToggleYoutubeTutorial && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      'h-10 w-10 shrink-0 rounded-none',
+                      youtubeTutorialOpen && 'bg-red-500/10 text-red-600 dark:text-red-400'
+                    )}
+                    onClick={onToggleYoutubeTutorial}
+                    aria-label={t('youtubeTutorial.title')}
+                    title={t('youtubeTutorial.title')}
+                  >
+                    <Youtube className="h-5 w-5" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"

@@ -15,6 +15,7 @@ import {
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { Playlist, Song } from '@/types'
+import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog'
 import { removeSongFromPlaylistAction, updatePlaylistOrderAction } from './actions'
 import {
   DndContext,
@@ -174,6 +175,7 @@ export default function PlaylistDetailClient({
   const [songs, setSongs] = useState(initialSongs)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const [linkCopied, setLinkCopied] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -547,9 +549,27 @@ export default function PlaylistDetailClient({
             <Button type="button" className="w-full" onClick={() => void handleCopyShareLink()}>
               {linkCopied ? t('songHeader.linkCopied') : t('playlistView.copyLink')}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setShareOpen(false)
+                setShareWithFriendOpen(true)
+              }}
+            >
+              {t('friends.shareWithFriend')}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
+      <ShareWithFriendDialog
+        open={shareWithFriendOpen}
+        onOpenChange={setShareWithFriendOpen}
+        entityType="playlist"
+        entityId={playlist.id}
+        entityTitle={playlist.name}
+      />
     </div>
   )
 }

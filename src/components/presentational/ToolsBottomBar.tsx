@@ -25,6 +25,9 @@ import {
 } from '@/components/ui/select';
 import { Piano, Guitar } from 'lucide-react';
 import { shareOrCopyLink } from '@/utils/shareLink';
+import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
+import { useAuthContext } from '@/context/AuthContext';
+import { UserPlusIcon } from '@heroicons/react/24/outline';
 
 function interpolate(template: string, vars: Record<string, string>) {
   return Object.entries(vars).reduce(
@@ -84,7 +87,9 @@ export default function ToolsBottomBar({
   onDelete,
 }: ToolsBottomBarProps) {
   const { t } = useLanguage();
+  const { user } = useAuthContext();
   const [linkCopied, setLinkCopied] = useState(false);
+  const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false);
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -294,6 +299,20 @@ export default function ToolsBottomBar({
             )}
           </Button>
         </div>
+        {user && (
+          <div className={cardClass}>
+            <p className={labelClass}>{t('friends.shareWithFriend')}</p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShareWithFriendOpen(true)}
+              className="h-10 w-full rounded-xl font-medium"
+            >
+              <UserPlusIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+              {t('friends.shareAction')}
+            </Button>
+          </div>
+        )}
 
         {(onToggleEdit || onDelete) && (
           <div className="flex gap-2.5 pt-0.5">
@@ -310,6 +329,15 @@ export default function ToolsBottomBar({
           </div>
         )}
       </div>
+      {user && (
+        <ShareWithFriendDialog
+          open={shareWithFriendOpen}
+          onOpenChange={setShareWithFriendOpen}
+          entityType="song"
+          entityId={song.id}
+          entityTitle={song.title}
+        />
+      )}
     </div>
   );
 }

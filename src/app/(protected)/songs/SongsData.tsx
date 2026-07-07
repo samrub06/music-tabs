@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { createSafeServerClient } from '@/lib/supabase/server'
+import { folderRepo } from '@/lib/services/folderRepo'
 import { songService } from '@/lib/services/songService'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import SongsClient from './SongsClient'
@@ -30,7 +31,7 @@ export default async function SongsData({
   const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'
   const likedOnly = params?.filter === 'liked'
 
-  const catalogKey = `${page}:${limit}:${q}:${tab}:${view}:${initialFolder ?? ''}:${initialSortOrder}:${easyChord}:${capoFilter}:${likedOnly}`
+  const catalogKey = `${page}:${limit}:${tab}:${view}:${initialFolder ?? ''}:${initialSortOrder}:${easyChord}:${capoFilter}:${likedOnly}`
 
   return (
     <Suspense key={catalogKey} fallback={<SongsPageSkeleton view={view} />}>
@@ -83,7 +84,7 @@ async function SongsDataWrapper({
   const orderBy: OrderByOption = tab === 'recent' ? 'updated_at' : tab === 'popular' ? 'view_count' : 'created_at'
   const folderId = initialFolder === 'unorganized' ? 'unorganized' : initialFolder
 
-  const [songsData, playlistsLightweight] = await Promise.all([
+  const [songsData, playlistsLightweight, folderSongCountsMap] = await Promise.all([
     songService.getAllSongs(
       supabase,
       page,
@@ -97,7 +98,10 @@ async function SongsDataWrapper({
       userId
     ),
     playlistRepo(supabase).getAllPlaylistsLightweight(userId),
+    folderRepo(supabase).getSongCountsByFolder(userId),
   ])
+
+  const folderSongCounts = Object.fromEntries(folderSongCountsMap.entries())
 
   const playlistsData: Playlist[] = playlistsLightweight.map((p) => ({
     id: p.id,
@@ -124,6 +128,7 @@ async function SongsDataWrapper({
       initialEasyChord={easyChord}
       initialCapoFilter={capoFilter}
       likedOnly={likedOnly}
+      folderSongCounts={folderSongCounts}
     />
   )
 }

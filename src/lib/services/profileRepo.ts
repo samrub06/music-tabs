@@ -11,6 +11,7 @@ export interface Profile {
   preferredInstrument: PreferredInstrument | null
   spotifyId: string | null
   tsnioutFilterEnabled: boolean
+  onboardingCompletedAt: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -36,6 +37,9 @@ function mapDbProfileToDomain(dbProfile: Database['public']['Tables']['profiles'
     preferredInstrument,
     spotifyId: dbProfile.spotify_id ?? null,
     tsnioutFilterEnabled: dbProfile.tsniout_filter_enabled ?? false,
+    onboardingCompletedAt: dbProfile.onboarding_completed_at
+      ? new Date(dbProfile.onboarding_completed_at)
+      : null,
     createdAt: new Date(dbProfile.created_at),
     updatedAt: new Date(dbProfile.updated_at)
   }
@@ -79,7 +83,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
   async getProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await client
       .from('profiles')
-      .select('*')
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
       .eq('id', userId)
       .single()
 
@@ -173,5 +177,34 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
       })),
       total: count ?? 0,
     }
+  },
+
+  async completeOnboarding(userId: string, preferredInstrument?: 'piano' | 'guitar' | null): Promise<Profile> {
+    const updateData: Database['public']['Tables']['profiles']['Update'] = {
+      onboarding_completed_at: new Date().toISOString(),
+    }
+
+    if (preferredInstrument) {
+      updateData.preferred_instrument = preferredInstrument
+    }
+
+    const { data, error } = await (client.from('profiles') as any)
+      .update(updateData)
+      .eq('id', userId)
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .single()
+
+    if (error) throw error
+    return mapDbProfileToDomain(data)
+  },
+
+  async needsOnboarding(userId: string): Promise<boolean> {
+    const { data, error } = await (client.from('profiles') as any)
+      .select('onboarding_completed_at')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    return !(data as { onboarding_completed_at?: string | null } | null)?.onboarding_completed_at
   },
 })

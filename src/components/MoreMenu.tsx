@@ -15,6 +15,7 @@ import {
   TrophyIcon,
   ChevronRightIcon,
   PencilSquareIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import ManualEntryForm from './ManualEntryForm'
@@ -105,6 +106,14 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
           <div className="mt-4">
           {currentView === 'menu' && (
             <div className="space-y-2 pb-2">
+              <MenuNavItem
+                icon={<UserGroupIcon className="h-5 w-5 text-sky-600 dark:text-sky-400" />}
+                iconBg="bg-sky-100 dark:bg-sky-900/40"
+                title={t('navigation.friends')}
+                description={t('friends.moreMenuDescription')}
+                onClick={() => navigate('/friends')}
+              />
+
               <MenuNavItem
                 icon={<TrophyIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />}
                 iconBg="bg-yellow-100 dark:bg-yellow-900/40"

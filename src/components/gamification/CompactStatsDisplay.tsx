@@ -4,38 +4,64 @@ import { useEffect, useState } from 'react'
 import type { UserStats } from '@/types'
 import { getUserStatsAction } from '@/app/(protected)/gamification/actions'
 import { useLanguage } from '@/context/LanguageContext'
+import { Skeleton } from '@/components/ui/skeleton'
 import StreakDisplay from './StreakDisplay'
-import { FireIcon } from '@heroicons/react/24/solid'
 
 interface CompactStatsDisplayProps {
   className?: string
 }
 
+function CompactStatsSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div className={`space-y-1.5 text-sm ${className}`}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="flex items-center gap-1">
+          <Skeleton className="h-4 w-9" />
+          <Skeleton className="h-4 w-4" />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="size-4 rounded-full" />
+          <Skeleton className="h-4 w-14" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CompactStatsDisplay({ className = '' }: CompactStatsDisplayProps) {
   const { t } = useLanguage()
   const [stats, setStats] = useState<UserStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getUserStatsAction().then(setStats).catch(console.error)
+    getUserStatsAction()
+      .then(setStats)
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
+
+  if (loading) {
+    return <CompactStatsSkeleton className={className} />
+  }
 
   if (!stats) {
     return null
   }
 
   return (
-    <div className={`flex items-center gap-4 text-sm ${className}`}>
-      <div className="flex items-center gap-1">
-        <span className="text-gray-600 dark:text-gray-400">{t('gamification.LEVEL')}</span>
-        <span className="font-bold text-gray-900 dark:text-gray-100">{stats.currentLevel}</span>
+    <div className={`space-y-1.5 text-sm ${className}`}>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="flex items-center gap-1 whitespace-nowrap">
+          <span className="text-muted-foreground">{t('gamification.LEVEL')}</span>
+          <span className="font-bold">{stats.currentLevel}</span>
+        </div>
+        {stats.currentStreak > 0 && (
+          <StreakDisplay
+            currentStreak={stats.currentStreak}
+            className="gap-1.5 [&_svg]:size-4"
+          />
+        )}
       </div>
-      <div className="flex items-center gap-1">
-        <span className="text-gray-600 dark:text-gray-400">{t('gamification.XP')}</span>
-        <span className="font-bold text-gray-900 dark:text-gray-100">{stats.totalXp.toLocaleString()}</span>
-      </div>
-      {stats.currentStreak > 0 && (
-        <StreakDisplay currentStreak={stats.currentStreak} />
-      )}
     </div>
   )
 }

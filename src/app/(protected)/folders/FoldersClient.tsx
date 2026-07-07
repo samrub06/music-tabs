@@ -243,7 +243,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   }
 
   const handleFolderClick = (folderId: string) => {
-    router.push(`/folders/${folderId}`)
+    router.push(`/songs?folder=${folderId}`)
   }
 
   const handleAddFolder = async () => {

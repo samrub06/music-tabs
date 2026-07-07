@@ -92,6 +92,17 @@ export const selectableSongIdsSchema = z.object({
   scopeFolderId: z.string().uuid().optional(),
 })
 
+export const userSongsListQuerySchema = z.object({
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1).max(10000),
+  searchQuery: z.string().optional(),
+  tab: z.enum(['all', 'recent', 'popular']).optional(),
+  folder: z.string().optional(),
+  easyChord: z.boolean().optional(),
+  capo: z.enum(['any', 'with', 'without']).optional(),
+  likedOnly: z.boolean().optional(),
+})
+
 export const adminSongListQuerySchema = z.object({
   author: z.string().optional(),
   playlist: z.string().uuid().optional(),
@@ -168,7 +179,55 @@ export const jewishChordBookExtractSchema = z.object({
   songs: z.array(jewishChordBookSongSchema).min(1),
 })
 
+export const searchUsersSchema = z.object({
+  query: z.string().min(2, 'Search query is too short').max(100),
+})
+
+export const friendshipIdSchema = z.object({
+  friendshipId: z.string().uuid(),
+})
+
+export const sendFriendRequestSchema = z.object({
+  addresseeId: z.string().uuid(),
+})
+
+export const shareWithFriendSchema = z.object({
+  friendUserId: z.string().uuid(),
+  entityType: z.enum(['song', 'playlist']),
+  entityId: z.string().uuid(),
+  entityTitle: z.string().min(1).max(200),
+})
+
+export const notificationIdSchema = z.object({
+  notificationId: z.string().uuid(),
+})
+
+export const createInvitationSchema = z.object({
+  inviteeEmail: z.string().email().optional().nullable(),
+})
+
+export const redeemInvitationSchema = z.object({
+  code: z.string().min(6).max(12),
+})
+
+export const completeOnboardingSchema = z.object({
+  preferredInstrument: z.enum(['piano', 'guitar']).optional().nullable(),
+  inviteCode: z.string().min(6).max(12).optional().nullable(),
+})
+
+export const getSongStorySchema = z.object({
+  songId: z.string().uuid(),
+  title: z.string().min(1),
+  author: z.string().min(1),
+  tabId: z.string().optional().nullable(),
+  genre: z.string().optional(),
+  key: z.string().optional(),
+  chordProgression: z.array(z.string()).optional(),
+  language: z.enum(['en', 'fr', 'he']).default('en'),
+})
+
 export type SelectableSongIdsInput = z.infer<typeof selectableSongIdsSchema>
+export type UserSongsListQueryInput = z.infer<typeof userSongsListQuerySchema>
 
 export type CreateFolderInput = z.infer<typeof createFolderSchema>
 export type UpdateFolderInput = z.infer<typeof updateFolderSchema>
