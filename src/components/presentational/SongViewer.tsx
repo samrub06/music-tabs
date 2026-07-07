@@ -79,6 +79,9 @@ interface SongViewerProps {
   isLiked?: boolean;
   onAddToLibrary?: () => void;
   isAddingToLibrary?: boolean;
+  onRemoveFromLibrary?: () => void;
+  isRemovingFromLibrary?: boolean;
+  libraryActionFeedback?: { type: 'success' | 'error'; message: string } | null;
   onToggleFavorite?: () => void;
   isTogglingFavorite?: boolean;
   onFontSizeChange?: (value: number) => void;
@@ -151,6 +154,9 @@ export default function SongViewer({
     isLiked,
     onAddToLibrary,
     isAddingToLibrary,
+    onRemoveFromLibrary,
+    isRemovingFromLibrary,
+    libraryActionFeedback,
     onToggleFavorite,
     isTogglingFavorite,
     onFontSizeChange,
@@ -229,6 +235,9 @@ export default function SongViewer({
               isLiked={isLiked}
               onAddToLibrary={onAddToLibrary}
               isAddingToLibrary={isAddingToLibrary}
+              onRemoveFromLibrary={onRemoveFromLibrary}
+              isRemovingFromLibrary={isRemovingFromLibrary}
+              libraryActionFeedback={libraryActionFeedback}
               onToggleFavorite={onToggleFavorite}
               isTogglingFavorite={isTogglingFavorite}
               selectedInstrument={selectedInstrument}

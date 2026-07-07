@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "slug": "halev-sheli",
+    "title": "הלב שלי",
+    "author": "ישי ריבו",
+    "url": "https://www.tab4u.com/tabs/songs/66568_%D7%99%D7%A9%D7%99_%D7%A8%D7%99%D7%91%D7%95_-_%D7%94%D7%9C%D7%91_%D7%A9%D7%9C%D7%99.html",
+    "snapshot": "halev-sheli.snapshot.html",
+    "note": "Positions verified via getBoundingClientRect() pixel measurement against the live Tab4U page (not screenshot eyeballing). 0 = phrase start (visual right edge)."
+  },
+  "lines": [
+    {
+      "id": "verse-1",
+      "lyricsContains": "הלב שלי נקרע לשנים",
+      "chords": [{ "chord": "Cm", "position": 0 }]
+    },
+    {
+      "id": "verse-2",
+      "lyricsContains": "מה שלא ראתה שפחה על המים",
+      "chords": [{ "chord": "Eb", "position": 3 }]
+    },
+    {
+      "id": "storm",
+      "lyricsContains": "כמו סופה מן הים ,הולם",
+      "chords": [
+        { "chord": "Ab", "position": 4 },
+        { "chord": "Fm", "position": 12 },
+        { "chord": "Cm", "position": 16 }
+      ]
+    },
+    {
+      "id": "marian-drum",
+      "lyricsContains": "כמו תפה של מרים , פועם",
+      "chords": [
+        { "chord": "Ab", "position": 4 },
+        { "chord": "Fm", "position": 11 },
+        { "chord": "Cm", "position": 18 }
+      ]
+    },
+    {
+      "id": "no-remedy",
+      "lyricsContains": "ואין תרופה בעולם",
+      "chords": [{ "chord": "Gm", "position": 5 }]
+    },
+    {
+      "id": "no-remedy-repeat",
+      "lyricsContains": "כבר מועד לא עומד על הרגלים",
+      "chords": [{ "chord": "Ebmaj7", "position": 4 }]
+    },
+    {
+      "id": "broken-vessel",
+      "lyricsContains": "שבר כלי שאין בו כבר מה",
+      "chords": [
+        { "chord": "Ab", "position": 4 },
+        { "chord": "Fm", "position": 13 },
+        { "chord": "Cm", "position": 20 }
+      ]
+    },
+    {
+      "id": "heaven-wall",
+      "lyricsContains": "והשמים הם לי חומה",
+      "chords": [
+        { "chord": "Ab", "position": 0 },
+        { "chord": "Fm", "position": 10 },
+        { "chord": "Cm", "position": 13 }
+      ]
+    },
+    {
+      "id": "cross-sea-dryshod",
+      "lyricsContains": "איך אעבר בתוך הים ביבש",
+      "chords": [
+        { "chord": "Gm", "position": 4 },
+        { "chord": "Gm7", "position": 18 }
+      ]
+    },
+    {
+      "id": "cry-to-rock",
+      "lyricsContains": "ואין ציר שיצעק לצור",
+      "chords": [
+        { "chord": "Ab", "position": 5 },
+        { "chord": "Fm", "position": 9 },
+        { "chord": "Cm", "position": 15 }
+      ]
+    }
+  ]
+}

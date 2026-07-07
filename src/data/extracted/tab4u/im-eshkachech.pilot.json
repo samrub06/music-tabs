@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "slug": "im-eshkachech",
+    "title": "אם אשכחך",
+    "author": "שלמה קרליבך",
+    "url": "https://www.tab4u.com/tabs/songs/2626_%D7%A9%D7%9C%D7%9E%D7%94_%D7%A7%D7%A8%D7%9C%D7%99%D7%91%D7%9A_-_%D7%90%D7%9D_%D7%90%D7%A9%D7%9B%D7%97%D7%9A.html",
+    "snapshot": "im-eshkachech.snapshot.html",
+    "note": "Positions re-verified via getBoundingClientRect() pixel measurement against the live Tab4U page. The previous values here were the OLD reversed dense-path output (leftmost chord column mapped to lyric position 0, i.e. the rightmost RTL word) — they were wrong. Ground truth for verse-1 is Am@0, Dm@3, Am@9, C@17, Dm@17, Am@27, Dm@32; the extractor's proportional formula lands Dm on position 22 instead of 17 for that one chord (~1 word off, documented gap in Tab4U's inconsistent column padding)."
+  },
+  "lines": [
+    {
+      "id": "verse-1",
+      "lyricsContains": "אם אשכחך ירושלים תשכח תשכח תשכח ימני",
+      "chords": [
+        { "chord": "Am", "position": 0 },
+        { "chord": "Dm", "position": 3 },
+        { "chord": "Am", "position": 9 },
+        { "chord": "C", "position": 17 },
+        { "chord": "Dm", "position": 22 },
+        { "chord": "Am", "position": 27 },
+        { "chord": "Dm", "position": 32 }
+      ],
+      "lineIndex": 0
+    },
+    {
+      "id": "chorus",
+      "lyricsContains": "אם לא אעלה את ירושלים על ראש שמחתי",
+      "chords": [
+        { "chord": "Am", "position": 0 },
+        { "chord": "G", "position": 14 },
+        { "chord": "Dm", "position": 25 },
+        { "chord": "Am", "position": 29 }
+      ]
+    }
+  ]
+}

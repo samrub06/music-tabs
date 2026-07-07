@@ -23,6 +23,7 @@
     "seed:jewish-chord-book:b": "npx tsx scripts/seed-jewish-chord-book.ts --part=b",
     "validate:jcb-extract": "npx tsx scripts/validate-jcb-extract.ts",
     "validate:jcb-extract:b": "npx tsx scripts/validate-jcb-extract.ts --part=b",
+    "validate:tab4u-extract": "npx tsx scripts/validate-tab4u-extract.ts",
     "clean:catalog-duplicates": "npx tsx scripts/clean-duplicate-catalog-songs.ts",
     "sync:explore-catalog": "NODE_ENV=development npx tsx scripts/sync-explore-catalog.ts"
   },

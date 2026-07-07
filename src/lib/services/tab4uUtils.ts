@@ -45,7 +45,7 @@ export function parseTab4uTotalResults(html: string): number | undefined {
 
 const TAB4U_ORIGIN = 'https://www.tab4u.com'
 
-function toTab4uAbsoluteUrl(path: string | undefined): string | undefined {
+export function toTab4uAbsoluteUrl(path: string | undefined): string | undefined {
   if (!path) return undefined
   const trimmed = path.replace(/^['"]|['"]$/g, '').trim()
   if (!trimmed || trimmed.includes('noArtPic')) return undefined

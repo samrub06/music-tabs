@@ -1,6 +1,7 @@
 'use client'
 
 import { getRecentSearchDisplay, type RecentSearchItem } from '@/lib/recentSearches'
+import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 
 interface RecentSearchListProps {
   items: RecentSearchItem[]
@@ -14,7 +15,7 @@ export function RecentSearchList({ items, onItemClick, compact = false }: Recent
   return (
     <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
       {items.map((item, index) => {
-        const { imageUrl, title, subtitle } = getRecentSearchDisplay(item)
+        const { title, subtitle } = getRecentSearchDisplay(item)
 
         return (
           <button
@@ -34,7 +35,13 @@ export function RecentSearchList({ items, onItemClick, compact = false }: Recent
                   : 'flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-lg overflow-hidden bg-muted'
               }
             >
-              <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+              <SongThumbnail
+                songImageUrl={item.songImageUrl}
+                artistImageUrl={item.artistImageUrl}
+                alt=""
+                size={compact ? 'xs' : 'sm'}
+                className="w-full h-full rounded-none"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <p

@@ -17,79 +17,77 @@ import { containsHebrew, getTextDirection } from '@/utils/rtl';
 import type { ChordPosition, SongLine } from '@/types';
 import { cn } from '@/lib/utils';
 
-interface ChordWithOffset {
+interface PlacedChord {
   chord: string;
-  position: number;
-  horizontalOffset: number;
   originalIndex: number;
+  offset: number;
 }
 
-function groupChordsByPosition(
+/** Pixel width of a rendered chord label (drawn in the monospace chord font). */
+function getChordWidth(
+  chord: string,
+  fontSize: number,
+  chordFontFamily: string,
+  charWidth: number
+): number {
+  if (typeof document === 'undefined') {
+    return chord.length * charWidth * 1.1;
+  }
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return chord.length * charWidth * 1.1;
+  }
+  context.font = `${fontSize}px ${chordFontFamily}`;
+  return context.measureText(chord).width + 2;
+}
+
+/**
+ * Place chords at their lyric-aligned pixel offset, then push any chord that
+ * would overlap its predecessor just far enough to keep a readable gap.
+ *
+ * Chord labels are drawn in a monospace font while Hebrew lyric offsets come
+ * from a narrower proportional font, so chords sitting a few characters apart
+ * can measure closer than their own width and collide. The offset grows in the
+ * same visual direction each chord extends (leftward for the RTL `right` anchor,
+ * rightward for the LTR `left` anchor), so one left-to-right sweep over
+ * position-sorted chords resolves overlaps for both directions.
+ */
+function placeChordsWithoutOverlap(
   chords: ChordPosition[],
   lyrics: string,
   fontSize: number,
-  charWidth: number,
+  lyricsFontFamily: string,
   chordFontFamily: string,
-  spacing: number = 50
-): ChordWithOffset[] {
-  // Clamp to lyrics length so chords that overflow the lyric end are grouped
-  // together and spread via horizontalOffset instead of stacking at the same pixel.
-  const lyricsLength = lyrics.length;
-  const positionGroups = new Map<number, Array<{ chord: string; originalIndex: number }>>();
+  proportional: boolean,
+  charWidth: number,
+  containerWidth: number
+): PlacedChord[] {
+  const cap = containerWidth > 0 ? containerWidth - 50 : Number.POSITIVE_INFINITY;
+  const minGap = Math.max(6, fontSize * 0.3);
 
-  chords.forEach((chordPos, index) => {
-    const groupKey = Math.min(chordPos.position, lyricsLength);
-    if (!positionGroups.has(groupKey)) {
-      positionGroups.set(groupKey, []);
-    }
-    positionGroups.get(groupKey)!.push({
+  const ordered = chords
+    .map((chordPos, index) => ({
       chord: chordPos.chord,
       originalIndex: index,
-    });
-  });
+      position: Math.min(chordPos.position, lyrics.length),
+    }))
+    .sort((a, b) => a.position - b.position);
 
-  const getChordWidth = (chord: string): number => {
-    if (typeof document === 'undefined') {
-      return chord.length * charWidth * 1.1;
-    }
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (!context) {
-      return chord.length * charWidth * 1.1;
-    }
-    context.font = `${fontSize}px ${chordFontFamily}`;
-    return context.measureText(chord).width + 2;
-  };
+  const placed: PlacedChord[] = [];
+  let previousEnd = Number.NEGATIVE_INFINITY;
 
-  const result: ChordWithOffset[] = [];
+  for (const item of ordered) {
+    const base = Math.min(
+      getLyricOffsetPx(lyrics, item.position, fontSize, lyricsFontFamily, proportional, charWidth),
+      cap
+    );
+    const offset = Math.max(base, previousEnd + minGap);
+    placed.push({ chord: item.chord, originalIndex: item.originalIndex, offset });
+    previousEnd = offset + getChordWidth(item.chord, fontSize, chordFontFamily, charWidth);
+  }
 
-  positionGroups.forEach((chordGroup, position) => {
-    if (chordGroup.length === 1) {
-      result.push({
-        chord: chordGroup[0].chord,
-        position,
-        horizontalOffset: 0,
-        originalIndex: chordGroup[0].originalIndex,
-      });
-      return;
-    }
-
-    let cumulativeOffset = 0;
-    chordGroup.forEach(({ chord, originalIndex }) => {
-      result.push({
-        chord,
-        position,
-        horizontalOffset: cumulativeOffset,
-        originalIndex,
-      });
-      const chordWidth = getChordWidth(chord);
-      const dynamicSpacing = Math.max(spacing, fontSize * 0.3);
-      cumulativeOffset += chordWidth + dynamicSpacing;
-    });
-  });
-
-  result.sort((a, b) => a.originalIndex - b.originalIndex);
-  return result;
+  return placed;
 }
 
 export interface ChordOverLyricsLineProps {
@@ -168,31 +166,28 @@ function ChordButtons({
   onChordClick,
   onChordChipClick,
 }: ChordButtonsProps) {
-  const groupedChords = groupChordsByPosition(chords, lyrics, fontSize, charWidth, chordFontFamily);
+  const placedChords = placeChordsWithoutOverlap(
+    chords,
+    lyrics,
+    fontSize,
+    lyricsFontFamily,
+    chordFontFamily,
+    proportional,
+    charWidth,
+    containerWidth
+  );
 
   return (
     <>
-      {groupedChords.map((chordWithOffset, chordIndex) => {
-        const safePosition = Math.min(chordWithOffset.position, lyrics.length);
-        const baseLeftOffset = Math.min(
-          getLyricOffsetPx(
-            lyrics,
-            safePosition,
-            fontSize,
-            lyricsFontFamily,
-            proportional,
-            charWidth
-          ),
-          containerWidth - 50
-        );
-        const leftOffset = baseLeftOffset + chordWithOffset.horizontalOffset;
+      {placedChords.map((placedChord, chordIndex) => {
+        const leftOffset = placedChord.offset;
 
         if (editMode) {
           return (
             <button
               key={chordIndex}
               type="button"
-              onClick={() => onChordChipClick?.(chordWithOffset.originalIndex)}
+              onClick={() => onChordChipClick?.(placedChord.originalIndex)}
               className="absolute z-10 rounded-md bg-blue-100 px-1.5 py-0.5 text-blue-800 ring-1 ring-blue-300 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-200 dark:ring-blue-700"
               style={{
                 left: isHebrew ? 'auto' : `${leftOffset}px`,
@@ -201,7 +196,7 @@ function ChordButtons({
                 lineHeight: 1.4,
               }}
             >
-              {chordWithOffset.chord}
+              {placedChord.chord}
             </button>
           );
         }
@@ -210,7 +205,7 @@ function ChordButtons({
           <button
             key={chordIndex}
             type="button"
-            onClick={() => onChordClick?.(chordWithOffset.chord)}
+            onClick={() => onChordClick?.(placedChord.chord)}
             className="absolute z-10 cursor-pointer whitespace-nowrap text-blue-600 hover:text-blue-800 hover:underline"
             style={{
               left: isHebrew ? 'auto' : `${leftOffset}px`,
@@ -220,7 +215,7 @@ function ChordButtons({
               maxWidth: 'calc(100vw - 40px)',
             }}
           >
-            {chordWithOffset.chord}
+            {placedChord.chord}
           </button>
         );
       })}

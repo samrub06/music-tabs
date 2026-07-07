@@ -2,11 +2,13 @@ import * as cheerio from 'cheerio';
 import { fetchNeginaHtml } from './neginaFetch';
 import { extractNeginaContent } from './neginaContentExtractor';
 import { fetchUltimateGuitarHtml } from './ugFetch';
+import { extractTab4uContent } from './tab4uContentExtractor';
 import {
   buildTab4uCategoryUrl,
   parseTab4uCoverImages,
   parseTab4uLinkText,
   parseTab4uTotalResults,
+  toTab4uAbsoluteUrl,
 } from './tab4uUtils';
 import { songService } from './songService';
 
@@ -659,38 +661,8 @@ async function scrapeTab4U(url: string, searchResult?: SearchResult): Promise<Sc
       }
     }
 
-    // Extraire le contenu depuis les tables
-    let content = '';
-    const tables = $('table');
-    
-    tables.each((i: number, elem: any) => {
-      const $table = $(elem);
-      const tableText = $table.text();
-      
-      // Vérifier si cette table contient des accords
-      const chordCount = (tableText.match(/\b[A-G][#b]?(m|maj|min|dim|aug|sus)?[0-9]?\b/g) || []).length;
-      
-      if (chordCount > 5) {
-        // Extraire le contenu ligne par ligne
-        const rows = $table.find('tr');
-        
-        rows.each((j: number, row: any) => {
-          const $row = $(row);
-          const cells = $row.find('td');
-          
-          cells.each((k: number, cell: any) => {
-            const $cell = $(cell);
-            const cellText = $cell.text().trim();
-            
-            if (cellText) {
-              content += cellText + '\n';
-            }
-          });
-        });
-      }
-    });
+    let content = extractTab4uContent($);
 
-    // Alternative: chercher dans div#songContentTPL
     if (!content || content.length < 100) {
       const songDiv = $('#songContentTPL');
       if (songDiv.length > 0) {
@@ -752,12 +724,18 @@ function parseTab4uSearchResultsFromHtml(html: string, limit?: number): SearchRe
     if (seenUrls.has(fullUrl)) return;
     seenUrls.add(fullUrl);
 
+    // Artist thumbnail is inlined as a background-image on a span.ruArtPhoto inside the link
+    const photoStyle = $link.find('span.ruArtPhoto').attr('style') ?? '';
+    const photoRel = photoStyle.match(/background-image:url\(([^)]+)\)/)?.[1];
+    const artistImageUrl = toTab4uAbsoluteUrl(photoRel); // returns undefined for noArtPicDu.svg
+
     results.push({
       title: parsed.title,
       author: parsed.author,
       url: fullUrl,
       source: 'Tab4U',
       reviews: 0,
+      ...(artistImageUrl ? { artistImageUrl } : {}),
     });
   });
 

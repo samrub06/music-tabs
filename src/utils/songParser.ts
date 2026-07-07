@@ -215,7 +215,7 @@ function calculateChordPositions(chordLine: string, lyricLine: string): ChordPos
 
     // Multiple chords may legitimately share the same lyric position (e.g.
     // trailing chords beyond a short lyric). Allow them all — the renderer
-    // handles same-position chords via horizontal offsets.
+    // pushes overlapping chords apart in pixel space.
     positions.push({ chord, position: lyricPosition });
   }
 
@@ -223,9 +223,9 @@ function calculateChordPositions(chordLine: string, lyricLine: string): ChordPos
   positions.sort((a, b) => a.position - b.position);
 
   // Spread any positions that collided due to maxPos clamping so no two chords
-  // share the same lyric position (the renderer groups by position and spreads
-  // via horizontalOffset, but only when positions are identical — deduplicated
-  // positions yield cleaner per-character alignment).
+  // share the same lyric position — deduplicated positions yield cleaner
+  // per-character alignment (the renderer also resolves any residual pixel
+  // overlaps as a safety net).
   const seen = new Set<number>();
   for (const pos of positions) {
     while (seen.has(pos.position)) pos.position++;

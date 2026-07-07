@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "slug": "halev-sheli-eyal-golan",
+    "title": "הלב שלי",
+    "author": "אייל גולן",
+    "url": "https://www.tab4u.com/tabs/songs/4950_%D7%90%D7%99%D7%99%D7%9C_%D7%92%D7%95%D7%9C%D7%9F_-_%D7%94%D7%9C%D7%91_%D7%A9%D7%9C%D7%99.html",
+    "snapshot": "halev-sheli-eyal-golan.snapshot.html",
+    "note": "Positions verified via getBoundingClientRect() pixel measurement against the live Tab4U page. Same title as the Ishay Ribo song, but a different song/artist — added specifically to catch the DOM-order reversal regression (first chord in source = last word, not first). Every position below (including middle chords of 3-chord lines) is an exact word match to the live page: the unified proportional formula in tab4uTokensToLyricPositions scales each chord's distance-from-right by the lyric's own width (lyricFieldWidth), which lands middle chords on the correct word (Db on ולא / פינה)."
+  },
+  "lines": [
+    {
+      "id": "verse-1-line2",
+      "lyricsContains": "זה רק הלב שלי",
+      "chords": [{ "chord": "Bbm", "position": 6 }]
+    },
+    {
+      "id": "verse-1-line3",
+      "lyricsContains": "שמבקש פינה בתוך ליבך",
+      "chords": [
+        { "chord": "B", "position": 0 },
+        { "chord": "Db", "position": 6 },
+        { "chord": "Gb", "position": 16 }
+      ]
+    },
+    {
+      "id": "verse-1-line4",
+      "lyricsContains": "זה הלב שמתעתע בי",
+      "chords": [
+        { "chord": "Abm", "position": 3 },
+        { "chord": "Ebm", "position": 7 }
+      ]
+    },
+    {
+      "id": "verse-1-line5",
+      "lyricsContains": "ולא מרפה לרגע בגללך",
+      "chords": [
+        { "chord": "B", "position": 0 },
+        { "chord": "Bb", "position": 14 }
+      ]
+    },
+    {
+      "id": "verse-2-line2",
+      "lyricsContains": "להגיד כמה את יקרה לי",
+      "chords": [{ "chord": "Abm", "position": 13 }]
+    },
+    {
+      "id": "verse-2-line3",
+      "lyricsContains": "מביט בך מאושר ולא אומר דבר",
+      "chords": [
+        { "chord": "Abm", "position": 0 },
+        { "chord": "Db", "position": 14 },
+        { "chord": "Gb", "position": 23 }
+      ]
+    },
+    {
+      "id": "chorus-4chord",
+      "lyricsContains": "ולא יכול כי זה חזק ממני",
+      "note": "Dense cluster: the source chord row packs Db/B/Bb into columns 1-8 (over the phrase's last word ממני@19) with a lone B far right (over ولا@0). The unified formula lands all three on ~19; parseTextToStructuredSong's de-collision then spreads them to 19/22/23. Exact per-chord pixel targets are inherently ambiguous here, so this line asserts the rendered (de-collided) result, not a pure Tab4U position.",
+      "chords": [
+        { "chord": "B", "position": 0 },
+        { "chord": "Db", "position": 19 },
+        { "chord": "B", "position": 22 },
+        { "chord": "Bb", "position": 23 }
+      ]
+    }
+  ]
+}

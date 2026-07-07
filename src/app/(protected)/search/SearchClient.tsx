@@ -21,7 +21,6 @@ import { RecentSearchList } from '@/components/search/RecentSearchList'
 import { HubZoneNav } from '@/components/library/HubZoneNav'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import {
-  FALLBACK_SEARCH_IMAGE_URL,
   loadRecentSearches,
   RECENT_SEARCHES_PREVIEW,
   upsertRecentSearch,
@@ -749,7 +748,7 @@ export default function SearchClient({
                     {/* Photo compacte */}
                     <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-md overflow-hidden bg-muted">
                       <SongThumbnail
-                        songImageUrl={result.songImageUrl || result.artistImageUrl || FALLBACK_SEARCH_IMAGE_URL}
+                        songImageUrl={result.songImageUrl}
                         artistImageUrl={result.artistImageUrl}
                         alt={result.title}
                         size="sm"

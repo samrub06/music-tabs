@@ -27,6 +27,7 @@ import { triggerXpConfetti } from '@/utils/triggerXpConfetti';
 import { mountXpCelebration } from '@/utils/mountXpCelebration';
 import type { SongProgressResult } from '@/types';
 import { updateSongFolderAction, cloneSongAction } from '@/app/(protected)/dashboard/actions';
+import { deleteSongAction } from '@/app/song/[id]/actions';
 import { useLanguage } from '@/context/LanguageContext';
 import { useFoldersContext } from '@/context/FoldersContext';
 
@@ -104,16 +105,24 @@ export default function SongViewerContainerSSR({
     setCurrentFolderId(song.folderId);
   }, [song.id, song.folderId]);
 
-  const librarySongIdForActions = librarySongId ?? song.id;
+  const [localIsInLibrary, setLocalIsInLibrary] = useState(isInLibrary);
+  const [localLibrarySongId, setLocalLibrarySongId] = useState(librarySongId);
+
+  useEffect(() => {
+    setLocalIsInLibrary(isInLibrary);
+    setLocalLibrarySongId(librarySongId);
+  }, [song.id, isInLibrary, librarySongId]);
+
+  const librarySongIdForActions = localLibrarySongId ?? (isOwnedByUser ? song.id : undefined);
 
   const handleFolderChange = async (folderId: string | undefined) => {
-    if (!isOwnedByUser && !librarySongId) return;
+    if (!librarySongIdForActions) return;
     await updateSongFolderAction(librarySongIdForActions, folderId);
     setCurrentFolderId(folderId);
   };
 
   const handleToggleFavorite = async () => {
-    if (!isOwnedByUser && !librarySongId) return;
+    if (!librarySongIdForActions) return;
     setIsTogglingFavorite(true);
     try {
       const { isLiked: next } = await toggleSongFavoriteAction(librarySongIdForActions);
@@ -126,23 +135,79 @@ export default function SongViewerContainerSSR({
   };
 
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
+  const [isRemovingFromLibrary, setIsRemovingFromLibrary] = useState(false);
+  const [libraryActionFeedback, setLibraryActionFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!libraryActionFeedback) return;
+    const timer = window.setTimeout(() => setLibraryActionFeedback(null), 3500);
+    return () => window.clearTimeout(timer);
+  }, [libraryActionFeedback]);
 
   const handleAddToLibrary = async () => {
     if (onAddToLibrary) {
       onAddToLibrary();
       return;
     }
-    if (!isAuthenticated || isInLibrary) return;
+    if (!isAuthenticated || localIsInLibrary) return;
 
     setIsAddingToLibrary(true);
+    setLibraryActionFeedback(null);
     try {
       const created = await cloneSongAction(song.id);
-      router.push(`/song/${created.id}`);
+      setLocalIsInLibrary(true);
+      setLocalLibrarySongId(created.id);
+      setLibraryActionFeedback({
+        type: 'success',
+        message: t('library.addedToLibrary'),
+      });
     } catch (error) {
       console.error('Failed to add song to library:', error);
-      alert(t('errors.failedToSave'));
+      setLibraryActionFeedback({
+        type: 'error',
+        message: t('errors.failedToSave'),
+      });
     } finally {
       setIsAddingToLibrary(false);
+    }
+  };
+
+  const handleRemoveFromLibrary = async () => {
+    if (!isAuthenticated || !localIsInLibrary) return;
+
+    const idToDelete = localLibrarySongId ?? (isOwnedByUser ? song.id : undefined);
+    if (!idToDelete) return;
+
+    const confirmMessage = isOwnedByUser
+      ? t('songs.confirmDeleteSong')
+      : t('library.confirmRemoveFromLibrary');
+    if (!confirm(confirmMessage)) return;
+
+    setIsRemovingFromLibrary(true);
+    setLibraryActionFeedback(null);
+    try {
+      await deleteSongAction(idToDelete);
+      if (isOwnedByUser || idToDelete === song.id) {
+        router.push('/songs');
+        return;
+      }
+      setLocalIsInLibrary(false);
+      setLocalLibrarySongId(undefined);
+      setLibraryActionFeedback({
+        type: 'success',
+        message: t('library.removedFromLibrary'),
+      });
+    } catch (error) {
+      console.error('Failed to remove song from library:', error);
+      setLibraryActionFeedback({
+        type: 'error',
+        message: t('errors.failedToSave'),
+      });
+    } finally {
+      setIsRemovingFromLibrary(false);
     }
   };
 
@@ -636,22 +701,25 @@ export default function SongViewerContainerSSR({
     knownChordIds,
     chordNameToIdMap,
     chords,
-    isInLibrary,
+    isInLibrary: localIsInLibrary,
     isOwnedByUser,
-    librarySongId,
+    librarySongId: localLibrarySongId,
     isLiked,
-    onAddToLibrary: isInLibrary ? undefined : handleAddToLibrary,
+    onAddToLibrary: handleAddToLibrary,
     isAddingToLibrary,
-    onToggleFavorite: handleToggleFavorite,
+    onRemoveFromLibrary: handleRemoveFromLibrary,
+    isRemovingFromLibrary,
+    libraryActionFeedback,
+    onToggleFavorite: localIsInLibrary ? handleToggleFavorite : undefined,
     isTogglingFavorite,
     onFontSizeChange: setFontSize,
     bottomBarHeight,
     setBottomBarHeight,
     onToggleToolsBar: () =>
       setBottomBarHeight((prev) => (prev > 0 ? 0 : getDefaultToolsBarHeight())),
-    folders: isOwnedByUser || librarySongId ? folders : [],
+    folders: localIsInLibrary && librarySongIdForActions ? folders : [],
     currentFolderId,
-    onFolderChange: isOwnedByUser || librarySongId ? handleFolderChange : undefined,
+    onFolderChange: localIsInLibrary && librarySongIdForActions ? handleFolderChange : undefined,
   };
 
   return (

@@ -6,6 +6,7 @@ import {
   MusicalNoteIcon,
   PencilSquareIcon,
   HeartIcon,
+  PlusIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
@@ -98,6 +99,9 @@ interface SongContentProps {
   isLiked?: boolean;
   onAddToLibrary?: () => void;
   isAddingToLibrary?: boolean;
+  onRemoveFromLibrary?: () => void;
+  isRemovingFromLibrary?: boolean;
+  libraryActionFeedback?: { type: 'success' | 'error'; message: string } | null;
   onToggleFavorite?: () => void;
   isTogglingFavorite?: boolean;
   selectedInstrument?: 'piano' | 'guitar';
@@ -145,6 +149,9 @@ export default function SongContent({
   isLiked = false,
   onAddToLibrary,
   isAddingToLibrary = false,
+  onRemoveFromLibrary,
+  isRemovingFromLibrary = false,
+  libraryActionFeedback = null,
   onToggleFavorite,
   isTogglingFavorite = false,
   selectedInstrument = 'piano',
@@ -342,62 +349,72 @@ export default function SongContent({
 
   const metaRowActionSize = 'h-11 min-h-11 w-11';
 
-  const inLibraryBadge = isInLibrary ? (
-    <div
-      className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-lg border border-green-600/25 bg-green-500/10 text-green-700 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400',
-        metaRowActionSize
-      )}
-      title={t('library.inYourLibrary')}
-    >
-      <CheckIcon className="h-4 w-4 shrink-0" aria-hidden />
-    </div>
-  ) : null;
+  const libraryToggleButton =
+    isAuthenticated && (onAddToLibrary || onRemoveFromLibrary) ? (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (isInLibrary) {
+            onRemoveFromLibrary?.();
+            return;
+          }
+          onAddToLibrary?.();
+        }}
+        disabled={
+          isAddingToLibrary ||
+          isRemovingFromLibrary ||
+          (isInLibrary ? !onRemoveFromLibrary : !onAddToLibrary)
+        }
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center rounded-lg border transition-colors disabled:opacity-70',
+          metaRowActionSize,
+          isInLibrary
+            ? 'border-green-600/25 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25'
+            : 'border-border/80 bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+        )}
+        aria-label={
+          isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary')
+        }
+        title={isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary')}
+      >
+        {isAddingToLibrary || isRemovingFromLibrary ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : isInLibrary ? (
+          <CheckIcon className="h-4 w-4 shrink-0" aria-hidden />
+        ) : (
+          <PlusIcon className="h-4 w-4 shrink-0" aria-hidden />
+        )}
+      </button>
+    ) : null;
 
-  const favoriteButton = (
+  const favoriteButton = isInLibrary ? (
     <button
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        if (!isInLibrary) {
-          onAddToLibrary?.();
-          return;
-        }
         onToggleFavorite?.();
       }}
-      disabled={
-        isTogglingFavorite ||
-        isAddingToLibrary ||
-        (!isInLibrary && !onAddToLibrary) ||
-        (isInLibrary && !onToggleFavorite)
-      }
+      disabled={isTogglingFavorite || !onToggleFavorite}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70',
         titleRowHeight,
         'w-14 sm:w-16'
       )}
       aria-label={
-        isInLibrary
-          ? isLiked
-            ? t('library.removeFromFavorites')
-            : t('library.addToFavorites')
-          : t('library.addToLibrary')
+        isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')
       }
-      title={
-        isInLibrary
-          ? isLiked
-            ? t('library.removeFromFavorites')
-            : t('library.addToFavorites')
-          : t('library.addToLibrary')
-      }
+      title={isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')}
     >
-      {isLiked ? (
+      {isTogglingFavorite ? (
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      ) : isLiked ? (
         <HeartSolidIcon className="h-5 w-5" />
       ) : (
         <HeartIcon className="h-5 w-5" />
       )}
     </button>
-  );
+  ) : null;
 
   const editButton = onToggleEdit ? (
     <Button
@@ -440,10 +457,26 @@ export default function SongContent({
     ) : null;
 
   const songMetaRow =
-    folderControl || inLibraryBadge ? (
-      <div className="flex w-full items-center gap-1.5">
-        {folderControl}
-        {inLibraryBadge}
+    folderControl || libraryToggleButton || libraryActionFeedback ? (
+      <div className="flex w-full flex-col gap-1.5">
+        <div className="flex w-full items-center gap-1.5">
+          {folderControl}
+          {libraryToggleButton}
+        </div>
+        {libraryActionFeedback ? (
+          <p
+            role="status"
+            aria-live="polite"
+            className={cn(
+              'text-xs font-medium',
+              libraryActionFeedback.type === 'success'
+                ? 'text-green-700 dark:text-green-400'
+                : 'text-destructive'
+            )}
+          >
+            {libraryActionFeedback.message}
+          </p>
+        ) : null}
       </div>
     ) : null;
 

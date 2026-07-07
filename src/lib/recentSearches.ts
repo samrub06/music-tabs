@@ -1,8 +1,6 @@
 export const RECENT_SEARCHES_KEY = 'recentSearches'
 export const MAX_RECENT_SEARCHES = 30
 export const RECENT_SEARCHES_PREVIEW = 3
-export const FALLBACK_SEARCH_IMAGE_URL =
-  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
 
 export interface RecentSearchItem {
   query: string
@@ -93,9 +91,8 @@ export function upsertRecentSearch(query: string, preview?: RecentSearchPreview)
 }
 
 export function getRecentSearchDisplay(item: RecentSearchItem) {
-  const imageUrl = item.songImageUrl || item.artistImageUrl || FALLBACK_SEARCH_IMAGE_URL
   const title = item.title || item.query
   const subtitle = item.title ? item.author || item.query : item.author
 
-  return { imageUrl, title, subtitle }
+  return { title, subtitle }
 }
