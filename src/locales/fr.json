@@ -622,6 +622,7 @@
     "guitar": "Guitare",
     "edit": "Éditer",
     "shareLink": "Partager le lien",
+    "shareSongText": "Accords et paroles de « {title} » par {author}",
     "linkCopied": "Lien copié !",
     "AUTO_SCROLL_LABEL": "Défilement auto",
     "STOP_AUTO_SCROLL": "Arrêter",

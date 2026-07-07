@@ -622,6 +622,7 @@
     "guitar": "גיטרה",
     "edit": "ערוך",
     "shareLink": "שתף קישור",
+    "shareSongText": "אקורדים ומילים ל\"{title}\" מאת {author}",
     "linkCopied": "הקישור הועתק!",
     "AUTO_SCROLL_LABEL": "גלילה אוטומטית",
     "STOP_AUTO_SCROLL": "עצור",

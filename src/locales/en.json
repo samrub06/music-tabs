@@ -622,6 +622,7 @@
     "guitar": "Guitar",
     "edit": "Edit",
     "shareLink": "Share link",
+    "shareSongText": "Chords and lyrics for \"{title}\" by {author}",
     "linkCopied": "Link copied!",
     "AUTO_SCROLL_LABEL": "Auto scroll",
     "STOP_AUTO_SCROLL": "Stop",

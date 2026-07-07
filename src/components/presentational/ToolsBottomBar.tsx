@@ -24,6 +24,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Piano, Guitar } from 'lucide-react';
+import { shareOrCopyLink } from '@/utils/shareLink';
+
+function interpolate(template: string, vars: Record<string, string>) {
+  return Object.entries(vars).reduce(
+    (str, [key, value]) => str.replace(new RegExp(`\\{${key}\\}`, 'g'), value),
+    template
+  );
+}
 
 const BAR_MIN_HEIGHT = 48;
 const BAR_MAX_HEIGHT_PERCENT = 65;
@@ -91,15 +99,23 @@ export default function ToolsBottomBar({
         ? `${window.location.origin}/song/${song.id}`
         : `/song/${song.id}`;
 
+    const title = `${song.title} — ${song.author}`;
+    const text = interpolate(t('songHeader.shareSongText'), {
+      title: song.title,
+      author: song.author,
+    });
+
     try {
-      await navigator.clipboard.writeText(url);
-      setLinkCopied(true);
-      if (copyFeedbackTimerRef.current) clearTimeout(copyFeedbackTimerRef.current);
-      copyFeedbackTimerRef.current = setTimeout(() => setLinkCopied(false), 2500);
+      const result = await shareOrCopyLink({ url, title, text });
+      if (result === 'copied') {
+        setLinkCopied(true);
+        if (copyFeedbackTimerRef.current) clearTimeout(copyFeedbackTimerRef.current);
+        copyFeedbackTimerRef.current = setTimeout(() => setLinkCopied(false), 2500);
+      }
     } catch (error) {
-      console.error('Failed to copy song link:', error);
+      console.error('Failed to share song link:', error);
     }
-  }, [song.id]);
+  }, [song.author, song.id, song.title, t]);
 
   const getBaseChord = () => song.firstChord || song.key || 'C';
   const getAvailableKeys = () => generateAllKeys(getBaseChord());
