@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getSpotifyConfig } from '@/lib/config/spotify'
+import { getSpotifyConfig, SPOTIFY_LIKED_SONGS_ID } from '@/lib/config/spotify'
 import { profileRepo } from '@/lib/services/profileRepo'
 import type { Database } from '@/types/db'
 import type { ParsedSong } from '@/lib/services/simplePlaylistImporter'
@@ -142,8 +142,39 @@ export async function getSpotifyUserProfile(accessToken: string): Promise<Spotif
   }
 }
 
+function mapTrackItem(track: {
+  name?: string
+  artists?: Array<{ name?: string }>
+} | null | undefined): SpotifyPlaylistTrack | null {
+  if (!track?.name) return null
+  const artist = track.artists?.[0]?.name?.trim()
+  if (!artist) return null
+  return { title: track.name.trim(), artist }
+}
+
 export async function listSpotifyPlaylists(accessToken: string): Promise<SpotifyPlaylistSummary[]> {
   const playlists: SpotifyPlaylistSummary[] = []
+
+  // Liked Songs is not returned by /me/playlists — add it explicitly.
+  try {
+    const likedResponse = await fetch(`${SPOTIFY_API_BASE}/me/tracks?limit=1`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+    })
+    if (likedResponse.ok) {
+      const likedPayload = (await likedResponse.json()) as { total?: number }
+      playlists.push({
+        id: SPOTIFY_LIKED_SONGS_ID,
+        name: 'Liked Songs',
+        trackCount: likedPayload.total ?? 0,
+        imageUrl: null,
+        ownerName: null,
+      })
+    }
+  } catch {
+    // Scope missing or API error — continue with regular playlists.
+  }
+
   let url: string | null = `${SPOTIFY_API_BASE}/me/playlists?limit=50`
 
   while (url) {
@@ -164,11 +195,12 @@ export async function listSpotifyPlaylists(accessToken: string): Promise<Spotify
         images?: Array<{ url: string }>
         owner?: { display_name?: string | null }
         tracks?: { total?: number }
-      }>
+      } | null>
       next?: string | null
     }
 
     for (const item of payload.items ?? []) {
+      if (!item?.id || !item.name) continue
       playlists.push({
         id: item.id,
         name: item.name,
@@ -181,7 +213,47 @@ export async function listSpotifyPlaylists(accessToken: string): Promise<Spotify
     url = payload.next ?? null
   }
 
-  return playlists.sort((a, b) => a.name.localeCompare(b.name))
+  return playlists.sort((a, b) => {
+    if (a.id === SPOTIFY_LIKED_SONGS_ID) return -1
+    if (b.id === SPOTIFY_LIKED_SONGS_ID) return 1
+    return a.name.localeCompare(b.name)
+  })
+}
+
+async function getLikedTracks(
+  accessToken: string,
+  maxTracks = DEFAULT_IMPORT_TRACK_LIMIT
+): Promise<SpotifyPlaylistTrack[]> {
+  const tracks: SpotifyPlaylistTrack[] = []
+  let url: string | null = `${SPOTIFY_API_BASE}/me/tracks?limit=50`
+
+  while (url && tracks.length < maxTracks) {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+    })
+
+    if (!response.ok) {
+      const details = await response.text().catch(() => '')
+      throw new Error(`Spotify liked tracks fetch failed (${response.status}): ${details}`)
+    }
+
+    const payload = (await response.json()) as {
+      items: Array<{ track: { name?: string; artists?: Array<{ name?: string }> } | null } | null>
+      next?: string | null
+    }
+
+    for (const item of payload.items ?? []) {
+      const mapped = mapTrackItem(item?.track)
+      if (!mapped) continue
+      tracks.push(mapped)
+      if (tracks.length >= maxTracks) break
+    }
+
+    url = tracks.length >= maxTracks ? null : payload.next ?? null
+  }
+
+  return tracks
 }
 
 export async function getSpotifyPlaylistTracks(
@@ -189,6 +261,10 @@ export async function getSpotifyPlaylistTracks(
   playlistId: string,
   maxTracks = DEFAULT_IMPORT_TRACK_LIMIT
 ): Promise<SpotifyPlaylistTrack[]> {
+  if (playlistId === SPOTIFY_LIKED_SONGS_ID) {
+    return getLikedTracks(accessToken, maxTracks)
+  }
+
   const tracks: SpotifyPlaylistTrack[] = []
   let url: string | null =
     `${SPOTIFY_API_BASE}/playlists/${encodeURIComponent(playlistId)}/tracks?limit=100&fields=items(track(name,artists(name))),next`
@@ -210,19 +286,15 @@ export async function getSpotifyPlaylistTracks(
           name?: string
           artists?: Array<{ name?: string }>
         } | null
-      }>
+      } | null>
       next?: string | null
     }
 
     for (const item of payload.items ?? []) {
-      if (!item.track?.name) continue
-      const artist = item.track.artists?.[0]?.name?.trim()
-      if (!artist) continue
+      const mapped = mapTrackItem(item?.track)
+      if (!mapped) continue
 
-      tracks.push({
-        title: item.track.name.trim(),
-        artist,
-      })
+      tracks.push(mapped)
 
       if (tracks.length >= maxTracks) break
     }

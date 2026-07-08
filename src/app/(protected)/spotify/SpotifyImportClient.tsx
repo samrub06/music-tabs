@@ -51,6 +51,7 @@ export default function SpotifyImportClient({
   const [playlists, setPlaylists] = useState<SpotifyPlaylistSummary[]>([])
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false)
   const [playlistsError, setPlaylistsError] = useState<string | null>(null)
+  const [needsReconnect, setNeedsReconnect] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFolderId, setSelectedFolderId] = useState('')
   const [importingPlaylistId, setImportingPlaylistId] = useState<string | null>(null)
@@ -76,6 +77,7 @@ export default function SpotifyImportClient({
     if (spotifyStatus === 'connected') {
       void refetchProfile()
       setIsConnected(true)
+      setNeedsReconnect(false)
     }
 
     const url = new URL(window.location.href)
@@ -84,26 +86,27 @@ export default function SpotifyImportClient({
   }, [spotifyStatus, refetchProfile, router, t])
 
   const loadPlaylists = useCallback(async () => {
-    if (!session?.access_token || !isConnected) return
+    if (!isConnected) return
 
     setIsLoadingPlaylists(true)
     setPlaylistsError(null)
+    setNeedsReconnect(false)
 
     try {
-      const response = await fetch('/api/spotify/playlists', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      })
+      // Cookie session is enough — /api/spotify/playlists uses createActionServerClient().
+      const response = await fetch('/api/spotify/playlists', { credentials: 'include' })
 
       const payload = (await response.json()) as {
         playlists?: SpotifyPlaylistSummary[]
         error?: string
         details?: string
+        reconnectRequired?: boolean
       }
 
       if (!response.ok) {
-        throw new Error(payload.details || payload.error || 'Failed to load playlists')
+        const details = payload.details || payload.error || 'Failed to load playlists'
+        setNeedsReconnect(Boolean(payload.reconnectRequired))
+        throw new Error(details)
       }
 
       setPlaylists(payload.playlists ?? [])
@@ -112,30 +115,36 @@ export default function SpotifyImportClient({
     } finally {
       setIsLoadingPlaylists(false)
     }
-  }, [session?.access_token, isConnected, t])
+  }, [isConnected, t])
 
   useEffect(() => {
-    if (isConnected && session?.access_token) {
+    if (isConnected) {
       void loadPlaylists()
     }
-  }, [isConnected, session?.access_token, loadPlaylists])
+  }, [isConnected, loadPlaylists])
 
   const filteredPlaylists = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
-    if (!query) return playlists
-    return playlists.filter((playlist) => playlist.name.toLowerCase().includes(query))
-  }, [playlists, searchQuery])
+    const withLabels = playlists.map((playlist) =>
+      playlist.id === 'liked'
+        ? { ...playlist, name: t('spotifyImport.likedSongs') }
+        : playlist
+    )
+    if (!query) return withLabels
+    return withLabels.filter((playlist) => playlist.name.toLowerCase().includes(query))
+  }, [playlists, searchQuery, t])
 
-  const handleConnect = () => {
+  const handleConnect = (force = false) => {
+    const authPath = force ? '/api/spotify/auth?force=1' : '/api/spotify/auth'
     if (!user) {
-      void signInWithGoogle('/api/spotify/auth')
+      void signInWithGoogle(authPath)
       return
     }
-    window.location.assign('/api/spotify/auth')
+    window.location.assign(authPath)
   }
 
   const handleImport = async (playlist: SpotifyPlaylistSummary) => {
-    if (!session?.access_token || importingPlaylistId) return
+    if (importingPlaylistId) return
 
     setImportingPlaylistId(playlist.id)
     setImportResult(null)
@@ -147,12 +156,18 @@ export default function SpotifyImportClient({
     })
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      // Prefer cookie auth path once available; Bearer still works for streaming import.
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`
+      }
+
       const response = await fetch('/api/spotify/import', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        credentials: 'include',
+        headers,
         body: JSON.stringify({
           playlistId: playlist.id,
           targetFolderId: selectedFolderId || null,
@@ -243,7 +258,7 @@ export default function SpotifyImportClient({
             {!isConnected ? (
               <Button
                 type="button"
-                onClick={handleConnect}
+                onClick={() => handleConnect()}
                 className="rounded-full bg-[#1DB954] px-4 text-black hover:bg-[#1ed760]"
               >
                 {t('spotifyImport.connect')}
@@ -263,7 +278,7 @@ export default function SpotifyImportClient({
           role="status"
           className={cn(
             'rounded-xl border px-3 py-2 text-sm',
-            spotifyStatus === 'connected'
+            statusMessage === t('library.spotifyStatus.connected')
               ? 'border-green-600/30 bg-green-500/10 text-green-700 dark:text-green-400'
               : 'border-destructive/30 bg-destructive/10 text-destructive'
           )}
@@ -280,17 +295,29 @@ export default function SpotifyImportClient({
                 <h2 className="text-base font-semibold text-foreground">{t('spotifyImport.playlistsTitle')}</h2>
                 <p className="text-sm text-muted-foreground">{t('spotifyImport.playlistsHint')}</p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void loadPlaylists()}
-                disabled={isLoadingPlaylists}
-                className="rounded-xl"
-              >
-                <ArrowPathIcon className={cn('mr-1.5 h-4 w-4', isLoadingPlaylists && 'animate-spin')} />
-                {t('spotifyImport.refresh')}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {needsReconnect && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => handleConnect(true)}
+                    className="rounded-xl bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                  >
+                    {t('spotifyImport.reconnect')}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void loadPlaylists()}
+                  disabled={isLoadingPlaylists}
+                  className="rounded-xl"
+                >
+                  <ArrowPathIcon className={cn('mr-1.5 h-4 w-4', isLoadingPlaylists && 'animate-spin')} />
+                  {t('spotifyImport.refresh')}
+                </Button>
+              </div>
             </div>
 
             <div className="mb-4 grid gap-3 sm:grid-cols-2">

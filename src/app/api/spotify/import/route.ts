@@ -1,22 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { createActionServerClient } from '@/lib/supabase/server'
 import { importSpotifyPlaylist } from '@/lib/services/spotifyImportService'
 import type { ImportProgress } from '@/lib/services/simplePlaylistImporter'
 import { spotifyImportSchema } from '@/lib/validation/schemas'
+import type { Database } from '@/types/db'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const maxDuration = 300
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { playlistId, targetFolderId, useAiOrganization } = spotifyImportSchema.parse(body)
+async function resolveSupabaseUser(request: NextRequest): Promise<{
+  userId: string
+  supabase: SupabaseClient<Database>
+} | null> {
+  const authHeader = request.headers.get('authorization')
 
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const supabase = createClient(
+  if (authHeader) {
+    const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -24,16 +24,35 @@ export async function POST(request: NextRequest) {
         auth: { autoRefreshToken: false, persistSession: false },
       }
     )
-
     const {
       data: { user },
-      error: authError,
+      error,
     } = await supabase.auth.getUser()
+    if (!error && user) {
+      return { userId: user.id, supabase }
+    }
+  }
 
-    if (authError || !user) {
+  const supabase = await createActionServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return null
+  return { userId: user.id, supabase }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { playlistId, targetFolderId, useAiOrganization } = spotifyImportSchema.parse(body)
+
+    const auth = await resolveSupabaseUser(request)
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { userId, supabase } = auth
     const encoder = new TextEncoder()
 
     const stream = new ReadableStream({
@@ -47,7 +66,7 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-          const result = await importSpotifyPlaylist(playlistId, user.id, supabase, {
+          const result = await importSpotifyPlaylist(playlistId, userId, supabase, {
             targetFolderId: targetFolderId ?? undefined,
             useAiOrganization: useAiOrganization ?? false,
             onProgress,

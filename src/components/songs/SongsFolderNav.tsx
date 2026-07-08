@@ -289,8 +289,8 @@ function FolderChip({
   )
 }
 
-const MOBILE_CHIP_LIMIT = 5
-const MOBILE_INLINE_WHEN_OVERFLOW = 4
+const MOBILE_CHIP_LIMIT = 3
+const MOBILE_INLINE_WHEN_OVERFLOW = 3
 
 type FolderChipItem = {
   id: string

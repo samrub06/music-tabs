@@ -168,10 +168,10 @@ export default function SongViewer({
     currentFolderId,
     onFolderChange,
 }: SongViewerProps) {
-  const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(true);
+  const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
 
   useEffect(() => {
-    setYoutubeTutorialOpen(true);
+    setYoutubeTutorialOpen(false);
   }, [song?.id]);
 
   if (!song) {

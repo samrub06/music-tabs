@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Piano, Guitar, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
+import ShareWithFriendIconButton from '@/components/social/ShareWithFriendIconButton';
 import { containsHebrew, getTextDirection } from '@/utils/rtl';
 
 const ChordDiagramsGrid = dynamic(
@@ -175,7 +176,7 @@ export default function SongContent({
 }: SongContentProps) {
   const { t, isRtl } = useLanguage();
   const pathname = usePathname();
-  const { signInWithGoogle } = useAuthContext();
+  const { user, signInWithGoogle } = useAuthContext();
   const pinchRef = useRef<{ initialDistance: number; initialFontSize: number } | null>(null);
   const endSuggestionsRef = useRef<HTMLDivElement>(null);
   const lastPinchTime = useRef(0);
@@ -571,21 +572,33 @@ export default function SongContent({
                 </div>
               </div>
               {songMetaRow}
-              {onToggleYoutubeTutorial && (
-                <button
-                  type="button"
-                  onClick={onToggleYoutubeTutorial}
-                  className={cn(
-                    'flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
-                    youtubeTutorialOpen
-                      ? 'border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400'
-                      : 'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60'
+              {(onToggleYoutubeTutorial || user) && (
+                <div className="flex items-center gap-2">
+                  {onToggleYoutubeTutorial && (
+                    <button
+                      type="button"
+                      onClick={onToggleYoutubeTutorial}
+                      className={cn(
+                        'flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
+                        youtubeTutorialOpen
+                          ? 'border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400'
+                          : 'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60'
+                      )}
+                      aria-pressed={youtubeTutorialOpen}
+                    >
+                      <Youtube className="h-4 w-4 shrink-0" />
+                      {t('youtubeTutorial.title')}
+                    </button>
                   )}
-                  aria-pressed={youtubeTutorialOpen}
-                >
-                  <Youtube className="h-4 w-4 shrink-0" />
-                  {t('youtubeTutorial.title')}
-                </button>
+                  {user && (
+                    <ShareWithFriendIconButton
+                      entityType="song"
+                      entityId={transposedSong.id}
+                      entityTitle={transposedSong.title}
+                      className="h-11 w-11 rounded-xl border border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground"
+                    />
+                  )}
+                </div>
               )}
             </div>
           </div>

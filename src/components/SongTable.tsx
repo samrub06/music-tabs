@@ -99,7 +99,8 @@ export default function SongTable({
   const [selectedSongs, setSelectedSongs] = useState<Set<string>>(new Set());
   const [isSelectingAll, setIsSelectingAll] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteType, setDeleteType] = useState<'selected' | 'all' | null>(null);
+  const [deleteType, setDeleteType] = useState<'selected' | 'all' | 'single' | null>(null);
+  const [songIdToDelete, setSongIdToDelete] = useState<string | null>(null);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [showMovePlaylistModal, setShowMovePlaylistModal] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -336,7 +337,14 @@ export default function SongTable({
 
   // Handle bulk delete
   const handleBulkDelete = (type: 'selected' | 'all') => {
+    setSongIdToDelete(null);
     setDeleteType(type);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteSong = (songId: string) => {
+    setSongIdToDelete(songId);
+    setDeleteType('single');
     setShowDeleteConfirm(true);
   };
 
@@ -345,15 +353,24 @@ export default function SongTable({
     try {
       if (deleteType === 'all') {
         await onDeleteAllSongs();
+        setSelectedSongs(new Set());
       } else if (deleteType === 'selected') {
         await onDeleteSongs(Array.from(selectedSongs));
+        setSelectedSongs(new Set());
+      } else if (deleteType === 'single' && songIdToDelete) {
+        await onDeleteSongs([songIdToDelete]);
+        setSelectedSongs((prev) => {
+          const next = new Set(prev);
+          next.delete(songIdToDelete);
+          return next;
+        });
       }
-      setSelectedSongs(new Set());
     } catch (error) {
       console.error('Error deleting songs:', error);
     } finally {
       setShowDeleteConfirm(false);
       setDeleteType(null);
+      setSongIdToDelete(null);
     }
   };
 
@@ -361,6 +378,7 @@ export default function SongTable({
   const cancelBulkDelete = () => {
     setShowDeleteConfirm(false);
     setDeleteType(null);
+    setSongIdToDelete(null);
   };
 
   const handleBulkRemoveFromPlaylist = async () => {
@@ -469,6 +487,7 @@ export default function SongTable({
               isSelected={selectedSongs.has(song.id)}
               onSelect={(checked) => handleSelectSong(song.id, checked)}
               onFolderChange={handleFolderChange}
+              onDeleteSong={handleDeleteSong}
               hasUser={hasUser}
               isSelectMode={isSelectMode}
               isCoverExpanded={expandedCoverSongId === song.id}
@@ -493,15 +512,19 @@ export default function SongTable({
             <DialogTitle>
               {deleteType === 'all'
                 ? t('songs.confirmDeleteAll')
-                : t('songs.confirmDeleteSelected')}
+                : deleteType === 'single'
+                  ? t('songs.delete')
+                  : t('songs.confirmDeleteSelected')}
             </DialogTitle>
             <DialogDescription>
               {deleteType === 'all'
                 ? t('songs.confirmDeleteAllMessage')
-                : t('songs.confirmDeleteSelectedMessage').replace(
-                    '{count}',
-                    String(selectedSongs.size)
-                  )}
+                : deleteType === 'single'
+                  ? t('songs.confirmDeleteSong')
+                  : t('songs.confirmDeleteSelectedMessage').replace(
+                      '{count}',
+                      String(selectedSongs.size)
+                    )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">

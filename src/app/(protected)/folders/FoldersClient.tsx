@@ -67,7 +67,7 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
             onFolderClick(folder.id)
           }
         }}
-        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:py-3"
+        className="flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-3 transition-colors hover:bg-muted/50 sm:rounded-none sm:px-4 sm:py-3"
       >
         {isDragMode && (
           <div
@@ -80,12 +80,14 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
             <Bars3Icon className="h-4 w-4 text-muted-foreground" />
           </div>
         )}
-        <div className="w-10 shrink-0">
+        <div className="w-12 shrink-0 sm:w-10">
           <FolderShape count={songCount} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">{folder.name}</p>
-          <p className="text-xs text-muted-foreground tabular-nums">
+          <p className="truncate text-base font-semibold text-foreground sm:text-sm sm:font-medium">
+            {folder.name}
+          </p>
+          <p className="mt-0.5 text-sm text-muted-foreground tabular-nums sm:text-xs">
             {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
           </p>
         </div>
@@ -95,6 +97,7 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
 }
 
 function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: SortableFolderItemProps) {
+  const { t } = useLanguage()
   const {
     attributes,
     listeners,
@@ -113,10 +116,14 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
     <div
       ref={setNodeRef}
       style={style}
-      className={cn('group flex min-w-0 cursor-pointer flex-col gap-1.5', isDragging && 'opacity-50')}
+      className={cn(
+        'group flex min-w-0 cursor-pointer flex-col gap-2 rounded-2xl border border-transparent p-2.5 transition-colors active:bg-muted/40 sm:gap-1.5 sm:rounded-none sm:border-0 sm:p-0',
+        'bg-muted/30 sm:bg-transparent',
+        isDragging && 'opacity-50'
+      )}
       onClick={() => onFolderClick(folder.id)}
     >
-      <div className="relative w-full">
+      <div className="relative mx-auto w-[72%] max-w-[7.5rem] sm:mx-0 sm:w-full sm:max-w-none">
         <FolderShape
           count={songCount}
           className="transition-transform duration-200 group-hover:scale-[1.03]"
@@ -133,8 +140,13 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
           </div>
         )}
       </div>
-      <div className="min-w-0">
-        <h3 className="truncate text-xs font-medium text-foreground">{folder.name}</h3>
+      <div className="min-w-0 text-center sm:text-start">
+        <h3 className="truncate text-sm font-semibold text-foreground sm:text-xs sm:font-medium">
+          {folder.name}
+        </h3>
+        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums sm:hidden">
+          {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
+        </p>
       </div>
     </div>
   )
@@ -446,7 +458,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             >
               <PlusIcon className="h-5 w-5" />
             </button>
-            <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
+            <div className="hidden shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800 sm:flex">
               <button
                 type="button"
                 onClick={() => setView('grid')}
@@ -491,7 +503,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 items={filteredFolders.map((f) => f.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-2">
                   {filteredFolders.map((folder) => (
                     <SortableFolderItem
                       key={folder.id}
@@ -504,7 +516,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 </div>
               </SortableContext>
             ) : (
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-2">
                 {filteredFolders.map((folder) => (
                   <SortableFolderItem
                     key={folder.id}

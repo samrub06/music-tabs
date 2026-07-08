@@ -33,12 +33,19 @@ export async function GET() {
     return NextResponse.json({ playlists })
   } catch (error) {
     console.error('Failed to list Spotify playlists:', error)
+    const details = error instanceof Error ? error.message : 'Unknown error'
+    const reconnectRequired =
+      details.toLowerCase().includes('not connected') ||
+      details.toLowerCase().includes('token refresh') ||
+      details.toLowerCase().includes('invalid_grant')
+
     return NextResponse.json(
       {
         error: 'Failed to load Spotify playlists',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details,
+        reconnectRequired,
       },
-      { status: 500 }
+      { status: reconnectRequired ? 401 : 500 }
     )
   }
 }

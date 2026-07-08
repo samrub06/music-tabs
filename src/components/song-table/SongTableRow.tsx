@@ -10,7 +10,14 @@ import {
 } from 'react'
 import { Song, Folder } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
-import { Bars3Icon, HeartIcon } from '@heroicons/react/24/outline'
+import {
+  Bars3Icon,
+  EllipsisVerticalIcon,
+  HeartIcon,
+  PencilSquareIcon,
+  ShareIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline'
 import { HeartIcon as HeartSolidIcon, MusicalNoteIcon } from '@heroicons/react/24/solid'
 import { useSongCover } from '@/lib/hooks/useSongCover'
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
@@ -19,6 +26,14 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { toggleSongFavoriteAction } from '@/app/song/[id]/actions'
 import { useLanguage } from '@/context/LanguageContext'
+import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 
@@ -30,6 +45,7 @@ interface SongTableRowProps {
   isSelected: boolean
   onSelect: (checked: boolean) => void
   onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>
+  onDeleteSong: (songId: string) => void
   hasUser: boolean
   isSelectMode: boolean
   isCoverExpanded?: boolean
@@ -44,6 +60,7 @@ export default function SongTableRow({
   isSelected,
   onSelect,
   onFolderChange,
+  onDeleteSong,
   hasUser,
   isSelectMode,
   isCoverExpanded = false,
@@ -54,6 +71,7 @@ export default function SongTableRow({
   const { t } = useLanguage()
   const [isLiked, setIsLiked] = useState(song.isLiked ?? false)
   const [isTogglingFavorite, startToggleFavorite] = useTransition()
+  const [shareOpen, setShareOpen] = useState(false)
 
   useEffect(() => {
     setIsLiked(song.isLiked ?? false)
@@ -274,21 +292,58 @@ export default function SongTableRow({
         )}
 
         {hasUser && (
-          <button
-            type="button"
-            onClick={handleToggleFavorite}
-            disabled={isTogglingFavorite}
-            className="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-60"
-            aria-label={
-              isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')
-            }
+          <div
+            className="ms-auto flex shrink-0 items-center gap-0.5"
+            onClick={(e) => e.stopPropagation()}
           >
-            {isLiked ? (
-              <HeartSolidIcon className="h-5 w-5" aria-hidden />
-            ) : (
-              <HeartIcon className="h-5 w-5" aria-hidden />
+            <button
+              type="button"
+              onClick={handleToggleFavorite}
+              disabled={isTogglingFavorite}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-60"
+              aria-label={
+                isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')
+              }
+            >
+              {isLiked ? (
+                <HeartSolidIcon className="h-5 w-5" aria-hidden />
+              ) : (
+                <HeartIcon className="h-5 w-5" aria-hidden />
+              )}
+            </button>
+
+            {!isSelectMode && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    aria-label={t('songs.moreActions')}
+                  >
+                    <EllipsisVerticalIcon className="h-5 w-5" aria-hidden />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => router.push(`/song/${song.id}`)}>
+                    <PencilSquareIcon className="me-2 h-4 w-4" aria-hidden />
+                    {t('songs.edit')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                    <ShareIcon className="me-2 h-4 w-4" aria-hidden />
+                    {t('friends.shareWithFriend')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => onDeleteSong(song.id)}
+                  >
+                    <TrashIcon className="me-2 h-4 w-4" aria-hidden />
+                    {t('songs.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-          </button>
+          </div>
         )}
       </div>
 
@@ -304,6 +359,14 @@ export default function SongTableRow({
           </div>
         </div>
       )}
+
+      <ShareWithFriendDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        entityType="song"
+        entityId={song.id}
+        entityTitle={song.title}
+      />
     </li>
   )
 }

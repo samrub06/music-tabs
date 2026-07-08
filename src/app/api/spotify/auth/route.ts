@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
   }
 
   const state = crypto.randomUUID()
-  const authorizeUrl = buildSpotifyAuthorizeUrl(state, config)
+  const forceDialog = req.nextUrl.searchParams.get('force') === '1'
+  const authorizeUrl = buildSpotifyAuthorizeUrl(state, config, { forceDialog })
   const response = NextResponse.redirect(authorizeUrl)
 
   response.cookies.set(SPOTIFY_STATE_COOKIE, state, {
