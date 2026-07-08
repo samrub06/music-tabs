@@ -31,6 +31,9 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<UserNotification[]>([])
+  const [resolvedFriendRequestIds, setResolvedFriendRequestIds] = useState<Set<string>>(
+    () => new Set()
+  )
   const [pending, startTransition] = useTransition()
 
   const refreshCount = useCallback(() => {
@@ -71,6 +74,7 @@ export default function NotificationBell() {
     startTransition(async () => {
       await acceptFriendRequestFromNotificationAction(notification.entityId!)
       await markNotificationReadAction(notification.id)
+      setResolvedFriendRequestIds((current) => new Set(current).add(notification.id))
       refreshCount()
       refreshNotifications()
     })
@@ -81,6 +85,7 @@ export default function NotificationBell() {
     startTransition(async () => {
       await declineFriendRequestFromNotificationAction(notification.entityId!)
       await markNotificationReadAction(notification.id)
+      setResolvedFriendRequestIds((current) => new Set(current).add(notification.id))
       refreshCount()
       refreshNotifications()
     })
@@ -149,7 +154,9 @@ export default function NotificationBell() {
                     <p className="mt-0.5 text-xs text-muted-foreground">{notification.message}</p>
                   )}
                 </button>
-                {notification.type === 'friend_request' && !notification.readAt && notification.entityId && (
+                {notification.type === 'friend_request' &&
+                  notification.entityId &&
+                  !resolvedFriendRequestIds.has(notification.id) && (
                   <div className="mt-2 flex gap-2">
                     <Button
                       type="button"

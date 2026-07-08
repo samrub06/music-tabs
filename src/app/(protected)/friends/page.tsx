@@ -9,8 +9,19 @@ export default async function FriendsPage() {
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const friends = user ? await friendsRepo(supabase).getAcceptedFriends(user.id) : []
-  const discoverableUsers = user ? await friendsRepo(supabase).getDiscoverableUsers(user.id) : []
+  const [friends, pendingRequests, discoverableUsers] = user
+    ? await Promise.all([
+        friendsRepo(supabase).getAcceptedFriends(user.id),
+        friendsRepo(supabase).getPendingReceivedRequests(user.id),
+        friendsRepo(supabase).getDiscoverableUsers(user.id),
+      ])
+    : [[], [], []]
 
-  return <FriendsClient initialFriends={friends} initialDiscoverableUsers={discoverableUsers} />
+  return (
+    <FriendsClient
+      initialFriends={friends}
+      initialPendingRequests={pendingRequests}
+      initialDiscoverableUsers={discoverableUsers}
+    />
+  )
 }

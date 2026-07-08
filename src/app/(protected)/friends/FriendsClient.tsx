@@ -8,6 +8,7 @@ import {
   declineFriendRequestAction,
   getDiscoverableUsersAction,
   getFriendsAction,
+  getPendingReceivedRequestsAction,
   removeFriendAction,
   searchUsersAction,
   sendFriendRequestAction,
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils'
 
 interface FriendsClientProps {
   initialFriends: FriendProfile[]
+  initialPendingRequests: FriendProfile[]
   initialDiscoverableUsers: FriendProfile[]
 }
 
@@ -163,10 +165,12 @@ function FriendRow({
 
 export default function FriendsClient({
   initialFriends,
+  initialPendingRequests,
   initialDiscoverableUsers,
 }: FriendsClientProps) {
   const { t } = useLanguage()
   const [friends, setFriends] = useState(initialFriends)
+  const [pendingRequests, setPendingRequests] = useState(initialPendingRequests)
   const [discoverableUsers, setDiscoverableUsers] = useState(initialDiscoverableUsers)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<FriendProfile[]>([])
@@ -175,6 +179,10 @@ export default function FriendsClient({
 
   const refreshFriends = useCallback(() => {
     getFriendsAction().then(setFriends).catch(console.error)
+  }, [])
+
+  const refreshPendingRequests = useCallback(() => {
+    getPendingReceivedRequestsAction().then(setPendingRequests).catch(console.error)
   }, [])
 
   const refreshDiscoverableUsers = useCallback(() => {
@@ -210,6 +218,14 @@ export default function FriendsClient({
     return () => window.clearTimeout(timeout)
   }, [searchQuery, activeTab])
 
+  const refreshAfterMutation = useCallback(async () => {
+    refreshFriends()
+    refreshPendingRequests()
+    if (activeTab === 'search') {
+      await refreshSearchTab()
+    }
+  }, [activeTab, refreshFriends, refreshPendingRequests, refreshSearchTab])
+
   const handleProfileAction = (profile: FriendProfile) => {
     startTransition(async () => {
       try {
@@ -222,10 +238,7 @@ export default function FriendsClient({
         } else {
           await sendFriendRequestAction(profile.id)
         }
-        refreshFriends()
-        if (activeTab === 'search') {
-          await refreshSearchTab()
-        }
+        await refreshAfterMutation()
       } catch (error) {
         console.error(error)
       }
@@ -237,10 +250,7 @@ export default function FriendsClient({
     startTransition(async () => {
       try {
         await declineFriendRequestAction(profile.friendshipId!)
-        refreshFriends()
-        if (activeTab === 'search') {
-          await refreshSearchTab()
-        }
+        await refreshAfterMutation()
       } catch (error) {
         console.error(error)
       }
@@ -291,21 +301,40 @@ export default function FriendsClient({
           </div>
 
           {activeTab === 'friends' ? (
-            <div className="space-y-2">
-              {friends.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                  {t('friends.noFriends')}
-                </div>
-              ) : (
-                friends.map((friend) => (
-                  <FriendRow
-                    key={friend.id}
-                    profile={friend}
-                    pending={pending}
-                    onAction={() => handleProfileAction(friend)}
-                  />
-                ))
+            <div className="space-y-6">
+              {pendingRequests.length > 0 && (
+                <section className="space-y-2">
+                  <h2 className="text-sm font-semibold text-foreground">
+                    {t('friends.pendingRequests')} ({pendingRequests.length})
+                  </h2>
+                  {pendingRequests.map((profile) => (
+                    <FriendRow
+                      key={profile.id}
+                      profile={profile}
+                      pending={pending}
+                      onAction={() => handleProfileAction(profile)}
+                      onDecline={() => handleDecline(profile)}
+                    />
+                  ))}
+                </section>
               )}
+
+              <section className="space-y-2">
+                {friends.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                    {t('friends.noFriends')}
+                  </div>
+                ) : (
+                  friends.map((friend) => (
+                    <FriendRow
+                      key={friend.id}
+                      profile={friend}
+                      pending={pending}
+                      onAction={() => handleProfileAction(friend)}
+                    />
+                  ))
+                )}
+              </section>
             </div>
           ) : (
             <div className="space-y-4">

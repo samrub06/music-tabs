@@ -32,8 +32,12 @@ export function ChordVariantsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto border-border bg-card p-0 sm:max-w-md">
-        <DialogHeader className="flex min-h-14 flex-row items-center justify-center space-y-0 px-12 py-0">
+      <DialogContent
+        className="w-[min(100%-2rem,22rem)] max-w-[22rem] gap-0 overflow-y-auto rounded-2xl border-border bg-card p-0 max-h-[90vh]"
+        closeButtonClassName="right-2.5 top-2.5 flex h-11 w-11 items-center justify-center rounded-full opacity-100 hover:bg-muted"
+        closeIconClassName="h-6 w-6"
+      >
+        <DialogHeader className="flex min-h-14 flex-row items-center justify-center space-y-0 px-14 py-0">
           <DialogTitle className="text-center text-xl font-bold leading-none text-foreground">
             {group.symbol}
           </DialogTitle>

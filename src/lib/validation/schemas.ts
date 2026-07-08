@@ -191,6 +191,10 @@ export const sendFriendRequestSchema = z.object({
   addresseeId: z.string().uuid(),
 })
 
+export const friendRelationUserIdSchema = z.object({
+  userId: z.string().uuid(),
+})
+
 export const shareWithFriendSchema = z.object({
   friendUserId: z.string().uuid(),
   entityType: z.enum(['song', 'playlist']),

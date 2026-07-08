@@ -6,11 +6,12 @@ import { friendsRepo } from '@/lib/services/friendsRepo'
 import { notificationsRepo } from '@/lib/services/notificationsRepo'
 import {
   friendshipIdSchema,
+  friendRelationUserIdSchema,
   searchUsersSchema,
   sendFriendRequestSchema,
   shareWithFriendSchema,
 } from '@/lib/validation/schemas'
-import type { FriendProfile } from '@/types'
+import type { FriendProfile, FriendRelationStatus } from '@/types'
 
 async function getCurrentUserId() {
   const supabase = await createActionServerClient()
@@ -22,6 +23,12 @@ export async function getFriendsAction(): Promise<FriendProfile[]> {
   const { supabase, userId } = await getCurrentUserId()
   if (!userId) return []
   return friendsRepo(supabase).getAcceptedFriends(userId)
+}
+
+export async function getPendingReceivedRequestsAction(): Promise<FriendProfile[]> {
+  const { supabase, userId } = await getCurrentUserId()
+  if (!userId) return []
+  return friendsRepo(supabase).getPendingReceivedRequests(userId)
 }
 
 export async function getDiscoverableUsersAction(): Promise<FriendProfile[]> {
@@ -100,6 +107,7 @@ export async function sendFriendRequestAction(addresseeId: string) {
   }
 
   revalidatePath('/friends')
+  revalidatePath('/notifications')
   return friendship
 }
 
@@ -133,6 +141,7 @@ export async function acceptFriendRequestAction(friendshipId: string) {
   })
 
   revalidatePath('/friends')
+  revalidatePath('/notifications')
   return friendship
 }
 
@@ -143,6 +152,7 @@ export async function declineFriendRequestAction(friendshipId: string) {
 
   await friendsRepo(supabase).declineFriendRequest(validatedId, userId)
   revalidatePath('/friends')
+  revalidatePath('/notifications')
 }
 
 export async function cancelFriendRequestAction(friendshipId: string) {
@@ -152,6 +162,7 @@ export async function cancelFriendRequestAction(friendshipId: string) {
 
   await friendsRepo(supabase).cancelFriendRequest(validatedId, userId)
   revalidatePath('/friends')
+  revalidatePath('/notifications')
 }
 
 export async function removeFriendAction(friendshipId: string) {
@@ -161,6 +172,19 @@ export async function removeFriendAction(friendshipId: string) {
 
   await friendsRepo(supabase).removeFriend(validatedId, userId)
   revalidatePath('/friends')
+}
+
+export async function getFriendRelationAction(userId: string): Promise<{
+  relationStatus: FriendRelationStatus
+  friendshipId: string | null
+}> {
+  const { userId: otherUserId } = friendRelationUserIdSchema.parse({ userId })
+  const { supabase, userId: currentUserId } = await getCurrentUserId()
+  if (!currentUserId) {
+    return { relationStatus: 'none', friendshipId: null }
+  }
+
+  return friendsRepo(supabase).getRelationForUser(currentUserId, otherUserId)
 }
 
 export async function shareWithFriendAction(payload: unknown) {

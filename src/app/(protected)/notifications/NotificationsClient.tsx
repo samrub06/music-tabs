@@ -22,6 +22,9 @@ export default function NotificationsClient({ initialNotifications }: Notificati
   const { t } = useLanguage()
   const router = useRouter()
   const [notifications, setNotifications] = useState(initialNotifications)
+  const [resolvedFriendRequestIds, setResolvedFriendRequestIds] = useState<Set<string>>(
+    () => new Set()
+  )
   const [pending, startTransition] = useTransition()
 
   const unreadCount = notifications.filter((notification) => !notification.readAt).length
@@ -48,6 +51,7 @@ export default function NotificationsClient({ initialNotifications }: Notificati
     startTransition(async () => {
       await acceptFriendRequestFromNotificationAction(notification.entityId!)
       await markNotificationReadAction(notification.id)
+      setResolvedFriendRequestIds((current) => new Set(current).add(notification.id))
       setNotifications((current) =>
         current.map((item) =>
           item.id === notification.id ? { ...item, readAt: new Date() } : item
@@ -61,6 +65,7 @@ export default function NotificationsClient({ initialNotifications }: Notificati
     startTransition(async () => {
       await declineFriendRequestFromNotificationAction(notification.entityId!)
       await markNotificationReadAction(notification.id)
+      setResolvedFriendRequestIds((current) => new Set(current).add(notification.id))
       setNotifications((current) =>
         current.map((item) =>
           item.id === notification.id ? { ...item, readAt: new Date() } : item
@@ -138,7 +143,9 @@ export default function NotificationsClient({ initialNotifications }: Notificati
                       })}
                     </p>
                   </button>
-                  {notification.type === 'friend_request' && !notification.readAt && notification.entityId && (
+                  {notification.type === 'friend_request' &&
+                    notification.entityId &&
+                    !resolvedFriendRequestIds.has(notification.id) && (
                     <div className="mt-2 flex gap-2">
                       <Button
                         type="button"

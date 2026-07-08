@@ -100,7 +100,10 @@
     "playerColumn": "שחקן",
     "levelColumn": "רמה",
     "xpColumn": "XP",
-    "songsColumn": "שירים"
+    "songsColumn": "שירים",
+    "playerProfile": "פרופיל שחקן",
+    "streak": "רצף",
+    "badges": "תגים"
   },
   "friends": {
     "title": "חברים",
@@ -108,8 +111,10 @@
     "moreMenuDescription": "מצא חברים ונהל בקשות",
     "myFriends": "החברים שלי",
     "findFriends": "מצא חברים",
+    "pendingRequests": "בקשות חברות",
     "searchPlaceholder": "חפש לפי שם או אימייל...",
     "noFriends": "אין עדיין חברים. חפש מוזיקאים להתחבר.",
+    "noPendingRequests": "אין בקשות חברות ממתינות.",
     "noDiscoverableUsers": "אין מוזיקאים אחרים לגלות כרגע.",
     "noSearchResults": "לא נמצאו משתמשים.",
     "addFriend": "הוסף חבר",

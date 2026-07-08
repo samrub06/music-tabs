@@ -247,6 +247,55 @@ export const friendsRepo = (client: SupabaseClient<Database>) => ({
     }))
   },
 
+  async getPendingReceivedRequests(userId: string): Promise<FriendProfile[]> {
+    const { data, error } = await client
+      .from('friendships')
+      .select('id, requester_id, addressee_id, status, created_at, updated_at')
+      .eq('status', 'pending')
+      .eq('addressee_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    const friendships = ((data || []) as FriendshipRow[]).map(mapDbFriendshipToDomain)
+    const requesterIds = friendships.map((f) => f.requesterId)
+
+    if (requesterIds.length === 0) return []
+
+    const { data: profiles, error: profilesError } = await client
+      .from('profiles')
+      .select('id, email, full_name, avatar_url')
+      .in('id', requesterIds)
+
+    if (profilesError) throw profilesError
+
+    const friendshipByRequesterId = new Map<string, Friendship>()
+    for (const friendship of friendships) {
+      friendshipByRequesterId.set(friendship.requesterId, friendship)
+    }
+
+    const profileById = new Map(
+      ((profiles || []) as Pick<ProfileRow, 'id' | 'email' | 'full_name' | 'avatar_url'>[]).map(
+        (profile) => [profile.id, profile]
+      )
+    )
+
+    return requesterIds
+      .map((requesterId) => {
+        const profile = profileById.get(requesterId)
+        if (!profile) return null
+        return {
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.full_name,
+          avatarUrl: profile.avatar_url,
+          relationStatus: 'pending_received' as const,
+          friendshipId: friendshipByRequesterId.get(profile.id)?.id ?? null,
+        }
+      })
+      .filter((profile): profile is FriendProfile => profile !== null)
+  },
+
   async getDiscoverableUsers(userId: string, limit: number = 20): Promise<FriendProfile[]> {
     const friendshipByOtherId = await getFriendshipMapForUsers(client, userId)
     const friendIds = new Set(
@@ -294,5 +343,23 @@ export const friendsRepo = (client: SupabaseClient<Database>) => ({
   async areFriends(userId: string, otherUserId: string): Promise<boolean> {
     const friendship = await this.findFriendshipBetween(userId, otherUserId)
     return friendship?.status === 'accepted'
+  },
+
+  async getRelationForUser(
+    userId: string,
+    otherUserId: string
+  ): Promise<{
+    relationStatus: FriendRelationStatus
+    friendshipId: string | null
+  }> {
+    if (userId === otherUserId) {
+      return { relationStatus: 'none', friendshipId: null }
+    }
+
+    const friendship = await this.findFriendshipBetween(userId, otherUserId)
+    return {
+      relationStatus: getRelationStatus(userId, otherUserId, friendship),
+      friendshipId: friendship?.id ?? null,
+    }
   },
 })

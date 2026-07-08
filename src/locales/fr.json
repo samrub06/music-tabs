@@ -100,7 +100,10 @@
     "playerColumn": "Joueur",
     "levelColumn": "Niveau",
     "xpColumn": "XP",
-    "songsColumn": "Chansons"
+    "songsColumn": "Chansons",
+    "playerProfile": "Profil joueur",
+    "streak": "Série",
+    "badges": "Badges"
   },
   "friends": {
     "title": "Amis",
@@ -108,8 +111,10 @@
     "moreMenuDescription": "Trouver des amis et gérer les demandes",
     "myFriends": "Mes amis",
     "findFriends": "Trouver des amis",
+    "pendingRequests": "Demandes d'amis",
     "searchPlaceholder": "Rechercher par nom ou email...",
     "noFriends": "Pas encore d'amis. Recherchez des musiciens pour vous connecter.",
+    "noPendingRequests": "Aucune demande d'ami en attente.",
     "noDiscoverableUsers": "Aucun autre musicien à découvrir pour le moment.",
     "noSearchResults": "Aucun utilisateur trouvé.",
     "addFriend": "Ajouter",
