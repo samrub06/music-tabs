@@ -8,7 +8,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
-import { Song, Folder } from '@/types'
+import { Song, Folder, Playlist } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
 import {
   Bars3Icon,
@@ -41,6 +41,7 @@ interface SongTableRowProps {
   song: Song
   songs: Song[]
   folders: Folder[]
+  songPlaylists?: Playlist[]
   visibleColumns: string[]
   isSelected: boolean
   onSelect: (checked: boolean) => void
@@ -56,6 +57,7 @@ export default function SongTableRow({
   song,
   songs,
   folders,
+  songPlaylists = [],
   visibleColumns,
   isSelected,
   onSelect,
@@ -279,6 +281,38 @@ export default function SongTableRow({
             </p>
           )}
         </div>
+
+        {visibleColumns.includes('playlist') && !isSelectMode && (
+          <div
+            className="hidden max-w-[11rem] shrink-0 sm:block"
+            onClick={(e) => e.stopPropagation()}
+            title={
+              songPlaylists.length > 0
+                ? songPlaylists.map((p) => p.name).join(', ')
+                : t('admin.notInPlaylist')
+            }
+          >
+            {songPlaylists.length > 0 ? (
+              <div className="flex flex-wrap justify-end gap-1">
+                {songPlaylists.slice(0, 2).map((playlist) => (
+                  <span
+                    key={playlist.id}
+                    className="max-w-[7.5rem] truncate rounded-full bg-muted/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                  >
+                    {playlist.name}
+                  </span>
+                ))}
+                {songPlaylists.length > 2 && (
+                  <span className="rounded-full bg-muted/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    +{songPlaylists.length - 2}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground/70">{t('admin.notInPlaylist')}</span>
+            )}
+          </div>
+        )}
 
         {visibleColumns.includes('folder') && !isSelectMode && (
           <div className="hidden shrink-0 sm:block" onClick={(e) => e.stopPropagation()}>

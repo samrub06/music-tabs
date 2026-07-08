@@ -107,10 +107,26 @@ export default function SongTable({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [expandedCoverSongId, setExpandedCoverSongId] = useState<string | null>(null);
   const router = useRouter();
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(['title', 'author', 'key', 'folder']);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() =>
+    showPlaylistBulkActions
+      ? ['title', 'author', 'key', 'playlist']
+      : ['title', 'author', 'key', 'folder']
+  );
   
   // Use external select mode if provided, otherwise default to false
   const isSelectMode = externalIsSelectMode ?? false;
+
+  const playlistsBySongId = useMemo(() => {
+    const map = new Map<string, Playlist[]>()
+    for (const playlist of playlistsForMove.length > 0 ? playlistsForMove : playlists) {
+      for (const songId of playlist.songIds) {
+        const existing = map.get(songId)
+        if (existing) existing.push(playlist)
+        else map.set(songId, [playlist])
+      }
+    }
+    return map
+  }, [playlists, playlistsForMove])
   
   // Ensure 'title' is always in visibleColumns (required column)
   useEffect(() => {
@@ -483,6 +499,7 @@ export default function SongTable({
               song={song}
               songs={sortedSongs}
               folders={folders}
+              songPlaylists={playlistsBySongId.get(song.id) ?? []}
               visibleColumns={visibleColumns}
               isSelected={selectedSongs.has(song.id)}
               onSelect={(checked) => handleSelectSong(song.id, checked)}

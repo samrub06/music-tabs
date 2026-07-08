@@ -957,6 +957,7 @@
     "filterLanguage": "Language filter",
     "filterAllSongs": "All songs",
     "filterHebrewSongs": "Hebrew only",
+    "notInPlaylist": "No playlist",
     "addSong": "Add catalog song",
     "moveToPlaylist": "Move to playlist",
     "removeFromPlaylist": "Remove from playlist (keep in catalog)",
