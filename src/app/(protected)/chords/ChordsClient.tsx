@@ -179,6 +179,7 @@ export default function ChordsClient({
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [openVariantGroupId, setOpenVariantGroupId] = useState<string | null>(null);
   const [instrument, setInstrument] = useState<ChordInstrument>('guitar');
+  const [showProgressions, setShowProgressions] = useState(false);
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -540,6 +541,25 @@ export default function ChordsClient({
               compact
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowProgressions((prev) => !prev)}
+            aria-pressed={showProgressions}
+            className={cn(
+              'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
+              showProgressions
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-border bg-card text-foreground hover:bg-muted/60'
+            )}
+          >
+            <MusicalNoteIcon className="h-4 w-4 shrink-0" aria-hidden />
+            {showProgressions
+              ? t('chords.hideProgressions')
+              : t('chords.showProgressions')}
+          </button>
+
+          {showProgressions && <ChordProgressionsPanel />}
         </div>
 
         {filteredSections.length === 0 && !showVariantCards ? (

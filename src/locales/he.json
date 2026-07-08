@@ -681,7 +681,21 @@
     "notifyToAdd": "הודע לי כשיוסף",
     "notifySending": "שולח…",
     "notifyRequested": "קיבלנו! נודיע לך",
-    "notifyError": "לא ניתן לשלוח את הבקשה. נסה שוב."
+    "notifyError": "לא ניתן לשלוח את הבקשה. נסה שוב.",
+    "showProgressions": "מהלכי אקורדים",
+    "hideProgressions": "הסתר מהלכים",
+    "progressionsTitle": "מהלכים פופולריים",
+    "progressionsHint": "לחץ על מהלך כדי למצוא שירים שמשתמשים באקורדים האלה.",
+    "progressionsMatchHint": "שירים שכוללים את כל האקורדים האלה",
+    "progressionsNoSongs": "לא נמצאו עדיין שירים עם מהלך זה.",
+    "progressionPopRock": "פופ / רוק למתחילים",
+    "progressionClassicRock": "רוק קלאסי",
+    "progressionFourChordsMajor": "4 אקורדים מז'וריים",
+    "progressionPop": "פופ",
+    "progressionAxis": "Axis of awesome",
+    "progressionFolk": "פולק / אינדי",
+    "progressionBallad": "בלדה",
+    "progressionCampfire": "שירי מדורה"
   },
   "aiPlaylist": {
     "title": "צור פלייליסט עם AI",

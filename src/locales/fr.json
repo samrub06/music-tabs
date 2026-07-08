@@ -681,7 +681,21 @@
     "notifyToAdd": "Me prévenir quand il sera ajouté",
     "notifySending": "Envoi…",
     "notifyRequested": "C'est noté ! On vous prévient",
-    "notifyError": "Impossible d'envoyer la demande. Réessayez."
+    "notifyError": "Impossible d'envoyer la demande. Réessayez.",
+    "showProgressions": "Progressions d'accords",
+    "hideProgressions": "Masquer les progressions",
+    "progressionsTitle": "Progressions populaires",
+    "progressionsHint": "Touchez une progression pour trouver des chansons qui utilisent ces accords.",
+    "progressionsMatchHint": "Chansons qui contiennent tous ces accords",
+    "progressionsNoSongs": "Aucune chanson trouvée avec cette progression pour l'instant.",
+    "progressionPopRock": "Pop / rock débutant",
+    "progressionClassicRock": "Rock classique",
+    "progressionFourChordsMajor": "4 accords majeurs",
+    "progressionPop": "Pop",
+    "progressionAxis": "Axis of awesome",
+    "progressionFolk": "Folk / indie",
+    "progressionBallad": "Ballade",
+    "progressionCampfire": "Chansons autour du feu"
   },
   "aiPlaylist": {
     "title": "Générer une playlist avec AI",

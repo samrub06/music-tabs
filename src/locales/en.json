@@ -681,7 +681,21 @@
     "notifyToAdd": "Notify me when it's added",
     "notifySending": "Sending…",
     "notifyRequested": "Got it! We'll notify you",
-    "notifyError": "Could not send your request. Please try again."
+    "notifyError": "Could not send your request. Please try again.",
+    "showProgressions": "Chord progressions",
+    "hideProgressions": "Hide progressions",
+    "progressionsTitle": "Popular progressions",
+    "progressionsHint": "Tap a progression to find songs that use these chords.",
+    "progressionsMatchHint": "Songs that include all these chords",
+    "progressionsNoSongs": "No songs found with this progression yet.",
+    "progressionPopRock": "Pop / rock beginner",
+    "progressionClassicRock": "Classic rock",
+    "progressionFourChordsMajor": "4 major chords",
+    "progressionPop": "Pop progressive",
+    "progressionAxis": "Axis of awesome",
+    "progressionFolk": "Folk / indie",
+    "progressionBallad": "Ballad",
+    "progressionCampfire": "Campfire songs"
   },
   "aiPlaylist": {
     "title": "Generate playlist with AI",
