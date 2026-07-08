@@ -13,9 +13,10 @@ import { cn } from '@/lib/utils'
 import type { YoutubeTutorialVideo } from '@/lib/services/youtubeService'
 import {
   buildYoutubeSearchPageUrl,
-  buildYoutubeTutorialQuery,
+  buildYoutubeSearchQuery,
   buildYoutubeVideoEmbedUrl,
   buildYoutubeWatchUrl,
+  type YoutubeVideoMode,
 } from '@/utils/youtubeTutorial'
 
 interface FloatingYoutubeTutorialProps {
@@ -39,6 +40,11 @@ type FetchState =
   | { status: 'success'; video: YoutubeTutorialVideo }
   | { status: 'error'; message: string }
 
+type CachedVideo = {
+  video: YoutubeTutorialVideo
+  embedSrc: string
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
@@ -53,15 +59,15 @@ export default function FloatingYoutubeTutorial({
   const { t, language } = useLanguage()
   const panelRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const loadedQueryRef = useRef<string | null>(null)
-  const embedSrcRef = useRef<string | null>(null)
-  const videoMetaRef = useRef<YoutubeTutorialVideo | null>(null)
+  const cacheRef = useRef<Map<string, CachedVideo>>(new Map())
   const [mounted, setMounted] = useState(false)
+  const [videoMode, setVideoMode] = useState<YoutubeVideoMode>('tutorial')
   const [isMinimized, setIsMinimized] = useState(false)
   const [isLarge, setIsLarge] = useState(false)
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
   const [position, setPosition] = useState({ x: 16, y: 72 })
   const [fetchState, setFetchState] = useState<FetchState>({ status: 'idle' })
+  const [activeEmbedSrc, setActiveEmbedSrc] = useState<string | null>(null)
   const dragStateRef = useRef<{
     pointerId: number
     startX: number
@@ -79,13 +85,19 @@ export default function FloatingYoutubeTutorial({
 
   const searchQuery = useMemo(
     () =>
-      buildYoutubeTutorialQuery(
+      buildYoutubeSearchQuery(
+        videoMode,
         songTitle,
         songAuthor,
         selectedInstrument,
         language as 'en' | 'fr' | 'he'
       ),
-    [songTitle, songAuthor, selectedInstrument, language]
+    [videoMode, songTitle, songAuthor, selectedInstrument, language]
+  )
+
+  const cacheKey = useMemo(
+    () => `${videoMode}::${searchQuery}::${language}`,
+    [videoMode, searchQuery, language]
   )
 
   const youtubePageUrl = useMemo(() => buildYoutubeSearchPageUrl(searchQuery), [searchQuery])
@@ -116,28 +128,28 @@ export default function FloatingYoutubeTutorial({
 
     setIsMinimized(false)
     setIsLarge(false)
+    setVideoMode('tutorial')
     setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
     setFetchState({ status: 'idle' })
-    loadedQueryRef.current = null
-    embedSrcRef.current = null
-    videoMetaRef.current = null
+    setActiveEmbedSrc(null)
+    cacheRef.current.clear()
   }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return
 
-    if (loadedQueryRef.current === searchQuery && videoMetaRef.current && embedSrcRef.current) {
-      setFetchState({ status: 'success', video: videoMetaRef.current })
+    const cached = cacheRef.current.get(cacheKey)
+    if (cached) {
+      setActiveEmbedSrc(cached.embedSrc)
+      setFetchState({ status: 'success', video: cached.video })
       return
     }
 
     const controller = new AbortController()
 
-    async function loadTutorial() {
-      const isSameQueryReload = loadedQueryRef.current === searchQuery
-      if (!isSameQueryReload) {
-        setFetchState({ status: 'loading' })
-      }
+    async function loadVideo() {
+      setFetchState({ status: 'loading' })
+      setActiveEmbedSrc(null)
 
       try {
         const params = new URLSearchParams({
@@ -150,32 +162,26 @@ export default function FloatingYoutubeTutorial({
 
         if (!response.ok) {
           const payload = (await response.json().catch(() => null)) as { error?: string } | null
-          throw new Error(payload?.error ?? 'Failed to load tutorial')
+          throw new Error(payload?.error ?? 'Failed to load video')
         }
 
         const payload = (await response.json()) as { video: YoutubeTutorialVideo }
         const nextVideo = payload.video
         const nextEmbedSrc = buildYoutubeVideoEmbedUrl(nextVideo.videoId)
-
-        loadedQueryRef.current = searchQuery
-        videoMetaRef.current = nextVideo
-
-        if (embedSrcRef.current !== nextEmbedSrc) {
-          embedSrcRef.current = nextEmbedSrc
-        }
-
+        cacheRef.current.set(cacheKey, { video: nextVideo, embedSrc: nextEmbedSrc })
+        setActiveEmbedSrc(nextEmbedSrc)
         setFetchState({ status: 'success', video: nextVideo })
       } catch (error) {
         if (controller.signal.aborted) return
-        const message = error instanceof Error ? error.message : 'Failed to load tutorial'
+        const message = error instanceof Error ? error.message : 'Failed to load video'
         setFetchState({ status: 'error', message })
       }
     }
 
-    void loadTutorial()
+    void loadVideo()
 
     return () => controller.abort()
-  }, [isOpen, searchQuery, language])
+  }, [isOpen, cacheKey, searchQuery, language])
 
   const clampPosition = useCallback(
     (next: { x: number; y: number }, panelWidth: number, panelHeight: number) => {
@@ -269,9 +275,17 @@ export default function FloatingYoutubeTutorial({
 
   const panelWidth = isLarge ? LARGE_WIDTH : size.width
   const panelHeight = isMinimized ? 44 : isLarge ? LARGE_HEIGHT : size.height
-  const video = fetchState.status === 'success' ? fetchState.video : videoMetaRef.current
-  const embedSrc = embedSrcRef.current
+  const video = fetchState.status === 'success' ? fetchState.video : null
+  const embedSrc = activeEmbedSrc
   const watchUrl = video ? buildYoutubeWatchUrl(video.videoId) : youtubePageUrl
+  const panelTitle =
+    videoMode === 'original' ? t('youtubeTutorial.originalTitle') : t('youtubeTutorial.title')
+  const modeHint =
+    videoMode === 'original'
+      ? t('youtubeTutorial.originalMode')
+      : selectedInstrument === 'piano'
+        ? t('youtubeTutorial.pianoMode')
+        : t('youtubeTutorial.guitarMode')
 
   const panel = (
     <div
@@ -306,9 +320,7 @@ export default function FloatingYoutubeTutorial({
         >
           <Youtube className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-foreground">
-              {t('youtubeTutorial.title')}
-            </p>
+            <p className="truncate text-xs font-semibold text-foreground">{panelTitle}</p>
             {!isMinimized && (
               <p className="truncate text-[10px] text-muted-foreground">
                 {video?.title ?? searchQuery}
@@ -355,15 +367,55 @@ export default function FloatingYoutubeTutorial({
 
       {!isMinimized && (
         <>
+          <div
+            className="flex shrink-0 gap-0.5 border-b border-border/70 bg-muted/20 p-1.5"
+            onPointerDown={stopControlPointer}
+          >
+            <button
+              type="button"
+              onClick={() => setVideoMode('tutorial')}
+              className={cn(
+                'flex-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
+                videoMode === 'tutorial'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-pressed={videoMode === 'tutorial'}
+            >
+              {t('youtubeTutorial.modeTutorial')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setVideoMode('original')}
+              className={cn(
+                'flex-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
+                videoMode === 'original'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-pressed={videoMode === 'original'}
+            >
+              {t('youtubeTutorial.modeOriginal')}
+            </button>
+          </div>
+
           <div className="relative min-h-0 flex-1 bg-black touch-manipulation">
             {fetchState.status === 'loading' && !embedSrc && (
               <div className="flex h-full items-center justify-center px-4 text-center">
-                <p className="text-xs text-white/80">{t('youtubeTutorial.loading')}</p>
+                <p className="text-xs text-white/80">
+                  {videoMode === 'original'
+                    ? t('youtubeTutorial.loadingOriginal')
+                    : t('youtubeTutorial.loading')}
+                </p>
               </div>
             )}
             {fetchState.status === 'error' && !embedSrc && (
               <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-                <p className="text-xs text-white/80">{t('youtubeTutorial.loadError')}</p>
+                <p className="text-xs text-white/80">
+                  {videoMode === 'original'
+                    ? t('youtubeTutorial.loadErrorOriginal')
+                    : t('youtubeTutorial.loadError')}
+                </p>
                 <a
                   href={youtubePageUrl}
                   target="_blank"
@@ -377,7 +429,8 @@ export default function FloatingYoutubeTutorial({
             {embedSrc && (
               <iframe
                 ref={iframeRef}
-                title={video?.title ?? t('youtubeTutorial.title')}
+                key={embedSrc}
+                title={video?.title ?? panelTitle}
                 src={embedSrc}
                 className="h-full w-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -388,11 +441,7 @@ export default function FloatingYoutubeTutorial({
             )}
           </div>
           <div className="flex items-center justify-between gap-2 border-t border-border/70 px-2.5 py-1.5">
-            <span className="truncate text-[10px] text-muted-foreground">
-              {selectedInstrument === 'piano'
-                ? t('youtubeTutorial.pianoMode')
-                : t('youtubeTutorial.guitarMode')}
-            </span>
+            <span className="truncate text-[10px] text-muted-foreground">{modeHint}</span>
             <a
               href={watchUrl}
               target="_blank"

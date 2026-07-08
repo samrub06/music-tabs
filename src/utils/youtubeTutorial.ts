@@ -1,3 +1,5 @@
+export type YoutubeVideoMode = 'tutorial' | 'original'
+
 export function buildYoutubeTutorialQuery(
   title: string,
   author: string,
@@ -25,6 +27,40 @@ export function buildYoutubeTutorialQuery(
   parts.push(instrumentTerms[instrument][language] ?? instrumentTerms[instrument].en)
 
   return parts.join(' ')
+}
+
+export function buildYoutubeOriginalQuery(
+  title: string,
+  author: string,
+  language: 'en' | 'fr' | 'he' = 'en'
+): string {
+  const cleanTitle = title.trim()
+  const cleanAuthor = author.trim()
+
+  const originalTerms: Record<'en' | 'fr' | 'he', string> = {
+    en: 'official audio OR official video OR lyrics',
+    fr: 'audio officiel OR clip officiel OR paroles',
+    he: 'רשמי OR מילים OR אודיו',
+  }
+
+  const parts = [cleanTitle]
+  if (cleanAuthor) parts.push(cleanAuthor)
+  parts.push(originalTerms[language] ?? originalTerms.en)
+
+  return parts.join(' ')
+}
+
+export function buildYoutubeSearchQuery(
+  mode: YoutubeVideoMode,
+  title: string,
+  author: string,
+  instrument: 'piano' | 'guitar',
+  language: 'en' | 'fr' | 'he' = 'en'
+): string {
+  if (mode === 'original') {
+    return buildYoutubeOriginalQuery(title, author, language)
+  }
+  return buildYoutubeTutorialQuery(title, author, instrument, language)
 }
 
 export function buildYoutubeVideoEmbedUrl(videoId: string): string {
