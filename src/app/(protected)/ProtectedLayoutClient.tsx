@@ -106,8 +106,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           >
             {children}
           </div>
-          {user && <BottomNavigation />}
         </SidebarInset>
+        {/* Keep outside SidebarInset: overflow-hidden there clips position:fixed on mobile */}
+        {user && <BottomNavigation />}
       </div>
     </SidebarProvider>
     </PageHeaderProvider>

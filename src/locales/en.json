@@ -86,7 +86,17 @@
     "guitar": "Guitar",
     "tsnioutFilter": "Tsniout filter",
     "tsnioutFilterDescription": "Replace secular song covers with a generic image. Religious catalog songs (songbook, Hebrew playlists) keep their artwork.",
-    "updateError": "Error updating profile"
+    "updateError": "Error updating profile",
+    "spotify": "Spotify",
+    "spotifyConnectedDescription": "Your Spotify account is linked. You can import playlists into your library.",
+    "spotifyDisconnectedDescription": "Connect Spotify to import playlists into your library.",
+    "spotifyConnected": "Connected",
+    "spotifyNotConnected": "Not connected",
+    "spotifyDisconnect": "Disconnect",
+    "spotifyDisconnectConfirm": "Disconnect Spotify from your account?",
+    "spotifyDisconnectError": "Could not disconnect Spotify",
+    "spotifyConnect": "Connect Spotify",
+    "spotifyImportPlaylists": "Import playlists"
   },
   "leaderboard": {
     "title": "Leaderboard",

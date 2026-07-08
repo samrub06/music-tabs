@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { usePathname } from 'next/navigation';
@@ -31,7 +32,12 @@ export default function BottomNavigation() {
   const { user } = useAuthContext();
   const { t } = useLanguage();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { folders } = useFoldersContext();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!user) {
     return null;
@@ -79,9 +85,12 @@ export default function BottomNavigation() {
     },
   ];
 
-  return (
+  const chrome = (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 lg:hidden safe-area-inset-bottom">
+      <nav
+        aria-label={t('navigation.MENU')}
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 lg:hidden safe-area-inset-bottom"
+      >
         <div className="flex items-stretch h-16 px-0.5">
           {navItems.map((item) => {
             const IconComponent = item.isActive ? item.iconSolid : item.icon;
@@ -106,6 +115,7 @@ export default function BottomNavigation() {
             );
           })}
           <button
+            type="button"
             onClick={() => setIsMoreMenuOpen((open) => !open)}
             className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
               isMoreActive || isMoreMenuOpen
@@ -134,4 +144,10 @@ export default function BottomNavigation() {
       />
     </>
   );
+
+  if (!mounted) {
+    return null;
+  }
+
+  return createPortal(chrome, document.body);
 }

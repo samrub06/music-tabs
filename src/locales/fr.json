@@ -86,7 +86,17 @@
     "guitar": "Guitare",
     "tsnioutFilter": "Filtre tsniout",
     "tsnioutFilterDescription": "Remplace les pochettes des chansons profanes par une image générique. Les chansons du catalogue religieux (songbook, playlists hébraïques) gardent leur illustration.",
-    "updateError": "Erreur lors de la mise à jour du profil"
+    "updateError": "Erreur lors de la mise à jour du profil",
+    "spotify": "Spotify",
+    "spotifyConnectedDescription": "Votre compte Spotify est lié. Vous pouvez importer des playlists dans votre bibliothèque.",
+    "spotifyDisconnectedDescription": "Connectez Spotify pour importer des playlists dans votre bibliothèque.",
+    "spotifyConnected": "Connecté",
+    "spotifyNotConnected": "Non connecté",
+    "spotifyDisconnect": "Déconnecter",
+    "spotifyDisconnectConfirm": "Déconnecter Spotify de votre compte ?",
+    "spotifyDisconnectError": "Impossible de déconnecter Spotify",
+    "spotifyConnect": "Connecter Spotify",
+    "spotifyImportPlaylists": "Importer des playlists"
   },
   "leaderboard": {
     "title": "Classement",

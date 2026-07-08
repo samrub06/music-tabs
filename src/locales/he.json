@@ -86,7 +86,17 @@
     "guitar": "גיטרה",
     "tsnioutFilter": "מסנן צניעות",
     "tsnioutFilterDescription": "מחליף עטיפות של שירים חילוניים בתמונה גנרית. שירים מהקטלוג הדתי (ספר זמרות, פלייליסטים עבריים) שומרים על העטיפה המקורית.",
-    "updateError": "שגיאה בעדכון הפרופיל"
+    "updateError": "שגיאה בעדכון הפרופיל",
+    "spotify": "Spotify",
+    "spotifyConnectedDescription": "חשבון Spotify שלך מחובר. אפשר לייבא פלייליסטים לספרייה שלך.",
+    "spotifyDisconnectedDescription": "חבר את Spotify כדי לייבא פלייליסטים לספרייה שלך.",
+    "spotifyConnected": "מחובר",
+    "spotifyNotConnected": "לא מחובר",
+    "spotifyDisconnect": "נתק",
+    "spotifyDisconnectConfirm": "לנתק את Spotify מהחשבון שלך?",
+    "spotifyDisconnectError": "לא ניתן לנתק את Spotify",
+    "spotifyConnect": "חבר Spotify",
+    "spotifyImportPlaylists": "ייבוא פלייליסטים"
   },
   "leaderboard": {
     "title": "לוח תוצאות",

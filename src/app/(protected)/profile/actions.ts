@@ -46,3 +46,24 @@ export async function updateProfileAction(updates: unknown): Promise<Profile> {
   revalidatePath('/profile')
   return updatedProfile
 }
+
+/**
+ * Disconnect Spotify from the current user's profile
+ */
+export async function unlinkSpotifyAccountAction(): Promise<Profile> {
+  const supabase = await createActionServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('User must be authenticated to disconnect Spotify')
+  }
+
+  const updatedProfile = await profileRepo(supabase).unlinkSpotifyAccount(user.id)
+
+  revalidatePath('/profile')
+  revalidatePath('/spotify')
+  revalidatePath('/search')
+  return updatedProfile
+}
