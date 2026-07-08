@@ -100,6 +100,28 @@ export const invitationsRepo = (client: SupabaseClient<Database>) => ({
     return ((data || []) as InvitationRow[]).map(mapDbInvitationToDomain)
   },
 
+  async cancelInvitation(invitationId: string, userId: string): Promise<void> {
+    const { data: existing, error: fetchError } = await client
+      .from('app_invitations')
+      .select('id, inviter_id, status')
+      .eq('id', invitationId)
+      .single()
+
+    if (fetchError) throw fetchError
+
+    const row = existing as Pick<InvitationRow, 'id' | 'inviter_id' | 'status'>
+    if (row.inviter_id !== userId || row.status !== 'pending') {
+      throw new Error('Not allowed')
+    }
+
+    const { error } = await client
+      .from('app_invitations')
+      .delete()
+      .eq('id', invitationId)
+
+    if (error) throw error
+  },
+
   async redeemInvitation(code: string, userId: string): Promise<AppInvitation | null> {
     const normalizedCode = code.toUpperCase()
 

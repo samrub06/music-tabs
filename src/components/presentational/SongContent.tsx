@@ -27,7 +27,7 @@ import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
 import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Piano, Guitar } from 'lucide-react';
+import { Piano, Guitar, Youtube } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import { containsHebrew, getTextDirection } from '@/utils/rtl';
@@ -118,6 +118,8 @@ interface SongContentProps {
   folders?: Folder[];
   currentFolderId?: string;
   onFolderChange?: (folderId: string | undefined) => Promise<void>;
+  youtubeTutorialOpen?: boolean;
+  onToggleYoutubeTutorial?: () => void;
 }
 
 export default function SongContent({
@@ -168,6 +170,8 @@ export default function SongContent({
   folders = [],
   currentFolderId,
   onFolderChange,
+  youtubeTutorialOpen = false,
+  onToggleYoutubeTutorial,
 }: SongContentProps) {
   const { t, isRtl } = useLanguage();
   const pathname = usePathname();
@@ -567,6 +571,22 @@ export default function SongContent({
                 </div>
               </div>
               {songMetaRow}
+              {onToggleYoutubeTutorial && (
+                <button
+                  type="button"
+                  onClick={onToggleYoutubeTutorial}
+                  className={cn(
+                    'flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
+                    youtubeTutorialOpen
+                      ? 'border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400'
+                      : 'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60'
+                  )}
+                  aria-pressed={youtubeTutorialOpen}
+                >
+                  <Youtube className="h-4 w-4 shrink-0" />
+                  {t('youtubeTutorial.title')}
+                </button>
+              )}
             </div>
           </div>
 

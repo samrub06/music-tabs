@@ -35,12 +35,12 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-    <div className="container mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="hidden lg:block text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+    <div className="container mx-auto max-w-4xl px-4 py-4 sm:py-6 lg:py-8">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="mb-2 hidden text-2xl font-bold text-foreground lg:block">
           {t('leaderboard.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           {t('leaderboard.description')}
         </p>
       </div>
@@ -48,19 +48,17 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
       {/* Search bar */}
       <div className="mb-4">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-          </div>
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('leaderboard.searchPlaceholder')}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:text-base"
           />
         </div>
         {searchQuery && (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
             {t('leaderboard.resultsCount').replace('{count}', String(filteredLeaderboard.length))}
           </p>
         )}

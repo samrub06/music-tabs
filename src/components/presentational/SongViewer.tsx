@@ -207,8 +207,6 @@ export default function SongViewer({
         nextSongInfo={nextSongInfo}
         onToggleToolsBar={onToggleToolsBar}
         isInLibrary={isInLibrary}
-        youtubeTutorialOpen={youtubeTutorialOpen}
-        onToggleYoutubeTutorial={() => setYoutubeTutorialOpen((prev) => !prev)}
       />
 
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -262,6 +260,8 @@ export default function SongViewer({
               folders={folders}
               currentFolderId={currentFolderId}
               onFolderChange={onFolderChange}
+              youtubeTutorialOpen={youtubeTutorialOpen}
+              onToggleYoutubeTutorial={() => setYoutubeTutorialOpen((prev) => !prev)}
             />
           </div>
 

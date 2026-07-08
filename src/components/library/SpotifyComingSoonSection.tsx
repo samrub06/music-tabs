@@ -1,21 +1,60 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowUpRightIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
+import { cn } from '@/lib/utils'
 
 interface SpotifyComingSoonSectionProps {
   spotifyId?: string | null
 }
 
+type SpotifyStatus =
+  | 'connected'
+  | 'denied'
+  | 'not_configured'
+  | 'unauthorized'
+  | 'invalid_state'
+  | 'already_linked'
+  | 'failed'
+
 export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: SpotifyComingSoonSectionProps) {
   const { t } = useLanguage()
-  const { profile } = useAuthContext()
+  const { user, profile, signInWithGoogle, refetchProfile } = useAuthContext()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const spotifyStatus = searchParams.get('spotify') as SpotifyStatus | null
+
+  const statusMessage = useMemo(() => {
+    if (!spotifyStatus) return null
+    const key = `library.spotifyStatus.${spotifyStatus}` as const
+    const translated = t(key)
+    return translated === key ? null : translated
+  }, [spotifyStatus, t])
+
+  useEffect(() => {
+    if (!spotifyStatus) return
+
+    if (spotifyStatus === 'connected') {
+      void refetchProfile()
+    }
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('spotify')
+    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false })
+  }, [spotifyStatus, refetchProfile, router])
 
   const isConnected = !!(spotifyIdProp ?? profile?.spotify_id)
 
   const handleSpotifyConnect = () => {
+    if (!user) {
+      void signInWithGoogle('/api/spotify/auth')
+      return
+    }
     window.location.assign('/api/spotify/auth')
   }
 
@@ -67,6 +106,21 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
           </div>
         </div>
       </div>
+
+      {statusMessage && (
+        <p
+          role="status"
+          aria-live="polite"
+          className={cn(
+            'mt-2 text-sm',
+            spotifyStatus === 'connected'
+              ? 'text-green-700 dark:text-green-400'
+              : 'text-destructive'
+          )}
+        >
+          {statusMessage}
+        </p>
+      )}
     </section>
   )
 }

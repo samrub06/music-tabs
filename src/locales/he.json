@@ -141,6 +141,7 @@
     "latestLink": "שתף את הקישור",
     "pendingCount": "{count} הזמנה(ות) ממתינות",
     "copy": "העתק",
+    "cancel": "בטל הזמנה",
     "someone": "מוזיקאי",
     "landingTitle": "{name} מזמין אותך ל-TABasco",
     "landingDescription": "ארגן שירים, תשנה סולמות ושתף פלייליסטים.",
@@ -390,7 +391,16 @@
     "spotifyDescriptionShort": "ייבא את הפלייליסטים שלך",
     "spotifySignIn": "התחבר",
     "spotifyImport": "בואו נייבא",
-    "spotifyConnected": "מחובר"
+    "spotifyConnected": "מחובר",
+    "spotifyStatus": {
+      "connected": "חשבון Spotify חובר בהצלחה.",
+      "denied": "חיבור Spotify בוטל.",
+      "not_configured": "אינטגרציית Spotify לא מוגדרת בשרת זה.",
+      "unauthorized": "התחבר כדי לקשר את חשבון Spotify שלך.",
+      "invalid_state": "חיבור Spotify פג תוקף. נסה שוב.",
+      "already_linked": "חשבון Spotify זה כבר מקושר למשתמש אחר.",
+      "failed": "לא ניתן לחבר את Spotify. נסה שוב."
+    }
   },
   "auth": {
     "signIn": "התחבר",

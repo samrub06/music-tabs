@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
@@ -51,6 +52,11 @@ export default function FloatingYoutubeTutorial({
 }: FloatingYoutubeTutorialProps) {
   const { t, language } = useLanguage()
   const panelRef = useRef<HTMLDivElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const loadedQueryRef = useRef<string | null>(null)
+  const embedSrcRef = useRef<string | null>(null)
+  const videoMetaRef = useRef<YoutubeTutorialVideo | null>(null)
+  const [mounted, setMounted] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [isLarge, setIsLarge] = useState(false)
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
@@ -84,6 +90,10 @@ export default function FloatingYoutubeTutorial({
 
   const youtubePageUrl = useMemo(() => buildYoutubeSearchPageUrl(searchQuery), [searchQuery])
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const placeBottomRight = useCallback(() => {
     if (typeof window === 'undefined') return
     const margin = 12
@@ -102,21 +112,32 @@ export default function FloatingYoutubeTutorial({
   }, [isOpen, placeBottomRight])
 
   useEffect(() => {
-    if (!isOpen) {
-      setIsMinimized(false)
-      setIsLarge(false)
-      setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
-      setFetchState({ status: 'idle' })
-    }
+    if (isOpen) return
+
+    setIsMinimized(false)
+    setIsLarge(false)
+    setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
+    setFetchState({ status: 'idle' })
+    loadedQueryRef.current = null
+    embedSrcRef.current = null
+    videoMetaRef.current = null
   }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return
 
+    if (loadedQueryRef.current === searchQuery && videoMetaRef.current && embedSrcRef.current) {
+      setFetchState({ status: 'success', video: videoMetaRef.current })
+      return
+    }
+
     const controller = new AbortController()
 
     async function loadTutorial() {
-      setFetchState({ status: 'loading' })
+      const isSameQueryReload = loadedQueryRef.current === searchQuery
+      if (!isSameQueryReload) {
+        setFetchState({ status: 'loading' })
+      }
 
       try {
         const params = new URLSearchParams({
@@ -133,11 +154,20 @@ export default function FloatingYoutubeTutorial({
         }
 
         const payload = (await response.json()) as { video: YoutubeTutorialVideo }
-        setFetchState({ status: 'success', video: payload.video })
+        const nextVideo = payload.video
+        const nextEmbedSrc = buildYoutubeVideoEmbedUrl(nextVideo.videoId)
+
+        loadedQueryRef.current = searchQuery
+        videoMetaRef.current = nextVideo
+
+        if (embedSrcRef.current !== nextEmbedSrc) {
+          embedSrcRef.current = nextEmbedSrc
+        }
+
+        setFetchState({ status: 'success', video: nextVideo })
       } catch (error) {
         if (controller.signal.aborted) return
-        const message =
-          error instanceof Error ? error.message : t('youtubeTutorial.loadError')
+        const message = error instanceof Error ? error.message : 'Failed to load tutorial'
         setFetchState({ status: 'error', message })
       }
     }
@@ -145,7 +175,7 @@ export default function FloatingYoutubeTutorial({
     void loadTutorial()
 
     return () => controller.abort()
-  }, [isOpen, searchQuery, language, t])
+  }, [isOpen, searchQuery, language])
 
   const clampPosition = useCallback(
     (next: { x: number; y: number }, panelWidth: number, panelHeight: number) => {
@@ -158,6 +188,10 @@ export default function FloatingYoutubeTutorial({
     },
     []
   )
+
+  const stopPanelEvent = (event: React.SyntheticEvent) => {
+    event.stopPropagation()
+  }
 
   const onDragPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return
@@ -231,18 +265,15 @@ export default function FloatingYoutubeTutorial({
     }
   }
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const panelWidth = isLarge ? LARGE_WIDTH : size.width
   const panelHeight = isMinimized ? 44 : isLarge ? LARGE_HEIGHT : size.height
-  const video =
-    fetchState.status === 'success'
-      ? fetchState.video
-      : null
-  const embedUrl = video ? buildYoutubeVideoEmbedUrl(video.videoId) : null
+  const video = fetchState.status === 'success' ? fetchState.video : videoMetaRef.current
+  const embedSrc = embedSrcRef.current
   const watchUrl = video ? buildYoutubeWatchUrl(video.videoId) : youtubePageUrl
 
-  return (
+  const panel = (
     <div
       ref={panelRef}
       className={cn(
@@ -255,6 +286,10 @@ export default function FloatingYoutubeTutorial({
         width: panelWidth,
         height: panelHeight,
       }}
+      onPointerDown={stopPanelEvent}
+      onPointerUp={stopPanelEvent}
+      onClick={stopPanelEvent}
+      onTouchStart={stopPanelEvent}
     >
       <div
         className={cn(
@@ -320,13 +355,13 @@ export default function FloatingYoutubeTutorial({
 
       {!isMinimized && (
         <>
-          <div className="relative min-h-0 flex-1 bg-black">
-            {fetchState.status === 'loading' && (
+          <div className="relative min-h-0 flex-1 bg-black touch-manipulation">
+            {fetchState.status === 'loading' && !embedSrc && (
               <div className="flex h-full items-center justify-center px-4 text-center">
                 <p className="text-xs text-white/80">{t('youtubeTutorial.loading')}</p>
               </div>
             )}
-            {fetchState.status === 'error' && (
+            {fetchState.status === 'error' && !embedSrc && (
               <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
                 <p className="text-xs text-white/80">{t('youtubeTutorial.loadError')}</p>
                 <a
@@ -339,12 +374,12 @@ export default function FloatingYoutubeTutorial({
                 </a>
               </div>
             )}
-            {embedUrl && (
+            {embedSrc && (
               <iframe
-                key={embedUrl}
+                ref={iframeRef}
                 title={video?.title ?? t('youtubeTutorial.title')}
-                src={embedUrl}
-                className="h-full w-full"
+                src={embedSrc}
+                className="h-full w-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"
@@ -384,4 +419,6 @@ export default function FloatingYoutubeTutorial({
       )}
     </div>
   )
+
+  return createPortal(panel, document.body)
 }

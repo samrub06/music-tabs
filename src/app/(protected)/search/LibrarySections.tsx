@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { getCachedLibraryCatalogSections } from '@/lib/services/libraryCatalogCache'
 import { personalizedForYouService } from '@/lib/services/personalizedForYouService'
@@ -98,7 +99,9 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
       )}
       <PopularSongsSection songs={popularSongs} userId={userId} />
-      <SpotifyComingSoonSection spotifyId={spotifyId} />
+      <Suspense fallback={null}>
+        <SpotifyComingSoonSection spotifyId={spotifyId} />
+      </Suspense>
     </>
   )
 }

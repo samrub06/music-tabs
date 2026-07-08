@@ -32,8 +32,15 @@ export function buildYoutubeVideoEmbedUrl(videoId: string): string {
     rel: '0',
     modestbranding: '1',
     playsinline: '1',
+    enablejsapi: '1',
+    fs: '1',
   })
-  return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`
+
+  if (typeof window !== 'undefined') {
+    params.set('origin', window.location.origin)
+  }
+
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`
 }
 
 export function buildYoutubeWatchUrl(videoId: string): string {

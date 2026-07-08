@@ -10,6 +10,7 @@ import type { UserStats } from '@/types'
 import UserStatsCard from '@/components/gamification/UserStatsCard'
 import BadgeDisplay from '@/components/gamification/BadgeDisplay'
 import { PencilIcon, CheckIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
+import { Guitar, Piano } from 'lucide-react'
 import { getUserStatsAction, getUserBadgesAction } from '@/app/(protected)/gamification/actions'
 import { useEffect, useRef } from 'react'
 import type { UserBadge } from '@/types'
@@ -271,27 +272,33 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                     <Label className="mb-2 block text-[11px] font-medium text-muted-foreground">
                       {t('profile.preferredInstrument')}
                     </Label>
-                    <div className="flex flex-wrap justify-center gap-4 sm:justify-start">
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="radio"
-                          name="preferredInstrument"
-                          checked={preferredInstrument === 'piano'}
-                          onChange={() => setPreferredInstrument('piano')}
-                          className="text-primary focus:ring-primary"
-                        />
-                        <span className="text-sm text-foreground">{t('profile.piano')}</span>
-                      </label>
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="radio"
-                          name="preferredInstrument"
-                          checked={preferredInstrument === 'guitar'}
-                          onChange={() => setPreferredInstrument('guitar')}
-                          className="text-primary focus:ring-primary"
-                        />
-                        <span className="text-sm text-foreground">{t('profile.guitar')}</span>
-                      </label>
+                    <div className="grid grid-cols-2 gap-2 sm:max-w-xs">
+                      <button
+                        type="button"
+                        onClick={() => setPreferredInstrument('guitar')}
+                        className={cn(
+                          'rounded-2xl border p-3 text-center transition-all',
+                          preferredInstrument === 'guitar'
+                            ? 'border-amber-500/60 bg-amber-500/10'
+                            : 'border-border hover:bg-muted/50'
+                        )}
+                      >
+                        <Guitar className="mx-auto mb-1.5 h-6 w-6 text-amber-600 dark:text-amber-400" />
+                        <span className="text-sm font-medium text-foreground">{t('profile.guitar')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreferredInstrument('piano')}
+                        className={cn(
+                          'rounded-2xl border p-3 text-center transition-all',
+                          preferredInstrument === 'piano'
+                            ? 'border-blue-500/60 bg-blue-500/10'
+                            : 'border-border hover:bg-muted/50'
+                        )}
+                      >
+                        <Piano className="mx-auto mb-1.5 h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-foreground">{t('profile.piano')}</span>
+                      </button>
                     </div>
                   </div>
                   {error && (
@@ -328,9 +335,23 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                     {user?.email}
                   </p>
                   {preferredInstrument && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {t('profile.preferredInstrument')}: {preferredInstrument === 'piano' ? t('profile.piano') : t('profile.guitar')}
-                    </p>
+                    <div className="mt-2 flex justify-center sm:justify-start">
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
+                          preferredInstrument === 'piano'
+                            ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400'
+                            : 'bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                        )}
+                      >
+                        {preferredInstrument === 'piano' ? (
+                          <Piano className="h-3.5 w-3.5 shrink-0" />
+                        ) : (
+                          <Guitar className="h-3.5 w-3.5 shrink-0" />
+                        )}
+                        {preferredInstrument === 'piano' ? t('profile.piano') : t('profile.guitar')}
+                      </span>
+                    </div>
                   )}
                 </div>
               )}

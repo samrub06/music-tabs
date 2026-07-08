@@ -3,13 +3,14 @@
 import { useEffect, useState, useTransition } from 'react'
 import type { AppInvitation } from '@/types'
 import {
+  cancelInvitationAction,
   createInvitationAction,
   getMyInvitationsAction,
 } from '@/app/(protected)/onboarding/actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { CheckIcon, LinkIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, LinkIcon, PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 export default function InviteFriendsSection() {
   const { t } = useLanguage()
@@ -53,6 +54,21 @@ export default function InviteFriendsSection() {
     } catch (error) {
       console.error(error)
     }
+  }
+
+  const handleCancelInvitation = (invitation: AppInvitation) => {
+    startTransition(async () => {
+      try {
+        await cancelInvitationAction(invitation.id)
+        if (latestLink?.endsWith(`/invite/${invitation.code}`)) {
+          setLatestLink(null)
+        }
+        const updated = await getMyInvitationsAction()
+        setInvitations(updated)
+      } catch (error) {
+        console.error(error)
+      }
+    })
   }
 
   const pendingInvites = invitations.filter((inv) => inv.status === 'pending')
@@ -118,13 +134,24 @@ export default function InviteFriendsSection() {
                 <span className="truncate text-muted-foreground">
                   {invitation.inviteeEmail || invitation.code}
                 </span>
-                <button
-                  type="button"
-                  className="shrink-0 text-primary hover:underline"
-                  onClick={() => void handleCopy(buildInviteUrl(invitation.code))}
-                >
-                  {t('invitations.copy')}
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => void handleCopy(buildInviteUrl(invitation.code))}
+                  >
+                    {t('invitations.copy')}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    disabled={pending}
+                    aria-label={t('invitations.cancel')}
+                    onClick={() => handleCancelInvitation(invitation)}
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

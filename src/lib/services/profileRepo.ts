@@ -198,6 +198,28 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     return mapDbProfileToDomain(data)
   },
 
+  async linkSpotifyAccount(userId: string, spotifyId: string): Promise<Profile> {
+    const { data, error } = await (client.from('profiles') as any)
+      .update({ spotify_id: spotifyId })
+      .eq('id', userId)
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .single()
+
+    if (error) throw error
+    return mapDbProfileToDomain(data)
+  },
+
+  async unlinkSpotifyAccount(userId: string): Promise<Profile> {
+    const { data, error } = await (client.from('profiles') as any)
+      .update({ spotify_id: null })
+      .eq('id', userId)
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .single()
+
+    if (error) throw error
+    return mapDbProfileToDomain(data)
+  },
+
   async needsOnboarding(userId: string): Promise<boolean> {
     const { data, error } = await (client.from('profiles') as any)
       .select('onboarding_completed_at')

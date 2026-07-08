@@ -202,6 +202,10 @@ export const notificationIdSchema = z.object({
   notificationId: z.string().uuid(),
 })
 
+export const invitationIdSchema = z.object({
+  invitationId: z.string().uuid(),
+})
+
 export const createInvitationSchema = z.object({
   inviteeEmail: z.string().email().optional().nullable(),
 })

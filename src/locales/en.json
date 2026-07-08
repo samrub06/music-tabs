@@ -141,6 +141,7 @@
     "latestLink": "Share this link",
     "pendingCount": "{count} pending invitation(s)",
     "copy": "Copy",
+    "cancel": "Cancel invitation",
     "someone": "A musician",
     "landingTitle": "{name} invited you to TABasco",
     "landingDescription": "Organize songs, transpose chords, and share playlists with friends.",
@@ -390,7 +391,16 @@
     "spotifyDescriptionShort": "Import your playlists",
     "spotifySignIn": "Sign in",
     "spotifyImport": "Let's import",
-    "spotifyConnected": "Connected"
+    "spotifyConnected": "Connected",
+    "spotifyStatus": {
+      "connected": "Spotify account linked successfully.",
+      "denied": "Spotify connection was cancelled.",
+      "not_configured": "Spotify integration is not configured on this server.",
+      "unauthorized": "Sign in to connect your Spotify account.",
+      "invalid_state": "Spotify connection expired. Please try again.",
+      "already_linked": "This Spotify account is already linked to another user.",
+      "failed": "Could not connect Spotify. Please try again."
+    }
   },
   "auth": {
     "signIn": "Sign In",

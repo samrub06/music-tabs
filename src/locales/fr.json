@@ -141,6 +141,7 @@
     "latestLink": "Partagez ce lien",
     "pendingCount": "{count} invitation(s) en attente",
     "copy": "Copier",
+    "cancel": "Annuler l'invitation",
     "someone": "Un musicien",
     "landingTitle": "{name} vous invite sur TABasco",
     "landingDescription": "Organisez vos chansons, transposez et partagez des playlists.",
@@ -390,7 +391,16 @@
     "spotifyDescriptionShort": "Importez vos playlists",
     "spotifySignIn": "Se connecter",
     "spotifyImport": "Importons",
-    "spotifyConnected": "Connecté"
+    "spotifyConnected": "Connecté",
+    "spotifyStatus": {
+      "connected": "Compte Spotify lié avec succès.",
+      "denied": "Connexion Spotify annulée.",
+      "not_configured": "L'intégration Spotify n'est pas configurée sur ce serveur.",
+      "unauthorized": "Connectez-vous pour lier votre compte Spotify.",
+      "invalid_state": "La connexion Spotify a expiré. Réessayez.",
+      "already_linked": "Ce compte Spotify est déjà lié à un autre utilisateur.",
+      "failed": "Impossible de connecter Spotify. Réessayez."
+    }
   },
   "auth": {
     "signIn": "Se connecter",

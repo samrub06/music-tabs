@@ -42,7 +42,9 @@ const BAR_MAX_HEIGHT_PERCENT = 65;
 /** Default open height — tall enough for share link + edit/delete at the bottom */
 export function getDefaultToolsBarHeight(): number {
   if (typeof window === 'undefined') return 420;
-  return Math.round(Math.min(560, Math.max(400, window.innerHeight * 0.58)));
+  const viewportHeight = window.innerHeight;
+  const ratio = viewportHeight < 740 ? 0.68 : 0.58;
+  return Math.round(Math.min(620, Math.max(440, viewportHeight * ratio)));
 }
 
 interface ToolsBottomBarProps {
@@ -175,7 +177,7 @@ export default function ToolsBottomBar({
 
   return (
     <div
-      className="flex flex-shrink-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-border bg-background backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
+      className="flex flex-shrink-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-border bg-background pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
       style={{ height: `${height}px` }}
     >
       <div
@@ -197,7 +199,7 @@ export default function ToolsBottomBar({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-6 safe-area-inset-bottom space-y-3.5">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-10 space-y-3.5">
         {/* First card: row Text size + Easy chords, then Key · Transpose */}
         <div className={cardClass}>
           <div className="flex flex-wrap gap-3 items-end">
@@ -315,7 +317,7 @@ export default function ToolsBottomBar({
         )}
 
         {(onToggleEdit || onDelete) && (
-          <div className="flex gap-2.5 pt-0.5">
+          <div className="flex gap-2.5 pt-0.5 pb-2">
             {onToggleEdit && (
               <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
                 <PencilIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.edit')}

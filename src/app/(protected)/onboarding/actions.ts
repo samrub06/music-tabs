@@ -5,7 +5,12 @@ import { createActionServerClient, createSafeServerClient } from '@/lib/supabase
 import { invitationsRepo } from '@/lib/services/invitationsRepo'
 import { profileRepo } from '@/lib/services/profileRepo'
 import type { AppInvitation, InvitationPreview } from '@/types'
-import { createInvitationSchema, completeOnboardingSchema, redeemInvitationSchema } from '@/lib/validation/schemas'
+import {
+  createInvitationSchema,
+  completeOnboardingSchema,
+  invitationIdSchema,
+  redeemInvitationSchema,
+} from '@/lib/validation/schemas'
 
 async function getCurrentUserId() {
   const supabase = await createActionServerClient()
@@ -47,6 +52,15 @@ export async function getMyInvitationsAction(): Promise<AppInvitation[]> {
   const { supabase, userId } = await getCurrentUserId()
   if (!userId) return []
   return invitationsRepo(supabase).listByInviter(userId)
+}
+
+export async function cancelInvitationAction(invitationId: string) {
+  const { invitationId: validatedId } = invitationIdSchema.parse({ invitationId })
+  const { supabase, userId } = await getCurrentUserId()
+  if (!userId) throw new Error('Unauthorized')
+
+  await invitationsRepo(supabase).cancelInvitation(validatedId, userId)
+  revalidatePath('/friends')
 }
 
 export async function redeemInvitationAction(code: string) {

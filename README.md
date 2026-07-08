@@ -65,6 +65,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_for_cron_jobs
 CRON_SECRET=your_secret_for_cron_protection
 OPENAI_API_KEY=your_openai_key_for_ai_features
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:3005/api/spotify/callback
+YOUTUBE_API_KEY=your_youtube_data_api_key
+NEXT_PUBLIC_SITE_URL=http://localhost:3005
 ```
 
 4. **Configurer la base de données**
