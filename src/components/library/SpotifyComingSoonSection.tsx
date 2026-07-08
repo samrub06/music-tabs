@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowUpRightIcon, CheckIcon } from '@heroicons/react/24/outline'
@@ -87,12 +88,15 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
 
           <div className="mt-3 shrink-0 sm:mt-4">
             {isConnected ? (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm sm:gap-2 sm:px-4 sm:py-2">
+              <Link
+                href="/spotify"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/15 sm:gap-2 sm:px-4 sm:py-2"
+              >
                 <CheckIcon className="h-3.5 w-3.5 shrink-0 text-white/90 sm:h-4 sm:w-4" aria-hidden />
                 <span className="text-[10px] font-bold uppercase tracking-wide text-white/90 sm:text-xs">
-                  {t('library.spotifyConnected')}
+                  {t('library.spotifyImportPlaylists')}
                 </span>
-              </div>
+              </Link>
             ) : (
               <button
                 type="button"

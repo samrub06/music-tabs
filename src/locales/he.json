@@ -400,7 +400,35 @@
       "invalid_state": "חיבור Spotify פג תוקף. נסה שוב.",
       "already_linked": "חשבון Spotify זה כבר מקושר למשתמש אחר.",
       "failed": "לא ניתן לחבר את Spotify. נסה שוב."
-    }
+    },
+    "spotifyImportPlaylists": "ייבוא פלייליסטים"
+  },
+  "spotifyImport": {
+    "title": "ייבוא מ-Spotify",
+    "description": "בחר פלייליסט מ-Spotify וייבא את הטאבים המתאימים לספרייה שלך.",
+    "connect": "חבר Spotify",
+    "notConfigured": "Spotify לא מוגדר בשרת זה.",
+    "playlistsTitle": "הפלייליסטים שלך",
+    "playlistsHint": "אנחנו מחפשים כל שיר ב-Ultimate Guitar (עד 80 שירים לפלייליסט).",
+    "refresh": "רענן",
+    "searchPlaceholder": "חפש פלייליסט...",
+    "targetFolder": "שמור בתיקייה",
+    "noFolder": "ללא תיקייה",
+    "loadingPlaylists": "טוען פלייליסטים...",
+    "loadPlaylistsError": "לא ניתן לטעון את פלייליסטי Spotify שלך.",
+    "noPlaylists": "לא נמצאו פלייליסטים.",
+    "tracks": "שירים",
+    "import": "ייבא",
+    "importing": "מייבא...",
+    "starting": "מתחיל ייבוא...",
+    "completed": "הייבוא הושלם",
+    "importFailed": "הייבוא נכשל",
+    "progressTitle": "התקדמות הייבוא",
+    "resultsTitle": "תוצאות הייבוא",
+    "successCount": "{count} נוספו",
+    "duplicateCount": "{count} כפילויות",
+    "failedCount": "{count} נכשלו",
+    "viewLibrary": "צפה בשירים שלי"
   },
   "auth": {
     "signIn": "התחבר",

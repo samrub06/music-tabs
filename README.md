@@ -72,6 +72,8 @@ YOUTUBE_API_KEY=your_youtube_data_api_key
 NEXT_PUBLIC_SITE_URL=http://localhost:3005
 ```
 
+Run `db/add-spotify-id.sql` and `db/add-spotify-refresh-token.sql` in Supabase for Spotify linking/import.
+
 4. **Configurer la base de données**
 Exécutez les migrations SQL dans le dossier `db/` dans votre projet Supabase :
 - `db/supabase-setup.sql` (schéma de base)

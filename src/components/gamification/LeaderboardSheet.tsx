@@ -64,11 +64,11 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
         side="bottom"
         showCloseButton={false}
         overlayClassName="backdrop-blur-sm"
-        className="!bottom-0 z-[60] max-h-[85vh] gap-0 overflow-hidden rounded-t-[1.75rem] border-0 border-t-0 bg-background p-0 shadow-none"
+        className="!bottom-0 z-[60] flex max-h-[85vh] flex-col gap-0 overflow-visible rounded-t-[1.75rem] border-0 border-t-0 bg-transparent p-0 shadow-none"
       >
-        <div className="flex h-full max-h-[85vh] flex-col bg-background">
-          <BottomSheetDippedTop onClose={handleClose} hideBorder />
+        <BottomSheetDippedTop onClose={handleClose} hideBorder />
 
+        <div className="flex max-h-[calc(85vh-2rem)] min-h-0 flex-1 flex-col overflow-hidden bg-background">
           <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 sm:px-6">
             <SheetHeader className="pb-3 pt-1">
               <SheetTitle className="text-center text-lg">

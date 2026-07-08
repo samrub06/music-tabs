@@ -12,7 +12,7 @@ function redirectWithSpotifyStatus(
   req: NextRequest,
   status: 'connected' | 'denied' | 'not_configured' | 'unauthorized' | 'invalid_state' | 'already_linked' | 'failed'
 ) {
-  const url = new URL('/search', req.url)
+  const url = new URL('/spotify', req.url)
   url.searchParams.set('spotify', status)
   return NextResponse.redirect(url)
 }

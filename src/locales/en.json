@@ -400,7 +400,35 @@
       "invalid_state": "Spotify connection expired. Please try again.",
       "already_linked": "This Spotify account is already linked to another user.",
       "failed": "Could not connect Spotify. Please try again."
-    }
+    },
+    "spotifyImportPlaylists": "Import playlists"
+  },
+  "spotifyImport": {
+    "title": "Spotify import",
+    "description": "Pick a Spotify playlist and import matching guitar tabs into your library.",
+    "connect": "Connect Spotify",
+    "notConfigured": "Spotify is not configured on this server.",
+    "playlistsTitle": "Your playlists",
+    "playlistsHint": "We search Ultimate Guitar for each track (up to 80 songs per playlist).",
+    "refresh": "Refresh",
+    "searchPlaceholder": "Search playlists...",
+    "targetFolder": "Save to folder",
+    "noFolder": "No folder",
+    "loadingPlaylists": "Loading playlists...",
+    "loadPlaylistsError": "Could not load your Spotify playlists.",
+    "noPlaylists": "No playlists found.",
+    "tracks": "tracks",
+    "import": "Import",
+    "importing": "Importing...",
+    "starting": "Starting import...",
+    "completed": "Import completed",
+    "importFailed": "Import failed",
+    "progressTitle": "Import progress",
+    "resultsTitle": "Import results",
+    "successCount": "{count} added",
+    "duplicateCount": "{count} duplicates",
+    "failedCount": "{count} failed",
+    "viewLibrary": "View my songs"
   },
   "auth": {
     "signIn": "Sign In",

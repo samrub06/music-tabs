@@ -55,7 +55,7 @@ export function useAuth() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, created_at, updated_at')
         .eq('id', userId)
         .single();
 

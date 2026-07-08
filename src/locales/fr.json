@@ -400,7 +400,35 @@
       "invalid_state": "La connexion Spotify a expiré. Réessayez.",
       "already_linked": "Ce compte Spotify est déjà lié à un autre utilisateur.",
       "failed": "Impossible de connecter Spotify. Réessayez."
-    }
+    },
+    "spotifyImportPlaylists": "Importer des playlists"
+  },
+  "spotifyImport": {
+    "title": "Import Spotify",
+    "description": "Choisissez une playlist Spotify et importez les partitions correspondantes dans votre bibliothèque.",
+    "connect": "Connecter Spotify",
+    "notConfigured": "Spotify n'est pas configuré sur ce serveur.",
+    "playlistsTitle": "Vos playlists",
+    "playlistsHint": "Nous cherchons chaque titre sur Ultimate Guitar (jusqu'à 80 morceaux par playlist).",
+    "refresh": "Actualiser",
+    "searchPlaceholder": "Rechercher une playlist...",
+    "targetFolder": "Enregistrer dans le dossier",
+    "noFolder": "Aucun dossier",
+    "loadingPlaylists": "Chargement des playlists...",
+    "loadPlaylistsError": "Impossible de charger vos playlists Spotify.",
+    "noPlaylists": "Aucune playlist trouvée.",
+    "tracks": "titres",
+    "import": "Importer",
+    "importing": "Import...",
+    "starting": "Démarrage de l'import...",
+    "completed": "Import terminé",
+    "importFailed": "Échec de l'import",
+    "progressTitle": "Progression de l'import",
+    "resultsTitle": "Résultats de l'import",
+    "successCount": "{count} ajoutées",
+    "duplicateCount": "{count} doublons",
+    "failedCount": "{count} échecs",
+    "viewLibrary": "Voir mes chansons"
   },
   "auth": {
     "signIn": "Se connecter",

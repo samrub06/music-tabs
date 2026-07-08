@@ -256,155 +256,14 @@ export async function importPlaylistFromText(
         artist: song.artist
       }));
 
-    console.log(`🤖 AI parsed ${validSongs.length} songs:`);
-    validSongs.forEach((song, index) => {
-      console.log(`${index + 1}. "${song.title}" by "${song.artist}"`);
-    });
-
-    onProgress?.({
-      current: 0,
-      total: validSongs.length,
-      currentSong: `${validSongs.length} chansons analysées par l'IA`,
-      status: 'parsing'
-    });
-
-    // Étape 2: Organisation IA si demandée
-    let folderMap: Map<string, string> = new Map();
-    if (useAiOrganization) {
-      console.log('📁 Step 2: Starting AI folder organization...');
-      onProgress?.({
-        current: 0,
-        total: validSongs.length,
-        currentSong: 'Organisation IA des dossiers...',
-        status: 'parsing'
-      });
-
-      try {
-        console.log(`🤖 Starting AI folder organization for ${validSongs.length} songs...`);
-        const { organizeSongsWithFallback } = await import('./folderOrganizerService');
-        const aiFolders = await organizeSongsWithFallback(validSongs);
-        
-        console.log(`📁 AI suggested ${aiFolders.length} folders:`, aiFolders.map(f => f.name));
-        
-        // Créer les dossiers et mapper les chansons
-        for (const aiFolder of aiFolders) {
-          // Check if folder already exists (via genre/name map) to avoid duplicates even here
-          const folderNameKey = aiFolder.name.toLowerCase().trim();
-          let folderId = genreToFolderId[folderNameKey];
-
-          if (!folderId) {
-             console.log(`📁 Creating folder: ${aiFolder.name} with ${aiFolder.songs.length} songs`);
-             const folder = await folderRepo(clientSupabase).createFolder({ 
-               name: aiFolder.name,
-             });
-             console.log(`✅ Folder created with ID: ${folder.id}`);
-             folderId = folder.id;
-             genreToFolderId[folderNameKey] = folderId; // Update cache
-
-             // Ajouter le dossier aux résultats
-            result.aiFolders!.push({
-              id: folder.id,
-              name: folder.name,
-              songsCount: aiFolder.songs.length
-            });
-          } else {
-             console.log(`📁 Using existing folder for group: ${aiFolder.name}`);
-          }
-          
-          for (const song of aiFolder.songs) {
-            folderMap.set(`${song.title}|${song.artist}`, folderId);
-            console.log(`🎵 Mapped "${song.title}" by "${song.artist}" to folder "${aiFolder.name}"`);
-          }
-        }
-        
-        onProgress?.({
-          current: 0,
-          total: validSongs.length,
-          currentSong: `${aiFolders.length} dossiers IA créés`,
-          status: 'parsing'
-        });
-      } catch (error) {
-        console.warn('AI organization failed, using default folder:', error);
-      }
-    }
-
-    // Étape 3: Traitement par lots (Batching)
-    console.log(`🎵 Step 3: Processing ${validSongs.length} songs with batching...`);
-    const BATCH_SIZE = 3; // Limite de concurrence
-    let processedCount = 0;
-
-    for (let i = 0; i < validSongs.length; i += BATCH_SIZE) {
-      const batch = validSongs.slice(i, i + BATCH_SIZE);
-      const batchNum = Math.floor(i/BATCH_SIZE) + 1;
-      const totalBatches = Math.ceil(validSongs.length/BATCH_SIZE);
-      
-      console.log(`📦 Processing batch ${batchNum}/${totalBatches} (${batch.length} songs)`);
-      
-      onProgress?.({
-        current: processedCount,
-        total: validSongs.length,
-        currentSong: `Traitement lot ${batchNum}/${totalBatches}...`,
-        status: 'importing'
-      });
-
-      // Exécuter le lot en parallèle
-      const batchResults = await Promise.all(batch.map(song => 
-        processSong(song, folderMap, targetFolderId, userId, clientSupabase, genreToFolderId, pendingFolderCreations)
-      ));
-
-      // Agréger les résultats
-      for (const res of batchResults) {
-        processedCount++;
-        if (res.status === 'success') {
-          result.success++;
-          console.log(`✅ Imported: ${res.title}`);
-        } else if (res.status === 'duplicate') {
-          result.duplicates++;
-          console.log(`⚠️ Duplicate: ${res.title}`);
-        } else {
-          result.failed++;
-          result.errors.push(`${res.title}: ${res.error}`);
-          console.error(`❌ Failed: ${res.title} - ${res.error}`);
-        }
-        
-        result.songs.push({
-          title: res.title,
-          artist: res.artist,
-          status: res.status,
-          error: res.error
-        });
-      }
-
-      // Update progress after batch
-      onProgress?.({
-        current: processedCount,
-        total: validSongs.length,
-        currentSong: `Importé: ${processedCount}/${validSongs.length}`,
-        status: 'importing'
-      });
-
-      // Petit délai entre les lots pour éviter le rate limiting
-      if (i + BATCH_SIZE < validSongs.length) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      }
-    }
-
-    console.log('🎉 Import completed!');
-    console.log(`📊 Final results:`, {
-      success: result.success,
-      failed: result.failed,
-      duplicates: result.duplicates,
-      total: result.songs.length,
-      errors: result.errors.length
-    });
-    
-    onProgress?.({
-      current: validSongs.length,
-      total: validSongs.length,
-      currentSong: `Import terminé: ${result.success} succès, ${result.failed} échecs`,
-      status: 'completed'
-    });
-
+    return importParsedSongs(
+      validSongs,
+      userId,
+      targetFolderId,
+      onProgress,
+      clientSupabase,
+      useAiOrganization
+    );
   } catch (error) {
     console.error('Global import error:', error);
     onProgress?.({
@@ -414,6 +273,166 @@ export async function importPlaylistFromText(
       status: 'error'
     });
     
+    result.errors.push(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+
+  return result;
+}
+
+/**
+ * Import a list of parsed songs (title + artist) by searching Ultimate Guitar.
+ */
+export async function importParsedSongs(
+  validSongs: ParsedSong[],
+  userId: string,
+  targetFolderId?: string,
+  onProgress?: (progress: ImportProgress) => void,
+  clientSupabase?: SupabaseClient<Database>,
+  useAiOrganization?: boolean
+): Promise<ImportResult> {
+  const result: ImportResult = {
+    success: 0,
+    failed: 0,
+    duplicates: 0,
+    errors: [],
+    songs: [],
+    aiFolders: []
+  };
+
+  if (validSongs.length === 0) {
+    result.errors.push('No songs to import')
+    return result
+  }
+
+  const genreToFolderId: GenreFolderMap = {};
+  const pendingFolderCreations: PendingFolderCreations = {};
+
+  try {
+    if (clientSupabase) {
+      try {
+        const existingFolders = await folderRepo(clientSupabase).getAllFolders();
+        existingFolders.forEach(f => {
+          genreToFolderId[f.name.toLowerCase().trim()] = f.id;
+        });
+      } catch (err) {
+        console.warn('Failed to load existing folders:', err);
+      }
+    }
+
+    console.log(`🤖 Parsed ${validSongs.length} songs for import`);
+
+    onProgress?.({
+      current: 0,
+      total: validSongs.length,
+      currentSong: `${validSongs.length} songs ready`,
+      status: 'parsing'
+    });
+
+    let folderMap: Map<string, string> = new Map();
+    if (useAiOrganization) {
+      onProgress?.({
+        current: 0,
+        total: validSongs.length,
+        currentSong: 'Organizing folders...',
+        status: 'parsing'
+      });
+
+      try {
+        const { organizeSongsWithFallback } = await import('./folderOrganizerService');
+        const aiFolders = await organizeSongsWithFallback(validSongs);
+
+        for (const aiFolder of aiFolders) {
+          const folderNameKey = aiFolder.name.toLowerCase().trim();
+          let folderId = genreToFolderId[folderNameKey];
+
+          if (!folderId && clientSupabase) {
+            const folder = await folderRepo(clientSupabase).createFolder({ name: aiFolder.name });
+            folderId = folder.id;
+            genreToFolderId[folderNameKey] = folderId;
+            result.aiFolders!.push({
+              id: folder.id,
+              name: folder.name,
+              songsCount: aiFolder.songs.length
+            });
+          }
+
+          if (folderId) {
+            for (const song of aiFolder.songs) {
+              folderMap.set(`${song.title}|${song.artist}`, folderId);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('AI organization failed, using default folder:', error);
+      }
+    }
+
+    const BATCH_SIZE = 3;
+    let processedCount = 0;
+
+    for (let i = 0; i < validSongs.length; i += BATCH_SIZE) {
+      const batch = validSongs.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(validSongs.length / BATCH_SIZE);
+
+      onProgress?.({
+        current: processedCount,
+        total: validSongs.length,
+        currentSong: `Batch ${batchNum}/${totalBatches}...`,
+        status: 'importing'
+      });
+
+      const batchResults = await Promise.all(
+        batch.map(song =>
+          processSong(song, folderMap, targetFolderId, userId, clientSupabase, genreToFolderId, pendingFolderCreations)
+        )
+      );
+
+      for (const res of batchResults) {
+        processedCount++;
+        if (res.status === 'success') {
+          result.success++;
+        } else if (res.status === 'duplicate') {
+          result.duplicates++;
+        } else {
+          result.failed++;
+          result.errors.push(`${res.title}: ${res.error}`);
+        }
+
+        result.songs.push({
+          title: res.title,
+          artist: res.artist,
+          status: res.status,
+          error: res.error
+        });
+      }
+
+      onProgress?.({
+        current: processedCount,
+        total: validSongs.length,
+        currentSong: `Imported ${processedCount}/${validSongs.length}`,
+        status: 'importing'
+      });
+
+      if (i + BATCH_SIZE < validSongs.length) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+    }
+
+    onProgress?.({
+      current: validSongs.length,
+      total: validSongs.length,
+      currentSong: `Done: ${result.success} success, ${result.failed} failed`,
+      status: 'completed'
+    });
+  } catch (error) {
+    console.error('Parsed songs import error:', error);
+    onProgress?.({
+      current: 0,
+      total: 0,
+      currentSong: '',
+      status: 'error'
+    });
     result.errors.push(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 

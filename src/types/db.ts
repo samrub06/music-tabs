@@ -17,6 +17,7 @@ export interface Database {
           avatar_url: string | null
           preferred_instrument: string | null
           spotify_id: string | null
+          spotify_refresh_token: string | null
           tsniout_filter_enabled: boolean
           is_admin: boolean
           onboarding_completed_at: string | null
@@ -30,6 +31,7 @@ export interface Database {
           avatar_url?: string | null
           preferred_instrument?: string | null
           spotify_id?: string | null
+          spotify_refresh_token?: string | null
           tsniout_filter_enabled?: boolean
           is_admin?: boolean
           onboarding_completed_at?: string | null
@@ -43,6 +45,7 @@ export interface Database {
           avatar_url?: string | null
           preferred_instrument?: string | null
           spotify_id?: string | null
+          spotify_refresh_token?: string | null
           tsniout_filter_enabled?: boolean
           is_admin?: boolean
           onboarding_completed_at?: string | null

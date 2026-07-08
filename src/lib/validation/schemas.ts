@@ -231,6 +231,12 @@ export const getSongStorySchema = z.object({
 })
 
 export type SelectableSongIdsInput = z.infer<typeof selectableSongIdsSchema>
+export const spotifyImportSchema = z.object({
+  playlistId: z.string().min(1),
+  targetFolderId: z.string().uuid().optional().nullable(),
+  useAiOrganization: z.boolean().optional(),
+})
+
 export const youtubeTutorialSearchSchema = z.object({
   q: z.string().min(1, 'Search query is required').max(200, 'Search query is too long'),
   lang: z.enum(['en', 'fr', 'he']).optional(),

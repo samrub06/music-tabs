@@ -198,9 +198,13 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     return mapDbProfileToDomain(data)
   },
 
-  async linkSpotifyAccount(userId: string, spotifyId: string): Promise<Profile> {
+  async linkSpotifyAccount(
+    userId: string,
+    spotifyId: string,
+    refreshToken: string
+  ): Promise<Profile> {
     const { data, error } = await (client.from('profiles') as any)
-      .update({ spotify_id: spotifyId })
+      .update({ spotify_id: spotifyId, spotify_refresh_token: refreshToken })
       .eq('id', userId)
       .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
       .single()
@@ -209,9 +213,27 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     return mapDbProfileToDomain(data)
   },
 
+  async getSpotifyRefreshToken(userId: string): Promise<string | null> {
+    const { data, error } = await (client.from('profiles') as any)
+      .select('spotify_refresh_token')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    return (data as { spotify_refresh_token?: string | null } | null)?.spotify_refresh_token ?? null
+  },
+
+  async updateSpotifyRefreshToken(userId: string, refreshToken: string): Promise<void> {
+    const { error } = await (client.from('profiles') as any)
+      .update({ spotify_refresh_token: refreshToken })
+      .eq('id', userId)
+
+    if (error) throw error
+  },
+
   async unlinkSpotifyAccount(userId: string): Promise<Profile> {
     const { data, error } = await (client.from('profiles') as any)
-      .update({ spotify_id: null })
+      .update({ spotify_id: null, spotify_refresh_token: null })
       .eq('id', userId)
       .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
       .single()

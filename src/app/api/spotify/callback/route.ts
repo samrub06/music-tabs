@@ -16,7 +16,7 @@ function redirectWithSpotifyStatus(
   req: NextRequest,
   status: 'connected' | 'denied' | 'not_configured' | 'unauthorized' | 'invalid_state' | 'already_linked' | 'failed'
 ) {
-  const url = new URL('/search', req.url)
+  const url = new URL('/spotify', req.url)
   url.searchParams.set('spotify', status)
   return NextResponse.redirect(url)
 }
@@ -69,6 +69,9 @@ export async function GET(req: NextRequest) {
     const repo = profileRepo(supabase)
     const existingOwner = await repo.getProfile(user.id)
     if (existingOwner?.spotifyId === spotifyProfile.id) {
+      if (token.refresh_token) {
+        await repo.linkSpotifyAccount(user.id, spotifyProfile.id, token.refresh_token)
+      }
       return clearStateCookie(redirectWithSpotifyStatus(req, 'connected'))
     }
 
@@ -83,7 +86,15 @@ export async function GET(req: NextRequest) {
       return clearStateCookie(redirectWithSpotifyStatus(req, 'already_linked'))
     }
 
-    await repo.linkSpotifyAccount(user.id, spotifyProfile.id)
+    if (!token.refresh_token) {
+      return clearStateCookie(redirectWithSpotifyStatus(req, 'failed'))
+    }
+
+    await repo.linkSpotifyAccount(
+      user.id,
+      spotifyProfile.id,
+      token.refresh_token
+    )
     return clearStateCookie(redirectWithSpotifyStatus(req, 'connected'))
   } catch (linkError) {
     console.error('Spotify OAuth callback failed:', linkError)
