@@ -102,6 +102,7 @@ function DraggableSongCard({
         )}
       >
         {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
             alt={song.title}

@@ -49,6 +49,7 @@ function PlaylistCard({
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
         {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
             alt=""
@@ -100,6 +101,7 @@ function PlaylistListRow({
       >
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-primary/10">
           {coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">

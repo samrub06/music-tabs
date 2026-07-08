@@ -194,6 +194,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-4">
             <div className="relative shrink-0">
               {previewUrl || displayAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img 
                   src={previewUrl || displayAvatarUrl || ''} 
                   alt={displayName}

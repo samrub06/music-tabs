@@ -100,7 +100,7 @@ export default function SongPreviewClient({
     }
 
     fetchSong()
-  }, [url, searchResultParam, userId])
+  }, [url, searchResultParam, userId, t])
 
   const handleAddToLibrary = async () => {
     if (!userId || !song) {

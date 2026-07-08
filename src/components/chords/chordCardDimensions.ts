@@ -23,7 +23,6 @@ export const CHORD_MODAL_DIAGRAM_OPTS: ChordBoxOptions = {
 export const CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS = 'w-[10.5rem] shrink-0';
 
 /** Piano SVG frame 1900×800 — wide rectangular cells */
-export const CHORD_PREVIEW_PIANO_ASPECT_CLASS = 'aspect-[19/8]';
-export const CHORD_PREVIEW_PIANO_CARD_CLASS =
-  'w-full max-w-none sm:max-w-none';
+export const CHORD_PREVIEW_PIANO_ASPECT_CLASS = 'aspect-[19/8] min-h-[4.5rem] sm:min-h-[5.5rem]';
+export const CHORD_PREVIEW_PIANO_CARD_CLASS = 'w-full max-w-none';
 export const CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS = 'w-[18rem] max-w-[85vw] shrink-0';

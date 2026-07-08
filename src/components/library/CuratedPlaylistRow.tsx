@@ -128,6 +128,7 @@ function buildPlaylistCard(item: PublicPlaylistItem, options?: { gaugeSize?: num
 
   const content =
     !isDifficultyBanner && coverUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={coverUrl}
         alt={item.name}
@@ -160,6 +161,7 @@ interface ShortcutCardData {
 function buildCoverCardContent(coverUrl: string | null, fallback: ReactNode): ReactNode {
   if (coverUrl) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={coverUrl}
         alt=""

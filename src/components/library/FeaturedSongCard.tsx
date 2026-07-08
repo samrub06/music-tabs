@@ -28,6 +28,7 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
       </h2>
       <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group">
         {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
             alt={song.title}

@@ -48,14 +48,14 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         }
       })
       .catch(console.error)
-  }, [user?.id, authLoading, isOnboardingRoute, isInviteRoute, router])
+  }, [user, authLoading, isOnboardingRoute, isInviteRoute, router])
 
   useEffect(() => {
     if (!user || authLoading) return
     updateStreakAction().catch(error => {
       console.error('Error updating streak:', error)
     })
-  }, [user?.id, authLoading])
+  }, [user, authLoading])
 
   const getPageTitle = (path: string): string | undefined => {
     if (path.startsWith('/song/')) return undefined

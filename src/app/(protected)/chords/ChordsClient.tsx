@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
 import { ChordBox } from 'vexchords';
 import { useLanguage } from '@/context/LanguageContext';
 import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
@@ -25,12 +25,14 @@ import {
 } from '@/components/chords/InstrumentToggle';
 import { VariantChordCard } from '@/components/chords/VariantChordCard';
 import { CHORD_PREVIEW_DIAGRAM_OPTS } from '@/components/chords/chordCardDimensions';
+import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
 import type { ChordVariantGroup } from '@/types/chordVariants';
 const CHORDS_INSTRUMENT_STORAGE_KEY = 'chords-instrument';
 
 const CHORDS_GRID_CLASS = 'grid grid-cols-2 gap-4';
 
-const CHORDS_PIANO_GRID_CLASS = 'grid grid-cols-2 gap-3';
+/** One wide landscape card per row on mobile; two per row from sm up. */
+const CHORDS_PIANO_GRID_CLASS = 'grid grid-cols-1 gap-3 sm:grid-cols-2';
 
 /** Static variant carousel groups shown as grid cards (replaces duplicate DB open shapes). */
 const VARIANT_GROUP_UI: Array<{
@@ -149,6 +151,24 @@ interface ChordSection {
 type StatusFilter = 'all' | 'to-learn' | 'known';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
 
+function resolveDbChordForGroup(group: ChordVariantGroup, chords: Chord[]): Chord | undefined {
+  const cfg = VARIANT_GROUP_UI.find((g) => g.id === group.id);
+  if (cfg) {
+    for (const name of cfg.hideDbNames) {
+      const found = chords.find((c) => c.name === name);
+      if (found) return found;
+    }
+  }
+
+  const symbolNorm = normalizeChordName(group.symbol);
+  return chords.find((c) => {
+    const nameNorm = normalizeChordName(c.name);
+    if (nameNorm === symbolNorm) return true;
+    const root = nameNorm.split(/\s+/)[0] ?? nameNorm;
+    return root === symbolNorm;
+  });
+}
+
 // Normalize chord name for comparison
 function normalizeChordName(chord: string): string {
   if (!chord) return '';
@@ -182,6 +202,7 @@ export default function ChordsClient({
   const [showProgressions, setShowProgressions] = useState(false);
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const chordSuggestionsListId = useId();
   const chordRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const chordBoxesRef = useRef<Map<string, ChordBox>>(new Map());
 
@@ -290,6 +311,10 @@ export default function ChordsClient({
       filteredChords = filteredChords.filter(chord => 
         chord.difficulty === difficultyFilter
       );
+    }
+
+    if (instrument === 'piano') {
+      filteredChords = filteredChords.filter((chord) => hasPianoChordDiagram(chord.name));
     }
 
     return {
@@ -428,8 +453,16 @@ export default function ChordsClient({
     if (difficultyFilter !== 'all' && difficultyFilter !== 'beginner') return [];
     return VARIANT_GROUP_UI.filter((cfg) => matchesChordSearch(cfg.searchKeys))
       .map((cfg) => chordVariantsFr.find((g) => g.id === cfg.id))
-      .filter((g): g is ChordVariantGroup => g != null);
-  }, [matchesChordSearch, difficultyFilter]);
+      .filter((g): g is ChordVariantGroup => g != null)
+      .filter((g) => instrument !== 'piano' || hasPianoChordDiagram(g.symbol))
+      .filter((g) => {
+        if (statusFilter === 'all') return true;
+        const dbChord = resolveDbChordForGroup(g, chords);
+        if (!dbChord) return statusFilter === 'to-learn';
+        const known = knownChordIds.has(dbChord.id);
+        return statusFilter === 'known' ? known : !known;
+      });
+  }, [matchesChordSearch, difficultyFilter, instrument, statusFilter, knownChordIds, chords]);
 
   const showVariantCards = visibleVariantGroups.length > 0;
 
@@ -467,6 +500,7 @@ export default function ChordsClient({
               className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
               autoComplete="off"
               role="combobox"
+              aria-controls={chordSuggestionsListId}
               aria-expanded={showSuggestions}
               aria-autocomplete="list"
             />
@@ -482,12 +516,13 @@ export default function ChordsClient({
             )}
             {showSuggestions && (
               <ul
+                id={chordSuggestionsListId}
                 className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-md"
                 role="listbox"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 {chordNameSuggestions.map((name) => (
-                  <li key={name} role="option">
+                  <li key={name} role="option" aria-selected={false}>
                     <button
                       type="button"
                       className={cn(
@@ -571,14 +606,44 @@ export default function ChordsClient({
             {showVariantCards && (
               <div className="mb-12">
                 <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
-                  {visibleVariantGroups.map((group) => (
-                    <VariantChordCard
-                      key={group.id}
-                      group={group}
-                      instrument={instrument}
-                      onClick={() => setOpenVariantGroupId(group.id)}
-                    />
-                  ))}
+                  {visibleVariantGroups.map((group) => {
+                    const dbChord = resolveDbChordForGroup(group, chords);
+                    const chordId = dbChord?.id;
+                    const isKnown = chordId ? knownChordIds.has(chordId) : false;
+
+                    return (
+                      <div
+                        key={group.id}
+                        className={cn(
+                          'relative flex w-full flex-col',
+                          isKnown && 'rounded-lg border border-green-300 bg-green-50'
+                        )}
+                      >
+                        {chordId && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleKnown(chordId)}
+                            disabled={isPending}
+                            className="absolute top-2 left-2 z-10 rounded-full p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50"
+                            aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
+                            title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
+                          >
+                            {isKnown ? (
+                              <CheckCircleIconSolid className="h-5 w-5 text-green-600" />
+                            ) : (
+                              <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-600" />
+                            )}
+                          </button>
+                        )}
+                        <VariantChordCard
+                          group={group}
+                          instrument={instrument}
+                          onClick={() => setOpenVariantGroupId(group.id)}
+                          className={isKnown ? 'border-green-300 bg-green-50' : undefined}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

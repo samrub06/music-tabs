@@ -34,6 +34,7 @@ function HorizontalSongSlide({
       <Link href={`/song/${song.id}`}>
         <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
           {coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt={song.title} className="h-full w-full object-cover" />
           ) : (
             <SongCoverPlaceholder />
