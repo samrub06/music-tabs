@@ -72,10 +72,14 @@ export default function AdminUsersClient({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50 text-left">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="hidden px-4 py-3 font-medium sm:table-cell">Songs</th>
-                <th className="hidden px-4 py-3 font-medium md:table-cell">Joined</th>
+                <th className="px-4 py-3 font-medium">{t('admin.columnName')}</th>
+                <th className="px-4 py-3 font-medium">{t('admin.columnEmail')}</th>
+                <th className="hidden px-4 py-3 font-medium sm:table-cell">
+                  {t('admin.columnSongs')}
+                </th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">
+                  {t('admin.columnJoined')}
+                </th>
                 <th className="px-4 py-3 font-medium" />
               </tr>
             </thead>

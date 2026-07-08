@@ -26,6 +26,7 @@ export default async function AdminSongsData({
     author: typeof raw.author === 'string' ? raw.author : undefined,
     playlist: typeof raw.playlist === 'string' ? raw.playlist : undefined,
     q: typeof raw.q === 'string' ? raw.q : undefined,
+    lang: typeof raw.lang === 'string' ? raw.lang : undefined,
     page: raw.page,
     limit: raw.limit,
   })
@@ -38,6 +39,7 @@ export default async function AdminSongsData({
       author: parsed.author,
       playlistId: parsed.playlist,
       q: parsed.q,
+      lang: parsed.lang,
       page: parsed.page,
       limit: parsed.limit,
     }),
@@ -56,6 +58,7 @@ export default async function AdminSongsData({
       initialAuthor={parsed.author}
       initialPlaylist={parsed.playlist}
       initialQuery={parsed.q}
+      initialLang={parsed.lang}
     />
   )
 }

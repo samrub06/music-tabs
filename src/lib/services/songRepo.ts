@@ -8,6 +8,14 @@ import { fetchAllSongIdsFromQuery } from '@/lib/services/songListFilters'
 import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
 import { FEATURED_CATALOG_SONG_SLUG } from '@/data/featuredCatalogSong'
 
+function isHebrewCatalogSong(song: Pick<Song, 'title' | 'author' | 'genre' | 'sourceSite'>): boolean {
+  if (song.genre?.startsWith('hebrew-')) return true
+  const site = song.sourceSite?.toLowerCase() ?? ''
+  if (site.includes('tab4u') || site.includes('negina')) return true
+  const hebrewRe = /[\u0590-\u05FF]/
+  return hebrewRe.test(song.title) || hebrewRe.test(song.author)
+}
+
 // Helper to map DB result to Domain Entity
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
   const sections = (dbSong.sections as unknown as SongSection[]) || []
@@ -68,6 +76,7 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
     genre: dbSong.genre || undefined,
     tabId: dbSong.tab_id || undefined,
     sourceUrl: dbSong.source_url || undefined,
+    sourceSite: dbSong.source_site || undefined,
     isLiked: dbSong.is_liked ?? false,
     difficulty: dbSong.difficulty || undefined,
     decade: dbSong.decade || undefined,
@@ -76,10 +85,10 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
 }
 
 const LIGHTWEIGHT_LIST_COLUMNS =
-  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, is_liked'
+  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, source_site, is_liked'
 
 const PUBLIC_PLAYLIST_LIST_COLUMNS =
-  'id, title, author, song_image_url, artist_image_url, genre, key'
+  'id, title, author, song_image_url, artist_image_url, genre, key, source_site'
 
 /** PostgREST `.in()` via GET breaks on very large playlists (URL length). */
 const PUBLIC_PLAYLIST_ID_CHUNK_SIZE = 100
@@ -977,10 +986,12 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     author?: string
     playlistId?: string
     q?: string
+    lang?: 'all' | 'he'
     page: number
     limit: number
   }): Promise<{ songs: Song[]; total: number }> {
-    const { author, playlistId, q, page, limit } = options
+    const { author, playlistId, q, lang = 'all', page, limit } = options
+    const hebrewOnly = lang === 'he'
 
     if (playlistId) {
       const { data: playlistRow, error: playlistError } = await (client.from('playlists') as any)
@@ -1012,6 +1023,9 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
             s.author.toLowerCase().includes(needle)
         )
       }
+      if (hebrewOnly) {
+        songs = songs.filter(isHebrewCatalogSong)
+      }
 
       const total = songs.length
       const start = (page - 1) * limit
@@ -1031,6 +1045,12 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     if (q?.trim()) {
       const term = q.trim()
       builder = builder.or(`title.ilike.%${term}%,author.ilike.%${term}%`)
+    }
+    if (hebrewOnly) {
+      // Prefer metadata tags used by the Hebrew catalog + Tab4U/Negina imports.
+      builder = builder.or(
+        'genre.like.hebrew-%,source_site.ilike.%tab4u%,source_site.ilike.%negina%'
+      )
     }
 
     builder = builder.order('title', { ascending: true }).range(from, to)

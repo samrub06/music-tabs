@@ -954,18 +954,25 @@
     "allArtists": "All artists",
     "allPlaylists": "All playlists",
     "clearFilters": "Clear filters",
+    "filterLanguage": "Language filter",
+    "filterAllSongs": "All songs",
+    "filterHebrewSongs": "Hebrew only",
     "addSong": "Add catalog song",
     "moveToPlaylist": "Move to playlist",
-    "removeFromPlaylist": "Remove from playlist",
+    "removeFromPlaylist": "Remove from playlist (keep in catalog)",
     "moveSongsTitle": "Move {count} song(s) to playlist",
     "selectDestinationPlaylist": "Select destination playlist",
-    "removeFromCurrentPlaylist": "Remove from current playlist",
+    "removeFromCurrentPlaylist": "Remove from current playlist after move",
     "importTab": "Import",
     "manualTab": "Manual entry",
     "searchCatalog": "Search Tab4U / Ultimate Guitar",
     "userSongs": "User songs",
     "songCount": "{count} songs",
     "viewSongs": "View songs",
-    "noUsers": "No users found"
+    "noUsers": "No users found",
+    "columnName": "Name",
+    "columnEmail": "Email",
+    "columnSongs": "Songs",
+    "columnJoined": "Joined"
   }
 }

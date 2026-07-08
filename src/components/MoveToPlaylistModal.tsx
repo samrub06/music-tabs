@@ -32,9 +32,11 @@ export default function MoveToPlaylistModal({
   useEffect(() => {
     if (!isOpen) {
       setSelectedPlaylistId(undefined)
-      setRemoveFromSource(false)
+      setRemoveFromSource(Boolean(currentPlaylistId))
+    } else {
+      setRemoveFromSource(Boolean(currentPlaylistId))
     }
-  }, [isOpen])
+  }, [isOpen, currentPlaylistId])
 
   if (!isOpen) return null
 

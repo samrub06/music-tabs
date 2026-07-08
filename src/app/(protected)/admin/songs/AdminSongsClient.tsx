@@ -38,6 +38,7 @@ interface AdminSongsClientProps {
   initialAuthor?: string
   initialPlaylist?: string
   initialQuery?: string
+  initialLang?: 'all' | 'he'
 }
 
 export default function AdminSongsClient({
@@ -50,6 +51,7 @@ export default function AdminSongsClient({
   initialAuthor = '',
   initialPlaylist = '',
   initialQuery = '',
+  initialLang = 'all',
 }: AdminSongsClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -75,7 +77,9 @@ export default function AdminSongsClient({
     [pathname, router, searchParams]
   )
 
-  const hasActiveFilters = Boolean(initialAuthor || initialPlaylist || initialQuery)
+  const hasActiveFilters = Boolean(
+    initialAuthor || initialPlaylist || initialQuery || initialLang === 'he'
+  )
 
   const handleSearchSubmit = () => {
     applyParams({ q: localSearch.trim() || undefined, page: '1' })
@@ -119,6 +123,37 @@ export default function AdminSongsClient({
       </div>
 
       <div className="mb-4 flex shrink-0 flex-col gap-3">
+        <div
+          className="flex w-full max-w-xs rounded-full bg-muted/80 p-0.5 gap-0.5"
+          role="group"
+          aria-label={t('admin.filterLanguage')}
+        >
+          <button
+            type="button"
+            onClick={() => applyParams({ lang: undefined, page: '1' })}
+            className={cn(
+              'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+              initialLang !== 'he'
+                ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t('admin.filterAllSongs')}
+          </button>
+          <button
+            type="button"
+            onClick={() => applyParams({ lang: 'he', page: '1' })}
+            className={cn(
+              'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+              initialLang === 'he'
+                ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t('admin.filterHebrewSongs')}
+          </button>
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[200px] flex-1">
             <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

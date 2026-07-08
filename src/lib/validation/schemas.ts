@@ -107,6 +107,7 @@ export const adminSongListQuerySchema = z.object({
   author: z.string().optional(),
   playlist: z.string().uuid().optional(),
   q: z.string().optional(),
+  lang: z.enum(['all', 'he']).optional().default('all'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 })

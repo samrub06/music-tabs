@@ -954,18 +954,25 @@
     "allArtists": "כל האמנים",
     "allPlaylists": "כל הפלייליסטים",
     "clearFilters": "נקה מסננים",
+    "filterLanguage": "סינון שפה",
+    "filterAllSongs": "כל השירים",
+    "filterHebrewSongs": "עברית בלבד",
     "addSong": "הוסף שיר לקטלוג",
     "moveToPlaylist": "העבר לפלייליסט",
-    "removeFromPlaylist": "הסר מהפלייליסט",
+    "removeFromPlaylist": "הסר מהפלייליסט (השאר בקטלוג)",
     "moveSongsTitle": "העבר {count} שירים לפלייליסט",
     "selectDestinationPlaylist": "בחר פלייליסט יעד",
-    "removeFromCurrentPlaylist": "הסר מהפלייליסט הנוכחי",
+    "removeFromCurrentPlaylist": "הסר מהפלייליסט הנוכחי לאחר ההעברה",
     "importTab": "ייבוא",
     "manualTab": "הזנה ידנית",
     "searchCatalog": "חפש ב-Tab4U / Ultimate Guitar",
     "userSongs": "שירי משתמש",
     "songCount": "{count} שירים",
     "viewSongs": "צפה בשירים",
-    "noUsers": "לא נמצאו משתמשים"
+    "noUsers": "לא נמצאו משתמשים",
+    "columnName": "שם",
+    "columnEmail": "אימייל",
+    "columnSongs": "שירים",
+    "columnJoined": "הצטרף"
   }
 }
