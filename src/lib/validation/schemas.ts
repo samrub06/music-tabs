@@ -195,6 +195,11 @@ export const friendRelationUserIdSchema = z.object({
   userId: z.string().uuid(),
 })
 
+export const chordProgressionSearchSchema = z.object({
+  chords: z.array(z.string().min(1).max(16)).min(2).max(8),
+  limit: z.number().int().min(1).max(50).optional(),
+})
+
 export const shareWithFriendSchema = z.object({
   friendUserId: z.string().uuid(),
   entityType: z.enum(['song', 'playlist']),

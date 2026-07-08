@@ -1075,4 +1075,62 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       total: count ?? 0,
     }
   },
+
+  /**
+   * Songs whose `all_chords` contains every chord in the progression (set match).
+   * Includes the current user's songs and public catalog songs.
+   */
+  async findSongsByChordProgression(
+    chords: string[],
+    options: { limit?: number } = {}
+  ): Promise<Song[]> {
+    const limit = options.limit ?? 30
+    const uniqueChords = [...new Set(chords.map((c) => c.trim()).filter(Boolean))]
+    if (uniqueChords.length === 0) return []
+
+    const {
+      data: { user },
+    } = await client.auth.getUser()
+    if (!user) return []
+
+    const columns =
+      `${LIGHTWEIGHT_LIST_COLUMNS}, difficulty, decade, capo, all_chords, key, chord_progression`
+
+    const { data: userSongs, error: userError } = await (client.from('songs') as any)
+      .select(columns)
+      .eq('user_id', user.id)
+      .contains('all_chords', uniqueChords)
+      .order('updated_at', { ascending: false })
+      .limit(limit)
+
+    if (userError) throw userError
+
+    const remaining = Math.max(0, limit - (userSongs?.length ?? 0))
+    let catalogSongs: Partial<Database['public']['Tables']['songs']['Row']>[] = []
+
+    if (remaining > 0) {
+      const { data, error } = await (client.from('songs') as any)
+        .select(columns)
+        .is('user_id', null)
+        .or('is_public.eq.true,is_trending.eq.true')
+        .contains('all_chords', uniqueChords)
+        .order('view_count', { ascending: false })
+        .limit(remaining)
+
+      if (error) throw error
+      catalogSongs = data || []
+    }
+
+    const seen = new Set<string>()
+    const results: Song[] = []
+
+    for (const row of [...(userSongs || []), ...catalogSongs]) {
+      const id = row.id as string
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      results.push(mapDbSongToList(row))
+    }
+
+    return results
+  },
 })

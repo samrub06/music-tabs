@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { ChordBox } from 'vexchords';
 import { useLanguage } from '@/context/LanguageContext';
-import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import type { Chord } from '@/types';
 import { markChordKnownAction, unmarkChordKnownAction } from './actions';
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import chordVariantsFr from '@/data/chordVariants';
 import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
 import { ChordVariantsModal } from '@/components/chords/ChordVariantsModal';
+import { ChordProgressionsPanel } from '@/components/chords/ChordProgressionsPanel';
 import {
   InstrumentToggle,
   type ChordInstrument,
