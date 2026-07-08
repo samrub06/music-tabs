@@ -280,20 +280,21 @@ export const friendsRepo = (client: SupabaseClient<Database>) => ({
       )
     )
 
-    return requesterIds
-      .map((requesterId) => {
-        const profile = profileById.get(requesterId)
-        if (!profile) return null
-        return {
-          id: profile.id,
-          email: profile.email,
-          fullName: profile.full_name,
-          avatarUrl: profile.avatar_url,
-          relationStatus: 'pending_received' as const,
-          friendshipId: friendshipByRequesterId.get(profile.id)?.id ?? null,
-        }
+    const pendingProfiles: FriendProfile[] = []
+    for (const requesterId of requesterIds) {
+      const profile = profileById.get(requesterId)
+      if (!profile) continue
+      pendingProfiles.push({
+        id: profile.id,
+        email: profile.email,
+        fullName: profile.full_name,
+        avatarUrl: profile.avatar_url,
+        relationStatus: 'pending_received',
+        friendshipId: friendshipByRequesterId.get(profile.id)?.id ?? null,
       })
-      .filter((profile): profile is FriendProfile => profile !== null)
+    }
+
+    return pendingProfiles
   },
 
   async getDiscoverableUsers(userId: string, limit: number = 20): Promise<FriendProfile[]> {

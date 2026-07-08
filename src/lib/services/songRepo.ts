@@ -1085,7 +1085,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     options: { limit?: number } = {}
   ): Promise<Song[]> {
     const limit = options.limit ?? 30
-    const uniqueChords = [...new Set(chords.map((c) => c.trim()).filter(Boolean))]
+    const uniqueChords = Array.from(new Set(chords.map((c) => c.trim()).filter(Boolean)))
     if (uniqueChords.length === 0) return []
 
     const {
