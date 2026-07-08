@@ -24,6 +24,8 @@ interface FloatingYoutubeTutorialProps {
   songAuthor: string
   selectedInstrument: 'piano' | 'guitar'
   isOpen: boolean
+  videoMode: YoutubeVideoMode
+  onVideoModeChange: (mode: YoutubeVideoMode) => void
   onClose: () => void
 }
 
@@ -54,6 +56,8 @@ export default function FloatingYoutubeTutorial({
   songAuthor,
   selectedInstrument,
   isOpen,
+  videoMode,
+  onVideoModeChange,
   onClose,
 }: FloatingYoutubeTutorialProps) {
   const { t, language } = useLanguage()
@@ -61,7 +65,6 @@ export default function FloatingYoutubeTutorial({
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const cacheRef = useRef<Map<string, CachedVideo>>(new Map())
   const [mounted, setMounted] = useState(false)
-  const [videoMode, setVideoMode] = useState<YoutubeVideoMode>('tutorial')
   const [isMinimized, setIsMinimized] = useState(false)
   const [isLarge, setIsLarge] = useState(false)
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
@@ -128,7 +131,6 @@ export default function FloatingYoutubeTutorial({
 
     setIsMinimized(false)
     setIsLarge(false)
-    setVideoMode('tutorial')
     setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
     setFetchState({ status: 'idle' })
     setActiveEmbedSrc(null)
@@ -373,7 +375,7 @@ export default function FloatingYoutubeTutorial({
           >
             <button
               type="button"
-              onClick={() => setVideoMode('tutorial')}
+              onClick={() => onVideoModeChange('tutorial')}
               className={cn(
                 'flex-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
                 videoMode === 'tutorial'
@@ -386,7 +388,7 @@ export default function FloatingYoutubeTutorial({
             </button>
             <button
               type="button"
-              onClick={() => setVideoMode('original')}
+              onClick={() => onVideoModeChange('original')}
               className={cn(
                 'flex-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
                 videoMode === 'original'

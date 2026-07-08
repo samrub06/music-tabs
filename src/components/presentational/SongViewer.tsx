@@ -10,6 +10,7 @@ import ToolsBottomBar from './ToolsBottomBar';
 import FloatingYoutubeTutorial from './FloatingYoutubeTutorial';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
+import type { YoutubeVideoMode } from '@/utils/youtubeTutorial';
 
 const ChordDiagramModal = dynamic(() => import('./ChordDiagramModal'), { ssr: false });
 
@@ -169,10 +170,21 @@ export default function SongViewer({
     onFolderChange,
 }: SongViewerProps) {
   const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
+  const [youtubeVideoMode, setYoutubeVideoMode] = useState<YoutubeVideoMode>('tutorial');
 
   useEffect(() => {
     setYoutubeTutorialOpen(false);
+    setYoutubeVideoMode('tutorial');
   }, [song?.id]);
+
+  const handleSelectYoutubeMode = (mode: YoutubeVideoMode) => {
+    if (youtubeTutorialOpen && youtubeVideoMode === mode) {
+      setYoutubeTutorialOpen(false);
+      return;
+    }
+    setYoutubeVideoMode(mode);
+    setYoutubeTutorialOpen(true);
+  };
 
   if (!song) {
     return (
@@ -261,7 +273,8 @@ export default function SongViewer({
               currentFolderId={currentFolderId}
               onFolderChange={onFolderChange}
               youtubeTutorialOpen={youtubeTutorialOpen}
-              onToggleYoutubeTutorial={() => setYoutubeTutorialOpen((prev) => !prev)}
+              youtubeVideoMode={youtubeVideoMode}
+              onSelectYoutubeMode={handleSelectYoutubeMode}
             />
           </div>
 
@@ -305,6 +318,8 @@ export default function SongViewer({
         songAuthor={song.author}
         selectedInstrument={selectedInstrument}
         isOpen={youtubeTutorialOpen}
+        videoMode={youtubeVideoMode}
+        onVideoModeChange={setYoutubeVideoMode}
         onClose={() => setYoutubeTutorialOpen(false)}
       />
     </div>

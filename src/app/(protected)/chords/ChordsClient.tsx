@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { ChordBox } from 'vexchords';
 import { useLanguage } from '@/context/LanguageContext';
-import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon, MusicalNoteIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon, MusicalNoteIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import type { Chord } from '@/types';
 import { markChordKnownAction, unmarkChordKnownAction } from './actions';
@@ -18,7 +19,6 @@ import { cn } from '@/lib/utils';
 import chordVariantsFr from '@/data/chordVariants';
 import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
 import { ChordVariantsModal } from '@/components/chords/ChordVariantsModal';
-import { ChordProgressionsPanel } from '@/components/chords/ChordProgressionsPanel';
 import {
   InstrumentToggle,
   type ChordInstrument,
@@ -199,7 +199,6 @@ export default function ChordsClient({
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [openVariantGroupId, setOpenVariantGroupId] = useState<string | null>(null);
   const [instrument, setInstrument] = useState<ChordInstrument>('guitar');
-  const [showProgressions, setShowProgressions] = useState(false);
   const [isPending, startTransition] = useTransition();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const chordSuggestionsListId = useId();
@@ -577,24 +576,14 @@ export default function ChordsClient({
             />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowProgressions((prev) => !prev)}
-            aria-pressed={showProgressions}
-            className={cn(
-              'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
-              showProgressions
-                ? 'border-primary/40 bg-primary/10 text-primary'
-                : 'border-border bg-card text-foreground hover:bg-muted/60'
-            )}
+          <Link
+            href="/chords/progressions"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
           >
             <MusicalNoteIcon className="h-4 w-4 shrink-0" aria-hidden />
-            {showProgressions
-              ? t('chords.hideProgressions')
-              : t('chords.showProgressions')}
-          </button>
-
-          {showProgressions && <ChordProgressionsPanel />}
+            {t('chords.showProgressions')}
+            <ArrowRightIcon className="h-4 w-4 shrink-0" aria-hidden />
+          </Link>
         </div>
 
         {filteredSections.length === 0 && !showVariantCards ? (

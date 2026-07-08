@@ -120,7 +120,8 @@ interface SongContentProps {
   currentFolderId?: string;
   onFolderChange?: (folderId: string | undefined) => Promise<void>;
   youtubeTutorialOpen?: boolean;
-  onToggleYoutubeTutorial?: () => void;
+  youtubeVideoMode?: 'tutorial' | 'original';
+  onSelectYoutubeMode?: (mode: 'tutorial' | 'original') => void;
 }
 
 export default function SongContent({
@@ -172,7 +173,8 @@ export default function SongContent({
   currentFolderId,
   onFolderChange,
   youtubeTutorialOpen = false,
-  onToggleYoutubeTutorial,
+  youtubeVideoMode = 'tutorial',
+  onSelectYoutubeMode,
 }: SongContentProps) {
   const { t, isRtl } = useLanguage();
   const pathname = usePathname();
@@ -572,23 +574,47 @@ export default function SongContent({
                 </div>
               </div>
               {songMetaRow}
-              {(onToggleYoutubeTutorial || user) && (
+              {(onSelectYoutubeMode || user) && (
                 <div className="flex items-center gap-2">
-                  {onToggleYoutubeTutorial && (
-                    <button
-                      type="button"
-                      onClick={onToggleYoutubeTutorial}
+                  {onSelectYoutubeMode && (
+                    <div
                       className={cn(
-                        'flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
+                        'flex h-11 min-w-0 flex-1 items-stretch gap-0.5 rounded-xl border p-0.5',
                         youtubeTutorialOpen
-                          ? 'border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400'
-                          : 'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60'
+                          ? 'border-red-500/40 bg-red-500/10'
+                          : 'border-border/80 bg-muted/30'
                       )}
-                      aria-pressed={youtubeTutorialOpen}
+                      role="group"
+                      aria-label={t('youtubeTutorial.title')}
                     >
-                      <Youtube className="h-4 w-4 shrink-0" />
-                      {t('youtubeTutorial.title')}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => onSelectYoutubeMode('tutorial')}
+                        className={cn(
+                          'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+                          youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
+                            ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
+                            : 'text-muted-foreground hover:text-foreground'
+                        )}
+                        aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
+                      >
+                        <Youtube className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{t('youtubeTutorial.modeTutorial')}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onSelectYoutubeMode('original')}
+                        className={cn(
+                          'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+                          youtubeTutorialOpen && youtubeVideoMode === 'original'
+                            ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
+                            : 'text-muted-foreground hover:text-foreground'
+                        )}
+                        aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
+                      >
+                        <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
+                      </button>
+                    </div>
                   )}
                   {user && (
                     <ShareWithFriendIconButton
