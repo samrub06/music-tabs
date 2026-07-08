@@ -9,14 +9,8 @@ import {
   type ChordProgressionPreset,
 } from '@/data/chordProgressions'
 import { ChordProgressionSongsDialog } from '@/components/chords/ChordProgressionSongsDialog'
+import { FilterChip, FilterChipRow } from '@/components/ui/filter-chip'
 import { useLanguage } from '@/context/LanguageContext'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { ArrowLeftIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
 
 export default function ChordProgressionsClient() {
@@ -54,29 +48,24 @@ export default function ChordProgressionsClient() {
             </p>
           </div>
 
-          <div className="mb-6 max-w-xs">
-            <label
-              htmlFor="progression-chord-filter"
-              className="mb-2 block text-[11px] font-medium text-muted-foreground"
-            >
-              {t('chords.progressionsFilterByChord')}
-            </label>
-            <Select value={chordFilter} onValueChange={setChordFilter}>
-              <SelectTrigger
-                id="progression-chord-filter"
-                className="h-11 rounded-xl border-border bg-card text-sm"
+          <div className="mb-6">
+            <FilterChipRow title={t('chords.progressionsFilterByChord')}>
+              <FilterChip
+                active={chordFilter === 'all'}
+                onClick={() => setChordFilter('all')}
               >
-                <SelectValue placeholder={t('chords.progressionsFilterAll')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('chords.progressionsFilterAll')}</SelectItem>
-                {filterChords.map((chord) => (
-                  <SelectItem key={chord} value={chord}>
-                    {chord}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                {t('chords.progressionsFilterAll')}
+              </FilterChip>
+              {filterChords.map((chord) => (
+                <FilterChip
+                  key={chord}
+                  active={chordFilter === chord}
+                  onClick={() => setChordFilter(chord)}
+                >
+                  {chord}
+                </FilterChip>
+              ))}
+            </FilterChipRow>
           </div>
 
           {filteredPresets.length === 0 ? (

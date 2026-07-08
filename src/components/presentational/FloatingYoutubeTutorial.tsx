@@ -377,26 +377,28 @@ export default function FloatingYoutubeTutorial({
               type="button"
               onClick={() => onVideoModeChange('tutorial')}
               className={cn(
-                'flex-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
+                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
                 videoMode === 'tutorial'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               )}
               aria-pressed={videoMode === 'tutorial'}
             >
+              <Youtube className="h-3.5 w-3.5 shrink-0" />
               {t('youtubeTutorial.modeTutorial')}
             </button>
             <button
               type="button"
               onClick={() => onVideoModeChange('original')}
               className={cn(
-                'flex-1 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
+                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
                 videoMode === 'original'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               )}
               aria-pressed={videoMode === 'original'}
             >
+              <Youtube className="h-3.5 w-3.5 shrink-0" />
               {t('youtubeTutorial.modeOriginal')}
             </button>
           </div>

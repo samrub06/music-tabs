@@ -612,6 +612,7 @@ export default function SongContent({
                         )}
                         aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
                       >
+                        <Youtube className="h-4 w-4 shrink-0" />
                         <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
                       </button>
                     </div>
