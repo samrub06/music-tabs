@@ -187,10 +187,7 @@ export default function SongTableRow({
     <li
       ref={setNodeRef}
       data-song-id={song.id}
-      style={{
-        ...style,
-        touchAction: hasUser ? 'none' : 'auto',
-      }}
+      style={style}
       className={isDragging ? 'relative z-50 opacity-50' : undefined}
     >
       <div

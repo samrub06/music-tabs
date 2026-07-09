@@ -16,9 +16,16 @@ interface BottomSheetDippedTopProps {
 export function BottomSheetDippedTop({ className, onClose, hideBorder = false }: BottomSheetDippedTopProps) {
   return (
     <div className={cn('relative z-[70] shrink-0 overflow-visible bg-background', className)}>
+      <div className="pointer-events-none absolute left-1/2 top-0 z-[70] -translate-x-1/2 -translate-y-1/2">
+        <div
+          aria-hidden
+          className="h-[52px] w-[52px] rounded-full bg-background shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur-none dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
+        />
+      </div>
+
       <SheetClose
         onClick={onClose}
-        className="absolute left-1/2 top-0 z-[70] flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-black/[0.06] bg-background text-foreground shadow-[0_2px_12px_rgba(0,0,0,0.12)] transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:border-white/[0.08] dark:shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+        className="absolute left-1/2 top-0 z-[71] flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-none backdrop-blur-none transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
       >
         <X className="h-4 w-4" strokeWidth={2} />
         <span className="sr-only">Close</span>
