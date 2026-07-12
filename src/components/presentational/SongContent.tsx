@@ -367,6 +367,24 @@ export default function SongContent({
       </div>
     ) : null;
 
+  const capoDisplay =
+    transposedSong?.capo !== undefined && transposedSong?.capo !== null ? (
+      <div
+        className={cn(
+          'flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2 sm:w-16',
+          titleRowStatHeight
+        )}
+        title={t('songHeader.capo')}
+      >
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground leading-none">
+          {t('songHeader.capo')}
+        </span>
+        <span className="text-sm font-semibold tabular-nums leading-none text-foreground">
+          {transposedSong.capo}
+        </span>
+      </div>
+    ) : null;
+
   const metaRowActionSize = 'h-11 min-h-11 w-11';
 
   const libraryToggleButton =
@@ -438,33 +456,32 @@ export default function SongContent({
 
   const editButton =
     isInLibrary && onToggleEdit ? (
-      <Button
+      <button
         type="button"
-        variant="outline"
         onClick={onToggleEdit}
         className={cn(
-          'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
-          actionTileHeight
+          'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-foreground transition-colors hover:bg-muted/60',
+          actionTileHeight,
+          'w-14 sm:w-16'
         )}
         aria-label={t('songHeader.edit')}
+        title={t('songHeader.edit')}
       >
-        <PencilSquareIcon className="h-4 w-4" />
-        <span className="hidden sm:inline">{t('songHeader.edit')}</span>
-      </Button>
+        <PencilSquareIcon className="h-5 w-5" />
+      </button>
     ) : isInLibrary && librarySongId ? (
-      <Button
-        asChild
-        variant="outline"
+      <Link
+        href={`/song/${librarySongId}`}
         className={cn(
-          'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
-          actionTileHeight
+          'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-foreground transition-colors hover:bg-muted/60',
+          actionTileHeight,
+          'w-14 sm:w-16'
         )}
+        aria-label={t('library.editYourCopy')}
+        title={t('library.editYourCopy')}
       >
-        <Link href={`/song/${librarySongId}`} aria-label={t('library.editYourCopy')}>
-          <PencilSquareIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">{t('library.editYourCopy')}</span>
-        </Link>
-      </Button>
+        <PencilSquareIcon className="h-5 w-5" />
+      </Link>
     ) : null;
 
   const addToLibraryTitleButton =
@@ -494,10 +511,16 @@ export default function SongContent({
     ) : null;
 
   const titleRowTrailingActions =
-    ratingDisplay || viewsDisplay || favoriteButton || editButton || addToLibraryTitleButton ? (
+    ratingDisplay ||
+    viewsDisplay ||
+    capoDisplay ||
+    favoriteButton ||
+    editButton ||
+    addToLibraryTitleButton ? (
       <div className="flex w-full flex-wrap items-stretch gap-1.5 sm:gap-2">
         {ratingDisplay}
         {viewsDisplay}
+        {capoDisplay}
         {favoriteButton}
         {editButton}
         {addToLibraryTitleButton}

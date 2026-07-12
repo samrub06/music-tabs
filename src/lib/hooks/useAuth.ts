@@ -1,5 +1,6 @@
 'use client';
 
+import { markPendingWelcomeAnimation } from '@/components/PostSignInWelcomeAnimation';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
@@ -75,6 +76,8 @@ export function useAuth() {
       const redirectUrl = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(safeNext)}`;
       
       console.log('Initiating Google Sign-In with redirect URL:', redirectUrl);
+
+      markPendingWelcomeAnimation();
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

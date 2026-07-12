@@ -17,11 +17,14 @@ export function absoluteUrl(path: string): string {
   return `${getSiteUrl()}${normalizedPath}`
 }
 
-/** Static brand assets in `public/brand/` — export from design, do not generate from SVG at runtime. */
+/** Static brand assets in `public/` — keep in sync with logo_tabasco sources. */
 export const BRAND_ASSETS = {
+  logo: '/logo_tabasco.png',
+  logoSvg: '/logo_tabasco.svg',
   icon: '/brand/icon.png',
   appleTouchIcon: '/brand/apple-touch-icon.png',
-  openGraph: '/brand/og.png',
+  openGraph: '/brand/og-1200x630.png',
+  openGraphSquare: '/brand/og.png',
 } as const
 
 export const defaultMetadata: Metadata = {
@@ -36,6 +39,7 @@ export const defaultMetadata: Metadata = {
     icon: [
       { url: BRAND_ASSETS.icon, type: 'image/png', sizes: '512x512' },
       { url: '/brand/favicon-32.png', type: 'image/png', sizes: '32x32' },
+      { url: BRAND_ASSETS.logo, type: 'image/png', sizes: '2000x2000' },
     ],
     apple: [{ url: BRAND_ASSETS.appleTouchIcon, type: 'image/png', sizes: '180x180' }],
   },
@@ -51,6 +55,12 @@ export const defaultMetadata: Metadata = {
         width: 1200,
         height: 630,
         alt: SITE_NAME,
+      },
+      {
+        url: BRAND_ASSETS.logo,
+        width: 2000,
+        height: 2000,
+        alt: `${SITE_NAME} logo`,
       },
     ],
   },

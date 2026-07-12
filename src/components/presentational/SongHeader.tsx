@@ -1,6 +1,5 @@
 'use client';
 
-import { Song } from '@/types';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   MinusIcon,
@@ -17,7 +16,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface SongHeaderProps {
-  song: Song;
   autoScroll: {
     isActive: boolean;
     speed: number;
@@ -36,12 +34,10 @@ interface SongHeaderProps {
 }
 
 export default function SongHeader({
-  song,
   autoScroll,
   onNavigateBack,
   onToggleAutoScroll,
   onSetAutoScrollSpeed,
-  onResetScroll,
   onPrevSong,
   onNextSong,
   canPrevSong,
@@ -52,7 +48,7 @@ export default function SongHeader({
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
-      {/* Single row: back, capo, auto-scroll + speed, tools, next */}
+      {/* Single row: back, auto-scroll + speed, tools, next */}
       <div
         className="flex items-center justify-between gap-2 p-2 w-full min-w-0"
         dir={isRtl ? 'rtl' : 'ltr'}
@@ -66,13 +62,6 @@ export default function SongHeader({
         >
           <BackArrowIcon className="h-5 w-5" />
         </Button>
-
-        {/* Capo: show in header on all breakpoints (including mobile), same height as other buttons (h-10) */}
-        {song.capo !== undefined && song.capo !== null && (
-          <span className="flex-shrink-0 flex items-center h-10 text-xs font-medium text-muted-foreground bg-muted/60 dark:bg-muted/40 px-2.5 rounded-md" title={t('songHeader.capo')}>
-            {t('songHeader.CAPO_WITH_VALUE').replace('{capo}', String(song.capo))}
-          </span>
-        )}
 
         {/* Auto-scroll + speed + song tools — grouped, minimal gap */}
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1">

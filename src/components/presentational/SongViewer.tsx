@@ -206,7 +206,6 @@ export default function SongViewer({
     <div className="flex flex-col h-full min-h-screen md:min-h-0 bg-background overflow-hidden">
       {/* Header */}
       <SongHeader
-        song={song}
         autoScroll={autoScroll}
         onNavigateBack={onNavigateBack}
         onToggleAutoScroll={onToggleAutoScroll}

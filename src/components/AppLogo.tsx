@@ -11,7 +11,7 @@ interface AppLogoProps {
 }
 
 const LOGO_CONFIG = {
-  portrait: { src: '/logo_tabasco.svg', width: 36, height: 40 },
+  portrait: { src: '/logo_tabasco.png', width: 40, height: 40 },
   text: { src: '/logo_text.svg', width: 140, height: 34 },
 } as const
 
