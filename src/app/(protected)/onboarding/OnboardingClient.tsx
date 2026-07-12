@@ -33,7 +33,7 @@ export default function OnboardingClient({ inviteCode }: OnboardingClientProps) 
   return (
     <div className="flex min-h-[calc(100vh-2.75rem)] flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg rounded-3xl border border-black/[0.06] bg-card p-6 dark:border-white/[0.08] sm:p-8">
-        <AppLogo variant="text" className="mb-6 h-7 w-auto" />
+        <AppLogo variant="portrait" className="mb-6 h-10 w-10" />
 
         {step === 0 && (
           <div className="space-y-4 text-center">

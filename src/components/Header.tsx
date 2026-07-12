@@ -242,9 +242,9 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         aria-label={t('common.backToHome')}
       >
         <AppLogo
-          variant="text"
+          variant="portrait"
           priority={isLandingPage}
-          className="h-6 w-auto sm:h-7"
+          className="h-8 w-8 sm:h-9 sm:w-9"
         />
       </Link>
 

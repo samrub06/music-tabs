@@ -10,13 +10,14 @@ interface AppLogoProps {
   priority?: boolean
 }
 
+/** Both variants use the chili mark until a dedicated wordmark is provided. */
 const LOGO_CONFIG = {
   portrait: { src: '/logo_tabasco.png', width: 40, height: 40 },
-  text: { src: '/logo_text.svg', width: 140, height: 34 },
+  text: { src: '/logo_tabasco.png', width: 40, height: 40 },
 } as const
 
 export function AppLogo({
-  variant = 'text',
+  variant = 'portrait',
   className,
   alt = 'TABasco',
   priority = false,
@@ -30,7 +31,7 @@ export function AppLogo({
       width={config.width}
       height={config.height}
       priority={priority}
-      className={cn('w-auto object-contain', className)}
+      className={cn('object-contain', className)}
     />
   )
 }

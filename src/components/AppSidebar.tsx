@@ -14,6 +14,7 @@ import {
   Disc3,
 } from 'lucide-react'
 import { AppLogo } from '@/components/AppLogo'
+import { SITE_NAME } from '@/lib/seo/site'
 import { useLanguage } from '@/context/LanguageContext'
 import {
   Sidebar,
@@ -78,15 +79,14 @@ export function AppSidebar() {
               asChild
               className="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
             >
-              <Link href="/" className="flex min-w-0 items-center">
+              <Link href="/" className="flex min-w-0 items-center gap-2">
                 <AppLogo
                   variant="portrait"
-                  className="hidden h-8 w-8 group-data-[collapsible=icon]:block"
+                  className="h-8 w-8 shrink-0"
                 />
-                <AppLogo
-                  variant="text"
-                  className="h-7 w-auto max-w-[9.5rem] group-data-[collapsible=icon]:hidden"
-                />
+                <span className="truncate text-base font-semibold tracking-tight text-foreground group-data-[collapsible=icon]:hidden">
+                  {SITE_NAME}
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

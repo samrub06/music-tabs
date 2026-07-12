@@ -23,6 +23,7 @@ export const BRAND_ASSETS = {
   logoSvg: '/logo_tabasco.svg',
   icon: '/brand/icon.png',
   appleTouchIcon: '/brand/apple-touch-icon.png',
+  /** Opaque 1200×630 — only image used for Open Graph / Twitter cards. */
   openGraph: '/brand/og-1200x630.png',
   openGraphSquare: '/brand/og.png',
 } as const
@@ -39,7 +40,6 @@ export const defaultMetadata: Metadata = {
     icon: [
       { url: BRAND_ASSETS.icon, type: 'image/png', sizes: '512x512' },
       { url: '/brand/favicon-32.png', type: 'image/png', sizes: '32x32' },
-      { url: BRAND_ASSETS.logo, type: 'image/png', sizes: '2000x2000' },
     ],
     apple: [{ url: BRAND_ASSETS.appleTouchIcon, type: 'image/png', sizes: '180x180' }],
   },
@@ -55,12 +55,6 @@ export const defaultMetadata: Metadata = {
         width: 1200,
         height: 630,
         alt: SITE_NAME,
-      },
-      {
-        url: BRAND_ASSETS.logo,
-        width: 2000,
-        height: 2000,
-        alt: `${SITE_NAME} logo`,
       },
     ],
   },

@@ -14,14 +14,6 @@ export const homeMetadata: Metadata = {
     absolute: `${SITE_NAME} — Chords, Tabs & Songbook`,
   },
   description: SITE_DESCRIPTION,
-  icons: {
-    icon: [
-      { url: BRAND_ASSETS.icon, type: 'image/png', sizes: '512x512' },
-      { url: '/brand/favicon-32.png', type: 'image/png', sizes: '32x32' },
-      { url: BRAND_ASSETS.logo, type: 'image/png', sizes: '2000x2000' },
-    ],
-    apple: [{ url: BRAND_ASSETS.appleTouchIcon, type: 'image/png', sizes: '180x180' }],
-  },
   openGraph: {
     title: `${SITE_NAME} — Chords, Tabs & Songbook`,
     description: SITE_DESCRIPTION,
@@ -33,19 +25,13 @@ export const homeMetadata: Metadata = {
         height: 630,
         alt: SITE_NAME,
       },
-      {
-        url: BRAND_ASSETS.logo,
-        width: 2000,
-        height: 2000,
-        alt: `${SITE_NAME} logo`,
-      },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} — Chords, Tabs & Songbook`,
     description: SITE_DESCRIPTION,
-    images: [BRAND_ASSETS.openGraph, BRAND_ASSETS.logo],
+    images: [BRAND_ASSETS.openGraph],
   },
   robots: { index: true, follow: true },
 }

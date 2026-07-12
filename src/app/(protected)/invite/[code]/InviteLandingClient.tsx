@@ -38,7 +38,7 @@ export default function InviteLandingClient({ code, preview }: InviteLandingClie
   return (
     <div className="flex min-h-[calc(100vh-2.75rem)] flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-3xl border border-black/[0.06] bg-card p-6 text-center shadow-sm dark:border-white/[0.08] sm:p-8">
-        <AppLogo variant="text" className="mx-auto mb-6 h-8 w-auto" />
+        <AppLogo variant="portrait" className="mx-auto mb-6 h-12 w-12" />
 
         {preview?.inviterAvatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
