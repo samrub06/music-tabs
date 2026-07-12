@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
+// import Link from 'next/link'
 import { useEffect, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowUpRightIcon, CheckIcon } from '@heroicons/react/24/outline'
@@ -24,7 +24,8 @@ type SpotifyStatus =
 
 export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: SpotifyComingSoonSectionProps) {
   const { t } = useLanguage()
-  const { user, profile, signInWithGoogle, refetchProfile } = useAuthContext()
+  // const { user, profile, signInWithGoogle, refetchProfile } = useAuthContext()
+  const { profile, refetchProfile } = useAuthContext()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -51,17 +52,22 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
 
   const isConnected = !!(spotifyIdProp ?? profile?.spotify_id)
 
-  const handleSpotifyConnect = () => {
-    if (!user) {
-      void signInWithGoogle('/api/spotify/auth')
-      return
-    }
-    window.location.assign('/api/spotify/auth')
-  }
+  // Temporarily disabled — re-enable with the Connect / Import CTAs below
+  // const handleSpotifyConnect = () => {
+  //   if (!user) {
+  //     void signInWithGoogle('/api/spotify/auth')
+  //     return
+  //   }
+  //   window.location.assign('/api/spotify/auth')
+  // }
 
   return (
     <section className="mb-6">
       <div className="relative min-h-[8.5rem] w-full overflow-hidden rounded-xl bg-[#011E0B] sm:min-h-[9.5rem]">
+        <span className="absolute end-2.5 top-2.5 z-20 rounded-full border border-white/20 bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/95 backdrop-blur-sm sm:end-3 sm:top-3 sm:px-2.5 sm:text-[11px]">
+          {t('library.spotifySoon')}
+        </span>
+
         <div className="pointer-events-none absolute -bottom-14 -right-8 sm:-bottom-20 sm:-right-6" aria-hidden>
           <Image
             src="/spotify_logo_V2.png"
@@ -88,20 +94,36 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
 
           <div className="mt-3 shrink-0 sm:mt-4">
             {isConnected ? (
-              <Link
-                href="/spotify"
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/15 sm:gap-2 sm:px-4 sm:py-2"
-              >
+              // Temporarily disabled — Spotify import not ready yet
+              // <Link
+              //   href="/spotify"
+              //   className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm transition-colors hover:bg-white/15 sm:gap-2 sm:px-4 sm:py-2"
+              // >
+              //   <CheckIcon className="h-3.5 w-3.5 shrink-0 text-white/90 sm:h-4 sm:w-4" aria-hidden />
+              //   <span className="text-[10px] font-bold uppercase tracking-wide text-white/90 sm:text-xs">
+              //     {t('library.spotifyImportPlaylists')}
+              //   </span>
+              // </Link>
+              <span className="inline-flex cursor-default items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm sm:gap-2 sm:px-4 sm:py-2">
                 <CheckIcon className="h-3.5 w-3.5 shrink-0 text-white/90 sm:h-4 sm:w-4" aria-hidden />
                 <span className="text-[10px] font-bold uppercase tracking-wide text-white/90 sm:text-xs">
                   {t('library.spotifyImportPlaylists')}
                 </span>
-              </Link>
+              </span>
             ) : (
+              // Temporarily disabled — Spotify connect not ready yet
+              // <button
+              //   type="button"
+              //   onClick={handleSpotifyConnect}
+              //   className="inline-flex items-center gap-1.5 rounded-full bg-[#1DB954] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-black transition-colors hover:bg-[#1ed760] sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
+              // >
+              //   <ArrowUpRightIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+              //   <span>{t('library.spotifyImport')}</span>
+              // </button>
               <button
                 type="button"
-                onClick={handleSpotifyConnect}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#1DB954] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-black transition-colors hover:bg-[#1ed760] sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
+                disabled
+                className="inline-flex cursor-default items-center gap-1.5 rounded-full bg-[#1DB954] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-black opacity-90 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
               >
                 <ArrowUpRightIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
                 <span>{t('library.spotifyImport')}</span>

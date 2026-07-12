@@ -55,7 +55,7 @@ export default function HeaderLevelProgress({ className }: HeaderLevelProgressPr
         type="button"
         onClick={() => setSheetOpen(true)}
         className={cn(
-          'flex shrink-0 items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2 py-1 transition-colors hover:bg-muted/70 sm:gap-2 sm:px-2.5',
+          'flex shrink-0 items-center gap-1 rounded-full border border-border/70 bg-muted/40 px-1.5 py-1 transition-colors hover:bg-muted/70 sm:gap-2 sm:px-2.5',
           className
         )}
         aria-label={levelLabel}
@@ -68,7 +68,7 @@ export default function HeaderLevelProgress({ className }: HeaderLevelProgressPr
           {stats ? stats.currentLevel : '—'}
         </span>
         <div
-          className="h-2 w-10 min-w-10 flex-1 overflow-hidden rounded-full bg-muted-foreground/20 sm:w-12 sm:min-w-12"
+          className="h-1.5 w-8 min-w-8 flex-1 overflow-hidden rounded-full bg-muted-foreground/20 sm:h-2 sm:w-12 sm:min-w-12"
           aria-hidden
         >
           <div

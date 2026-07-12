@@ -167,14 +167,14 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 bg-background px-3',
+        'sticky top-0 z-20 flex h-11 shrink-0 items-center gap-0.5 overflow-visible bg-background px-2 sm:gap-2 sm:px-3',
         hideHeaderOnScroll && 'max-lg:transition-[transform,margin,height] max-lg:duration-300 max-lg:ease-out',
         hideHeaderOnScroll &&
           headerHidden &&
           'max-lg:-translate-y-full max-lg:-mb-11 max-lg:h-0 max-lg:min-h-0 max-lg:overflow-hidden max-lg:pointer-events-none'
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
         {showMenuButton && user && (
           onMenuClick ? (
             <Button
@@ -235,7 +235,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
       <Link
         href="/"
         className={cn(
-          'absolute left-1/2 -translate-x-1/2 px-2 sm:px-3',
+          'absolute left-1/2 z-10 -translate-x-1/2 overflow-visible px-1 sm:px-3',
           usesAppSidebar && 'lg:hidden',
           showBackWithTitle && 'hidden'
         )}
@@ -244,11 +244,11 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
         <AppLogo
           variant="portrait"
           priority={isLandingPage}
-          className="h-8 w-8 sm:h-9 sm:w-9"
+          className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9"
         />
       </Link>
 
-      <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
+      <div className="flex flex-1 items-center justify-end gap-0 sm:gap-2">
         {user && <HeaderLevelProgress />}
 
         {user && <NotificationBell />}
@@ -260,7 +260,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="rounded-full p-0.5 sm:p-1 h-auto w-auto"
+                  className="h-auto w-auto shrink-0 rounded-full p-0 sm:p-1"
                   aria-label={t('navigation.profile')}
                 >
                   <UserAvatar

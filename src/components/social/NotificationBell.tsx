@@ -97,7 +97,7 @@ export default function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative min-w-9"
+          className="relative h-9 w-9 shrink-0 sm:min-w-9"
           aria-label={t('notifications.title')}
         >
           <Bell className="h-5 w-5" />
