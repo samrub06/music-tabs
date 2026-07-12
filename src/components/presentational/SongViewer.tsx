@@ -319,7 +319,6 @@ export default function SongViewer({
         selectedInstrument={selectedInstrument}
         isOpen={youtubeTutorialOpen}
         videoMode={youtubeVideoMode}
-        onVideoModeChange={setYoutubeVideoMode}
         onClose={() => setYoutubeTutorialOpen(false)}
       />
     </div>

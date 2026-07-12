@@ -52,7 +52,7 @@ export default function SongHeader({
 
   return (
     <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
-      {/* Single row: back, cover, auto-scroll, tools, prev/next, saved or add */}
+      {/* Single row: back, capo, auto-scroll + speed, tools, next */}
       <div
         className="flex items-center justify-between gap-2 p-2 w-full min-w-0"
         dir={isRtl ? 'rtl' : 'ltr'}
@@ -74,13 +74,13 @@ export default function SongHeader({
           </span>
         )}
 
-        {/* Auto-scroll + song tools — grouped, minimal gap */}
+        {/* Auto-scroll + speed + song tools — grouped, minimal gap */}
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
           <div
             className="flex min-w-0 flex-1 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30"
             dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <div className="flex min-w-0 flex-1 items-center gap-0.5 px-1.5 py-0.5">
+            <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 px-1.5 py-0.5">
               <Button
                 variant={autoScroll.isActive ? 'default' : 'ghost'}
                 size="icon"
@@ -98,32 +98,28 @@ export default function SongHeader({
                   <PlayIcon className={cn('h-4 w-4', isRtl && '-scale-x-100')} />
                 )}
               </Button>
-              <span className="order-1 hidden min-w-0 truncate whitespace-nowrap px-0.5 text-xs text-muted-foreground">
+              <span className="order-1 hidden min-w-0 truncate whitespace-nowrap px-0.5 text-xs text-muted-foreground md:inline">
                 {t('songHeader.AUTO_SCROLL_LABEL')}
               </span>
               <span className="order-3 min-w-[2.25rem] shrink-0 text-center text-xs font-semibold tabular-nums">
                 {autoScroll.speed.toFixed(1)}x
               </span>
-              {autoScroll.isActive && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="order-4 h-8 w-8 shrink-0"
-                    onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
-                  >
-                    <MinusIcon className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="order-5 h-8 w-8 shrink-0"
-                    onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
-                  >
-                    <PlusIcon className="h-3.5 w-3.5" />
-                  </Button>
-                </>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="order-4 h-8 w-8 shrink-0"
+                onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+              >
+                <MinusIcon className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="order-5 h-8 w-8 shrink-0"
+                onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+              </Button>
             </div>
 
             {onToggleToolsBar && (
@@ -144,11 +140,21 @@ export default function SongHeader({
           </div>
         </div>
 
-        {onPrevSong && onNextSong && (
+        {onNextSong && (
           <div className="flex items-center gap-1 flex-shrink-0">
-            <Button variant="ghost" size="icon" onClick={onPrevSong} disabled={!canPrevSong} className="h-10 w-10" aria-label={t('common.back')}>
-              <BackArrowIcon className="h-5 w-5" />
-            </Button>
+            {/* Previous song: desktop only — freed on mobile for speed controls */}
+            {onPrevSong && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onPrevSong}
+                disabled={!canPrevSong}
+                className="hidden sm:inline-flex h-10 w-10"
+                aria-label={t('common.previous')}
+              >
+                <BackArrowIcon className="h-5 w-5" />
+              </Button>
+            )}
             <Button
               variant="default"
               onClick={onNextSong}

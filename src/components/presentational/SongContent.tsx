@@ -267,14 +267,14 @@ export default function SongContent({
   const coverUrl = useSongCover(transposedSong);
 
   const songTitleBlock = (
-    <div className="min-w-0 text-start" dir={isRtl ? 'rtl' : 'ltr'}>
-      <h2 className="truncate text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base">
+    <div className="min-w-0 w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
+      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base break-words">
         {transposedSong?.title || ''}
       </h2>
       {transposedSong?.author && (
         <Link
           href={`/songs?searchQuery=${encodeURIComponent(transposedSong.author)}&page=1`}
-          className="mt-0.5 block max-w-full truncate text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs"
+          className="mt-0.5 block w-full text-start text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline sm:text-xs break-words"
         >
           {transposedSong.author}
         </Link>
@@ -282,13 +282,12 @@ export default function SongContent({
     </div>
   );
 
-  const titleRowHeight = 'h-14 min-h-14 sm:h-16 sm:min-h-16';
+  const actionTileHeight = 'h-14 min-h-14 sm:h-16 sm:min-h-16';
 
   const songCoverVignette = (
     <div
       className={cn(
-        'relative w-14 shrink-0 overflow-hidden rounded-xl bg-muted sm:w-16',
-        titleRowHeight
+        'relative h-14 w-14 shrink-0 self-start overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16',
       )}
     >
       {coverUrl ? (
@@ -333,7 +332,7 @@ export default function SongContent({
       </div>
     ) : null;
 
-  const titleRowStatHeight = titleRowHeight;
+  const titleRowStatHeight = actionTileHeight;
 
   const ratingDisplay =
     transposedSong?.rating != null ? (
@@ -419,7 +418,7 @@ export default function SongContent({
       disabled={isTogglingFavorite || !onToggleFavorite}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70',
-        titleRowHeight,
+        actionTileHeight,
         'w-14 sm:w-16'
       )}
       aria-label={
@@ -445,7 +444,7 @@ export default function SongContent({
         onClick={onToggleEdit}
         className={cn(
           'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
-          titleRowHeight
+          actionTileHeight
         )}
         aria-label={t('songHeader.edit')}
       >
@@ -458,7 +457,7 @@ export default function SongContent({
         variant="outline"
         className={cn(
           'shrink-0 gap-1 rounded-lg px-2.5 text-xs font-medium sm:px-3',
-          titleRowHeight
+          actionTileHeight
         )}
       >
         <Link href={`/song/${librarySongId}`} aria-label={t('library.editYourCopy')}>
@@ -480,7 +479,7 @@ export default function SongContent({
         disabled={isAddingToLibrary}
         className={cn(
           'shrink-0 rounded-lg px-2.5 sm:px-3',
-          titleRowHeight,
+          actionTileHeight,
           'w-11 sm:w-12'
         )}
         aria-label={t('library.addToLibrary')}
@@ -496,7 +495,7 @@ export default function SongContent({
 
   const titleRowTrailingActions =
     ratingDisplay || viewsDisplay || favoriteButton || editButton || addToLibraryTitleButton ? (
-      <div className="flex shrink-0 items-stretch gap-1.5 self-stretch sm:gap-2">
+      <div className="flex w-full flex-wrap items-stretch gap-1.5 sm:gap-2">
         {ratingDisplay}
         {viewsDisplay}
         {favoriteButton}
@@ -564,15 +563,13 @@ export default function SongContent({
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
             <div className="flex flex-col gap-3">
-              <div className={cn('flex items-center gap-2', titleRowHeight)}>
+              <div className={cn('flex w-full items-start gap-2')}>
                 {songCoverVignette}
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-                    {songTitleBlock}
-                  </div>
-                  {titleRowTrailingActions}
+                <div className="min-w-0 flex-1 self-center">
+                  {songTitleBlock}
                 </div>
               </div>
+              {titleRowTrailingActions}
               {songMetaRow}
               {(onSelectYoutubeMode || user) && (
                 <div className="flex items-center gap-2">

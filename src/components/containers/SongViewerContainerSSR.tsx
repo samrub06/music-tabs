@@ -13,7 +13,7 @@ import { useFontSize } from '@/lib/hooks/useFontSize';
 import { useMetronome } from '@/lib/hooks/useMetronome';
 import { songRepo } from '@/lib/services/songRepo';
 import { supabase } from '@/lib/supabase';
-import { calculateSpeedFromBPM } from '@/utils/autoScrollSpeed';
+import { DEFAULT_AUTO_SCROLL_SPEED } from '@/utils/autoScrollSpeed';
 import { findBestEasyChordTransposition } from '@/utils/chordDifficulty';
 import { knownChordService } from '@/lib/services/knownChordService';
 import { chordService } from '@/lib/services/chordService';
@@ -66,9 +66,9 @@ export default function SongViewerContainerSSR({
   const [transposeValue, setTransposeValue] = useState(0);
   const [easyChordMode, setEasyChordMode] = useState(false);
   const [savedTransposeValue, setSavedTransposeValue] = useState(0);
-  const [autoScroll, setAutoScroll] = useState({ 
-    isActive: false, 
-    speed: calculateSpeedFromBPM(song.bpm) 
+  const [autoScroll, setAutoScroll] = useState({
+    isActive: false,
+    speed: DEFAULT_AUTO_SCROLL_SPEED,
   });
   const [useCapo, setUseCapo] = useState<boolean>(song.capo !== undefined && song.capo !== null);
   const [metronomeActive, setMetronomeActive] = useState(false);
@@ -323,15 +323,6 @@ export default function SongViewerContainerSSR({
   useEffect(() => {
     setSavedTransposeValue(0);
   }, [song.id]);
-
-  // Update auto-scroll speed when song BPM changes
-  useEffect(() => {
-    const newSpeed = calculateSpeedFromBPM(song.bpm);
-    setAutoScroll(prev => ({ 
-      ...prev, 
-      speed: newSpeed 
-    }));
-  }, [song.bpm]);
 
   // Record view once per song (guards React Strict Mode double-mount in dev)
   useEffect(() => {

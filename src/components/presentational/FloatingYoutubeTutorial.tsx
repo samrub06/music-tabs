@@ -15,7 +15,6 @@ import {
   buildYoutubeSearchPageUrl,
   buildYoutubeSearchQuery,
   buildYoutubeVideoEmbedUrl,
-  buildYoutubeWatchUrl,
   type YoutubeVideoMode,
 } from '@/utils/youtubeTutorial'
 
@@ -25,7 +24,6 @@ interface FloatingYoutubeTutorialProps {
   selectedInstrument: 'piano' | 'guitar'
   isOpen: boolean
   videoMode: YoutubeVideoMode
-  onVideoModeChange: (mode: YoutubeVideoMode) => void
   onClose: () => void
 }
 
@@ -57,7 +55,6 @@ export default function FloatingYoutubeTutorial({
   selectedInstrument,
   isOpen,
   videoMode,
-  onVideoModeChange,
   onClose,
 }: FloatingYoutubeTutorialProps) {
   const { t, language } = useLanguage()
@@ -279,15 +276,7 @@ export default function FloatingYoutubeTutorial({
   const panelHeight = isMinimized ? 44 : isLarge ? LARGE_HEIGHT : size.height
   const video = fetchState.status === 'success' ? fetchState.video : null
   const embedSrc = activeEmbedSrc
-  const watchUrl = video ? buildYoutubeWatchUrl(video.videoId) : youtubePageUrl
-  const panelTitle =
-    videoMode === 'original' ? t('youtubeTutorial.originalTitle') : t('youtubeTutorial.title')
-  const modeHint =
-    videoMode === 'original'
-      ? t('youtubeTutorial.originalMode')
-      : selectedInstrument === 'piano'
-        ? t('youtubeTutorial.pianoMode')
-        : t('youtubeTutorial.guitarMode')
+  const panelTitle = video?.title ?? searchQuery
 
   const panel = (
     <div
@@ -323,11 +312,6 @@ export default function FloatingYoutubeTutorial({
           <Youtube className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold text-foreground">{panelTitle}</p>
-            {!isMinimized && (
-              <p className="truncate text-[10px] text-muted-foreground">
-                {video?.title ?? searchQuery}
-              </p>
-            )}
           </div>
         </div>
         <div
@@ -369,40 +353,6 @@ export default function FloatingYoutubeTutorial({
 
       {!isMinimized && (
         <>
-          <div
-            className="flex shrink-0 gap-0.5 border-b border-border/70 bg-muted/20 p-1.5"
-            onPointerDown={stopControlPointer}
-          >
-            <button
-              type="button"
-              onClick={() => onVideoModeChange('tutorial')}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
-                videoMode === 'tutorial'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              aria-pressed={videoMode === 'tutorial'}
-            >
-              <Youtube className="h-3.5 w-3.5 shrink-0" />
-              {t('youtubeTutorial.modeTutorial')}
-            </button>
-            <button
-              type="button"
-              onClick={() => onVideoModeChange('original')}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors',
-                videoMode === 'original'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              aria-pressed={videoMode === 'original'}
-            >
-              <Youtube className="h-3.5 w-3.5 shrink-0" />
-              {t('youtubeTutorial.modeOriginal')}
-            </button>
-          </div>
-
           <div className="relative min-h-0 flex-1 bg-black touch-manipulation">
             {fetchState.status === 'loading' && !embedSrc && (
               <div className="flex h-full items-center justify-center px-4 text-center">
@@ -434,7 +384,7 @@ export default function FloatingYoutubeTutorial({
               <iframe
                 ref={iframeRef}
                 key={embedSrc}
-                title={video?.title ?? panelTitle}
+                title={panelTitle}
                 src={embedSrc}
                 className="h-full w-full border-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -443,17 +393,6 @@ export default function FloatingYoutubeTutorial({
                 referrerPolicy="strict-origin-when-cross-origin"
               />
             )}
-          </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border/70 px-2.5 py-1.5">
-            <span className="truncate text-[10px] text-muted-foreground">{modeHint}</span>
-            <a
-              href={watchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-[10px] font-medium text-primary hover:underline"
-            >
-              {t('youtubeTutorial.openYoutube')}
-            </a>
           </div>
           {!isLarge && (
             <div
