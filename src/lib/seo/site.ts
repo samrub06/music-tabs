@@ -23,9 +23,12 @@ export const BRAND_ASSETS = {
   logoSvg: '/logo_tabasco.svg',
   icon: '/brand/icon.png',
   appleTouchIcon: '/brand/apple-touch-icon.png',
-  /** Opaque 1200×630 — only image used for Open Graph / Twitter cards. */
-  openGraph: '/brand/og-1200x630.png',
-  openGraphSquare: '/brand/og.png',
+  /**
+   * Opaque full-bleed OG (no transparency). Cache-bust query so messengers
+   * that cached the old bordered preview pick up the new file.
+   */
+  openGraph: '/brand/og-1200x630.png?v=3',
+  openGraphSquare: '/brand/og.png?v=3',
 } as const
 
 export const defaultMetadata: Metadata = {
@@ -38,10 +41,10 @@ export const defaultMetadata: Metadata = {
   applicationName: SITE_NAME,
   icons: {
     icon: [
-      { url: BRAND_ASSETS.icon, type: 'image/png', sizes: '512x512' },
-      { url: '/brand/favicon-32.png', type: 'image/png', sizes: '32x32' },
+      { url: `${BRAND_ASSETS.icon}?v=3`, type: 'image/png', sizes: '512x512' },
+      { url: '/brand/favicon-32.png?v=3', type: 'image/png', sizes: '32x32' },
     ],
-    apple: [{ url: BRAND_ASSETS.appleTouchIcon, type: 'image/png', sizes: '180x180' }],
+    apple: [{ url: `${BRAND_ASSETS.appleTouchIcon}?v=3`, type: 'image/png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',

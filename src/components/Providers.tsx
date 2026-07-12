@@ -5,7 +5,6 @@ import { LanguageProvider } from '@/context/LanguageContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { FoldersProvider } from '@/context/FoldersContext'
 import { AddSongModalProvider } from '@/context/AddSongModalContext'
-import { PostSignInWelcomeAnimation } from '@/components/PostSignInWelcomeAnimation'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -13,14 +12,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <LanguageProvider>
         <AuthProvider>
           <FoldersProvider>
-            <AddSongModalProvider>
-              {children}
-              <PostSignInWelcomeAnimation />
-            </AddSongModalProvider>
+            <AddSongModalProvider>{children}</AddSongModalProvider>
           </FoldersProvider>
         </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   )
 }
-
