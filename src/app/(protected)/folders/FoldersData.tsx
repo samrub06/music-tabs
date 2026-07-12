@@ -20,6 +20,7 @@ export default async function FoldersData({ userId }: FoldersDataProps) {
     id: f.id,
     name: f.name,
     displayOrder: f.displayOrder,
+    imageUrl: f.imageUrl,
     parentId: undefined,
     createdAt: f.createdAt,
     updatedAt: f.createdAt,

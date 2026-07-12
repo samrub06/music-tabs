@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
 import { FolderIcon, PlusIcon, Squares2X2Icon, TableCellsIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
-import { FolderShape } from '@/components/presentational/FolderShape'
+import { FolderCover } from '@/components/presentational/FolderCover'
 import { Folder } from '@/types'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -14,9 +14,9 @@ import { CSS } from '@dnd-kit/utilities'
 import { updateFolderOrderAction } from './actions'
 import { addFolderAction } from '@/app/(protected)/dashboard/actions'
 import Snackbar from '@/components/Snackbar'
+import { CreateFolderSheet } from '@/components/CreateFolderSheet'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -81,7 +81,7 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
           </div>
         )}
         <div className="w-12 shrink-0 sm:w-10">
-          <FolderShape count={songCount} />
+          <FolderCover imageUrl={folder.imageUrl} songCount={songCount} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-base font-semibold text-foreground sm:text-sm sm:font-medium">
@@ -124,8 +124,10 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
       onClick={() => onFolderClick(folder.id)}
     >
       <div className="relative mx-auto w-[72%] max-w-[7.5rem] sm:mx-0 sm:w-full sm:max-w-none">
-        <FolderShape
-          count={songCount}
+        <FolderCover
+          imageUrl={folder.imageUrl}
+          songCount={songCount}
+          shapeClassName="transition-transform duration-200 group-hover:scale-[1.03]"
           className="transition-transform duration-200 group-hover:scale-[1.03]"
         />
         {isDragMode && (
@@ -165,7 +167,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
-  const [newFolderName, setNewFolderName] = useState('')
   const [view, setView] = useState<'grid' | 'table'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [localSearchValue, setLocalSearchValue] = useState('')
@@ -176,6 +177,10 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [draftSortBy, setDraftSortBy] = useState<'name' | 'createdAt' | 'songCount'>('songCount')
   const [draftSortDirection, setDraftSortDirection] = useState<'asc' | 'desc'>('desc')
+
+  useEffect(() => {
+    setFolders(initialFolders)
+  }, [initialFolders])
 
   const hasActiveFilters = sortBy !== 'songCount' || sortDirection !== 'desc'
 
@@ -267,23 +272,15 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
     router.push(`/songs?folder=${folderId}`)
   }
 
-  const handleAddFolder = async () => {
-    if (newFolderName.trim()) {
-      try {
-        await addFolderAction(newFolderName.trim())
-        setNewFolderName('')
-        setIsAddSheetOpen(false)
-        router.refresh()
-      } catch (error) {
-        console.error('Error adding folder:', error)
-        setError(t('folders.createError'))
-      }
+  const handleAddFolder = async (name: string, coverSlug?: string) => {
+    try {
+      await addFolderAction(name, coverSlug)
+      router.refresh()
+    } catch (error) {
+      console.error('Error adding folder:', error)
+      setError(t('folders.createError'))
+      throw error
     }
-  }
-
-  const handleCloseAddSheet = () => {
-    setIsAddSheetOpen(false)
-    setNewFolderName('')
   }
 
   const getSongCount = useCallback((folderId: string) => {
@@ -584,7 +581,10 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
           <div className="bg-background/95 rounded-lg p-3 shadow-lg backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <div className="w-12 shrink-0">
-                <FolderShape count={getSongCount(draggedFolder.id)} />
+                <FolderCover
+                  imageUrl={draggedFolder.imageUrl}
+                  songCount={getSongCount(draggedFolder.id)}
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-medium text-foreground">{draggedFolder.name}</div>
@@ -691,67 +691,12 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         </SheetContent>
       </Sheet>
 
-      {/* New folder bottom sheet */}
-      <Sheet open={isAddSheetOpen} onOpenChange={(open) => !open && handleCloseAddSheet()}>
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          className="flex h-auto max-h-[50vh] flex-col rounded-t-[1.75rem] border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
-        >
-          <div className="shrink-0 flex items-center py-1.5 -mt-1">
-            <div className="flex-1" aria-hidden />
-            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
-            <div className="flex flex-1 justify-end">
-              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-                <XMarkIcon className="h-5 w-5" />
-                <span className="sr-only">{t('common.close')}</span>
-              </SheetClose>
-            </div>
-          </div>
-
-          <SheetHeader className="shrink-0 px-1 pb-2">
-            <SheetTitle className="text-xl font-semibold">{t('folders.newFolder')}</SheetTitle>
-          </SheetHeader>
-
-          <div className="flex-1 min-h-0 overflow-y-auto px-1 pb-4">
-            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
-              <Label htmlFor="new-folder-name" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
-                {t('sidebar.folderName')}
-              </Label>
-              <Input
-                id="new-folder-name"
-                type="text"
-                placeholder={t('folders.folderNamePlaceholder')}
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddFolder()
-                  if (e.key === 'Escape') handleCloseAddSheet()
-                }}
-                className="h-10 rounded-xl"
-                autoFocus
-              />
-            </div>
-          </div>
-
-          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
-            <Button
-              variant="outline"
-              onClick={handleCloseAddSheet}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={handleAddFolder}
-              disabled={!newFolderName.trim()}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
-            >
-              {t('common.create')}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      {/* New playlist (folder) bottom sheet */}
+      <CreateFolderSheet
+        open={isAddSheetOpen}
+        onOpenChange={setIsAddSheetOpen}
+        onCreate={handleAddFolder}
+      />
     </DndContext>
   )
 }

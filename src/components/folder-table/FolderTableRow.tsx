@@ -1,10 +1,11 @@
 'use client'
 
 import { Folder } from '@/types'
-import { FolderIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { useLanguage } from '@/context/LanguageContext'
+import { FolderCover } from '@/components/presentational/FolderCover'
 
 interface FolderTableRowProps {
   folder: Folder
@@ -106,7 +107,9 @@ export default function FolderTableRow({
       {/* Name column */}
       <td className="px-2 sm:px-4 py-2">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <FolderIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <div className="h-8 w-8 shrink-0">
+            <FolderCover imageUrl={folder.imageUrl} songCount={songCount} />
+          </div>
           {isEditing ? (
             <input
               ref={inputRef}

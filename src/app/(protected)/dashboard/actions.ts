@@ -167,11 +167,17 @@ export async function deleteSongAction(id: string) {
   revalidatePath('/')
 }
 
-export async function addFolderAction(name: string) {
-  const { name: validatedName } = createFolderSchema.parse({ name })
+export async function addFolderAction(name: string, coverSlug?: string) {
+  const { name: validatedName, coverSlug: validatedCoverSlug } = createFolderSchema.parse({
+    name,
+    coverSlug,
+  })
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
-  const created = await repo.createFolder({ name: validatedName })
+  const created = await repo.createFolder({
+    name: validatedName,
+    coverSlug: validatedCoverSlug,
+  })
   
   // Award XP for creating folder
   const { data: { user } } = await supabase.auth.getUser()
@@ -188,6 +194,7 @@ export async function addFolderAction(name: string) {
   
   revalidatePath('/folders')
   revalidatePath('/songs')
+  revalidatePath('/')
   return created
 }
 

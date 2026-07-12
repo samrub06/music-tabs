@@ -16,10 +16,13 @@ import {
   ChevronRightIcon,
   PencilSquareIcon,
   UserGroupIcon,
+  FolderPlusIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import ManualEntryForm from './ManualEntryForm'
 import PlaylistImporter from './PlaylistImporter'
+import { CreateFolderSheet } from './CreateFolderSheet'
+import { addFolderAction } from '@/app/(protected)/dashboard/actions'
 import { Folder } from '@/types'
 
 interface MoreMenuProps {
@@ -66,6 +69,7 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
   const { t } = useLanguage()
   const router = useRouter()
   const [currentView, setCurrentView] = useState<MoreView>('menu')
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false)
 
   const handleClose = () => {
     setCurrentView('menu')
@@ -87,7 +91,15 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
     router.refresh()
   }
 
+  const handleCreateFolder = async (name: string, coverSlug?: string) => {
+    await addFolderAction(name, coverSlug)
+    handleClose()
+    router.push('/folders')
+    router.refresh()
+  }
+
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <SheetContent
         side="bottom"
@@ -127,6 +139,16 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
                 </p>
               </div>
 
+              <MenuNavItem
+                icon={<FolderPlusIcon className="h-5 w-5 text-violet-600 dark:text-violet-400" />}
+                iconBg="bg-violet-100 dark:bg-violet-900/40"
+                title={t('createMenu.createFolder')}
+                description={t('createMenu.createFolderDescription')}
+                onClick={() => {
+                  onClose()
+                  setIsCreateFolderOpen(true)
+                }}
+              />
               <MenuNavItem
                 icon={<PencilSquareIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />}
                 iconBg="bg-indigo-100 dark:bg-indigo-900/40"
@@ -185,5 +207,12 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
         </div>
       </SheetContent>
     </Sheet>
+
+    <CreateFolderSheet
+      open={isCreateFolderOpen}
+      onOpenChange={setIsCreateFolderOpen}
+      onCreate={handleCreateFolder}
+    />
+    </>
   )
 }

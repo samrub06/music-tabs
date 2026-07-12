@@ -6,6 +6,7 @@ export interface Folder {
   name: string;
   parentId?: string;
   displayOrder?: number;
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }

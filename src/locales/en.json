@@ -406,6 +406,7 @@
     "spotifyDescriptionShort": "Import your playlists",
     "spotifySignIn": "Sign in",
     "spotifyImport": "Let's import",
+    "spotifySoon": "Soon",
     "spotifyConnected": "Connected",
     "spotifyStatus": {
       "connected": "Spotify account linked successfully.",
