@@ -421,40 +421,23 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             >
               <PlusIcon className="h-5 w-5" />
             </button>
-            <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
-              <button
-                type="button"
-                onClick={() => setView('grid')}
-                className={cn(
-                  'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
-                  view === 'grid'
-                    ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                title={t('folders.gridView')}
-                aria-label={t('folders.gridView')}
-                aria-pressed={view === 'grid'}
-              >
-                <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">{t('folders.gridView')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setView('list')}
-                className={cn(
-                  'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
-                  view === 'list'
-                    ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                title={t('folders.listView')}
-                aria-label={t('folders.listView')}
-                aria-pressed={view === 'list'}
-              >
-                <ListBulletIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">{t('folders.listView')}</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setView((current) => (current === 'grid' ? 'list' : 'grid'))}
+              className={cn(
+                'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+              )}
+              title={view === 'grid' ? t('folders.listView') : t('folders.gridView')}
+              aria-label={view === 'grid' ? t('folders.listView') : t('folders.gridView')}
+              aria-pressed={view === 'list'}
+            >
+              {view === 'grid' ? (
+                <ListBulletIcon className="h-5 w-5" />
+              ) : (
+                <Squares2X2Icon className="h-5 w-5" />
+              )}
+            </button>
           </div>
         </div>
 

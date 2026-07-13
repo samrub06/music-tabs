@@ -1,15 +1,9 @@
 'use client'
 
 import { ClockIcon, HeartIcon, SparklesIcon } from '@heroicons/react/24/solid'
-import { PlusIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
-import { useAuthContext } from '@/context/AuthContext'
-import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/actions'
-import Snackbar from '@/components/Snackbar'
 import {
   CURATED_PLAYLISTS,
   curatedPlaylistSectionBySlug,
@@ -80,9 +74,6 @@ interface GridCardProps {
   layout?: 'scroll' | 'landscape' | 'grid'
   title: ReactNode
   children: ReactNode
-  onAddClick?: () => void
-  isAdding?: boolean
-  addLabel?: string
 }
 
 interface PlaylistCardData {
@@ -97,9 +88,6 @@ function GridCard({
   layout = 'scroll',
   title,
   children,
-  onAddClick,
-  isAdding,
-  addLabel,
 }: GridCardProps) {
   return (
     <div
@@ -119,26 +107,6 @@ function GridCard({
       >
         {children}
       </Link>
-      {onAddClick ? (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            onAddClick()
-          }}
-          disabled={isAdding}
-          className="absolute end-1.5 top-1.5 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background disabled:opacity-60"
-          aria-label={addLabel}
-          title={addLabel}
-        >
-          {isAdding ? (
-            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-          ) : (
-            <PlusIcon className="h-4 w-4" />
-          )}
-        </button>
-      ) : null}
       <Link
         href={href}
         className="min-w-0 truncate text-xs font-medium leading-tight text-foreground transition-colors group-hover:text-primary sm:text-sm"
@@ -230,42 +198,9 @@ export default function CuratedPlaylistRow({
   showSectionTitle = true,
 }: CuratedPlaylistRowProps) {
   const { t } = useLanguage()
-  const { user } = useAuthContext()
-  const router = useRouter()
-  const [addingId, setAddingId] = useState<string | null>(null)
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
-  const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success')
-  const [showSnackbar, setShowSnackbar] = useState(false)
 
   if (!section && !hubZone) {
     throw new Error('CuratedPlaylistRow requires section or hubZone')
-  }
-
-  const handleAddPlaylist = async (playlistId: string) => {
-    if (!user || addingId) return
-    setAddingId(playlistId)
-    try {
-      const result = await savePublicPlaylistAsFolderAction(playlistId)
-      setSnackbarType('success')
-      setSnackbarMessage(
-        t('library.addedPlaylistToFolders')
-          .replace('{name}', result.folderName)
-          .replace('{count}', String(result.songCount))
-      )
-      setShowSnackbar(true)
-      router.refresh()
-    } catch (error) {
-      console.error('Error adding curated playlist:', error)
-      setSnackbarType('error')
-      setSnackbarMessage(
-        error instanceof Error && error.message === 'AUTH_REQUIRED'
-          ? t('library.signInToAddPlaylist')
-          : t('library.addPlaylistError')
-      )
-      setShowSnackbar(true)
-    } finally {
-      setAddingId(null)
-    }
   }
 
   const userShortcutCards: ShortcutCardData[] = showUserShortcutCards
@@ -328,7 +263,6 @@ export default function CuratedPlaylistRow({
     layout: CardLayout,
     playlistCards: PlaylistCardData[] = layout === 'grid' ? mobileGridCards : cards
   ) => {
-
     return (
       <>
         {layout === 'scroll' &&
@@ -338,15 +272,7 @@ export default function CuratedPlaylistRow({
             </GridCard>
           ))}
         {playlistCards.map((item) => (
-          <GridCard
-            key={item.id}
-            href={item.href}
-            layout={layout}
-            title={item.title}
-            onAddClick={user ? () => void handleAddPlaylist(item.id) : undefined}
-            isAdding={addingId === item.id}
-            addLabel={t('library.addPlaylistToFolders')}
-          >
+          <GridCard key={item.id} href={item.href} layout={layout} title={item.title}>
             {item.content}
           </GridCard>
         ))}
@@ -387,12 +313,6 @@ export default function CuratedPlaylistRow({
       >
         {renderCards('landscape', cards)}
       </div>
-      <Snackbar
-        message={snackbarMessage || ''}
-        isOpen={showSnackbar}
-        onClose={() => setShowSnackbar(false)}
-        type={snackbarType}
-      />
     </section>
   )
 }

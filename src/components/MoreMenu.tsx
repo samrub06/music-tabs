@@ -10,14 +10,12 @@ import {
 } from '@/components/ui/sheet'
 import { BottomSheetDippedTop } from '@/components/ui/BottomSheetDippedTop'
 import {
-  SparklesIcon,
   CloudArrowDownIcon,
   TrophyIcon,
   ChevronRightIcon,
   PencilSquareIcon,
   UserGroupIcon,
   FolderPlusIcon,
-  QueueListIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { useFoldersContext } from '@/context/FoldersContext'
@@ -138,25 +136,11 @@ export default function MoreMenu({ isOpen, onClose }: MoreMenuProps) {
                 onClick={() => navigate('/folders/new')}
               />
               <MenuNavItem
-                icon={<QueueListIcon className="h-5 w-5 text-rose-600 dark:text-rose-400" />}
-                iconBg="bg-rose-100 dark:bg-rose-900/40"
-                title={t('createMenu.createPlaylist')}
-                description={t('createMenu.createPlaylistDescription')}
-                onClick={() => navigate('/playlist')}
-              />
-              <MenuNavItem
                 icon={<PencilSquareIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />}
                 iconBg="bg-indigo-100 dark:bg-indigo-900/40"
                 title={t('createMenu.manualEntry')}
                 description={t('createMenu.manualEntryDescription')}
                 onClick={() => setCurrentView('manual')}
-              />
-              <MenuNavItem
-                icon={<SparklesIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
-                iconBg="bg-emerald-100 dark:bg-emerald-900/40"
-                title={t('createMenu.generatePlaylistWithAI')}
-                description={t('createMenu.generatePlaylistWithAIDescription')}
-                onClick={() => navigate('/ai-playlist')}
               />
               <MenuNavItem
                 icon={<CloudArrowDownIcon className="h-5 w-5 text-orange-600 dark:text-orange-400" />}

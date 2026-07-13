@@ -293,11 +293,11 @@ function AddPlaylistCtaButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'h-14 w-full gap-2 rounded-2xl text-base font-semibold shadow-md',
+        'h-12 w-full gap-2 rounded-xl text-sm font-semibold shadow-sm sm:h-14 sm:rounded-2xl sm:text-base',
         className
       )}
     >
-      <FolderPlusIcon className="h-6 w-6 shrink-0" />
+      <FolderPlusIcon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
       <span>
         {isSaving ? t('library.addingPlaylist') : t('library.addPlaylistToFolders')}
       </span>
@@ -309,12 +309,15 @@ function PublicPlaylistHeader({
   playlist,
   songCount,
   canSaveToFolders,
+  coverUrl,
 }: {
   playlist: Playlist
   songCount: number
   canSaveToFolders: boolean
+  coverUrl: string | null
 }) {
   const { t } = useLanguage()
+  const router = useRouter()
   const { signInWithGoogle } = useAuthContext()
   const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
   const {
@@ -337,77 +340,74 @@ function PublicPlaylistHeader({
 
   return (
     <>
-      <div className="px-4 pt-4 sm:px-6">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <h1
-            className={cn(
-              'min-w-0 text-2xl font-bold tracking-tight text-foreground transition-all duration-200 sm:text-3xl',
-              isSearchOpen
-                ? 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
-                : 'flex-1 truncate'
-            )}
-          >
-            {playlist.name}
-          </h1>
+      <div className="px-3 pt-3 sm:px-4 md:px-6">
+        <div className="space-y-3 rounded-xl border border-black/[0.06] bg-card px-3 py-3 dark:border-white/[0.08] sm:px-4 sm:py-3.5">
+          <div className="flex w-full items-start gap-2.5 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={t('common.back')}
+            >
+              <BackArrowIcon className="h-5 w-5" />
+            </button>
 
-          <PublicPlaylistExpandableSearch />
+            <div className="relative h-14 w-14 shrink-0 self-start overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16">
+              {coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
+                  <MusicalNoteIcon className="h-7 w-7 text-primary-foreground/90" />
+                </div>
+              )}
+            </div>
 
-          <button
-            type="button"
-            onClick={handleStartPlaylist}
-            disabled={songs.length === 0}
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
-            aria-label={t('playlistView.startPlaylist')}
-          >
-            <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
-          </button>
-        </div>
+            <div
+              className={cn(
+                'min-w-0 flex-1 self-center transition-all duration-200',
+                isSearchOpen && 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
+              )}
+            >
+              <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-base">
+                {playlist.name}
+              </h1>
+              <p className="mt-0.5 text-sm text-muted-foreground sm:text-xs">{songCountLabel}</p>
+            </div>
 
-        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
+            <div className="flex shrink-0 items-center gap-1.5 self-center">
+              <PublicPlaylistExpandableSearch />
+              <button
+                type="button"
+                onClick={handleStartPlaylist}
+                disabled={songs.length === 0}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:w-12"
+                aria-label={t('playlistView.startPlaylist')}
+              >
+                <PlayIcon className="h-5 w-5 translate-x-0.5 sm:h-6 sm:w-6" />
+              </button>
+            </div>
+          </div>
 
-        {canSaveToFolders ? (
-          <div className="mt-4">
+          {canSaveToFolders ? (
             <AddPlaylistCtaButton
               onClick={() => void handleSaveToFolders()}
               disabled={isSaving || songCount === 0}
               isSaving={isSaving}
-              className="sm:max-w-md"
             />
-          </div>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSignInToSave}
-            className="mt-4 flex h-14 w-full gap-2 rounded-2xl text-base font-semibold sm:max-w-md"
-          >
-            <FolderPlusIcon className="h-6 w-6 shrink-0" />
-            {t('library.signInToAddPlaylist')}
-          </Button>
-        )}
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSignInToSave}
+              className="flex h-12 w-full gap-2 rounded-xl text-sm font-semibold sm:h-14 sm:text-base"
+            >
+              <FolderPlusIcon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
+              {t('library.signInToAddPlaylist')}
+            </Button>
+          )}
+        </div>
       </div>
-
-      {canSaveToFolders ? (
-        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 sm:hidden">
-          <AddPlaylistCtaButton
-            onClick={() => void handleSaveToFolders()}
-            disabled={isSaving || songCount === 0}
-            isSaving={isSaving}
-          />
-        </div>
-      ) : (
-        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 sm:hidden">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSignInToSave}
-            className="h-14 w-full gap-2 rounded-2xl text-base font-semibold"
-          >
-            <FolderPlusIcon className="h-6 w-6 shrink-0" />
-            {t('library.signInToAddPlaylist')}
-          </Button>
-        </div>
-      )}
 
       <Snackbar
         message={snackbarMessage || ''}
@@ -430,42 +430,15 @@ export function PublicPlaylistDetailShell({
   songCount,
   canSaveToFolders = false,
 }: PublicPlaylistDetailShellProps) {
-  const { t } = useLanguage()
-  const router = useRouter()
-
   const coverUrl = getPlaylistDisplayCoverUrl(playlist) ?? null
 
   return (
-    <>
-      <div className="relative h-72 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[28rem]">
-        {coverUrl ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverUrl} alt="" className="h-full w-full object-cover object-top" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/25 via-primary/10 to-muted">
-            <MusicalNoteIcon className="h-16 w-16 text-muted-foreground/40" />
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => router.push('/')}
-          className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
-          aria-label={t('common.back')}
-        >
-          <BackArrowIcon className="h-5 w-5" />
-        </button>
-      </div>
-
-      <PublicPlaylistHeader
-        playlist={playlist}
-        songCount={songCount}
-        canSaveToFolders={canSaveToFolders}
-      />
-    </>
+    <PublicPlaylistHeader
+      playlist={playlist}
+      songCount={songCount}
+      canSaveToFolders={canSaveToFolders}
+      coverUrl={coverUrl}
+    />
   )
 }
 
@@ -641,47 +614,14 @@ export default function PublicPlaylistDetailClient({
   songs,
   userId,
 }: PublicPlaylistDetailClientProps) {
-  const { t } = useLanguage()
-  const router = useRouter()
-
-  const coverUrl =
-    getPlaylistDisplayCoverUrl(playlist) ??
-    songs[0]?.songImageUrl ??
-    songs[0]?.artistImageUrl ??
-    null
-
   return (
     <PublicPlaylistSearchProvider playlist={playlist}>
-      <div className="flex-1 overflow-y-auto pb-36 lg:pb-6">
-        <div className="relative h-72 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[28rem]">
-          {coverUrl ? (
-            <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={coverUrl} alt="" className="h-full w-full object-cover object-top" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-            </>
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/25 via-primary/10 to-muted">
-              <MusicalNoteIcon className="h-16 w-16 text-muted-foreground/40" />
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => router.push('/')}
-            className="absolute start-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
-            aria-label={t('common.back')}
-          >
-            <BackArrowIcon className="h-5 w-5" />
-          </button>
-        </div>
-
-        <PublicPlaylistHeader
+      <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+        <PublicPlaylistDetailShell
           playlist={playlist}
           songCount={songs.length}
           canSaveToFolders={Boolean(userId)}
         />
-
         <PublicPlaylistSongList playlist={playlist} songs={songs} userId={userId} />
       </div>
     </PublicPlaylistSearchProvider>
