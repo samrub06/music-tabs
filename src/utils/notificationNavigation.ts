@@ -5,7 +5,7 @@ export function getNotificationHref(notification: UserNotification): string | nu
     return `/song/${notification.entityId}`
   }
   if (notification.type === 'playlist_shared' && notification.entityId) {
-    return `/playlist/${notification.entityId}`
+    return `/jams/${notification.entityId}`
   }
   if (
     notification.type === 'friend_request' ||

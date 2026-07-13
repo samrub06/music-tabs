@@ -823,17 +823,19 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
-            {/* Sort Field - card style */}
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.sortBy')}
               </Label>
               <Select
                 value={sortField}
                 onValueChange={(value) => setSortField(value as SortField)}
               >
-                <SelectTrigger id="sortField" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="sortField"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -846,16 +848,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               </Select>
             </div>
 
-            {/* Sort Direction - card style */}
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.sortOrder')}
               </Label>
               <Select
                 value={sortDirection}
                 onValueChange={(value) => setSortDirection(value as SortDirection)}
               >
-                <SelectTrigger id="sortDirection" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="sortDirection"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -865,19 +869,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               </Select>
             </div>
 
-            {/* Accord facile - toggle buttons */}
-            <div className="space-y-2.5 py-1">
-              <Label className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+            <div className="space-y-2 py-1">
+              <Label className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.easyChord')}
               </Label>
-              <div className="flex rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
+              <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setFilterEasyChord(false)}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-full min-h-[40px] transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
                     !filterEasyChord
-                      ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {t('songs.easyChordAll')}
@@ -885,10 +888,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 <button
                   type="button"
                   onClick={() => setFilterEasyChord(true)}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-full min-h-[40px] transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
                     filterEasyChord
-                      ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {t('songs.easyChordOnly')}
@@ -896,19 +899,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               </div>
             </div>
 
-            {/* Capo - toggle buttons */}
-            <div className="space-y-2.5 py-1">
-              <Label className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+            <div className="space-y-2 py-1">
+              <Label className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.capo')}
               </Label>
-              <div className="flex rounded-full bg-muted/80 dark:bg-gray-800 p-0.5 gap-0.5">
+              <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setFilterCapo('any')}
-                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium rounded-full min-h-[40px] transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
                     filterCapo === 'any'
-                      ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {t('songs.capoAny')}
@@ -916,10 +918,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 <button
                   type="button"
                   onClick={() => setFilterCapo('with')}
-                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium rounded-full min-h-[40px] transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
                     filterCapo === 'with'
-                      ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {t('songs.capoWith')}
@@ -927,10 +929,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 <button
                   type="button"
                   onClick={() => setFilterCapo('without')}
-                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium rounded-full min-h-[40px] transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
                     filterCapo === 'without'
-                      ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {t('songs.capoWithout')}

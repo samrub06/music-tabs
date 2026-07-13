@@ -33,9 +33,9 @@ import { getIsAdminAction } from '@/app/(protected)/admin/actions'
 const MAIN_NAV = [
   { href: '/', labelKey: 'navigation.home', icon: Home, match: (p: string) => p === '/' || p === '/search' || p.startsWith('/search/') },
   { href: '/songs', labelKey: 'navigation.songs', icon: Library, match: (p: string) => p === '/songs' || p.startsWith('/songs/') },
-  { href: '/folders', labelKey: 'navigation.folders', icon: FolderOpen, match: (p: string) => p === '/folders' || p.startsWith('/folders/') },
+  { href: '/playlists', labelKey: 'navigation.folders', icon: FolderOpen, match: (p: string) => p === '/playlists' || p.startsWith('/playlists/') },
   { href: '/chords', labelKey: 'navigation.chords', icon: Music, match: (p: string) => p === '/chords' || p.startsWith('/chords/') },
-  { href: '/playlists', labelKey: 'navigation.playlists', icon: ListMusic, match: (p: string) => p === '/playlists' || p.startsWith('/playlists/') || p.startsWith('/playlist/') },
+  { href: '/jams', labelKey: 'navigation.playlists', icon: ListMusic, match: (p: string) => p === '/jams' || p.startsWith('/jams/') },
 ] as const
 
 const SECONDARY_NAV = [

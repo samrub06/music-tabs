@@ -76,6 +76,40 @@ const nextConfig = {
       },
     ]
   },
+
+  // URL rename: folders → playlists, jam sessions → /jams
+  async redirects() {
+    return [
+      // Jam sessions (old /playlist(s) + AI) → /jams
+      // Note: old jam list was /playlists; that path is now user playlists — no redirect.
+      {
+        source: '/playlist',
+        destination: '/jams/new',
+        permanent: true,
+      },
+      {
+        source: '/playlist/:id',
+        destination: '/jams/:id',
+        permanent: true,
+      },
+      {
+        source: '/ai-playlist',
+        destination: '/jams/ai',
+        permanent: true,
+      },
+      // User playlists (old /folders)
+      {
+        source: '/folders',
+        destination: '/playlists',
+        permanent: true,
+      },
+      {
+        source: '/folders/:path*',
+        destination: '/playlists/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 module.exports = withSentryConfig(nextConfig, {

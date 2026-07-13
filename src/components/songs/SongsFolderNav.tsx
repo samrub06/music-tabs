@@ -239,7 +239,7 @@ export function SongsFolderSidebar({
 
       <div className="shrink-0 border-t border-border/80 px-3 py-3">
         <Link
-          href="/folders"
+          href="/playlists"
           className="block rounded-xl px-3 py-2 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
         >
           {t('songs.manageFolders')}

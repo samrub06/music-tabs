@@ -9,15 +9,15 @@ import { Suspense } from 'react'
 export default async function PlaylistDetailPage({
   params
 }: {
-  params: Promise<{ playlistId: string }>
+  params: Promise<{ id: string }>
 }) {
   noStore()
 
-  const { playlistId } = await params
+  const { id } = await params
   const supabase = await createSafeServerClient()
 
   try {
-    const playlist = await playlistRepo(supabase).getPlaylist(playlistId)
+    const playlist = await playlistRepo(supabase).getPlaylist(id)
 
     return (
       <Suspense fallback={<PlaylistSongsSkeleton />}>

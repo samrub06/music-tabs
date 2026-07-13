@@ -415,7 +415,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             </button>
             <button
               type="button"
-              onClick={() => router.push('/folders/new')}
+              onClick={() => router.push('/playlists/new')}
               className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90"
               aria-label={t('folders.newFolder')}
             >
@@ -587,16 +587,19 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="sort-by" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="sort-by" className="text-[11px] font-medium text-muted-foreground block">
                 {t('folders.sortBy')}
               </Label>
               <Select
                 value={draftSortBy}
                 onValueChange={(value: 'name' | 'createdAt' | 'songCount') => setDraftSortBy(value)}
               >
-                <SelectTrigger id="sort-by" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="sort-by"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue placeholder={t('folders.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -607,15 +610,18 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               </Select>
             </div>
 
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="sort-direction" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="sort-direction" className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.sortOrder')}
               </Label>
               <Select
                 value={draftSortDirection}
                 onValueChange={(value: 'asc' | 'desc') => setDraftSortDirection(value)}
               >
-                <SelectTrigger id="sort-direction" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="sort-direction"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue placeholder={t('songs.sortOrder')} />
                 </SelectTrigger>
                 <SelectContent>

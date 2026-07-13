@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+/** Max songs assignable when creating a playlist (folder) in one wizard flow. */
+export const MAX_FOLDER_SONGS_ON_CREATE = 500
+
+/** Chunk size for progressive assign UI + PostgREST-friendly bulk updates. */
+export const FOLDER_SONG_ASSIGN_CHUNK_SIZE = 50
+
 // Folder Schemas
 export const createFolderSchema = z.object({
   name: z
@@ -12,7 +18,19 @@ export const createFolderSchema = z.object({
 })
 
 export const createFolderWithSongsSchema = createFolderSchema.extend({
-  songIds: z.array(z.string().uuid()).max(500).optional().default([]),
+  songIds: z
+    .array(z.string().uuid())
+    .max(MAX_FOLDER_SONGS_ON_CREATE)
+    .optional()
+    .default([]),
+})
+
+export const assignSongsToFolderSchema = z.object({
+  folderId: z.string().uuid(),
+  songIds: z
+    .array(z.string().uuid())
+    .min(1)
+    .max(FOLDER_SONG_ASSIGN_CHUNK_SIZE),
 })
 
 export const updateFolderSchema = z.object({

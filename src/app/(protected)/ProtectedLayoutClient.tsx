@@ -59,9 +59,9 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     <ScrollChromeProvider>
     <PageHeaderProvider>
     <SidebarProvider defaultOpen>
-      <div className="flex h-svh w-full bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-svh w-full bg-background">
         {user && <AppSidebar />}
-        <SidebarInset className="flex flex-col overflow-hidden lg:px-4 xl:px-5">
+        <SidebarInset className="flex flex-col overflow-hidden bg-background lg:px-4 xl:px-5">
           <Header />
           <div
             className={`flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden ${

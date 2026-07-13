@@ -24,7 +24,7 @@ import {
 } from '@heroicons/react/24/solid';
 import MoreMenu from './MoreMenu';
 
-const MORE_PATHS = ['/leaderboard', '/profile', '/ai-playlist', '/friends'];
+const MORE_PATHS = ['/leaderboard', '/profile', '/jams/ai', '/friends'];
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -61,11 +61,11 @@ export default function BottomNavigation() {
       isActive: pathname === '/songs' || pathname.startsWith('/songs/'),
     },
     {
-      href: '/folders',
+      href: '/playlists',
       label: t('navigation.folders'),
       icon: FolderIcon,
       iconSolid: FolderIconSolid,
-      isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
+      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/'),
     },
     {
       href: '/chords',
@@ -75,11 +75,11 @@ export default function BottomNavigation() {
       isActive: pathname === '/chords' || pathname.startsWith('/chords/'),
     },
     {
-      href: '/playlists',
+      href: '/jams',
       label: t('navigation.playlists'),
       icon: QueueListIcon,
       iconSolid: QueueListIconSolid,
-      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
+      isActive: pathname === '/jams' || pathname.startsWith('/jams/'),
     },
   ];
 

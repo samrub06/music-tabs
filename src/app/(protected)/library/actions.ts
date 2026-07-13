@@ -33,7 +33,7 @@ async function resolveUniqueFolderName(
 }
 
 /**
- * Saves a public/curated explorer playlist into the user's Playlists page (/folders).
+ * Saves a public/curated explorer playlist into the user's Playlists page (/playlists).
  * Creates a folder with the playlist cover, then imports songs (reuse existing library matches).
  */
 export async function savePublicPlaylistAsFolderAction(playlistId: string) {
@@ -114,7 +114,7 @@ export async function savePublicPlaylistAsFolderAction(playlistId: string) {
     imported += 1
   }
 
-  revalidatePath('/folders')
+  revalidatePath('/playlists')
   revalidatePath('/songs')
   revalidatePath('/')
   revalidatePath(`/library/${validatedId}`)

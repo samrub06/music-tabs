@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
-import { addFolderAction } from '@/app/(protected)/dashboard/actions'
+import {
+  addFolderAction,
+  assignSongsToFolderAction,
+} from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +17,10 @@ import {
   getPlaylistCoverOptions,
   resolveAutoCoverSlug,
 } from '@/utils/playlistCover'
+import {
+  FOLDER_SONG_ASSIGN_CHUNK_SIZE,
+  MAX_FOLDER_SONGS_ON_CREATE,
+} from '@/lib/validation/schemas'
 import { cn } from '@/lib/utils'
 
 type WizardStep = 1 | 2 | 3
@@ -49,6 +56,10 @@ export default function CreateFolderWizardClient({
   const [genreFilter, setGenreFilter] = useState<string | null>(null)
   const [songSearch, setSongSearch] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+  const [assignProgress, setAssignProgress] = useState<{
+    done: number
+    total: number
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const existingNameSet = useMemo(
@@ -90,6 +101,13 @@ export default function CreateFolderWizardClient({
   }, [songs, genreFilter, songSearch])
 
   const selectedSongSet = useMemo(() => new Set(selectedSongIds), [selectedSongIds])
+  const remainingSlots = MAX_FOLDER_SONGS_ON_CREATE - selectedSongIds.length
+  const isAtCap = remainingSlots <= 0
+  const shownSelectedCount = filteredSongs.filter((song) =>
+    selectedSongSet.has(song.id)
+  ).length
+  const shownUnselectedCount = filteredSongs.length - shownSelectedCount
+  const canSelectAllShown = shownUnselectedCount > 0 && remainingSlots > 0
 
   useEffect(() => {
     if (coverTouched) return
@@ -104,34 +122,74 @@ export default function CreateFolderWizardClient({
   }
 
   const toggleSong = (songId: string) => {
-    setSelectedSongIds((prev) =>
-      prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]
-    )
+    setSelectedSongIds((prev) => {
+      if (prev.includes(songId)) {
+        return prev.filter((id) => id !== songId)
+      }
+      if (prev.length >= MAX_FOLDER_SONGS_ON_CREATE) return prev
+      return [...prev, songId]
+    })
   }
 
-  const selectAllFiltered = () => {
+  const selectAllShown = () => {
     setSelectedSongIds((prev) => {
       const next = new Set(prev)
-      for (const song of filteredSongs) next.add(song.id)
+      let slots = MAX_FOLDER_SONGS_ON_CREATE - next.size
+      if (slots <= 0) return prev
+      for (const song of filteredSongs) {
+        if (next.has(song.id)) continue
+        next.add(song.id)
+        slots -= 1
+        if (slots <= 0) break
+      }
       return Array.from(next)
     })
   }
 
-  const clearFilteredSelection = () => {
+  const clearShownSelection = () => {
     const filteredIds = new Set(filteredSongs.map((song) => song.id))
     setSelectedSongIds((prev) => prev.filter((id) => !filteredIds.has(id)))
+  }
+
+  const clearAllSelection = () => {
+    setSelectedSongIds([])
   }
 
   const handleCreate = async () => {
     if (!trimmedName || isCreating || isDuplicate) return
     setIsCreating(true)
     setError(null)
+    setAssignProgress(null)
+
+    let createdId: string | null = null
+
     try {
-      await addFolderAction(trimmedName, coverSlug ?? undefined, selectedSongIds)
-      router.push('/folders')
+      const idsToAssign = selectedSongIds.slice(0, MAX_FOLDER_SONGS_ON_CREATE)
+      const created = await addFolderAction(trimmedName, coverSlug ?? undefined)
+      createdId = created.id
+
+      if (idsToAssign.length > 0) {
+        setAssignProgress({ done: 0, total: idsToAssign.length })
+        for (let i = 0; i < idsToAssign.length; i += FOLDER_SONG_ASSIGN_CHUNK_SIZE) {
+          const chunk = idsToAssign.slice(i, i + FOLDER_SONG_ASSIGN_CHUNK_SIZE)
+          await assignSongsToFolderAction(created.id, chunk)
+          setAssignProgress({
+            done: Math.min(i + chunk.length, idsToAssign.length),
+            total: idsToAssign.length,
+          })
+        }
+      }
+
+      router.push('/playlists')
       router.refresh()
     } catch (err) {
       console.error('Error creating folder:', err)
+      // Playlist may already exist if assign failed mid-way — don't retry create.
+      if (createdId) {
+        router.push('/playlists')
+        router.refresh()
+        return
+      }
       const message = err instanceof Error ? err.message : ''
       setError(
         message === 'FOLDER_NAME_EXISTS'
@@ -140,6 +198,7 @@ export default function CreateFolderWizardClient({
       )
       setStep(1)
       setIsCreating(false)
+      setAssignProgress(null)
     }
   }
 
@@ -148,6 +207,11 @@ export default function CreateFolderWizardClient({
     { id: 2, label: t('folders.stepCover') },
     { id: 3, label: t('folders.stepSongs') },
   ]
+
+  const assignPercent =
+    assignProgress && assignProgress.total > 0
+      ? Math.round((assignProgress.done / assignProgress.total) * 100)
+      : 0
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background p-4 sm:p-6">
@@ -239,7 +303,7 @@ export default function CreateFolderWizardClient({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/folders')}
+                onClick={() => router.push('/playlists')}
                 className="h-11 flex-1 rounded-xl"
               >
                 {t('common.cancel')}
@@ -310,11 +374,32 @@ export default function CreateFolderWizardClient({
           <div className="space-y-4 rounded-2xl border border-black/[0.06] bg-white/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.06] sm:p-5">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">{t('folders.stepSongsHint')}</p>
-              <p className="text-sm font-medium text-foreground">
-                {t('folders.songsSelected')
-                  .replace('{count}', String(selectedSongIds.length))
-                  .replace('{total}', String(songs.length))}
-              </p>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">
+                  {t('folders.songsSelectedCap')
+                    .replace('{count}', String(selectedSongIds.length))
+                    .replace('{max}', String(MAX_FOLDER_SONGS_ON_CREATE))
+                    .replace('{total}', String(songs.length))}
+                </p>
+                {selectedSongIds.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={clearAllSelection}
+                    disabled={isCreating}
+                    className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    {t('folders.clearAllSelected')}
+                  </button>
+                ) : null}
+              </div>
+              {isAtCap ? (
+                <p className="text-xs text-amber-700 dark:text-amber-400" role="status">
+                  {t('folders.selectionCapReached').replace(
+                    '{max}',
+                    String(MAX_FOLDER_SONGS_ON_CREATE)
+                  )}
+                </p>
+              ) : null}
             </div>
 
             {songs.length === 0 ? (
@@ -364,70 +449,116 @@ export default function CreateFolderWizardClient({
                   ) : null}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={selectAllFiltered}
-                    disabled={filteredSongs.length === 0}
+                    onClick={selectAllShown}
+                    disabled={!canSelectAllShown || isCreating}
                     className="h-9 rounded-full"
                   >
                     {t('folders.selectAllFiltered')}
+                    {filteredSongs.length > 0
+                      ? ` (${Math.min(shownUnselectedCount, remainingSlots)})`
+                      : ''}
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={clearFilteredSelection}
-                    disabled={filteredSongs.every((song) => !selectedSongSet.has(song.id))}
+                    onClick={clearShownSelection}
+                    disabled={shownSelectedCount === 0 || isCreating}
                     className="h-9 rounded-full"
                   >
                     {t('folders.clearFiltered')}
                   </Button>
+                  <span className="ms-auto text-xs text-muted-foreground">
+                    {t('folders.showingSongsCount')
+                      .replace('{shown}', String(filteredSongs.length))
+                      .replace('{total}', String(songs.length))}
+                  </span>
                 </div>
 
-                <div className="flex max-h-72 flex-wrap content-start gap-2 overflow-y-auto rounded-xl border border-black/[0.06] bg-background/60 p-3 dark:border-white/[0.08]">
+                <div
+                  className="max-h-80 overflow-y-auto rounded-xl border border-black/[0.06] bg-background/60 dark:border-white/[0.08]"
+                  role="listbox"
+                  aria-multiselectable
+                  aria-label={t('folders.stepSongs')}
+                >
                   {filteredSongs.length === 0 ? (
-                    <p className="w-full py-6 text-center text-sm text-muted-foreground">
+                    <p className="px-3 py-8 text-center text-sm text-muted-foreground">
                       {t('folders.noSongsMatchFilter')}
                     </p>
                   ) : (
-                    filteredSongs.map((song) => {
-                      const selected = selectedSongSet.has(song.id)
-                      return (
-                        <button
-                          key={song.id}
-                          type="button"
-                          onClick={() => toggleSong(song.id)}
-                          aria-pressed={selected}
-                          className={cn(
-                            'inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-2 text-start text-sm font-medium transition-all min-h-[36px]',
-                            selected
-                              ? 'bg-primary text-primary-foreground shadow-sm'
-                              : 'bg-muted/80 text-foreground hover:bg-muted dark:bg-white/[0.06] dark:hover:bg-white/10'
-                          )}
-                        >
-                          <span className="truncate">{song.title}</span>
-                          {song.author ? (
-                            <span
+                    <ul className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
+                      {filteredSongs.map((song) => {
+                        const selected = selectedSongSet.has(song.id)
+                        const disabled = isCreating || (!selected && isAtCap)
+                        return (
+                          <li key={song.id}>
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={selected}
+                              disabled={disabled}
+                              onClick={() => toggleSong(song.id)}
                               className={cn(
-                                'truncate text-xs font-normal',
+                                'flex w-full items-center gap-3 px-3 py-2.5 text-start transition-colors',
                                 selected
-                                  ? 'text-primary-foreground/80'
-                                  : 'text-muted-foreground'
+                                  ? 'bg-primary/10'
+                                  : 'hover:bg-muted/60 dark:hover:bg-white/[0.04]',
+                                disabled && !selected && 'opacity-50'
                               )}
                             >
-                              · {song.author}
-                            </span>
-                          ) : null}
-                        </button>
-                      )
-                    })
+                              <span
+                                className={cn(
+                                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+                                  selected
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'border-muted-foreground/40 bg-background'
+                                )}
+                                aria-hidden
+                              >
+                                {selected ? <CheckIcon className="h-3.5 w-3.5" /> : null}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium text-foreground">
+                                  {song.title}
+                                </span>
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {song.author}
+                                  {song.genre ? ` · ${song.genre}` : ''}
+                                </span>
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
                   )}
                 </div>
               </>
             )}
+
+            {assignProgress ? (
+              <div className="space-y-2" aria-live="polite">
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span className="font-medium text-foreground">
+                    {t('folders.assigningProgress')
+                      .replace('{done}', String(assignProgress.done))
+                      .replace('{total}', String(assignProgress.total))}
+                  </span>
+                  <span className="text-muted-foreground">{assignPercent}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-200 ease-out"
+                    style={{ width: `${assignPercent}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
 
             {error && (
               <p className="text-sm text-destructive" role="alert">
@@ -452,7 +583,9 @@ export default function CreateFolderWizardClient({
                 className="h-11 flex-1 rounded-xl"
               >
                 {isCreating
-                  ? t('createMenu.creating')
+                  ? assignProgress
+                    ? t('folders.assigning')
+                    : t('createMenu.creating')
                   : selectedSongIds.length > 0
                     ? t('folders.createWithSongs').replace(
                         '{count}',

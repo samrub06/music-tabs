@@ -8,7 +8,7 @@
   body {
     /* clip avoids creating a scroll container that can hide position:fixed mobile chrome */
     overflow-x: clip;
-    @apply bg-gray-50 dark:bg-gray-900;
+    @apply bg-background;
     max-width: 100vw;
   }
 
@@ -24,7 +24,8 @@
     }
   }
   :root {
-    --background: 0 0% 100%;
+    /* Match Tailwind gray-50 so shell + pages share one surface */
+    --background: 210 20% 98%;
     --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;

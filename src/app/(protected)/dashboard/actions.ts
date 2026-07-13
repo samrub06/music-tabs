@@ -14,7 +14,16 @@ import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
 import { assertCanDeleteSong, assertCanEditSong } from '@/lib/services/songPermissions'
 import { renderStructuredSong } from '@/utils/structuredSong'
-import { createSongSchema, updateSongSchema, createFolderSchema, createFolderWithSongsSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
+import {
+  createSongSchema,
+  updateSongSchema,
+  createFolderSchema,
+  createFolderWithSongsSchema,
+  assignSongsToFolderSchema,
+  updateFolderSchema,
+  createPlaylistSchema,
+  selectableSongIdsSchema,
+} from '@/lib/validation/schemas'
 import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
 
 export async function addSongAction(payload: NewSongData) {
@@ -185,12 +194,9 @@ export async function addFolderAction(name: string, coverSlug?: string, songIds?
   })
 
   if (validatedSongIds.length > 0) {
-    const songs = songRepo(supabase)
-    await Promise.all(
-      validatedSongIds.map((songId) => songs.updateSongFolder(songId, created.id))
-    )
+    await songRepo(supabase).assignSongsToFolder(created.id, validatedSongIds)
   }
-  
+
   // Award XP for creating folder
   const { data: { user } } = await supabase.auth.getUser()
   if (user) {
@@ -203,11 +209,37 @@ export async function addFolderAction(name: string, coverSlug?: string, songIds?
       console.error('Error awarding XP for folder creation:', error)
     }
   }
-  
-  revalidatePath('/folders')
+
+  revalidatePath('/playlists')
   revalidatePath('/songs')
   revalidatePath('/')
   return created
+}
+
+/** Assign a chunk of songs to an existing playlist (folder). Used for progressive create UI. */
+export async function assignSongsToFolderAction(folderId: string, songIds: string[]) {
+  const {
+    folderId: validatedFolderId,
+    songIds: validatedSongIds,
+  } = assignSongsToFolderSchema.parse({ folderId, songIds })
+
+  const supabase = await createActionServerClient()
+  const folders = folderRepo(supabase)
+  const folder = await folders.getFolderById(validatedFolderId)
+  if (!folder) {
+    throw new Error('FOLDER_NOT_FOUND')
+  }
+
+  const updated = await songRepo(supabase).assignSongsToFolder(
+    validatedFolderId,
+    validatedSongIds
+  )
+
+  revalidatePath('/playlists')
+  revalidatePath(`/playlists/${validatedFolderId}`)
+  revalidatePath('/songs')
+  revalidatePath('/')
+  return { updated }
 }
 
 export async function renameFolderAction(id: string, name: string) {
@@ -215,16 +247,16 @@ export async function renameFolderAction(id: string, name: string) {
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.updateFolder(id, { name: validatedName })
-  revalidatePath('/folders')
-  revalidatePath('/folders', 'layout')
+  revalidatePath('/playlists')
+  revalidatePath('/playlists', 'layout')
 }
 
 export async function deleteFolderAction(id: string) {
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.deleteFolder(id)
-  revalidatePath('/folders')
-  revalidatePath('/folders', 'layout')
+  revalidatePath('/playlists')
+  revalidatePath('/playlists', 'layout')
 }
 
 export async function createPlaylistAction(name: string, coverSlug?: string) {
@@ -246,7 +278,7 @@ export async function createPlaylistAction(name: string, coverSlug?: string) {
     }
   }
   
-  revalidatePath('/playlists')
+  revalidatePath('/jams')
   return created
 }
 
@@ -271,7 +303,7 @@ export async function createPlaylistFromGeneratedPlaylistAction(
     supabase,
     imageUrl
   )
-  revalidatePath('/playlists')
+  revalidatePath('/jams')
   return savedPlaylist
 }
 

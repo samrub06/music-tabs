@@ -8,7 +8,7 @@ export async function updateFolderOrderAction(folderId: string, newOrder: number
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
   await repo.updateFolderOrder(folderId, newOrder)
-  revalidatePath('/folders')
-  // Revalidate all folder detail pages
-  revalidatePath('/folders', 'layout')
+  revalidatePath('/playlists')
+  // Revalidate all playlist detail pages
+  revalidatePath('/playlists', 'layout')
 }

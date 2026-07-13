@@ -184,8 +184,8 @@ export default function PlaylistDetailClient({
   const openShareDialog = useCallback(() => {
     const url =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/playlist/${playlist.id}`
-        : `/playlist/${playlist.id}`
+        ? `${window.location.origin}/jams/${playlist.id}`
+        : `/jams/${playlist.id}`
     setShareUrl(url)
     setShareOpen(true)
   }, [playlist.id])
@@ -322,7 +322,7 @@ export default function PlaylistDetailClient({
         JSON.stringify({
           songList,
           currentIndex: currentIndex >= 0 ? currentIndex : 0,
-          sourceUrl: `/playlist/${playlist.id}`,
+          sourceUrl: `/jams/${playlist.id}`,
           playlistContext,
         })
       )

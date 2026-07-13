@@ -198,12 +198,12 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
   };
 
   const handlePlaylistClick = (playlist: Playlist) => {
-    router.push(`/playlist/${playlist.id}`);
+    router.push(`/jams/${playlist.id}`);
   };
 
   const handleStartSavedPlaylist = (e: React.MouseEvent, playlist: Playlist) => {
     e.stopPropagation();
-    router.push(`/playlist/${playlist.id}`);
+    router.push(`/jams/${playlist.id}`);
   };
 
   const getSongCount = (p: Playlist) => (p as Playlist & { songCount?: number }).songCount ?? p.songIds?.length ?? 0;
@@ -360,13 +360,16 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
           <SheetHeader className="shrink-0 px-1 pb-2">
             <SheetTitle className="text-xl font-semibold">{t('playlistsPage.filters')}</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
-            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
-              <Label htmlFor="playlist-sort" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="playlist-sort" className="text-[11px] font-medium text-muted-foreground block">
                 {t('playlistsPage.sortBy')}
               </Label>
               <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
-                <SelectTrigger id="playlist-sort" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="playlist-sort"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -376,12 +379,15 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
-              <Label htmlFor="playlist-sort-dir" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="playlist-sort-dir" className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.sortOrder')}
               </Label>
               <Select value={sortDirection} onValueChange={(v) => setSortDirection(v as SortDirection)}>
-                <SelectTrigger id="playlist-sort-dir" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="playlist-sort-dir"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -391,7 +397,7 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
               </Select>
             </div>
           </div>
-          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
+          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 safe-area-inset-bottom">
             <Button variant="outline" onClick={handleClearFilters} className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial">
               {t('common.clear')}
             </Button>
@@ -426,7 +432,7 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
               type="button"
               onClick={() => {
                 setIsCreateSheetOpen(false)
-                router.push('/playlist')
+                router.push('/jams/new')
               }}
               className="flex w-full items-center gap-3 rounded-xl border border-black/[0.06] p-3 text-start transition-colors hover:bg-muted/50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
             >
@@ -446,7 +452,7 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
               type="button"
               onClick={() => {
                 setIsCreateSheetOpen(false)
-                router.push('/ai-playlist')
+                router.push('/jams/ai')
               }}
               className="flex w-full items-center gap-3 rounded-xl border border-black/[0.06] p-3 text-start transition-colors hover:bg-muted/50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
             >

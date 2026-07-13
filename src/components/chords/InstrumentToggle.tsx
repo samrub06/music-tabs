@@ -23,12 +23,12 @@ export function InstrumentToggle({
   const { t } = useLanguage();
 
   const segmentClass =
-    'inline-flex h-11 shrink-0 items-center rounded-xl border border-border bg-card p-0.5';
+    'inline-flex h-11 shrink-0 items-center gap-0.5 bg-transparent p-0';
   const optionClass = (active: boolean) =>
     cn(
       'inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
       active
-        ? 'bg-background text-foreground shadow-sm'
+        ? 'bg-transparent text-foreground ring-1 ring-border'
         : 'text-muted-foreground hover:text-foreground'
     );
 

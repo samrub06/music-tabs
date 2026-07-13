@@ -133,7 +133,7 @@ export default function MoreMenu({ isOpen, onClose }: MoreMenuProps) {
                 iconBg="bg-violet-100 dark:bg-violet-900/40"
                 title={t('createMenu.createFolder')}
                 description={t('createMenu.createFolderDescription')}
-                onClick={() => navigate('/folders/new')}
+                onClick={() => navigate('/playlists/new')}
               />
               <MenuNavItem
                 icon={<PencilSquareIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />}

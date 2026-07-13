@@ -52,6 +52,6 @@ export async function createPlaylistWithSongsAction(
     supabase,
     imageUrl
   )
-  revalidatePath('/playlists')
+  revalidatePath('/jams')
   return playlist
 }

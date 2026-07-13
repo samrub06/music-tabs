@@ -432,6 +432,47 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return mapDbSongToDomain(data)
   },
 
+  /**
+   * Bulk-assign songs to a folder. Chunks IDs to stay within PostgREST URL/body limits.
+   * Only updates rows owned by the current user (RLS + explicit user_id filter).
+   */
+  async assignSongsToFolder(
+    folderId: string,
+    songIds: string[],
+    chunkSize = 100
+  ): Promise<number> {
+    const {
+      data: { user },
+    } = await client.auth.getUser()
+    if (!user) {
+      throw new Error('User must be authenticated to update songs')
+    }
+    if (songIds.length === 0) return 0
+
+    const uniqueIds = Array.from(new Set(songIds))
+    const updatedAt = new Date().toISOString()
+    let updated = 0
+
+    for (let i = 0; i < uniqueIds.length; i += chunkSize) {
+      const chunk = uniqueIds.slice(i, i + chunkSize)
+      const { data, error } = await (client.from('songs') as any)
+        .update({
+          folder_id: folderId,
+          updated_at: updatedAt,
+        } as any)
+        .in('id', chunk)
+        .eq('user_id', user.id)
+        .select('id')
+
+      if (error) {
+        throw error
+      }
+      updated += Array.isArray(data) ? data.length : 0
+    }
+
+    return updated
+  },
+
   async deleteSong(id: string): Promise<void> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) {

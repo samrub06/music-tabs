@@ -325,7 +325,7 @@ export default function AIPlaylistClient({ folders }: AIPlaylistClientProps) {
 
       setMessage({ type: 'success', text: t('aiPlaylist.playlistCreated') })
       setShowPlaylistModal(false)
-      router.push(`/playlists`)
+      router.push(`/jams`)
       router.refresh()
     } catch (error) {
       console.error('Error creating playlist:', error)

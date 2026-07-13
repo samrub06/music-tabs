@@ -26,8 +26,8 @@ export async function updatePlaylistOrderAction(playlistId: string, songIds: str
     songIds: validatedSongIds
   })
   
-  revalidatePath(`/playlist/${validatedPlaylistId}`)
-  revalidatePath('/playlists')
+  revalidatePath(`/jams/${validatedPlaylistId}`)
+  revalidatePath('/jams')
 }
 
 export async function removeSongFromPlaylistAction(playlistId: string, songId: string) {
@@ -41,6 +41,6 @@ export async function removeSongFromPlaylistAction(playlistId: string, songId: s
 
   await repo.updatePlaylist(validatedPlaylistId, { songIds: newSongIds })
 
-  revalidatePath(`/playlist/${validatedPlaylistId}`)
-  revalidatePath('/playlists')
+  revalidatePath(`/jams/${validatedPlaylistId}`)
+  revalidatePath('/jams')
 }

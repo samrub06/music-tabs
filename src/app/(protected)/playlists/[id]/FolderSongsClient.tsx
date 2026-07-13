@@ -102,7 +102,7 @@ export default function FolderSongsClient({
 
   const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
 
-  usePageHeader(folder.name, '/folders')
+  usePageHeader(folder.name, '/playlists')
 
   // Sync local search from URL
   useEffect(() => {
@@ -437,13 +437,16 @@ export default function FolderSongsClient({
             <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 pb-4 px-1">
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.sortBy')}
               </Label>
               <Select value={draftSortField} onValueChange={(value) => setDraftSortField(value as SortField)}>
-                <SelectTrigger id="sortField" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="sortField"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -456,12 +459,15 @@ export default function FolderSongsClient({
               </Select>
             </div>
 
-            <div className="space-y-2.5 py-1">
-              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground mb-2.5 block">
+            <div className="space-y-2 py-1">
+              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground block">
                 {t('songs.sortOrder')}
               </Label>
               <Select value={draftSortDirection} onValueChange={(value) => setDraftSortDirection(value as SortDirection)}>
-                <SelectTrigger id="sortDirection" className="h-10 rounded-xl">
+                <SelectTrigger
+                  id="sortDirection"
+                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

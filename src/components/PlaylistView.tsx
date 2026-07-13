@@ -143,7 +143,7 @@ export default function PlaylistView({ playlist, onSongSelect, onCreatePlaylist,
       const navigationData = {
         songList,
         currentIndex: 0,
-        sourceUrl: '/playlist',
+        sourceUrl: '/jams/new',
         playlistContext
       };
 

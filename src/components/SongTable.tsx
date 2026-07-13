@@ -23,7 +23,7 @@ import MoveToPlaylistModal from './MoveToPlaylistModal';
 import CreatePlaylistModal from './CreatePlaylistModal';
 import Snackbar from './Snackbar';
 import { addFolderAction } from '@/app/(protected)/dashboard/actions';
-import { createPlaylistWithSongsAction } from '@/app/(protected)/ai-playlist/actions';
+import { createPlaylistWithSongsAction } from '@/app/(protected)/jams/ai/actions';
 import { useRouter } from 'next/navigation';
 
 type SortField = 'title' | 'author' | 'createdAt' | 'updatedAt' | 'key' | 'rating' | 'reviews' | 'difficulty' | 'version' | 'viewCount';
@@ -279,7 +279,7 @@ export default function SongTable({
       const playlist = await createPlaylistWithSongsAction(name, '', songIds, coverSlug);
       setSuccessMessage(t('songs.playlistCreated'));
       setSelectedSongs(new Set());
-      router.push(`/playlist/${playlist.id}`);
+      router.push(`/jams/${playlist.id}`);
     } catch (error) {
       console.error('Error creating playlist:', error);
       alert(t('songs.playlistCreateError'));

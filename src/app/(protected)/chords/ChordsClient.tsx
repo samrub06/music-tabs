@@ -466,7 +466,7 @@ export default function ChordsClient({
   const showVariantCards = visibleVariantGroups.length > 0;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-white dark:bg-background">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
       <div
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
@@ -496,7 +496,7 @@ export default function ChordsClient({
                 }
               }}
               placeholder={t('chords.searchPlaceholder')}
-              className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
+              className="block min-h-[44px] w-full rounded-none border-0 border-b border-border/70 bg-transparent py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-sm placeholder:text-muted-foreground shadow-none focus:border-primary focus:outline-none focus:ring-0 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
               autoComplete="off"
               role="combobox"
               aria-controls={chordSuggestionsListId}
@@ -544,7 +544,7 @@ export default function ChordsClient({
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as StatusFilter)}
             >
-              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-xl border-border bg-card text-sm">
+              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-none border-0 border-b border-border/70 bg-transparent px-0 text-sm shadow-none focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -558,7 +558,7 @@ export default function ChordsClient({
               value={difficultyFilter}
               onValueChange={(v) => setDifficultyFilter(v as DifficultyFilter)}
             >
-              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-xl border-border bg-card text-sm">
+              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-none border-0 border-b border-border/70 bg-transparent px-0 text-sm shadow-none focus:ring-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -578,7 +578,7 @@ export default function ChordsClient({
 
           <Link
             href="/chords/progressions"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-none border-0 border-b border-border/70 bg-transparent text-sm font-medium text-foreground transition-colors hover:text-primary"
           >
             <MusicalNoteIcon className="h-4 w-4 shrink-0" aria-hidden />
             {t('chords.showProgressions')}

@@ -197,7 +197,7 @@ export default function DashboardSidebar({
         <div className="mb-4">
           <button
             onClick={() => {
-              router.push('/playlists');
+              router.push('/jams');
               onClose?.();
             }}
             className="w-full flex items-center justify-center px-4 py-3 bg-purple-200 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 text-sm font-medium rounded-lg hover:bg-purple-300 dark:hover:bg-purple-900/50 transition-colors shadow-sm"

@@ -127,22 +127,22 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   const isSongPage = pathname.includes('/song/')
   const isAddSongPage = pathname === '/add-song'
-  const isCreatePlaylistPage = pathname === '/playlist'
-  const isCreateFolderPage = pathname === '/folders/new'
+  const isCreateJamPage = pathname === '/jams/new' || pathname === '/jams/ai'
+  const isCreatePlaylistPage = pathname === '/playlists/new'
   const isLibraryPlaylistDetail = pathname.startsWith('/library/')
-  const isJamPlaylistDetail = /^\/playlist\/[^/]+$/.test(pathname)
-  const isFolderDetail =
-    pathname.startsWith('/folders/') &&
-    pathname !== '/folders/new' &&
-    pathname !== '/folders'
+  const isJamDetail = /^\/jams\/[^/]+$/.test(pathname) && !isCreateJamPage
+  const isPlaylistDetail =
+    pathname.startsWith('/playlists/') &&
+    pathname !== '/playlists/new' &&
+    pathname !== '/playlists'
 
   const showBack =
     isAddSongPage ||
+    isCreateJamPage ||
     isCreatePlaylistPage ||
-    isCreateFolderPage ||
     isLibraryPlaylistDetail ||
-    isJamPlaylistDetail ||
-    isFolderDetail ||
+    isJamDetail ||
+    isPlaylistDetail ||
     pageHeaderOverride !== null
 
   const hideHeaderOnScroll =
@@ -150,9 +150,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
     pathname === '/' ||
     pathname === '/search' ||
     pathname.startsWith('/search/') ||
+    pathname === '/jams' ||
     pathname === '/playlists' ||
-    pathname === '/folders' ||
-    pathname.startsWith('/folders/') ||
+    pathname.startsWith('/playlists/') ||
     isSongPage
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
@@ -164,12 +164,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
       router.push(pageHeaderOverride.backHref)
       return
     }
-    if (isCreatePlaylistPage || isJamPlaylistDetail) {
-      router.push('/playlists')
+    if (isCreateJamPage || isJamDetail) {
+      router.push('/jams')
       return
     }
-    if (isCreateFolderPage || isFolderDetail) {
-      router.push('/folders')
+    if (isCreatePlaylistPage || isPlaylistDetail) {
+      router.push('/playlists')
       return
     }
     if (isLibraryPlaylistDetail) {

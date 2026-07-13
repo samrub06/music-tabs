@@ -247,7 +247,7 @@ function useSavePublicPlaylistToFolders(playlist: Playlist) {
           .replace('{count}', String(result.songCount))
       )
       setShowSnackbar(true)
-      router.push('/folders')
+      router.push('/playlists')
       router.refresh()
     } catch (error) {
       console.error('Error saving playlist to folders:', error)
