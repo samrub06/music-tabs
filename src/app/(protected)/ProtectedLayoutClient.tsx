@@ -4,7 +4,6 @@ import Header from '@/components/Header'
 import { AppSidebar } from '@/components/AppSidebar'
 import BottomNavigation from '@/components/BottomNavigation'
 import { useAuthContext } from '@/context/AuthContext'
-import { useLanguage } from '@/context/LanguageContext'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
@@ -15,7 +14,6 @@ import { PageHeaderProvider } from '@/context/PageHeaderContext'
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuthContext()
-  const { t } = useLanguage()
   const pathname = usePathname()
   const router = useRouter()
   const isInviteRoute = pathname.startsWith('/invite/')
@@ -57,42 +55,6 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     })
   }, [user, authLoading])
 
-  const getPageTitle = (path: string): string | undefined => {
-    if (path.startsWith('/song/')) return undefined
-    if (path.startsWith('/library/')) return t('navigation.library')
-    if (path === '/' || path === '/search') return t('navigation.home')
-    if (path.startsWith('/search/')) return undefined
-    if (path === '/songs') return t('navigation.songs')
-    if (path.startsWith('/songs/')) return undefined
-    if (path === '/explore' || path.startsWith('/explore/')) return t('navigation.explore')
-    if (path === '/add-song') return t('navigation.addSong')
-    if (path === '/folders') return t('navigation.folders')
-    if (path === '/folders/new') return undefined
-    if (path.startsWith('/folders/')) return undefined
-    if (path === '/chords') return t('navigation.chords')
-    if (path === '/chords/progressions') return t('chords.progressionsPageTitle')
-    if (path.startsWith('/chords/')) return undefined
-    if (path === '/playlists') return t('navigation.playlists')
-    if (path.startsWith('/playlists/')) return undefined
-    if (path === '/playlist' || path.startsWith('/playlist/')) {
-      if (path.match(/^\/playlist\/[^/]+$/)) return undefined
-      return t('createMenu.createPlaylist')
-    }
-    if (path === '/spotify' || path.startsWith('/spotify/')) return t('spotifyImport.title')
-    if (path === '/profile' || path.startsWith('/profile/')) return undefined
-    if (path === '/leaderboard' || path.startsWith('/leaderboard/')) return t('navigation.leaderboard')
-    if (path === '/friends' || path.startsWith('/friends/')) return t('navigation.friends')
-    if (path === '/notifications' || path.startsWith('/notifications/')) return t('notifications.title')
-    if (path === '/onboarding') return t('onboarding.title')
-    if (path.startsWith('/invite/')) return t('invitations.title')
-    if (path === '/admin/songs' || path.startsWith('/admin/songs/')) return t('navigation.adminSongs')
-    if (path === '/admin/users' || path.startsWith('/admin/users/')) return t('navigation.adminUsers')
-    if (path.startsWith('/admin')) return t('navigation.admin')
-    return undefined
-  }
-
-  const pageTitle = getPageTitle(pathname)
-
   return (
     <ScrollChromeProvider>
     <PageHeaderProvider>
@@ -100,7 +62,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
       <div className="flex h-svh w-full bg-gray-50 dark:bg-gray-900">
         {user && <AppSidebar />}
         <SidebarInset className="flex flex-col overflow-hidden lg:px-4 xl:px-5">
-          <Header pageTitle={pageTitle} />
+          <Header />
           <div
             className={`flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden ${
               user ? 'pb-16 lg:pb-0' : ''

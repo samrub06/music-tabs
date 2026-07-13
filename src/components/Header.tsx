@@ -40,7 +40,6 @@ import { cn } from '@/lib/utils'
 
 interface HeaderProps {
   onMenuClick?: () => void
-  pageTitle?: string
 }
 
 const LANGUAGES = [
@@ -115,7 +114,7 @@ function UserAvatar({
   )
 }
 
-export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
+export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { language, setLanguage, t } = useLanguage()
@@ -129,8 +128,22 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const isAddSongPage = pathname === '/add-song'
   const isCreatePlaylistPage = pathname === '/playlist'
   const isCreateFolderPage = pathname === '/folders/new'
-  const showBackWithTitle =
-    isAddSongPage || isCreatePlaylistPage || isCreateFolderPage || pageHeaderOverride !== null
+  const isLibraryPlaylistDetail = pathname.startsWith('/library/')
+  const isJamPlaylistDetail = /^\/playlist\/[^/]+$/.test(pathname)
+  const isFolderDetail =
+    pathname.startsWith('/folders/') &&
+    pathname !== '/folders/new' &&
+    pathname !== '/folders'
+
+  const showBack =
+    isAddSongPage ||
+    isCreatePlaylistPage ||
+    isCreateFolderPage ||
+    isLibraryPlaylistDetail ||
+    isJamPlaylistDetail ||
+    isFolderDetail ||
+    pageHeaderOverride !== null
+
   const hideHeaderOnScroll =
     pathname === '/songs' ||
     pathname === '/' ||
@@ -144,6 +157,30 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const usesAppSidebar = !!user && !onMenuClick
   const isLandingPage = pathname === '/'
   const currentLanguage = LANGUAGES.find((lang) => lang.code === language) ?? LANGUAGES[0]
+
+  const handleBack = () => {
+    if (pageHeaderOverride) {
+      router.push(pageHeaderOverride.backHref)
+      return
+    }
+    if (isCreatePlaylistPage || isJamPlaylistDetail) {
+      router.push('/playlists')
+      return
+    }
+    if (isCreateFolderPage || isFolderDetail) {
+      router.push('/folders')
+      return
+    }
+    if (isLibraryPlaylistDetail) {
+      router.push('/')
+      return
+    }
+    if (isAddSongPage) {
+      router.back()
+      return
+    }
+    router.back()
+  }
 
   const languageMenuItems = (
     <DropdownMenuRadioGroup
@@ -165,6 +202,26 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
     </DropdownMenuRadioGroup>
   )
 
+  const brandMark = (
+    <Link
+      href="/"
+      className={cn(
+        'flex min-w-0 items-center gap-1.5 rounded-lg py-1 pe-1 ps-0.5 text-foreground transition-opacity hover:opacity-80',
+        usesAppSidebar && 'lg:hidden'
+      )}
+      aria-label={t('common.backToHome')}
+    >
+      <AppLogo
+        variant="portrait"
+        priority={isLandingPage}
+        className="h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8"
+      />
+      <span className="truncate text-sm font-bold tracking-[0.08em] text-foreground sm:text-base">
+        TABASCO
+      </span>
+    </Link>
+  )
+
   return (
     <header
       className={cn(
@@ -175,7 +232,7 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
           'max-lg:-translate-y-full max-lg:-mb-11 max-lg:h-0 max-lg:min-h-0 max-lg:overflow-hidden max-lg:pointer-events-none'
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-0.5 sm:gap-1">
         {showMenuButton && user && (
           onMenuClick ? (
             <Button
@@ -201,57 +258,22 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
           </Button>
         )}
 
-        {showBackWithTitle ? (
+        {showBack ? (
           <button
             type="button"
-            onClick={() => {
-              if (pageHeaderOverride) {
-                router.push(pageHeaderOverride.backHref)
-              } else if (isCreatePlaylistPage) {
-                router.push('/playlists')
-              } else if (isCreateFolderPage) {
-                router.push('/folders')
-              } else {
-                router.back()
-              }
-            }}
-            className="flex min-w-0 items-center gap-0.5 text-foreground -ms-1 py-1 pe-2 ps-1 rounded-lg hover:opacity-80 active:opacity-70 transition-opacity"
+            onClick={handleBack}
+            className={cn(
+              'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground transition-opacity hover:opacity-80 active:opacity-70',
+              usesAppSidebar && 'lg:hidden'
+            )}
             aria-label={t('common.back')}
           >
-            <BackArrowIcon className="h-5 w-5 shrink-0" />
-            <h1 className="truncate text-base font-semibold">
-              {pageHeaderOverride?.title ??
-                (isCreateFolderPage
-                  ? t('folders.newFolder')
-                  : isCreatePlaylistPage
-                    ? t('createMenu.createPlaylist')
-                    : t('navigation.addSong'))}
-            </h1>
+            <BackArrowIcon className="h-5 w-5" />
           </button>
-        ) : (
-          pageTitle && (
-            <h1 className="truncate text-base font-semibold text-foreground lg:hidden">
-              {pageTitle}
-            </h1>
-          )
-        )}
-      </div>
+        ) : null}
 
-      <Link
-        href="/"
-        className={cn(
-          'absolute left-1/2 z-10 -translate-x-1/2 overflow-visible px-1 sm:px-3',
-          usesAppSidebar && 'lg:hidden',
-          showBackWithTitle && 'hidden'
-        )}
-        aria-label={t('common.backToHome')}
-      >
-        <AppLogo
-          variant="portrait"
-          priority={isLandingPage}
-          className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9"
-        />
-      </Link>
+        {brandMark}
+      </div>
 
       <div className="flex flex-1 items-center justify-end gap-0 sm:gap-2">
         {user && <HeaderLevelProgress />}

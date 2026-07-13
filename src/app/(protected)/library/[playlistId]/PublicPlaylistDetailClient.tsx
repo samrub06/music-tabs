@@ -9,7 +9,6 @@ import {
   XMarkIcon,
   FolderPlusIcon,
 } from '@heroicons/react/24/outline'
-import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { Playlist, Song } from '@/types'
@@ -317,7 +316,6 @@ function PublicPlaylistHeader({
   coverUrl: string | null
 }) {
   const { t } = useLanguage()
-  const router = useRouter()
   const { signInWithGoogle } = useAuthContext()
   const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
   const {
@@ -343,15 +341,6 @@ function PublicPlaylistHeader({
       <div className="px-3 pt-3 sm:px-4 md:px-6">
         <div className="space-y-3 rounded-xl border border-black/[0.06] bg-card px-3 py-3 dark:border-white/[0.08] sm:px-4 sm:py-3.5">
           <div className="flex w-full items-start gap-2.5 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => router.push('/')}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              aria-label={t('common.back')}
-            >
-              <BackArrowIcon className="h-5 w-5" />
-            </button>
-
             <div className="relative h-14 w-14 shrink-0 self-start overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16">
               {coverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
