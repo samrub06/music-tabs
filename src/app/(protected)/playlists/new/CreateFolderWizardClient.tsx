@@ -214,92 +214,98 @@ export default function CreateFolderWizardClient({
       : 0
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-background p-4 sm:p-6">
-      <div className="mx-auto w-full max-w-lg space-y-6">
-        <div className="space-y-1.5">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {t('folders.newFolder')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t('folders.newFolderWizardDescription')}
-          </p>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
+      <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-4 pt-3 sm:px-6 sm:pt-5">
+        <div className="shrink-0 space-y-3">
+          <div className="space-y-0.5">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-2xl">
+              {t('folders.newFolder')}
+            </h1>
+            {step === 1 ? (
+              <p className="text-sm text-muted-foreground">
+                {t('folders.newFolderWizardDescription')}
+              </p>
+            ) : null}
+          </div>
 
-        <div className="flex items-center gap-2" aria-label={t('folders.wizardProgress')}>
-          {steps.map((item, index) => {
-            const isActive = step === item.id
-            const isDone = step > item.id
-            return (
-              <div key={item.id} className="flex min-w-0 flex-1 items-center gap-2">
-                <div
-                  className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors',
-                    isActive || isDone
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  {item.id}
-                </div>
-                <span
-                  className={cn(
-                    'truncate text-xs font-medium sm:text-sm',
-                    isActive ? 'text-foreground' : 'text-muted-foreground'
-                  )}
-                >
-                  {item.label}
-                </span>
-                {index < steps.length - 1 && (
+          <div className="flex items-center gap-2" aria-label={t('folders.wizardProgress')}>
+            {steps.map((item, index) => {
+              const isActive = step === item.id
+              const isDone = step > item.id
+              return (
+                <div key={item.id} className="flex min-w-0 flex-1 items-center gap-2">
                   <div
                     className={cn(
-                      'ms-1 hidden h-px flex-1 sm:block',
-                      isDone ? 'bg-primary/50' : 'bg-border'
+                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors sm:h-8 sm:w-8',
+                      isActive || isDone
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
                     )}
-                    aria-hidden
-                  />
-                )}
-              </div>
-            )
-          })}
+                  >
+                    {item.id}
+                  </div>
+                  <span
+                    className={cn(
+                      'truncate text-xs font-medium sm:text-sm',
+                      isActive ? 'text-foreground' : 'text-muted-foreground'
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={cn(
+                        'ms-1 hidden h-px flex-1 sm:block',
+                        isDone ? 'bg-primary/50' : 'bg-border'
+                      )}
+                      aria-hidden
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {step === 1 && (
-          <div className="space-y-4 rounded-2xl border border-black/[0.06] bg-white/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.06] sm:p-5">
-            <div>
-              <Label
-                htmlFor="wizard-folder-name"
-                className="mb-2.5 block text-[11px] font-medium text-muted-foreground"
-              >
-                {t('createMenu.folderName')}
-              </Label>
-              <Input
-                id="wizard-folder-name"
-                type="text"
-                placeholder={t('createMenu.folderNamePlaceholder')}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value)
-                  if (error) setError(null)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') goNextFromName()
-                }}
-                className={cn(
-                  'h-11 rounded-xl',
-                  (isDuplicate || error) &&
-                    'border-destructive focus-visible:ring-destructive/30'
+          <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white/70 dark:border-white/[0.08] dark:bg-white/[0.06]">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+              <div>
+                <Label
+                  htmlFor="wizard-folder-name"
+                  className="mb-2 block text-[11px] font-medium text-muted-foreground"
+                >
+                  {t('createMenu.folderName')}
+                </Label>
+                <Input
+                  id="wizard-folder-name"
+                  type="text"
+                  placeholder={t('createMenu.folderNamePlaceholder')}
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (error) setError(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') goNextFromName()
+                  }}
+                  className={cn(
+                    'h-11 rounded-xl',
+                    (isDuplicate || error) &&
+                      'border-destructive focus-visible:ring-destructive/30'
+                  )}
+                  autoFocus
+                  aria-invalid={isDuplicate || Boolean(error)}
+                />
+                {(isDuplicate || error) && (
+                  <p className="mt-2 text-sm text-destructive" role="alert">
+                    {error ?? t('folders.nameExists')}
+                  </p>
                 )}
-                autoFocus
-                aria-invalid={isDuplicate || Boolean(error)}
-              />
-              {(isDuplicate || error) && (
-                <p className="mt-2 text-sm text-destructive" role="alert">
-                  {error ?? t('folders.nameExists')}
-                </p>
-              )}
+              </div>
+              <p className="text-sm text-muted-foreground">{t('folders.stepNameHint')}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{t('folders.stepNameHint')}</p>
-            <div className="flex gap-3 pt-1">
+            <div className="flex shrink-0 gap-3 border-t border-black/[0.06] p-3 dark:border-white/[0.08] sm:p-4">
               <Button
                 type="button"
                 variant="outline"
@@ -321,43 +327,44 @@ export default function CreateFolderWizardClient({
         )}
 
         {step === 2 && (
-          <div className="space-y-3 rounded-2xl border border-black/[0.06] bg-white/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.06] sm:space-y-4 sm:p-5">
-            <p className="text-sm text-muted-foreground">{t('folders.stepCoverHint')}</p>
-            <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
-              <div className="relative h-28 w-full bg-muted sm:h-36">
-                {selectedCover ? (
-                  <>
-                    {selectedCover.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={selectedCover.imageUrl}
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary" />
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-2.5">
-                      <p className="text-sm font-medium text-white">{trimmedName}</p>
+          <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white/70 dark:border-white/[0.08] dark:bg-white/[0.06]">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+              <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="relative h-24 w-full bg-muted sm:h-32">
+                  {selectedCover ? (
+                    <>
+                      {selectedCover.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={selectedCover.imageUrl}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary" />
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-2">
+                        <p className="text-sm font-medium text-white">{trimmedName}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center px-4">
+                      <p className="text-center text-sm font-medium text-muted-foreground">
+                        {t('folders.selectYourCover')}
+                      </p>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center px-4">
-                    <p className="text-center text-sm font-medium text-muted-foreground">
-                      {t('folders.selectYourCover')}
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+              <PlaylistCoverPicker
+                value={coverSlug}
+                onChange={(slug) => {
+                  setCoverTouched(true)
+                  setCoverSlug(slug)
+                }}
+              />
             </div>
-            <PlaylistCoverPicker
-              value={coverSlug}
-              onChange={(slug) => {
-                setCoverTouched(true)
-                setCoverSlug(slug)
-              }}
-            />
-            <div className="flex gap-3 pt-1">
+            <div className="flex shrink-0 gap-3 border-t border-black/[0.06] p-3 dark:border-white/[0.08] sm:p-4">
               <Button
                 type="button"
                 variant="outline"
@@ -379,202 +386,205 @@ export default function CreateFolderWizardClient({
         )}
 
         {step === 3 && (
-          <div className="space-y-4 rounded-2xl border border-black/[0.06] bg-white/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.06] sm:p-5">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">{t('folders.stepSongsHint')}</p>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm font-medium text-foreground">
-                  {t('folders.songsSelectedCap')
-                    .replace('{count}', String(selectedSongIds.length))
-                    .replace('{max}', String(MAX_FOLDER_SONGS_ON_CREATE))
-                    .replace('{total}', String(songs.length))}
-                </p>
-                {selectedSongIds.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={clearAllSelection}
-                    disabled={isCreating}
-                    className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                  >
-                    {t('folders.clearAllSelected')}
-                  </button>
-                ) : null}
-              </div>
-              {isAtCap ? (
-                <p className="text-xs text-amber-700 dark:text-amber-400" role="status">
-                  {t('folders.selectionCapReached').replace(
-                    '{max}',
-                    String(MAX_FOLDER_SONGS_ON_CREATE)
-                  )}
-                </p>
-              ) : null}
-            </div>
-
-            {songs.length === 0 ? (
-              <p className="rounded-xl bg-muted/50 px-3 py-4 text-sm text-muted-foreground">
-                {t('folders.noSongsToAdd')}
-              </p>
-            ) : (
-              <>
-                <FilterChipRow title={t('folders.filterByStyle')}>
-                  <FilterChip
-                    active={genreFilter === null}
-                    onClick={() => setGenreFilter(null)}
-                  >
-                    {t('songs.all')}
-                  </FilterChip>
-                  {genreOptions.map(({ genre, count }) => (
-                    <FilterChip
-                      key={genre}
-                      active={genreFilter === genre}
-                      onClick={() =>
-                        setGenreFilter((current) => (current === genre ? null : genre))
-                      }
-                    >
-                      {genre} ({count})
-                    </FilterChip>
-                  ))}
-                </FilterChipRow>
-
-                <div className="relative">
-                  <MagnifyingGlassIcon className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    value={songSearch}
-                    onChange={(e) => setSongSearch(e.target.value)}
-                    placeholder={t('folders.searchSongsPlaceholder')}
-                    className="h-11 rounded-xl ps-9 pe-10"
-                  />
-                  {songSearch ? (
+          <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white/70 dark:border-white/[0.08] dark:bg-white/[0.06]">
+            <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden p-3 sm:gap-3 sm:p-4">
+              <div className="shrink-0 space-y-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('folders.songsSelectedCap')
+                      .replace('{count}', String(selectedSongIds.length))
+                      .replace('{max}', String(MAX_FOLDER_SONGS_ON_CREATE))
+                      .replace('{total}', String(songs.length))}
+                  </p>
+                  {selectedSongIds.length > 0 ? (
                     <button
                       type="button"
-                      onClick={() => setSongSearch('')}
-                      className="absolute end-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                      aria-label={t('common.clear')}
+                      onClick={clearAllSelection}
+                      disabled={isCreating}
+                      className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                     >
-                      <XMarkIcon className="h-4 w-4" />
+                      {t('folders.clearAllSelected')}
                     </button>
                   ) : null}
                 </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={selectAllShown}
-                    disabled={!canSelectAllShown || isCreating}
-                    className="h-9 rounded-full"
-                  >
-                    {t('folders.selectAllFiltered')}
-                    {filteredSongs.length > 0
-                      ? ` (${Math.min(shownUnselectedCount, remainingSlots)})`
-                      : ''}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearShownSelection}
-                    disabled={shownSelectedCount === 0 || isCreating}
-                    className="h-9 rounded-full"
-                  >
-                    {t('folders.clearFiltered')}
-                  </Button>
-                  <span className="ms-auto text-xs text-muted-foreground">
-                    {t('folders.showingSongsCount')
-                      .replace('{shown}', String(filteredSongs.length))
-                      .replace('{total}', String(songs.length))}
-                  </span>
-                </div>
-
-                <div
-                  className="max-h-80 overflow-y-auto rounded-xl border border-black/[0.06] bg-background/60 dark:border-white/[0.08]"
-                  role="listbox"
-                  aria-multiselectable
-                  aria-label={t('folders.stepSongs')}
-                >
-                  {filteredSongs.length === 0 ? (
-                    <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-                      {t('folders.noSongsMatchFilter')}
-                    </p>
-                  ) : (
-                    <ul className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
-                      {filteredSongs.map((song) => {
-                        const selected = selectedSongSet.has(song.id)
-                        const disabled = isCreating || (!selected && isAtCap)
-                        return (
-                          <li key={song.id}>
-                            <button
-                              type="button"
-                              role="option"
-                              aria-selected={selected}
-                              disabled={disabled}
-                              onClick={() => toggleSong(song.id)}
-                              className={cn(
-                                'flex w-full items-center gap-3 px-3 py-2.5 text-start transition-colors',
-                                selected
-                                  ? 'bg-primary/10'
-                                  : 'hover:bg-muted/60 dark:hover:bg-white/[0.04]',
-                                disabled && !selected && 'opacity-50'
-                              )}
-                            >
-                              <span
-                                className={cn(
-                                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
-                                  selected
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'border-muted-foreground/40 bg-background'
-                                )}
-                                aria-hidden
-                              >
-                                {selected ? <CheckIcon className="h-3.5 w-3.5" /> : null}
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate text-sm font-medium text-foreground">
-                                  {song.title}
-                                </span>
-                                <span className="block truncate text-xs text-muted-foreground">
-                                  {song.author}
-                                  {song.genre ? ` · ${song.genre}` : ''}
-                                </span>
-                              </span>
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </>
-            )}
-
-            {assignProgress ? (
-              <div className="space-y-2" aria-live="polite">
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="font-medium text-foreground">
-                    {t('folders.assigningProgress')
-                      .replace('{done}', String(assignProgress.done))
-                      .replace('{total}', String(assignProgress.total))}
-                  </span>
-                  <span className="text-muted-foreground">{assignPercent}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary transition-[width] duration-200 ease-out"
-                    style={{ width: `${assignPercent}%` }}
-                  />
-                </div>
+                {isAtCap ? (
+                  <p className="text-xs text-amber-700 dark:text-amber-400" role="status">
+                    {t('folders.selectionCapReached').replace(
+                      '{max}',
+                      String(MAX_FOLDER_SONGS_ON_CREATE)
+                    )}
+                  </p>
+                ) : null}
               </div>
-            ) : null}
 
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
+              {songs.length === 0 ? (
+                <p className="rounded-xl bg-muted/50 px-3 py-4 text-sm text-muted-foreground">
+                  {t('folders.noSongsToAdd')}
+                </p>
+              ) : (
+                <>
+                  <FilterChipRow>
+                    <FilterChip
+                      active={genreFilter === null}
+                      onClick={() => setGenreFilter(null)}
+                      className="min-h-[32px] px-3 py-1.5 text-xs"
+                    >
+                      {t('songs.all')}
+                    </FilterChip>
+                    {genreOptions.map(({ genre, count }) => (
+                      <FilterChip
+                        key={genre}
+                        active={genreFilter === genre}
+                        onClick={() =>
+                          setGenreFilter((current) => (current === genre ? null : genre))
+                        }
+                        className="min-h-[32px] px-3 py-1.5 text-xs"
+                      >
+                        {genre} ({count})
+                      </FilterChip>
+                    ))}
+                  </FilterChipRow>
 
-            <div className="flex gap-3 pt-1">
+                  <div className="relative shrink-0">
+                    <MagnifyingGlassIcon className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      value={songSearch}
+                      onChange={(e) => setSongSearch(e.target.value)}
+                      placeholder={t('folders.searchSongsPlaceholder')}
+                      className="h-9 rounded-xl ps-9 pe-10"
+                    />
+                    {songSearch ? (
+                      <button
+                        type="button"
+                        onClick={() => setSongSearch('')}
+                        className="absolute end-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label={t('common.clear')}
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={selectAllShown}
+                      disabled={!canSelectAllShown || isCreating}
+                      className="h-8 rounded-full text-xs"
+                    >
+                      {t('folders.selectAllFiltered')}
+                      {filteredSongs.length > 0
+                        ? ` (${Math.min(shownUnselectedCount, remainingSlots)})`
+                        : ''}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearShownSelection}
+                      disabled={shownSelectedCount === 0 || isCreating}
+                      className="h-8 rounded-full text-xs"
+                    >
+                      {t('folders.clearFiltered')}
+                    </Button>
+                    <span className="ms-auto text-xs text-muted-foreground">
+                      {t('folders.showingSongsCount')
+                        .replace('{shown}', String(filteredSongs.length))
+                        .replace('{total}', String(songs.length))}
+                    </span>
+                  </div>
+
+                  <div
+                    className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/[0.06] bg-background/60 dark:border-white/[0.08]"
+                    role="listbox"
+                    aria-multiselectable
+                    aria-label={t('folders.stepSongs')}
+                  >
+                    {filteredSongs.length === 0 ? (
+                      <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                        {t('folders.noSongsMatchFilter')}
+                      </p>
+                    ) : (
+                      <ul className="divide-y divide-black/[0.06] dark:divide-white/[0.08]">
+                        {filteredSongs.map((song) => {
+                          const selected = selectedSongSet.has(song.id)
+                          const disabled = isCreating || (!selected && isAtCap)
+                          return (
+                            <li key={song.id}>
+                              <button
+                                type="button"
+                                role="option"
+                                aria-selected={selected}
+                                disabled={disabled}
+                                onClick={() => toggleSong(song.id)}
+                                className={cn(
+                                  'flex w-full items-center gap-3 px-3 py-2 text-start transition-colors',
+                                  selected
+                                    ? 'bg-primary/10'
+                                    : 'hover:bg-muted/60 dark:hover:bg-white/[0.04]',
+                                  disabled && !selected && 'opacity-50'
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+                                    selected
+                                      ? 'border-primary bg-primary text-primary-foreground'
+                                      : 'border-muted-foreground/40 bg-background'
+                                  )}
+                                  aria-hidden
+                                >
+                                  {selected ? <CheckIcon className="h-3.5 w-3.5" /> : null}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-sm font-medium text-foreground">
+                                    {song.title}
+                                  </span>
+                                  <span className="block truncate text-xs text-muted-foreground">
+                                    {song.author}
+                                    {song.genre ? ` · ${song.genre}` : ''}
+                                  </span>
+                                </span>
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {assignProgress ? (
+                <div className="shrink-0 space-y-2" aria-live="polite">
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <span className="font-medium text-foreground">
+                      {t('folders.assigningProgress')
+                        .replace('{done}', String(assignProgress.done))
+                        .replace('{total}', String(assignProgress.total))}
+                    </span>
+                    <span className="text-muted-foreground">{assignPercent}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-[width] duration-200 ease-out"
+                      style={{ width: `${assignPercent}%` }}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {error && (
+                <p className="shrink-0 text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
+            </div>
+
+            <div className="flex shrink-0 gap-3 border-t border-black/[0.06] p-3 dark:border-white/[0.08] sm:p-4">
               <Button
                 type="button"
                 variant="outline"

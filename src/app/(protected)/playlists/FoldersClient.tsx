@@ -261,7 +261,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   }
 
   const handleFolderClick = (folderId: string) => {
-    router.push(`/songs?folder=${folderId}`)
+    router.push(`/playlists/${folderId}`)
   }
 
   const getSongCount = useCallback((folderId: string) => {

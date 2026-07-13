@@ -304,7 +304,7 @@ export default function SongContent({
   );
 
   const folderViewHref = currentFolderId
-    ? `/songs?folder=${currentFolderId}`
+    ? `/playlists/${currentFolderId}`
     : '/songs?folder=unorganized'
 
   const folderControl =
