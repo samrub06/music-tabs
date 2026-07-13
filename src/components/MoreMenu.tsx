@@ -17,6 +17,7 @@ import {
   PencilSquareIcon,
   UserGroupIcon,
   FolderPlusIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import ManualEntryForm from './ManualEntryForm'
@@ -150,6 +151,13 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
                 }}
               />
               <MenuNavItem
+                icon={<QueueListIcon className="h-5 w-5 text-rose-600 dark:text-rose-400" />}
+                iconBg="bg-rose-100 dark:bg-rose-900/40"
+                title={t('createMenu.createPlaylist')}
+                description={t('createMenu.createPlaylistDescription')}
+                onClick={() => navigate('/playlist')}
+              />
+              <MenuNavItem
                 icon={<PencilSquareIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />}
                 iconBg="bg-indigo-100 dark:bg-indigo-900/40"
                 title={t('createMenu.manualEntry')}
@@ -212,6 +220,7 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
       open={isCreateFolderOpen}
       onOpenChange={setIsCreateFolderOpen}
       onCreate={handleCreateFolder}
+      existingNames={folders.map((folder) => folder.name)}
     />
     </>
   )

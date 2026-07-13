@@ -31,12 +31,14 @@ export default function MoveToFolderModal({
   const [newFolderName, setNewFolderName] = useState('')
   const [tab, setTab] = useState<'existing' | 'new'>('existing')
   const [isMoving, setIsMoving] = useState(false)
+  const [nameError, setNameError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isOpen) {
       setSelectedFolderId(undefined)
       setNewFolderName('')
       setTab('existing')
+      setNameError(null)
     }
   }, [isOpen])
 
@@ -57,12 +59,23 @@ export default function MoveToFolderModal({
   const handleCreateAndMove = async () => {
     const trimmed = newFolderName.trim()
     if (!trimmed || !onCreateFolderAndMove || isMoving) return
+    const exists = folders.some(
+      (folder) => folder.name.trim().toLowerCase() === trimmed.toLowerCase()
+    )
+    if (exists) {
+      setNameError(t('folders.nameExists'))
+      return
+    }
     setIsMoving(true)
+    setNameError(null)
     try {
       await onCreateFolderAndMove(trimmed)
       onClose()
     } catch (error) {
       console.error('Error creating folder:', error)
+      if (error instanceof Error && error.message === 'FOLDER_NAME_EXISTS') {
+        setNameError(t('folders.nameExists'))
+      }
     } finally {
       setIsMoving(false)
     }
@@ -163,11 +176,23 @@ export default function MoveToFolderModal({
                 <Input
                   id="new-folder-name"
                   value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onChange={(e) => {
+                    setNewFolderName(e.target.value)
+                    if (nameError) setNameError(null)
+                  }}
                   placeholder={t('songs.folderNamePlaceholder')}
-                  className="h-11 rounded-xl"
+                  className={cn(
+                    'h-11 rounded-xl',
+                    nameError && 'border-destructive focus-visible:ring-destructive/30'
+                  )}
                   disabled={isMoving}
+                  aria-invalid={Boolean(nameError)}
                 />
+                {nameError && (
+                  <p className="text-sm text-destructive" role="alert">
+                    {nameError}
+                  </p>
+                )}
               </div>
             </div>
           )}

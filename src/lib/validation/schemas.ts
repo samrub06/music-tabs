@@ -2,12 +2,21 @@ import { z } from 'zod'
 
 // Folder Schemas
 export const createFolderSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(100, 'Name is too long'),
   coverSlug: z.string().min(1).optional(),
+  imageUrl: z.string().optional(),
 })
 
 export const updateFolderSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Name is required')
+    .max(100, 'Name is too long'),
 })
 
 // Song Schemas

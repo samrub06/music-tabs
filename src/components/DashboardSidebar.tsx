@@ -88,25 +88,55 @@ export default function DashboardSidebar({
   const [activeTab, setActiveTab] = useState<'all' | 'recent' | 'popular'>('all');
 
   const handleAddFolder = async () => {
-    if (newFolderName.trim()) {
-      await addFolderAction(newFolderName.trim());
-      setNewFolderName('');
-      setShowAddForm(false);
+    if (!newFolderName.trim()) return
+    const exists = folders.some(
+      (folder) => folder.name.trim().toLowerCase() === newFolderName.trim().toLowerCase()
+    )
+    if (exists) {
+      alert(t('folders.nameExists'))
+      return
     }
-  };
+    try {
+      await addFolderAction(newFolderName.trim())
+      setNewFolderName('')
+      setShowAddForm(false)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'FOLDER_NAME_EXISTS') {
+        alert(t('folders.nameExists'))
+        return
+      }
+      throw error
+    }
+  }
 
   const handleEditFolder = (folder: Folder) => {
-    setEditingFolder(folder.id);
-    setEditName(folder.name);
-  };
+    setEditingFolder(folder.id)
+    setEditName(folder.name)
+  }
 
   const handleSaveEdit = async () => {
-    if (editingFolder && editName.trim()) {
-      await renameFolderAction(editingFolder, editName.trim());
-      setEditingFolder(null);
-      setEditName('');
+    if (!editingFolder || !editName.trim()) return
+    const exists = folders.some(
+      (folder) =>
+        folder.id !== editingFolder &&
+        folder.name.trim().toLowerCase() === editName.trim().toLowerCase()
+    )
+    if (exists) {
+      alert(t('folders.nameExists'))
+      return
     }
-  };
+    try {
+      await renameFolderAction(editingFolder, editName.trim())
+      setEditingFolder(null)
+      setEditName('')
+    } catch (error) {
+      if (error instanceof Error && error.message === 'FOLDER_NAME_EXISTS') {
+        alert(t('folders.nameExists'))
+        return
+      }
+      throw error
+    }
+  }
 
   const handleDeleteFolder = async (folderId: string) => {
     if (confirm(t('sidebar.confirmDeleteFolder'))) {

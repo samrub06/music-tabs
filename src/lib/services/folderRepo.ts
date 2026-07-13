@@ -63,9 +63,32 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     return data ? mapDbFolderToDomain(data) : null
   },
 
+  async findFolderByName(
+    name: string,
+    options: { excludeId?: string } = {}
+  ): Promise<Folder | null> {
+    const trimmed = name.trim()
+    if (!trimmed) return null
+
+    const folders = await this.getAllFolders()
+    const needle = trimmed.toLowerCase()
+    return (
+      folders.find(
+        (folder) =>
+          folder.name.toLowerCase() === needle &&
+          folder.id !== options.excludeId
+      ) ?? null
+    )
+  },
+
   async createFolder(folderData: CreateFolderInput): Promise<Folder> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to create folders')
+
+    const existing = await this.findFolderByName(folderData.name)
+    if (existing) {
+      throw new Error('FOLDER_NAME_EXISTS')
+    }
 
     const { data: existingFolders }: { data: { display_order: number | null }[] | null } = await client
       .from('folders')
@@ -76,18 +99,21 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
 
     const maxOrder = existingFolders?.[0]?.display_order
     const newOrder = maxOrder !== undefined && maxOrder !== null ? maxOrder + 1.0 : 1.0
-    const imageUrl = resolvePlaylistImageUrl({
-      name: folderData.name,
-      coverSlug: folderData.coverSlug,
-    })
+    const imageUrl =
+      (folderData.imageUrl && folderData.imageUrl.trim()) ||
+      resolvePlaylistImageUrl({
+        name: folderData.name,
+        coverSlug: folderData.coverSlug,
+      }) ||
+      null
 
     const { data, error } = await (client
       .from('folders') as any)
       .insert([{
         user_id: user.id,
-        name: folderData.name,
+        name: folderData.name.trim(),
         display_order: newOrder,
-        image_url: imageUrl ?? null,
+        image_url: imageUrl,
       }])
       .select()
       .single()
@@ -101,10 +127,17 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
     const { data: { user } } = await client.auth.getUser()
     if (!user) throw new Error('User must be authenticated to update folders')
 
+    if (updates.name !== undefined) {
+      const existing = await this.findFolderByName(updates.name, { excludeId: id })
+      if (existing) {
+        throw new Error('FOLDER_NAME_EXISTS')
+      }
+    }
+
     const { data, error } = await (client
       .from('folders') as any)
       .update({
-        name: updates.name,
+        name: updates.name?.trim(),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

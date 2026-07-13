@@ -7,16 +7,19 @@ import {
   PlusIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
+  FolderPlusIcon,
 } from '@heroicons/react/24/outline'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { Playlist, Song } from '@/types'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/actions'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
+import Snackbar from '@/components/Snackbar'
 import {
   createContext,
   useState,
@@ -227,17 +230,52 @@ function PublicPlaylistExpandableSearch() {
 function PublicPlaylistHeader({
   playlist,
   songCount,
+  canSaveToFolders,
 }: {
   playlist: Playlist
   songCount: number
+  canSaveToFolders: boolean
 }) {
   const { t } = useLanguage()
+  const router = useRouter()
   const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
+  const [isSaving, setIsSaving] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
+  const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success')
+  const [showSnackbar, setShowSnackbar] = useState(false)
 
   const songCountLabel =
     songCount === 1
       ? `1 ${t('playlistView.songs').slice(0, -1)}`
       : `${songCount} ${t('playlistView.songs')}`
+
+  const handleSaveToFolders = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    try {
+      const result = await savePublicPlaylistAsFolderAction(playlist.id)
+      setSnackbarType('success')
+      setSnackbarMessage(
+        t('library.addedPlaylistToFolders')
+          .replace('{name}', result.folderName)
+          .replace('{count}', String(result.songCount))
+      )
+      setShowSnackbar(true)
+      router.push('/folders')
+      router.refresh()
+    } catch (error) {
+      console.error('Error saving playlist to folders:', error)
+      setSnackbarType('error')
+      setSnackbarMessage(
+        error instanceof Error && error.message === 'AUTH_REQUIRED'
+          ? t('library.signInToAddPlaylist')
+          : t('library.addPlaylistError')
+      )
+      setShowSnackbar(true)
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="px-4 pt-4 sm:px-6">
@@ -267,6 +305,26 @@ function PublicPlaylistHeader({
       </div>
 
       <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
+
+      {canSaveToFolders && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void handleSaveToFolders()}
+          disabled={isSaving || songCount === 0}
+          className="mt-3 h-11 w-full gap-2 rounded-xl font-medium sm:w-auto"
+        >
+          <FolderPlusIcon className="h-5 w-5" />
+          {isSaving ? t('library.addingPlaylist') : t('library.addPlaylistToFolders')}
+        </Button>
+      )}
+
+      <Snackbar
+        message={snackbarMessage || ''}
+        isOpen={showSnackbar}
+        onClose={() => setShowSnackbar(false)}
+        type={snackbarType}
+      />
     </div>
   )
 }
@@ -274,11 +332,13 @@ function PublicPlaylistHeader({
 interface PublicPlaylistDetailShellProps {
   playlist: Playlist
   songCount: number
+  canSaveToFolders?: boolean
 }
 
 export function PublicPlaylistDetailShell({
   playlist,
   songCount,
+  canSaveToFolders = false,
 }: PublicPlaylistDetailShellProps) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -310,7 +370,11 @@ export function PublicPlaylistDetailShell({
         </button>
       </div>
 
-      <PublicPlaylistHeader playlist={playlist} songCount={songCount} />
+      <PublicPlaylistHeader
+        playlist={playlist}
+        songCount={songCount}
+        canSaveToFolders={canSaveToFolders}
+      />
     </>
   )
 }

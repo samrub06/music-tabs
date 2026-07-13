@@ -263,7 +263,11 @@ export default function SongTable({
       router.refresh();
     } catch (error) {
       console.error('Error creating folder and moving songs:', error);
-      alert(t('songs.moveError'));
+      if (error instanceof Error && error.message === 'FOLDER_NAME_EXISTS') {
+        alert(t('folders.nameExists'));
+      } else {
+        alert(t('songs.moveError'));
+      }
       throw error;
     }
   };

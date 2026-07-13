@@ -63,18 +63,18 @@ export default function BottomNavigation() {
       isActive: pathname === '/songs' || pathname.startsWith('/songs/'),
     },
     {
-      href: '/playlists',
-      label: t('navigation.playlists'),
-      icon: QueueListIcon,
-      iconSolid: QueueListIconSolid,
-      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
-    },
-    {
       href: '/folders',
       label: t('navigation.folders'),
       icon: FolderIcon,
       iconSolid: FolderIconSolid,
       isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
+    },
+    {
+      href: '/playlists',
+      label: t('navigation.playlists'),
+      icon: QueueListIcon,
+      iconSolid: QueueListIconSolid,
+      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
     },
     {
       href: '/chords',

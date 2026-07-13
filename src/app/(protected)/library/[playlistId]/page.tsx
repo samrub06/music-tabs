@@ -49,6 +49,7 @@ export default async function PublicPlaylistDetailPage({
           <PublicPlaylistDetailShell
             playlist={playlist}
             songCount={playlist.songIds.length}
+            canSaveToFolders={Boolean(user)}
           />
           <Suspense fallback={<PublicPlaylistSongListSkeleton />}>
             <PublicPlaylistSongsData playlist={playlist} userId={user?.id} />

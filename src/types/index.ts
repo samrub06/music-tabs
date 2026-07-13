@@ -217,6 +217,7 @@ export interface Playlist {
   songIds: string[];
   imageUrl?: string;
   isPublic?: boolean;
+  curatedSlug?: string;
 }
 
 export interface ChordData {

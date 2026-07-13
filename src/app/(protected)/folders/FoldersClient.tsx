@@ -278,6 +278,9 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       router.refresh()
     } catch (error) {
       console.error('Error adding folder:', error)
+      if (error instanceof Error && error.message === 'FOLDER_NAME_EXISTS') {
+        throw error
+      }
       setError(t('folders.createError'))
       throw error
     }
@@ -696,6 +699,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         open={isAddSheetOpen}
         onOpenChange={setIsAddSheetOpen}
         onCreate={handleAddFolder}
+        existingNames={folders.map((folder) => folder.name)}
       />
     </DndContext>
   )

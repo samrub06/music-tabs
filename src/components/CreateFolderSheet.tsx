@@ -1,31 +1,63 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useState } from 'react'
 import { useLanguage } from '@/context/LanguageContext'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet'
+import { BottomSheetDippedTop } from '@/components/ui/BottomSheetDippedTop'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PlaylistCoverPicker } from '@/components/PlaylistCoverPicker'
-import { resolveAutoCoverSlug } from '@/utils/playlistCover'
+import {
+  getPlaylistCoverOptions,
+  resolveAutoCoverSlug,
+} from '@/utils/playlistCover'
+import { cn } from '@/lib/utils'
 
 interface CreateFolderSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCreate: (name: string, coverSlug?: string) => Promise<void>
+  existingNames?: string[]
+}
+
+function normalizeFolderName(name: string): string {
+  return name.trim().toLowerCase()
 }
 
 export function CreateFolderSheet({
   open,
   onOpenChange,
   onCreate,
+  existingNames = [],
 }: CreateFolderSheetProps) {
   const { t } = useLanguage()
   const [name, setName] = useState('')
   const [coverSlug, setCoverSlug] = useState<string | null>(null)
   const [coverTouched, setCoverTouched] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const existingNameSet = useMemo(
+    () => new Set(existingNames.map(normalizeFolderName).filter(Boolean)),
+    [existingNames]
+  )
+
+  const trimmedName = name.trim()
+  const isDuplicate =
+    trimmedName.length > 0 && existingNameSet.has(normalizeFolderName(trimmedName))
+
+  const selectedCover = useMemo(() => {
+    if (!coverSlug) return null
+    return getPlaylistCoverOptions().find((option) => option.slug === coverSlug) ?? null
+  }, [coverSlug])
 
   useEffect(() => {
     if (!open) {
@@ -33,6 +65,7 @@ export function CreateFolderSheet({
       setCoverSlug(null)
       setCoverTouched(false)
       setIsCreating(false)
+      setError(null)
     }
   }, [open])
 
@@ -48,17 +81,22 @@ export function CreateFolderSheet({
   }
 
   const handleCreate = async () => {
-    const trimmed = name.trim()
-    if (!trimmed || isCreating) return
+    if (!trimmedName || isCreating || isDuplicate) return
     setIsCreating(true)
+    setError(null)
     try {
-      await onCreate(trimmed, coverSlug ?? undefined)
+      await onCreate(trimmedName, coverSlug ?? undefined)
       setIsCreating(false)
       onOpenChange(false)
-    } catch (error) {
-      console.error('Error creating folder:', error)
+    } catch (err) {
+      console.error('Error creating folder:', err)
+      const message = err instanceof Error ? err.message : ''
+      setError(
+        message === 'FOLDER_NAME_EXISTS'
+          ? t('folders.nameExists')
+          : t('folders.createError')
+      )
       setIsCreating(false)
-      throw error
     }
   }
 
@@ -67,79 +105,116 @@ export function CreateFolderSheet({
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="max-h-[90vh] !bottom-0 flex flex-col gap-0 overflow-hidden rounded-t-[1.75rem] border border-b-0 border-black/[0.06] dark:border-white/[0.08] bg-background/95 dark:bg-background/98 backdrop-blur-xl p-6 pt-0 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
+        className="!bottom-0 z-[60] flex max-h-[90vh] flex-col gap-0 overflow-visible rounded-t-[1.75rem] border-0 border-t-0 bg-transparent p-0 shadow-none"
       >
-        <div className="shrink-0 flex items-center py-1.5 -mt-1">
-          <div className="flex-1" aria-hidden />
-          <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
-          <div className="flex flex-1 justify-end">
-            <SheetClose
-              className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+        <BottomSheetDippedTop onClose={handleClose} hideBorder />
+
+        <div className="-mt-px flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
+          <SheetHeader className="shrink-0 space-y-1 px-6 pb-3 pt-1 text-start">
+            <SheetTitle className="text-xl font-semibold tracking-tight">
+              {t('folders.newFolder')}
+            </SheetTitle>
+            <SheetDescription className="text-sm text-muted-foreground">
+              {t('folders.newFolderDescription')}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-4">
+            <div className="rounded-2xl border border-black/[0.06] bg-white/70 p-3.5 dark:border-white/[0.08] dark:bg-white/[0.06]">
+              <Label
+                htmlFor="create-folder-name"
+                className="mb-2.5 block text-[11px] font-medium text-muted-foreground"
+              >
+                {t('createMenu.folderName')}
+              </Label>
+              <Input
+                id="create-folder-name"
+                type="text"
+                placeholder={t('createMenu.folderNamePlaceholder')}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  if (error) setError(null)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleCreate()
+                  if (e.key === 'Escape') handleClose()
+                }}
+                className={cn(
+                  'h-11 rounded-xl',
+                  (isDuplicate || error) &&
+                    'border-destructive focus-visible:ring-destructive/30'
+                )}
+                autoFocus
+                disabled={isCreating}
+                aria-invalid={isDuplicate || Boolean(error)}
+                aria-describedby={
+                  isDuplicate || error ? 'create-folder-name-error' : undefined
+                }
+              />
+              {(isDuplicate || error) && (
+                <p
+                  id="create-folder-name-error"
+                  className="mt-2 text-sm text-destructive"
+                  role="alert"
+                >
+                  {error ?? t('folders.nameExists')}
+                </p>
+              )}
+            </div>
+
+            {selectedCover && (
+              <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
+                <div className="relative aspect-[2/1] w-full bg-muted">
+                  {selectedCover.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={selectedCover.imageUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary" />
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+                    <p className="text-sm font-medium text-white">
+                      {trimmedName || selectedCover.name}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-black/[0.06] bg-white/70 p-3.5 dark:border-white/[0.08] dark:bg-white/[0.06]">
+              <PlaylistCoverPicker
+                value={coverSlug}
+                onChange={(slug) => {
+                  setCoverTouched(true)
+                  setCoverSlug(slug)
+                }}
+                disabled={isCreating}
+              />
+            </div>
+          </div>
+
+          <SheetFooter className="safe-area-inset-bottom shrink-0 flex-row gap-3 border-t border-black/[0.06] bg-background px-6 py-4 pb-8 dark:border-white/[0.08]">
+            <Button
+              variant="outline"
+              onClick={handleClose}
               disabled={isCreating}
+              className="h-11 min-h-[44px] flex-1 rounded-xl font-medium sm:flex-initial"
             >
-              <XMarkIcon className="h-5 w-5" />
-              <span className="sr-only">{t('common.close')}</span>
-            </SheetClose>
-          </div>
-        </div>
-
-        <SheetHeader className="shrink-0 px-1 pb-2">
-          <SheetTitle className="text-xl font-semibold">{t('folders.newFolder')}</SheetTitle>
-        </SheetHeader>
-
-        <div className="flex-1 min-h-0 overflow-y-auto px-1 pb-4 space-y-4">
-          <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
-            <Label
-              htmlFor="create-folder-name"
-              className="text-[11px] font-medium text-muted-foreground mb-2.5 block"
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={() => void handleCreate()}
+              disabled={isCreating || !trimmedName || isDuplicate}
+              className="h-11 min-h-[44px] flex-1 rounded-xl font-medium sm:flex-initial"
             >
-              {t('sidebar.folderName')}
-            </Label>
-            <Input
-              id="create-folder-name"
-              type="text"
-              placeholder={t('folders.folderNamePlaceholder')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleCreate()
-                if (e.key === 'Escape') handleClose()
-              }}
-              className="h-10 rounded-xl"
-              autoFocus
-              disabled={isCreating}
-            />
-          </div>
-
-          <div className="rounded-2xl bg-muted/50 dark:bg-muted/30 border border-black/[0.06] dark:border-white/[0.08] p-3.5">
-            <PlaylistCoverPicker
-              value={coverSlug}
-              onChange={(slug) => {
-                setCoverTouched(true)
-                setCoverSlug(slug)
-              }}
-              disabled={isCreating}
-            />
-          </div>
+              {isCreating ? t('createMenu.creating') : t('createMenu.createFolderButton')}
+            </Button>
+          </SheetFooter>
         </div>
-
-        <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 border-t border-black/[0.06] dark:border-white/[0.08] bg-background safe-area-inset-bottom">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isCreating}
-            className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={() => void handleCreate()}
-            disabled={isCreating || !name.trim()}
-            className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
-          >
-            {isCreating ? t('createMenu.creating') : t('common.create')}
-          </Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   )

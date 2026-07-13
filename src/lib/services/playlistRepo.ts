@@ -4,7 +4,7 @@ import type { Playlist } from '@/types'
 import type { CreatePlaylistInput } from '@/lib/validation/schemas'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 
-function mapDbPlaylistToDomain(dbPlaylist: Database['public']['Tables']['playlists']['Row'] & { image_url?: string | null; is_public?: boolean }): Playlist {
+function mapDbPlaylistToDomain(dbPlaylist: Database['public']['Tables']['playlists']['Row'] & { image_url?: string | null; is_public?: boolean; curated_slug?: string | null }): Playlist {
   return {
     id: dbPlaylist.id,
     name: dbPlaylist.name,
@@ -13,7 +13,8 @@ function mapDbPlaylistToDomain(dbPlaylist: Database['public']['Tables']['playlis
     updatedAt: new Date(dbPlaylist.updated_at),
     songIds: dbPlaylist.song_ids || [],
     imageUrl: dbPlaylist.image_url || undefined,
-    isPublic: dbPlaylist.is_public
+    isPublic: dbPlaylist.is_public,
+    curatedSlug: dbPlaylist.curated_slug || undefined,
   }
 }
 
