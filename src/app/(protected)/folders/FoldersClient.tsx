@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
-import { FolderIcon, PlusIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, ArrowsUpDownIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { FolderIcon, PlusIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import { FolderCover } from '@/components/presentational/FolderCover'
 import { Folder } from '@/types'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
@@ -398,21 +398,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 )}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsDragMode(!isDragMode)}
-              className={cn(
-                'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 transition-all duration-200',
-                isDragMode
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
-              )}
-              title={isDragMode ? t('folders.disableDrag') : t('folders.enableDrag')}
-              aria-label={isDragMode ? t('folders.disableDrag') : t('folders.enableDrag')}
-            >
-              <ArrowsUpDownIcon className="h-5 w-5 max-lg:shrink-0" />
-            </button>
             <button
               type="button"
               onClick={openFilterSheet}

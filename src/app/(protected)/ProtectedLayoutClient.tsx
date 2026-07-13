@@ -67,7 +67,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     if (path === '/explore' || path.startsWith('/explore/')) return t('navigation.explore')
     if (path === '/add-song') return t('navigation.addSong')
     if (path === '/folders') return t('navigation.folders')
-    if (path === '/folders/new') return t('folders.newFolder')
+    if (path === '/folders/new') return undefined
     if (path.startsWith('/folders/')) return undefined
     if (path === '/chords') return t('navigation.chords')
     if (path === '/chords/progressions') return t('chords.progressionsPageTitle')
