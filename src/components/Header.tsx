@@ -128,8 +128,9 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
   const isSongPage = pathname.includes('/song/')
   const isAddSongPage = pathname === '/add-song'
   const isCreatePlaylistPage = pathname === '/playlist'
+  const isCreateFolderPage = pathname === '/folders/new'
   const showBackWithTitle =
-    isAddSongPage || isCreatePlaylistPage || pageHeaderOverride !== null
+    isAddSongPage || isCreatePlaylistPage || isCreateFolderPage || pageHeaderOverride !== null
   const hideHeaderOnScroll =
     pathname === '/songs' ||
     pathname === '/' ||
@@ -208,6 +209,8 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
                 router.push(pageHeaderOverride.backHref)
               } else if (isCreatePlaylistPage) {
                 router.push('/playlists')
+              } else if (isCreateFolderPage) {
+                router.push('/folders')
               } else {
                 router.back()
               }
@@ -218,9 +221,11 @@ export default function Header({ onMenuClick, pageTitle }: HeaderProps) {
             <BackArrowIcon className="h-5 w-5 shrink-0" />
             <h1 className="truncate text-base font-semibold">
               {pageHeaderOverride?.title ??
-                (isCreatePlaylistPage
-                  ? t('createMenu.createPlaylist')
-                  : t('navigation.addSong'))}
+                (isCreateFolderPage
+                  ? t('folders.newFolder')
+                  : isCreatePlaylistPage
+                    ? t('createMenu.createPlaylist')
+                    : t('navigation.addSong'))}
             </h1>
           </button>
         ) : (

@@ -23,7 +23,6 @@ import {
   MusicalNoteIcon as MusicalNoteIconSolid,
 } from '@heroicons/react/24/solid';
 import MoreMenu from './MoreMenu';
-import { useFoldersContext } from '@/context/FoldersContext';
 
 const MORE_PATHS = ['/leaderboard', '/profile', '/ai-playlist', '/friends'];
 
@@ -33,7 +32,6 @@ export default function BottomNavigation() {
   const { t } = useLanguage();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { folders } = useFoldersContext();
 
   useEffect(() => {
     setMounted(true);
@@ -70,18 +68,18 @@ export default function BottomNavigation() {
       isActive: pathname === '/folders' || pathname.startsWith('/folders/'),
     },
     {
-      href: '/playlists',
-      label: t('navigation.playlists'),
-      icon: QueueListIcon,
-      iconSolid: QueueListIconSolid,
-      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
-    },
-    {
       href: '/chords',
       label: t('navigation.chords'),
       icon: MusicalNoteIcon,
       iconSolid: MusicalNoteIconSolid,
       isActive: pathname === '/chords' || pathname.startsWith('/chords/'),
+    },
+    {
+      href: '/playlists',
+      label: t('navigation.playlists'),
+      icon: QueueListIcon,
+      iconSolid: QueueListIconSolid,
+      isActive: pathname === '/playlists' || pathname.startsWith('/playlists/') || pathname.startsWith('/playlist/'),
     },
   ];
 
@@ -140,7 +138,6 @@ export default function BottomNavigation() {
       <MoreMenu
         isOpen={isMoreMenuOpen}
         onClose={() => setIsMoreMenuOpen(false)}
-        folders={folders}
       />
     </>
   );

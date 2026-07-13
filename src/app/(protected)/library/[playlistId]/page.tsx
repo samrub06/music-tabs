@@ -45,7 +45,7 @@ export default async function PublicPlaylistDetailPage({
 
     return (
       <PublicPlaylistSearchProvider playlist={playlist}>
-        <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+        <div className="flex-1 overflow-y-auto pb-36 lg:pb-6">
           <PublicPlaylistDetailShell
             playlist={playlist}
             songCount={playlist.songIds.length}

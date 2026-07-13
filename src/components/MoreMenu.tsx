@@ -20,16 +20,13 @@ import {
   QueueListIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
+import { useFoldersContext } from '@/context/FoldersContext'
 import ManualEntryForm from './ManualEntryForm'
 import PlaylistImporter from './PlaylistImporter'
-import { CreateFolderSheet } from './CreateFolderSheet'
-import { addFolderAction } from '@/app/(protected)/dashboard/actions'
-import { Folder } from '@/types'
 
 interface MoreMenuProps {
   isOpen: boolean
   onClose: () => void
-  folders?: Folder[]
 }
 
 type MoreView = 'menu' | 'manual' | 'import'
@@ -66,11 +63,11 @@ function MenuNavItem({
   )
 }
 
-export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProps) {
+export default function MoreMenu({ isOpen, onClose }: MoreMenuProps) {
   const { t } = useLanguage()
   const router = useRouter()
+  const { folders } = useFoldersContext()
   const [currentView, setCurrentView] = useState<MoreView>('menu')
-  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false)
 
   const handleClose = () => {
     setCurrentView('menu')
@@ -89,13 +86,6 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
 
   const handleImportComplete = () => {
     handleClose()
-    router.refresh()
-  }
-
-  const handleCreateFolder = async (name: string, coverSlug?: string) => {
-    await addFolderAction(name, coverSlug)
-    handleClose()
-    router.push('/folders')
     router.refresh()
   }
 
@@ -145,10 +135,7 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
                 iconBg="bg-violet-100 dark:bg-violet-900/40"
                 title={t('createMenu.createFolder')}
                 description={t('createMenu.createFolderDescription')}
-                onClick={() => {
-                  onClose()
-                  setIsCreateFolderOpen(true)
-                }}
+                onClick={() => navigate('/folders/new')}
               />
               <MenuNavItem
                 icon={<QueueListIcon className="h-5 w-5 text-rose-600 dark:text-rose-400" />}
@@ -215,13 +202,6 @@ export default function MoreMenu({ isOpen, onClose, folders = [] }: MoreMenuProp
         </div>
       </SheetContent>
     </Sheet>
-
-    <CreateFolderSheet
-      open={isCreateFolderOpen}
-      onOpenChange={setIsCreateFolderOpen}
-      onCreate={handleCreateFolder}
-      existingNames={folders.map((folder) => folder.name)}
-    />
     </>
   )
 }

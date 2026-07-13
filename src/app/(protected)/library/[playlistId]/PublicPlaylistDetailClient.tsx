@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuthContext } from '@/context/AuthContext'
 import { Playlist, Song } from '@/types'
 import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
 import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/actions'
@@ -227,29 +228,15 @@ function PublicPlaylistExpandableSearch() {
   )
 }
 
-function PublicPlaylistHeader({
-  playlist,
-  songCount,
-  canSaveToFolders,
-}: {
-  playlist: Playlist
-  songCount: number
-  canSaveToFolders: boolean
-}) {
+function useSavePublicPlaylistToFolders(playlist: Playlist) {
   const { t } = useLanguage()
   const router = useRouter()
-  const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
   const [isSaving, setIsSaving] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null)
   const [snackbarType, setSnackbarType] = useState<'success' | 'error'>('success')
   const [showSnackbar, setShowSnackbar] = useState(false)
 
-  const songCountLabel =
-    songCount === 1
-      ? `1 ${t('playlistView.songs').slice(0, -1)}`
-      : `${songCount} ${t('playlistView.songs')}`
-
-  const handleSaveToFolders = async () => {
+  const handleSaveToFolders = useCallback(async () => {
     if (isSaving) return
     setIsSaving(true)
     try {
@@ -275,48 +262,151 @@ function PublicPlaylistHeader({
     } finally {
       setIsSaving(false)
     }
+  }, [isSaving, playlist.id, router, t])
+
+  return {
+    isSaving,
+    snackbarMessage,
+    snackbarType,
+    showSnackbar,
+    setShowSnackbar,
+    handleSaveToFolders,
+  }
+}
+
+function AddPlaylistCtaButton({
+  onClick,
+  disabled,
+  isSaving,
+  className,
+}: {
+  onClick: () => void
+  disabled: boolean
+  isSaving: boolean
+  className?: string
+}) {
+  const { t } = useLanguage()
+
+  return (
+    <Button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'h-14 w-full gap-2 rounded-2xl text-base font-semibold shadow-md',
+        className
+      )}
+    >
+      <FolderPlusIcon className="h-6 w-6 shrink-0" />
+      <span>
+        {isSaving ? t('library.addingPlaylist') : t('library.addPlaylistToFolders')}
+      </span>
+    </Button>
+  )
+}
+
+function PublicPlaylistHeader({
+  playlist,
+  songCount,
+  canSaveToFolders,
+}: {
+  playlist: Playlist
+  songCount: number
+  canSaveToFolders: boolean
+}) {
+  const { t } = useLanguage()
+  const { signInWithGoogle } = useAuthContext()
+  const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
+  const {
+    isSaving,
+    snackbarMessage,
+    snackbarType,
+    showSnackbar,
+    setShowSnackbar,
+    handleSaveToFolders,
+  } = useSavePublicPlaylistToFolders(playlist)
+
+  const songCountLabel =
+    songCount === 1
+      ? `1 ${t('playlistView.songs').slice(0, -1)}`
+      : `${songCount} ${t('playlistView.songs')}`
+
+  const handleSignInToSave = () => {
+    void signInWithGoogle(`/library/${playlist.id}`)
   }
 
   return (
-    <div className="px-4 pt-4 sm:px-6">
-      <div className="flex items-center gap-2 sm:gap-3">
-        <h1
-          className={cn(
-            'min-w-0 text-2xl font-bold tracking-tight text-foreground transition-all duration-200 sm:text-3xl',
-            isSearchOpen
-              ? 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
-              : 'flex-1 truncate'
-          )}
-        >
-          {playlist.name}
-        </h1>
+    <>
+      <div className="px-4 pt-4 sm:px-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h1
+            className={cn(
+              'min-w-0 text-2xl font-bold tracking-tight text-foreground transition-all duration-200 sm:text-3xl',
+              isSearchOpen
+                ? 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
+                : 'flex-1 truncate'
+            )}
+          >
+            {playlist.name}
+          </h1>
 
-        <PublicPlaylistExpandableSearch />
+          <PublicPlaylistExpandableSearch />
 
-        <button
-          type="button"
-          onClick={handleStartPlaylist}
-          disabled={songs.length === 0}
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
-          aria-label={t('playlistView.startPlaylist')}
-        >
-          <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
-        </button>
+          <button
+            type="button"
+            onClick={handleStartPlaylist}
+            disabled={songs.length === 0}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-14 sm:w-14"
+            aria-label={t('playlistView.startPlaylist')}
+          >
+            <PlayIcon className="h-6 w-6 translate-x-0.5 sm:h-7 sm:w-7" />
+          </button>
+        </div>
+
+        <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
+
+        {canSaveToFolders ? (
+          <div className="mt-4">
+            <AddPlaylistCtaButton
+              onClick={() => void handleSaveToFolders()}
+              disabled={isSaving || songCount === 0}
+              isSaving={isSaving}
+              className="sm:max-w-md"
+            />
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSignInToSave}
+            className="mt-4 flex h-14 w-full gap-2 rounded-2xl text-base font-semibold sm:max-w-md"
+          >
+            <FolderPlusIcon className="h-6 w-6 shrink-0" />
+            {t('library.signInToAddPlaylist')}
+          </Button>
+        )}
       </div>
 
-      <p className="mt-2 text-xs text-muted-foreground sm:text-sm">{songCountLabel}</p>
-
-      {canSaveToFolders && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => void handleSaveToFolders()}
-          disabled={isSaving || songCount === 0}
-          className="mt-3 h-11 w-full gap-2 rounded-xl font-medium sm:w-auto"
-        >
-          <FolderPlusIcon className="h-5 w-5" />
-          {isSaving ? t('library.addingPlaylist') : t('library.addPlaylistToFolders')}
-        </Button>
+      {canSaveToFolders ? (
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 sm:hidden">
+          <AddPlaylistCtaButton
+            onClick={() => void handleSaveToFolders()}
+            disabled={isSaving || songCount === 0}
+            isSaving={isSaving}
+          />
+        </div>
+      ) : (
+        <div className="fixed inset-x-0 bottom-16 z-40 border-t border-border bg-background/95 p-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 sm:hidden">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSignInToSave}
+            className="h-14 w-full gap-2 rounded-2xl text-base font-semibold"
+          >
+            <FolderPlusIcon className="h-6 w-6 shrink-0" />
+            {t('library.signInToAddPlaylist')}
+          </Button>
+        </div>
       )}
 
       <Snackbar
@@ -325,7 +415,7 @@ function PublicPlaylistHeader({
         onClose={() => setShowSnackbar(false)}
         type={snackbarType}
       />
-    </div>
+    </>
   )
 }
 
@@ -562,7 +652,7 @@ export default function PublicPlaylistDetailClient({
 
   return (
     <PublicPlaylistSearchProvider playlist={playlist}>
-      <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+      <div className="flex-1 overflow-y-auto pb-36 lg:pb-6">
         <div className="relative h-72 w-full overflow-hidden sm:h-auto sm:aspect-[4/3] sm:max-h-[28rem]">
           {coverUrl ? (
             <>
@@ -586,7 +676,11 @@ export default function PublicPlaylistDetailClient({
           </button>
         </div>
 
-        <PublicPlaylistHeader playlist={playlist} songCount={songs.length} />
+        <PublicPlaylistHeader
+          playlist={playlist}
+          songCount={songs.length}
+          canSaveToFolders={Boolean(userId)}
+        />
 
         <PublicPlaylistSongList playlist={playlist} songs={songs} userId={userId} />
       </div>
