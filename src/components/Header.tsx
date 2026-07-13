@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { GeistSans } from 'geist/font/sans'
 
 interface HeaderProps {
   onMenuClick?: () => void
@@ -206,7 +207,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     <Link
       href="/"
       className={cn(
-        'flex min-w-0 items-center gap-1.5 rounded-lg py-1 pe-1 ps-0.5 text-foreground transition-opacity hover:opacity-80',
+        'flex min-w-0 items-center gap-1 rounded-md pe-1 text-foreground transition-opacity hover:opacity-80',
         usesAppSidebar && 'lg:hidden'
       )}
       aria-label={t('common.backToHome')}
@@ -214,9 +215,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <AppLogo
         variant="portrait"
         priority={isLandingPage}
-        className="h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8"
+        className="h-6 w-6 shrink-0 object-contain sm:h-7 sm:w-7"
       />
-      <span className="truncate text-sm font-bold tracking-[0.08em] text-foreground sm:text-base">
+      <span
+        className={cn(
+          GeistSans.className,
+          'truncate text-[13px] font-semibold tracking-[0.04em] text-foreground sm:text-sm'
+        )}
+      >
         TABASCO
       </span>
     </Link>
@@ -263,12 +269,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
             type="button"
             onClick={handleBack}
             className={cn(
-              'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground transition-opacity hover:opacity-80 active:opacity-70',
+              'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-foreground transition-opacity hover:opacity-80 active:opacity-70',
               usesAppSidebar && 'lg:hidden'
             )}
             aria-label={t('common.back')}
           >
-            <BackArrowIcon className="h-5 w-5" />
+            <BackArrowIcon className="h-4 w-4" />
           </button>
         ) : null}
 

@@ -466,7 +466,7 @@ export default function ChordsClient({
   const showVariantCards = visibleVariantGroups.length > 0;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-white dark:bg-background">
       <div
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
