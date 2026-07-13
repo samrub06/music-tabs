@@ -24,7 +24,7 @@ export function PlaylistCoverPicker({
       <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
         {t('playlistsPage.chooseCover')}
       </p>
-      <div className="grid max-h-52 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
+      <div className="grid max-h-40 grid-cols-3 gap-2 overflow-y-auto sm:max-h-52 sm:grid-cols-4">
         {options.map((option) => (
           <button
             key={option.slug}

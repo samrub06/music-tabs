@@ -321,27 +321,35 @@ export default function CreateFolderWizardClient({
         )}
 
         {step === 2 && (
-          <div className="space-y-4 rounded-2xl border border-black/[0.06] bg-white/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.06] sm:p-5">
+          <div className="space-y-3 rounded-2xl border border-black/[0.06] bg-white/70 p-4 dark:border-white/[0.08] dark:bg-white/[0.06] sm:space-y-4 sm:p-5">
             <p className="text-sm text-muted-foreground">{t('folders.stepCoverHint')}</p>
-            {selectedCover && (
-              <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
-                <div className="relative aspect-[2/1] w-full bg-muted">
-                  {selectedCover.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={selectedCover.imageUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary" />
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                    <p className="text-sm font-medium text-white">{trimmedName}</p>
+            <div className="overflow-hidden rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
+              <div className="relative h-28 w-full bg-muted sm:h-36">
+                {selectedCover ? (
+                  <>
+                    {selectedCover.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={selectedCover.imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary" />
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-2.5">
+                      <p className="text-sm font-medium text-white">{trimmedName}</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center px-4">
+                    <p className="text-center text-sm font-medium text-muted-foreground">
+                      {t('folders.selectYourCover')}
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
             <PlaylistCoverPicker
               value={coverSlug}
               onChange={(slug) => {

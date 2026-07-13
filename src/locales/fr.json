@@ -627,6 +627,7 @@
     "stepSongs": "Chansons",
     "stepNameHint": "Choisissez un nom qui n’est pas déjà utilisé.",
     "stepCoverHint": "Choisissez une image de couverture pour cette playlist.",
+    "selectYourCover": "Sélectionnez votre couverture",
     "stepConfirmHint": "Vérifiez que tout est correct, puis créez-la.",
     "stepSongsHint": "Filtrez par style, recherchez, puis sélectionnez dans la liste. Vous pouvez tout sélectionner (affiché).",
     "filterByStyle": "Style",
