@@ -14,7 +14,7 @@ import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
 import { assertCanDeleteSong, assertCanEditSong } from '@/lib/services/songPermissions'
 import { renderStructuredSong } from '@/utils/structuredSong'
-import { createSongSchema, updateSongSchema, createFolderSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
+import { createSongSchema, updateSongSchema, createFolderSchema, createFolderWithSongsSchema, updateFolderSchema, createPlaylistSchema, selectableSongIdsSchema } from '@/lib/validation/schemas'
 import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
 
 export async function addSongAction(payload: NewSongData) {
@@ -167,10 +167,15 @@ export async function deleteSongAction(id: string) {
   revalidatePath('/')
 }
 
-export async function addFolderAction(name: string, coverSlug?: string) {
-  const { name: validatedName, coverSlug: validatedCoverSlug } = createFolderSchema.parse({
+export async function addFolderAction(name: string, coverSlug?: string, songIds?: string[]) {
+  const {
+    name: validatedName,
+    coverSlug: validatedCoverSlug,
+    songIds: validatedSongIds,
+  } = createFolderWithSongsSchema.parse({
     name,
     coverSlug,
+    songIds: songIds ?? [],
   })
   const supabase = await createActionServerClient()
   const repo = folderRepo(supabase)
@@ -178,6 +183,13 @@ export async function addFolderAction(name: string, coverSlug?: string) {
     name: validatedName,
     coverSlug: validatedCoverSlug,
   })
+
+  if (validatedSongIds.length > 0) {
+    const songs = songRepo(supabase)
+    await Promise.all(
+      validatedSongIds.map((songId) => songs.updateSongFolder(songId, created.id))
+    )
+  }
   
   // Award XP for creating folder
   const { data: { user } } = await supabase.auth.getUser()

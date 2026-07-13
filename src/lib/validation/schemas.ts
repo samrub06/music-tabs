@@ -11,6 +11,10 @@ export const createFolderSchema = z.object({
   imageUrl: z.string().optional(),
 })
 
+export const createFolderWithSongsSchema = createFolderSchema.extend({
+  songIds: z.array(z.string().uuid()).max(500).optional().default([]),
+})
+
 export const updateFolderSchema = z.object({
   name: z
     .string()
