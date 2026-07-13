@@ -140,6 +140,7 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -256,7 +257,7 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
           </button>
           <button
             type="button"
-            onClick={() => router.push('/playlist')}
+            onClick={() => setIsCreateSheetOpen(true)}
             className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90"
             aria-label={t('playlistsPage.newPlaylist')}
           >
@@ -264,45 +265,21 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
           </button>
           <button
             type="button"
-            onClick={() => router.push('/ai-playlist')}
+            onClick={() => setView((current) => (current === 'grid' ? 'list' : 'grid'))}
             className={cn(
-              'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-emerald-600 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400',
+              'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
               isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
             )}
-            aria-label={t('createMenu.generatePlaylistWithAI')}
+            title={view === 'grid' ? t('playlistsPage.listView') : t('playlistsPage.gridView')}
+            aria-label={view === 'grid' ? t('playlistsPage.listView') : t('playlistsPage.gridView')}
+            aria-pressed={view === 'list'}
           >
-            <SparklesIcon className="h-5 w-5 max-lg:shrink-0" />
+            {view === 'grid' ? (
+              <ListBulletIcon className="h-5 w-5" />
+            ) : (
+              <Squares2X2Icon className="h-5 w-5" />
+            )}
           </button>
-          <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
-            <button
-              type="button"
-              onClick={() => setView('grid')}
-              className={cn(
-                'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
-                view === 'grid'
-                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              title={t('playlistsPage.gridView')}
-            >
-              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="hidden sm:inline">{t('playlistsPage.gridView')}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('list')}
-              className={cn(
-                'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4',
-                view === 'list'
-                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              title={t('playlistsPage.listView')}
-            >
-              <ListBulletIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="hidden sm:inline">{t('playlistsPage.listView')}</span>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -321,10 +298,10 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
               {t('playlistsPage.startCreating')}
             </p>
             <button
-              onClick={() => router.push('/playlist')}
+              onClick={() => setIsCreateSheetOpen(true)}
               className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium min-h-[44px]"
             >
-              <SparklesIcon className="h-5 w-5" />
+              <PlusIcon className="h-5 w-5" />
               {t('playlistsPage.newPlaylist')}
             </button>
           </div>
@@ -422,6 +399,70 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
               {t('common.apply')}
             </Button>
           </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="flex flex-col gap-0 rounded-t-[1.75rem] border-b-0 border-black/[0.06] bg-background p-0 dark:border-white/[0.08] shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
+        >
+          <div className="shrink-0 flex items-center py-1.5 -mt-1 px-4">
+            <div className="flex-1" aria-hidden />
+            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
+            <div className="flex flex-1 justify-end">
+              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+                <XMarkIcon className="h-5 w-5" />
+                <span className="sr-only">{t('common.close')}</span>
+              </SheetClose>
+            </div>
+          </div>
+          <SheetHeader className="shrink-0 px-6 pb-2">
+            <SheetTitle className="text-xl font-semibold">{t('playlistsPage.newPlaylist')}</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2 px-6 pb-8 safe-area-inset-bottom">
+            <button
+              type="button"
+              onClick={() => {
+                setIsCreateSheetOpen(false)
+                router.push('/playlist')
+              }}
+              className="flex w-full items-center gap-3 rounded-xl border border-black/[0.06] p-3 text-start transition-colors hover:bg-muted/50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-900/40">
+                <PlusIcon className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-foreground">
+                  {t('createMenu.createPlaylist')}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {t('createMenu.createPlaylistDescription')}
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsCreateSheetOpen(false)
+                router.push('/ai-playlist')
+              }}
+              className="flex w-full items-center gap-3 rounded-xl border border-black/[0.06] p-3 text-start transition-colors hover:bg-muted/50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-900/40">
+                <SparklesIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-foreground">
+                  {t('createMenu.generatePlaylistWithAI')}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {t('createMenu.generatePlaylistWithAIDescription')}
+                </div>
+              </div>
+            </button>
+          </div>
         </SheetContent>
       </Sheet>
     </div>

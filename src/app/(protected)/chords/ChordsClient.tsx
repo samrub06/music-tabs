@@ -471,7 +471,7 @@ export default function ChordsClient({
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:px-8">
         <div className="mb-6 space-y-3">
           {/* Search with chord name autocomplete */}
           <div className="relative">
