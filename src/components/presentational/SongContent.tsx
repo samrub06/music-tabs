@@ -307,7 +307,7 @@ export default function SongContent({
 
   const songTitleBlock = (
     <div className="min-w-0 w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
-      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 sm:text-base break-words">
+      <h2 className="text-lg font-bold text-foreground sm:text-base break-words">
         {transposedSong?.title || ''}
       </h2>
       {transposedSong?.author && (
@@ -388,7 +388,7 @@ export default function SongContent({
     transposedSong?.viewCount != null && transposedSong.viewCount > 0 ? (
       <div
         className={cn(
-          'flex h-11 min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/80 bg-white px-2 shadow-sm dark:bg-gray-900'
+          'flex h-11 min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/80 bg-card px-2 shadow-sm'
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -578,11 +578,15 @@ export default function SongContent({
   ) : null;
 
   const actionButtonsRow =
+    ratingDisplay ||
+    viewsDisplay ||
     shareButton ||
     favoriteButton ||
     libraryToggleButton ||
     editButton ? (
       <div className="flex h-11 w-full items-stretch gap-1.5 sm:gap-2">
+        {viewsDisplay}
+        {ratingDisplay}
         {shareButton}
         {favoriteButton}
         {libraryToggleButton}
@@ -591,8 +595,6 @@ export default function SongContent({
     ) : null;
 
   const hasCollapsibleDetails =
-    Boolean(ratingDisplay) ||
-    Boolean(viewsDisplay) ||
     Boolean(actionButtonsRow) ||
     Boolean(folderControl) ||
     Boolean(libraryActionFeedback);
@@ -628,9 +630,9 @@ export default function SongContent({
       }}
       onTouchStart={handleTouchStart}
     >
-      <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
+      <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50 dark:bg-background">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-2.5">
+          <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 sm:gap-2.5">
             {/* Row 1: cover + title + capo */}
             <div className="flex w-full items-start gap-2">
               {songCoverVignette}
@@ -667,12 +669,6 @@ export default function SongContent({
 
             {hasCollapsibleDetails && metaDetailsOpen ? (
               <div className="flex flex-col gap-2">
-                {(ratingDisplay || viewsDisplay) && (
-                  <div className="flex h-11 w-full items-stretch gap-1.5 sm:gap-2">
-                    {ratingDisplay}
-                    {viewsDisplay}
-                  </div>
-                )}
                 {actionButtonsRow}
                 {(folderControl || libraryActionFeedback) && (
                   <div className="flex w-full flex-col gap-1.5">
@@ -701,6 +697,16 @@ export default function SongContent({
             ) : null}
           </div>
 
+          <SongStoryCard
+            songId={transposedSong.id}
+            title={transposedSong.title}
+            author={transposedSong.author ?? ''}
+            tabId={transposedSong.tabId}
+            genre={transposedSong.genre}
+            songKey={transposedSong.key}
+            chordProgression={transposedSong.chordProgression}
+          />
+
           {/* Chord Diagrams Section - accordion */}
           <Collapsible
             open={chordSectionOpen}
@@ -711,7 +717,7 @@ export default function SongContent({
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full font-semibold text-gray-900 dark:text-gray-100 py-3 px-4 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px] text-start"
+                className="w-full font-semibold text-foreground py-3 px-4 rounded-md bg-muted hover:bg-muted/80 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px] text-start"
               >
                 <MusicalNoteIcon className="w-5 h-5 me-2 shrink-0" />
                 {t('songContent.CHORDS_USED_TITLE')}
@@ -836,6 +842,7 @@ export default function SongContent({
                     </button>
                   </div>
                 )}
+                </div>
 
                 <button
                   type="button"
@@ -850,31 +857,25 @@ export default function SongContent({
                     setPracticePlaying(true);
                     onSelectYoutubeMode?.('original');
                   }}
-                  className={toolPillClass(practiceMode)}
+                  className={cn(
+                    'flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
+                    practiceMode
+                      ? 'border-primary/40 bg-primary text-primary-foreground'
+                      : 'border-border/80 bg-muted/40 text-foreground hover:bg-muted/70'
+                  )}
                   title={t('songContent.practiceModeHint')}
                 >
                   {practiceMode ? t('songContent.practiceExit') : t('songContent.practiceMode')}
                 </button>
-                </div>
 
                 {bpm && (
-                  <p className="text-sm font-medium text-blue-600">
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     {t('songContent.BPM_LABEL').replace('{bpm}', String(bpm))}
                   </p>
                 )}
               </div>
             </CollapsibleContent>
           </Collapsible>
-
-          <SongStoryCard
-            songId={transposedSong.id}
-            title={transposedSong.title}
-            author={transposedSong.author ?? ''}
-            tabId={transposedSong.tabId}
-            genre={transposedSong.genre}
-            songKey={transposedSong.key}
-            chordProgression={transposedSong.chordProgression}
-          />
 
           {practiceMode ? (
             <PracticeModeBar
@@ -917,12 +918,12 @@ export default function SongContent({
       </div>
 
       {!isAuthenticated && (
-        <div className="absolute inset-x-0 bottom-0 h-2/3 z-20 flex flex-col items-center justify-end pb-12 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent backdrop-blur-[1px]">
-          <div className="bg-white/90 backdrop-blur-md p-6 rounded-xl shadow-xl border border-gray-200 max-w-sm mx-4 text-center transform translate-y-2">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+        <div className="absolute inset-x-0 bottom-0 h-2/3 z-20 flex flex-col items-center justify-end pb-12 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent backdrop-blur-[1px] dark:from-background dark:via-background/95">
+          <div className="bg-card/95 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border max-w-sm mx-4 text-center transform translate-y-2">
+            <h3 className="text-xl font-bold text-foreground mb-2">
               {t('songContent.FULL_SONG_HIDDEN_TITLE')}
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               {t('songContent.FULL_SONG_HIDDEN_DESCRIPTION')}
             </p>
             <div className="flex flex-col gap-3">
@@ -1112,7 +1113,7 @@ function StructuredSongContent({
     
     if (line.type === 'lyrics_only') {
       content = (
-        <div className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={getTextDirection(line.lyrics)} style={{ 
+        <div className="text-foreground min-h-[1.8rem] break-words w-full" dir={getTextDirection(line.lyrics)} style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
           fontFamily: lyricsFontFamily,
@@ -1126,7 +1127,7 @@ function StructuredSongContent({
       );
     } else if (line.type === 'chords_only') {
       content = (
-        <div dir={songTextDirection} className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
+        <div dir={songTextDirection} className="text-blue-600 dark:text-blue-400 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
           fontFamily: chordFontFamily,
@@ -1180,7 +1181,7 @@ function StructuredSongContent({
         <button
           key={`chord-${match.index}`}
           onClick={() => onChordClick(match![1])}
-          className="hover:text-blue-800 hover:underline cursor-pointer"
+          className="hover:text-blue-800 dark:hover:text-blue-300 hover:underline cursor-pointer"
         >
           {match![1]}
         </button>
@@ -1315,7 +1316,7 @@ function StructuredSongContent({
                 role="button"
                 tabIndex={0}
                 dir={getTextDirection(section.name)}
-                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-gray-100 px-3 py-2.5 text-start font-medium text-gray-700 hover:bg-gray-200/90 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-muted px-3 py-2.5 text-start font-medium text-foreground hover:bg-muted/80"
                 style={{
                   fontSize: `${Math.min(optimalFontSize + 2, 16)}px`,
                   fontFamily: 'system-ui, -apple-system, sans-serif',

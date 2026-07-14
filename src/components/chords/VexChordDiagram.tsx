@@ -4,11 +4,11 @@ import { useLayoutEffect, useRef } from 'react';
 import { ChordBox } from 'vexchords';
 import type { ChordBoxOptions } from 'vexchords';
 import type { VexChordDiagramData } from '@/types/chordVariants';
+import { withChordDiagramTheme } from './chordDiagramTheme';
 
 const DEFAULT_OPTS: ChordBoxOptions = {
   width: 130,
   height: 150,
-  defaultColor: '#444',
 };
 
 interface VexChordDiagramProps {
@@ -27,10 +27,20 @@ export function VexChordDiagram({ chord, options = DEFAULT_OPTS }: VexChordDiagr
 
     const { name: _chordName, ...diagram } = chord;
     el.innerHTML = '';
-    const box = new ChordBox(el, options);
+    const themedOptions = withChordDiagramTheme(options);
+    const box = new ChordBox(el, themedOptions);
     box.draw(diagram);
 
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      el.innerHTML = '';
+      const redraw = new ChordBox(el, withChordDiagramTheme(options));
+      redraw.draw(diagram);
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+
     return () => {
+      observer.disconnect();
       el.innerHTML = '';
     };
   }, [chord, options]);

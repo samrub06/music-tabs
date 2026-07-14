@@ -47,7 +47,7 @@ export default function SongHeader({
   const { t, isRtl } = useLanguage();
 
   return (
-    <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-background relative">
+    <div className="flex-shrink-0 border-b border-border bg-background relative">
       {/* Single row: back, auto-scroll + speed, tools, next */}
       <div
         className="flex items-center justify-between gap-2 p-2 w-full min-w-0"

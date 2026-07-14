@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChordBox } from 'vexchords';
 import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
 import {
@@ -8,6 +8,10 @@ import {
   CHORD_PREVIEW_DIAGRAM_OPTS,
   CHORD_PREVIEW_PIANO_CARD_SCROLL_WIDTH_CLASS,
 } from '@/components/chords/chordCardDimensions';
+import {
+  isDocumentDarkMode,
+  withChordDiagramTheme,
+} from '@/components/chords/chordDiagramTheme';
 import type { ChordInstrument } from '@/components/chords/InstrumentToggle';
 import { getChordVariantGroup } from '@/utils/chordVariantLookup';
 import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
@@ -100,6 +104,15 @@ export function ChordDiagramsGrid({
   );
 
   const useGuitarDiagrams = selectedInstrument !== 'piano';
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(isDocumentDarkMode());
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => setIsDark(isDocumentDarkMode()));
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!useGuitarDiagrams) return;
@@ -116,7 +129,7 @@ export function ChordDiagramsGrid({
         container.innerHTML = '';
         chordBoxesRef.current.delete(songChordName);
 
-        const chordBox = new ChordBox(container, CHORD_PREVIEW_DIAGRAM_OPTS);
+        const chordBox = new ChordBox(container, withChordDiagramTheme(CHORD_PREVIEW_DIAGRAM_OPTS));
         chordBoxesRef.current.set(songChordName, chordBox);
         chordBox.draw({
           chord: dbChord.chordData.chord,
@@ -130,7 +143,7 @@ export function ChordDiagramsGrid({
     return () => {
       clearTimeout(timer);
     };
-  }, [dbOnlyChords, chords, useGuitarDiagrams]);
+  }, [dbOnlyChords, chords, useGuitarDiagrams, isDark]);
 
   return (
     <div>
@@ -154,12 +167,12 @@ export function ChordDiagramsGrid({
                 type="button"
                 onClick={() => onChordClick(songChordName)}
                 className={cn(
-                  'flex min-h-[9.75rem] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-2 shadow-sm hover:border-blue-400 hover:shadow-md sm:w-full',
+                  'flex min-h-[9.75rem] flex-col items-center justify-center rounded-lg border border-border bg-card px-2 shadow-sm hover:border-blue-400 hover:shadow-md dark:hover:border-blue-500 sm:w-full',
                   CHORD_PREVIEW_CARD_SCROLL_WIDTH_CLASS
                 )}
               >
                 <span
-                  className="text-center font-bold text-gray-900"
+                  className="text-center font-bold text-foreground"
                   style={{ fontSize: `${Math.min(fontSize, 14)}px` }}
                   title={songChordName}
                 >

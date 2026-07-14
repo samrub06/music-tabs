@@ -206,7 +206,7 @@ function ChordButtons({
             key={chordIndex}
             type="button"
             onClick={() => onChordClick?.(placedChord.chord)}
-            className="absolute z-10 cursor-pointer whitespace-nowrap text-blue-600 hover:text-blue-800 hover:underline"
+            className="absolute z-10 cursor-pointer whitespace-nowrap text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
             style={{
               left: isHebrew ? 'auto' : `${leftOffset}px`,
               right: isHebrew ? `${leftOffset}px` : 'auto',
@@ -269,7 +269,7 @@ const WrappedChordLyricsLine = React.forwardRef<HTMLDivElement, WrappedChordLyri
         {wrappedLines.map((wrappedLine, lineIndex) => (
           <div key={lineIndex} className="mb-1 w-full" style={{ maxWidth: '100%', overflow: 'hidden' }}>
             <div
-              className="relative min-h-[1.8rem] w-full font-semibold text-blue-600"
+              className="relative min-h-[1.8rem] w-full font-semibold text-blue-600 dark:text-blue-400"
               style={{
                 fontSize: `${fontSize}px`,
                 lineHeight,
@@ -419,7 +419,7 @@ export default function ChordOverLyricsLine({
       style={{ fontFamily: lyricsFontFamily, maxWidth: '100%', overflow: 'hidden' }}
     >
       <div
-        className="relative min-h-[1.8rem] w-full font-semibold text-blue-600"
+        className="relative min-h-[1.8rem] w-full font-semibold text-blue-600 dark:text-blue-400"
         style={{
           fontSize: `${fontSize}px`,
           lineHeight: 1.4,

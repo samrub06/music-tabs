@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { BookOpenIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { BookOpenIcon } from '@heroicons/react/24/outline'
 import { getSongStoryAction } from '@/app/song/[id]/actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { buildSongStoryCanonicalKey } from '@/utils/songStoryKey'
@@ -161,36 +161,28 @@ export function SongStoryCard({
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
       <CollapsibleTrigger asChild>
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           className={cn(
-            'flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3',
-            'text-start transition-colors hover:bg-muted/40',
+            'flex w-full min-h-[48px] cursor-pointer select-none items-center touch-manipulation rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground hover:bg-muted/80',
             UI_TEXT_ALIGN
           )}
           dir={isRtl ? 'rtl' : 'ltr'}
         >
-          <BookOpenIcon className="h-5 w-5 shrink-0 text-primary" />
-          <span className="min-w-0 flex-1 font-semibold text-foreground">
-            {t('songStory.title')}
-          </span>
+          <BookOpenIcon className="me-2 h-5 w-5 shrink-0" />
+          <span className="min-w-0 flex-1">{t('songStory.title')}</span>
           {loading && !story ? (
-            <span className="text-xs text-muted-foreground animate-pulse">
+            <span className="text-xs font-medium text-muted-foreground animate-pulse">
               {t('songStory.loading')}
             </span>
           ) : null}
-          <ChevronDownIcon
-            className={cn(
-              'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
-              open && 'rotate-180'
-            )}
-          />
-        </button>
+        </div>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div
           className={cn(
-            'mt-2 space-y-3 rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm',
+            'mt-2 space-y-3 rounded-md bg-muted/40 px-4 py-3 text-sm',
             UI_TEXT_ALIGN
           )}
           dir={isRtl ? 'rtl' : 'ltr'}

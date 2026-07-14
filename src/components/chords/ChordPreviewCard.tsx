@@ -49,11 +49,11 @@ export function ChordPreviewCard({
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex min-w-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white',
+        'flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card',
         showPiano ? cn(CHORD_PREVIEW_PIANO_CARD_CLASS, 'items-stretch') : 'min-h-[11rem] w-full items-center',
-        'shadow-sm transition-shadow dark:border-gray-700 dark:bg-gray-800',
+        'shadow-sm transition-shadow',
         onClick &&
-          'hover:border-blue-400 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+          'hover:border-blue-400 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:hover:border-blue-500',
         className
       )}
       aria-label={onClick ? `Diagramme ${chordLabel}` : undefined}
@@ -89,7 +89,7 @@ export function ChordPreviewCard({
       >
         <div
           className={cn(
-            'font-bold text-gray-900 dark:text-gray-100',
+            'font-bold text-foreground',
             showPiano ? 'text-xs' : 'text-sm'
           )}
         >
