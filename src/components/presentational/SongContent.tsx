@@ -373,14 +373,11 @@ export default function SongContent({
       </div>
     ) : null;
 
-  const titleRowStatHeight = actionTileHeight;
-
   const ratingDisplay =
     transposedSong?.rating != null ? (
       <div
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3',
-          titleRowStatHeight
+          'flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center rounded-xl border border-border/80 bg-muted/30 px-3'
         )}
       >
         <StarRatingDisplay rating={Number(transposedSong.rating)} size="md" />
@@ -391,15 +388,14 @@ export default function SongContent({
     transposedSong?.viewCount != null && transposedSong.viewCount > 0 ? (
       <div
         className={cn(
-          'flex w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-border/80 bg-white px-2 shadow-sm dark:bg-gray-900 sm:w-16',
-          titleRowStatHeight
+          'flex h-11 min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/80 bg-white px-2 shadow-sm dark:bg-gray-900'
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/eyeview_icon.jpeg"
           alt=""
-          className="h-8 w-8 object-contain"
+          className="h-6 w-6 object-contain"
           aria-hidden
         />
         <span className="text-[10px] font-semibold tabular-nums leading-none text-foreground">
@@ -413,7 +409,7 @@ export default function SongContent({
       <div
         className={cn(
           'flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2 sm:w-16',
-          titleRowStatHeight
+          actionTileHeight
         )}
         title={t('songHeader.capo')}
       >
@@ -426,7 +422,11 @@ export default function SongContent({
       </div>
     ) : null;
 
-  const metaRowActionSize = 'h-11 min-h-11 w-11';
+  const metaRowActionSize = 'h-11 min-h-11';
+  const metaRowActionTileClass = cn(
+    'inline-flex min-w-0 flex-1 items-center justify-center rounded-xl border transition-colors',
+    metaRowActionSize
+  );
 
   const libraryToggleButton =
     isAuthenticated && (onAddToLibrary || onRemoveFromLibrary) ? (
@@ -446,8 +446,8 @@ export default function SongContent({
           (isInLibrary ? !onRemoveFromLibrary : !onAddToLibrary)
         }
         className={cn(
-          'inline-flex shrink-0 items-center justify-center rounded-lg border transition-colors disabled:opacity-70',
-          metaRowActionSize,
+          metaRowActionTileClass,
+          'disabled:opacity-70',
           isInLibrary
             ? 'border-green-600/25 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25'
             : 'border-border/80 bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
@@ -476,8 +476,8 @@ export default function SongContent({
       }}
       disabled={isTogglingFavorite || !onToggleFavorite}
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70',
-        metaRowActionSize
+        metaRowActionTileClass,
+        'border-border/80 text-red-500 hover:bg-red-500/10 disabled:opacity-70'
       )}
       aria-label={
         isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')
@@ -500,8 +500,8 @@ export default function SongContent({
         type="button"
         onClick={onToggleEdit}
         className={cn(
-          'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-foreground transition-colors hover:bg-muted/60',
-          metaRowActionSize
+          metaRowActionTileClass,
+          'border-border/80 text-foreground hover:bg-muted/60'
         )}
         aria-label={t('songHeader.edit')}
         title={t('songHeader.edit')}
@@ -512,8 +512,8 @@ export default function SongContent({
       <Link
         href={`/song/${librarySongId}`}
         className={cn(
-          'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-foreground transition-colors hover:bg-muted/60',
-          metaRowActionSize
+          metaRowActionTileClass,
+          'border-border/80 text-foreground hover:bg-muted/60'
         )}
         aria-label={t('library.editYourCopy')}
         title={t('library.editYourCopy')}
@@ -526,7 +526,7 @@ export default function SongContent({
     onSelectYoutubeMode ? (
       <div
         className={cn(
-          'flex h-11 min-w-0 flex-1 items-stretch gap-0.5 rounded-xl border p-0.5',
+          'flex h-11 w-full min-w-0 items-stretch gap-0.5 rounded-xl border p-0.5',
           youtubeTutorialOpen
             ? 'border-red-500/40 bg-red-500/10'
             : 'border-border/80 bg-muted/30'
@@ -570,7 +570,10 @@ export default function SongContent({
       entityType="song"
       entityId={transposedSong.id}
       entityTitle={transposedSong.title}
-      className="h-11 w-11 rounded-xl border border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground"
+      className={cn(
+        metaRowActionTileClass,
+        'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground'
+      )}
     />
   ) : null;
 
@@ -579,7 +582,7 @@ export default function SongContent({
     favoriteButton ||
     libraryToggleButton ||
     editButton ? (
-      <div className="flex w-full flex-wrap items-center gap-1.5 sm:gap-2">
+      <div className="flex h-11 w-full items-stretch gap-1.5 sm:gap-2">
         {shareButton}
         {favoriteButton}
         {libraryToggleButton}
@@ -587,10 +590,9 @@ export default function SongContent({
       </div>
     ) : null;
 
-  const hasMetaDetails =
+  const hasCollapsibleDetails =
     Boolean(ratingDisplay) ||
     Boolean(viewsDisplay) ||
-    Boolean(youtubeActions) ||
     Boolean(actionButtonsRow) ||
     Boolean(folderControl) ||
     Boolean(libraryActionFeedback);
@@ -628,55 +630,54 @@ export default function SongContent({
     >
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-          <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
-            {/* Row 1: cover + title + capo + expand */}
+          <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-2.5">
+            {/* Row 1: cover + title + capo */}
             <div className="flex w-full items-start gap-2">
               {songCoverVignette}
               <div className="min-w-0 flex-1 self-center">
                 {songTitleBlock}
               </div>
               {capoDisplay}
-              {hasMetaDetails ? (
-                <button
-                  type="button"
-                  onClick={() => setMetaDetailsOpen((open) => !open)}
-                  className={cn(
-                    'inline-flex shrink-0 items-center justify-center self-center rounded-lg border border-border/80 bg-muted/30 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground',
-                    metaRowActionSize
-                  )}
-                  aria-expanded={metaDetailsOpen}
-                  aria-label={
-                    metaDetailsOpen
-                      ? t('songContent.hideDetails')
-                      : t('songContent.showDetails')
-                  }
-                >
-                  <ChevronDownIcon
-                    className={cn(
-                      'h-5 w-5 transition-transform duration-200',
-                      metaDetailsOpen && 'rotate-180'
-                    )}
-                  />
-                </button>
-              ) : null}
             </div>
 
-            {hasMetaDetails && metaDetailsOpen ? (
-              <div className="flex flex-col gap-2.5">
-                {/* Row 2: views, rating, YouTube + actions */}
-                {(ratingDisplay || viewsDisplay || youtubeActions) && (
-                  <div className="flex w-full flex-wrap items-stretch gap-1.5 sm:gap-2">
+            {/* Always-visible YouTube row — full width */}
+            {youtubeActions}
+
+            {/* Slim full-width expand bar for extra actions */}
+            {hasCollapsibleDetails ? (
+              <button
+                type="button"
+                onClick={() => setMetaDetailsOpen((open) => !open)}
+                className="flex h-7 w-full items-center justify-center rounded-lg bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-expanded={metaDetailsOpen}
+                aria-label={
+                  metaDetailsOpen
+                    ? t('songContent.hideDetails')
+                    : t('songContent.showDetails')
+                }
+              >
+                <ChevronDownIcon
+                  className={cn(
+                    'h-4 w-4 transition-transform duration-200',
+                    metaDetailsOpen && 'rotate-180'
+                  )}
+                />
+              </button>
+            ) : null}
+
+            {hasCollapsibleDetails && metaDetailsOpen ? (
+              <div className="flex flex-col gap-2">
+                {(ratingDisplay || viewsDisplay) && (
+                  <div className="flex h-11 w-full items-stretch gap-1.5 sm:gap-2">
                     {ratingDisplay}
                     {viewsDisplay}
-                    {youtubeActions}
                   </div>
                 )}
                 {actionButtonsRow}
-                {/* Row 3: folder + see in playlist */}
                 {(folderControl || libraryActionFeedback) && (
                   <div className="flex w-full flex-col gap-1.5">
                     {folderControl ? (
-                      <div className="flex w-full items-center gap-1.5">
+                      <div className="flex h-11 w-full items-center gap-1.5">
                         {folderControl}
                       </div>
                     ) : null}
