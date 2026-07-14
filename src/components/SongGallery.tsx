@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
@@ -98,35 +97,24 @@ function DraggableSongCard({
         onClick={handleSongClick}
         className={cn(
           'relative aspect-square w-full cursor-pointer overflow-hidden bg-muted',
-          isCompact ? 'rounded-lg' : 'rounded-xl'
+          isCompact ? 'rounded-lg' : 'rounded-xl',
+          hasUser && 'touch-none active:cursor-grabbing'
         )}
+        {...(hasUser ? { ...listeners, ...attributes, style: { touchAction: 'none' } } : {})}
       >
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={coverUrl}
             alt={song.title}
-            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 pointer-events-none"
+            draggable={false}
           />
         ) : (
           <SongCoverPlaceholder
             iconClassName={isCompact ? 'min-h-7 min-w-7 max-h-11 max-w-11' : undefined}
           />
         )}
-
-        {hasUser && (
-          <div
-            {...listeners}
-            {...attributes}
-            onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-2 right-2 z-10 touch-none rounded-md bg-background/90 p-1.5 shadow-sm backdrop-blur-sm transition-colors hover:bg-background active:cursor-grabbing cursor-grab"
-            style={{ touchAction: 'none' }}
-            aria-label="Drag to move song"
-          >
-            <ArrowsUpDownIcon className="h-4 w-4 text-muted-foreground" />
-          </div>
-        )}
-
       </div>
 
       <div

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   SparklesIcon,
@@ -20,8 +20,10 @@ import { Playlist } from '@/types';
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { createPlaylistAction } from '@/app/(protected)/dashboard/actions';
 
 type SortField = 'name' | 'songCount' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
@@ -143,6 +145,16 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [quickName, setQuickName] = useState('');
+  const [quickCreateError, setQuickCreateError] = useState<string | null>(null);
+  const [isCreating, startCreateTransition] = useTransition();
+
+  useEffect(() => {
+    if (!isCreateSheetOpen) {
+      setQuickName('');
+      setQuickCreateError(null);
+    }
+  }, [isCreateSheetOpen]);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearchQuery(localSearchValue), 300);
@@ -204,6 +216,23 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
   const handleStartSavedPlaylist = (e: React.MouseEvent, playlist: Playlist) => {
     e.stopPropagation();
     router.push(`/jams/${playlist.id}`);
+  };
+
+  const handleQuickCreate = () => {
+    const trimmed = quickName.trim();
+    if (!trimmed || isCreating) return;
+    setQuickCreateError(null);
+    startCreateTransition(async () => {
+      try {
+        const created = await createPlaylistAction(trimmed);
+        setIsCreateSheetOpen(false);
+        router.push(`/jams/${created.id}`);
+        router.refresh();
+      } catch (error) {
+        console.error('Quick create jam failed:', error);
+        setQuickCreateError(t('playlistsPage.createError'));
+      }
+    });
   };
 
   const getSongCount = (p: Playlist) => (p as Playlist & { songCount?: number }).songCount ?? p.songIds?.length ?? 0;
@@ -427,7 +456,39 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
           <SheetHeader className="shrink-0 px-6 pb-2">
             <SheetTitle className="text-xl font-semibold">{t('playlistsPage.newPlaylist')}</SheetTitle>
           </SheetHeader>
-          <div className="space-y-2 px-6 pb-8 safe-area-inset-bottom">
+          <div className="space-y-3 px-6 pb-8 safe-area-inset-bottom">
+            <div className="rounded-xl border border-black/[0.06] p-3 dark:border-white/[0.08]">
+              <div className="mb-2 text-sm font-medium text-foreground">
+                {t('playlistsPage.quickCreate')}
+              </div>
+              <p className="mb-3 text-xs text-muted-foreground">
+                {t('playlistsPage.quickCreateDescription')}
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={quickName}
+                  onChange={(e) => setQuickName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleQuickCreate();
+                  }}
+                  placeholder={t('playlistsPage.quickCreateNamePlaceholder')}
+                  disabled={isCreating}
+                  className="h-11 rounded-xl"
+                />
+                <Button
+                  type="button"
+                  onClick={handleQuickCreate}
+                  disabled={isCreating || !quickName.trim()}
+                  className="h-11 shrink-0 rounded-xl px-4"
+                >
+                  {isCreating ? t('playlistsPage.creating') : t('playlistsPage.quickCreateButton')}
+                </Button>
+              </div>
+              {quickCreateError ? (
+                <p className="mt-2 text-xs text-destructive">{quickCreateError}</p>
+              ) : null}
+            </div>
+
             <button
               type="button"
               onClick={() => {

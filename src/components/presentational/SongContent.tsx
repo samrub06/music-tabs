@@ -3,8 +3,13 @@
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import {
   CheckIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   MusicalNoteIcon,
+  PauseIcon,
   PencilSquareIcon,
+  PlayIcon,
   HeartIcon,
   PlusIcon,
   XMarkIcon,
@@ -234,6 +239,10 @@ export default function SongContent({
 
   const [chordSectionOpen, setChordSectionOpen] = useState(true);
   const [showTransposeControls, setShowTransposeControls] = useState(false);
+  const [metaDetailsOpen, setMetaDetailsOpen] = useState(false);
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [practiceLineIndex, setPracticeLineIndex] = useState(0);
+  const [practicePlaying, setPracticePlaying] = useState(false);
 
   const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return 0;
@@ -265,6 +274,36 @@ export default function SongContent({
   };
 
   const coverUrl = useSongCover(transposedSong);
+
+  const practiceLineCount = useMemo(() => {
+    const sections = transposedSong?.sections ?? [];
+    let count = 0;
+    for (const section of sections) {
+      if (section?.name === 'Version Description') continue;
+      count += Array.isArray(section?.lines) ? section.lines.length : 0;
+    }
+    return Math.max(count, 1);
+  }, [transposedSong?.sections]);
+
+  useEffect(() => {
+    setPracticeLineIndex((i) => Math.min(i, practiceLineCount - 1));
+  }, [practiceLineCount]);
+
+  useEffect(() => {
+    if (!practiceMode || !practicePlaying) return;
+    const effectiveBpm = typeof bpm === 'number' && bpm > 0 ? bpm : 80;
+    const msPerLine = Math.round((60_000 / effectiveBpm) * 4);
+    const timer = window.setInterval(() => {
+      setPracticeLineIndex((i) => {
+        if (i >= practiceLineCount - 1) {
+          setPracticePlaying(false);
+          return i;
+        }
+        return i + 1;
+      });
+    }, msPerLine);
+    return () => window.clearInterval(timer);
+  }, [practiceMode, practicePlaying, bpm, practiceLineCount]);
 
   const songTitleBlock = (
     <div className="min-w-0 w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -305,7 +344,7 @@ export default function SongContent({
 
   const folderViewHref = currentFolderId
     ? `/playlists/${currentFolderId}`
-    : '/songs?folder=unorganized'
+    : null
 
   const folderControl =
     isInLibrary && isAuthenticated && onFolderChange ? (
@@ -322,13 +361,15 @@ export default function SongContent({
             fullWidth
           />
         </div>
-        <Button
-          asChild
-          variant="outline"
-          className="h-11 shrink-0 whitespace-nowrap rounded-lg px-2.5 text-xs sm:px-3 sm:text-sm"
-        >
-          <Link href={folderViewHref}>{t('songContent.seeThisFolder')}</Link>
-        </Button>
+        {folderViewHref ? (
+          <Button
+            asChild
+            variant="outline"
+            className="h-11 shrink-0 whitespace-nowrap rounded-lg px-2.5 text-xs sm:px-3 sm:text-sm"
+          >
+            <Link href={folderViewHref}>{t('songContent.seeThisFolder')}</Link>
+          </Button>
+        ) : null}
       </div>
     ) : null;
 
@@ -436,8 +477,7 @@ export default function SongContent({
       disabled={isTogglingFavorite || !onToggleFavorite}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-70',
-        actionTileHeight,
-        'w-14 sm:w-16'
+        metaRowActionSize
       )}
       aria-label={
         isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites')
@@ -461,8 +501,7 @@ export default function SongContent({
         onClick={onToggleEdit}
         className={cn(
           'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-foreground transition-colors hover:bg-muted/60',
-          actionTileHeight,
-          'w-14 sm:w-16'
+          metaRowActionSize
         )}
         aria-label={t('songHeader.edit')}
         title={t('songHeader.edit')}
@@ -474,8 +513,7 @@ export default function SongContent({
         href={`/song/${librarySongId}`}
         className={cn(
           'inline-flex shrink-0 items-center justify-center rounded-lg border border-border/80 text-foreground transition-colors hover:bg-muted/60',
-          actionTileHeight,
-          'w-14 sm:w-16'
+          metaRowActionSize
         )}
         aria-label={t('library.editYourCopy')}
         title={t('library.editYourCopy')}
@@ -484,72 +522,78 @@ export default function SongContent({
       </Link>
     ) : null;
 
-  const addToLibraryTitleButton =
-    !isInLibrary && isAuthenticated && onAddToLibrary ? (
-      <Button
-        type="button"
-        variant="outline"
-        onClick={(e) => {
-          e.stopPropagation();
-          onAddToLibrary();
-        }}
-        disabled={isAddingToLibrary}
+  const youtubeActions =
+    onSelectYoutubeMode ? (
+      <div
         className={cn(
-          'shrink-0 rounded-lg px-2.5 sm:px-3',
-          actionTileHeight,
-          'w-11 sm:w-12'
+          'flex h-11 min-w-0 flex-1 items-stretch gap-0.5 rounded-xl border p-0.5',
+          youtubeTutorialOpen
+            ? 'border-red-500/40 bg-red-500/10'
+            : 'border-border/80 bg-muted/30'
         )}
-        aria-label={t('library.addToLibrary')}
-        title={t('library.addToLibrary')}
+        role="group"
+        aria-label={t('youtubeTutorial.title')}
       >
-        {isAddingToLibrary ? (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        ) : (
-          <PlusIcon className="h-4 w-4 shrink-0" aria-hidden />
-        )}
-      </Button>
+        <button
+          type="button"
+          onClick={() => onSelectYoutubeMode('tutorial')}
+          className={cn(
+            'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+            youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
+              ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
+        >
+          <Youtube className="h-4 w-4 shrink-0" />
+          <span className="truncate">{t('youtubeTutorial.modeTutorial')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onSelectYoutubeMode('original')}
+          className={cn(
+            'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+            youtubeTutorialOpen && youtubeVideoMode === 'original'
+              ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
+        >
+          <Youtube className="h-4 w-4 shrink-0" />
+          <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
+        </button>
+      </div>
     ) : null;
 
-  const titleRowTrailingActions =
-    ratingDisplay ||
-    viewsDisplay ||
-    capoDisplay ||
+  const shareButton = user ? (
+    <ShareWithFriendIconButton
+      entityType="song"
+      entityId={transposedSong.id}
+      entityTitle={transposedSong.title}
+      className="h-11 w-11 rounded-xl border border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground"
+    />
+  ) : null;
+
+  const actionButtonsRow =
+    shareButton ||
     favoriteButton ||
-    editButton ||
-    addToLibraryTitleButton ? (
-      <div className="flex w-full flex-wrap items-stretch gap-1.5 sm:gap-2">
-        {ratingDisplay}
-        {viewsDisplay}
-        {capoDisplay}
+    libraryToggleButton ||
+    editButton ? (
+      <div className="flex w-full flex-wrap items-center gap-1.5 sm:gap-2">
+        {shareButton}
         {favoriteButton}
+        {libraryToggleButton}
         {editButton}
-        {addToLibraryTitleButton}
       </div>
     ) : null;
 
-  const songMetaRow =
-    folderControl || (isInLibrary ? libraryToggleButton : null) || libraryActionFeedback ? (
-      <div className="flex w-full flex-col gap-1.5">
-        <div className="flex w-full items-center gap-1.5">
-          {folderControl}
-          {libraryToggleButton}
-        </div>
-        {libraryActionFeedback ? (
-          <p
-            role="status"
-            aria-live="polite"
-            className={cn(
-              'text-xs font-medium',
-              libraryActionFeedback.type === 'success'
-                ? 'text-green-700 dark:text-green-400'
-                : 'text-destructive'
-            )}
-          >
-            {libraryActionFeedback.message}
-          </p>
-        ) : null}
-      </div>
-    ) : null;
+  const hasMetaDetails =
+    Boolean(ratingDisplay) ||
+    Boolean(viewsDisplay) ||
+    Boolean(youtubeActions) ||
+    Boolean(actionButtonsRow) ||
+    Boolean(folderControl) ||
+    Boolean(libraryActionFeedback);
 
   if (isEditing) {
     return (
@@ -585,69 +629,75 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl bg-white px-4 py-3 dark:bg-gray-900/60 sm:gap-3">
-            <div className="flex flex-col gap-3">
-              <div className={cn('flex w-full items-start gap-2')}>
-                {songCoverVignette}
-                <div className="min-w-0 flex-1 self-center">
-                  {songTitleBlock}
-                </div>
+            {/* Row 1: cover + title + capo + expand */}
+            <div className="flex w-full items-start gap-2">
+              {songCoverVignette}
+              <div className="min-w-0 flex-1 self-center">
+                {songTitleBlock}
               </div>
-              {titleRowTrailingActions}
-              {songMetaRow}
-              {(onSelectYoutubeMode || user) && (
-                <div className="flex items-center gap-2">
-                  {onSelectYoutubeMode && (
-                    <div
-                      className={cn(
-                        'flex h-11 min-w-0 flex-1 items-stretch gap-0.5 rounded-xl border p-0.5',
-                        youtubeTutorialOpen
-                          ? 'border-red-500/40 bg-red-500/10'
-                          : 'border-border/80 bg-muted/30'
-                      )}
-                      role="group"
-                      aria-label={t('youtubeTutorial.title')}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => onSelectYoutubeMode('tutorial')}
-                        className={cn(
-                          'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
-                          youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
-                            ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
-                            : 'text-muted-foreground hover:text-foreground'
-                        )}
-                        aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
-                      >
-                        <Youtube className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{t('youtubeTutorial.modeTutorial')}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onSelectYoutubeMode('original')}
-                        className={cn(
-                          'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
-                          youtubeTutorialOpen && youtubeVideoMode === 'original'
-                            ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
-                            : 'text-muted-foreground hover:text-foreground'
-                        )}
-                        aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
-                      >
-                        <Youtube className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
-                      </button>
-                    </div>
+              {capoDisplay}
+              {hasMetaDetails ? (
+                <button
+                  type="button"
+                  onClick={() => setMetaDetailsOpen((open) => !open)}
+                  className={cn(
+                    'inline-flex shrink-0 items-center justify-center self-center rounded-lg border border-border/80 bg-muted/30 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground',
+                    metaRowActionSize
                   )}
-                  {user && (
-                    <ShareWithFriendIconButton
-                      entityType="song"
-                      entityId={transposedSong.id}
-                      entityTitle={transposedSong.title}
-                      className="h-11 w-11 rounded-xl border border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground"
-                    />
-                  )}
-                </div>
-              )}
+                  aria-expanded={metaDetailsOpen}
+                  aria-label={
+                    metaDetailsOpen
+                      ? t('songContent.hideDetails')
+                      : t('songContent.showDetails')
+                  }
+                >
+                  <ChevronDownIcon
+                    className={cn(
+                      'h-5 w-5 transition-transform duration-200',
+                      metaDetailsOpen && 'rotate-180'
+                    )}
+                  />
+                </button>
+              ) : null}
             </div>
+
+            {hasMetaDetails && metaDetailsOpen ? (
+              <div className="flex flex-col gap-2.5">
+                {/* Row 2: views, rating, YouTube + actions */}
+                {(ratingDisplay || viewsDisplay || youtubeActions) && (
+                  <div className="flex w-full flex-wrap items-stretch gap-1.5 sm:gap-2">
+                    {ratingDisplay}
+                    {viewsDisplay}
+                    {youtubeActions}
+                  </div>
+                )}
+                {actionButtonsRow}
+                {/* Row 3: folder + see in playlist */}
+                {(folderControl || libraryActionFeedback) && (
+                  <div className="flex w-full flex-col gap-1.5">
+                    {folderControl ? (
+                      <div className="flex w-full items-center gap-1.5">
+                        {folderControl}
+                      </div>
+                    ) : null}
+                    {libraryActionFeedback ? (
+                      <p
+                        role="status"
+                        aria-live="polite"
+                        className={cn(
+                          'text-xs font-medium',
+                          libraryActionFeedback.type === 'success'
+                            ? 'text-green-700 dark:text-green-400'
+                            : 'text-destructive'
+                        )}
+                      >
+                        {libraryActionFeedback.message}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
 
           {/* Chord Diagrams Section - accordion */}
@@ -785,6 +835,25 @@ export default function SongContent({
                     </button>
                   </div>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (practiceMode) {
+                      setPracticeMode(false);
+                      setPracticePlaying(false);
+                      return;
+                    }
+                    setPracticeMode(true);
+                    setPracticeLineIndex(0);
+                    setPracticePlaying(true);
+                    onSelectYoutubeMode?.('original');
+                  }}
+                  className={toolPillClass(practiceMode)}
+                  title={t('songContent.practiceModeHint')}
+                >
+                  {practiceMode ? t('songContent.practiceExit') : t('songContent.practiceMode')}
+                </button>
                 </div>
 
                 {bpm && (
@@ -806,11 +875,30 @@ export default function SongContent({
             chordProgression={transposedSong.chordProgression}
           />
 
+          {practiceMode ? (
+            <PracticeModeBar
+              lineIndex={practiceLineIndex}
+              lineCount={practiceLineCount}
+              isPlaying={practicePlaying}
+              onPrev={() => setPracticeLineIndex((i) => Math.max(0, i - 1))}
+              onNext={() =>
+                setPracticeLineIndex((i) => Math.min(practiceLineCount - 1, i + 1))
+              }
+              onTogglePlay={() => setPracticePlaying((p) => !p)}
+              onExit={() => {
+                setPracticeMode(false);
+                setPracticePlaying(false);
+              }}
+            />
+          ) : null}
+
           {/* Song Content */}
           <StructuredSongContent 
             song={transposedSong} 
             onChordClick={onChordClick}
             fontSize={fontSize}
+            practiceMode={practiceMode}
+            practiceLineIndex={practiceLineIndex}
           />
 
           {isAuthenticated && (
@@ -857,9 +945,77 @@ interface StructuredSongContentProps {
   song: any;
   onChordClick: (chord: string) => void;
   fontSize: number;
+  practiceMode?: boolean;
+  practiceLineIndex?: number;
 }
 
-function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongContentProps) {
+function PracticeModeBar({
+  lineIndex,
+  lineCount,
+  isPlaying,
+  onPrev,
+  onNext,
+  onTogglePlay,
+  onExit,
+}: {
+  lineIndex: number;
+  lineCount: number;
+  isPlaying: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  onTogglePlay: () => void;
+  onExit: () => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <div className="sticky top-0 z-10 flex items-center gap-2 rounded-xl border border-primary/20 bg-background/95 px-3 py-2 shadow-sm backdrop-blur-md">
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={lineIndex <= 0}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 text-foreground disabled:opacity-40"
+        aria-label={t('songContent.practicePrev')}
+      >
+        <ChevronLeftIcon className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={onTogglePlay}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground"
+        aria-label={isPlaying ? t('songContent.practicePause') : t('songContent.practicePlay')}
+      >
+        {isPlaying ? <PauseIcon className="h-5 w-5" /> : <PlayIcon className="h-5 w-5" />}
+      </button>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={lineIndex >= lineCount - 1}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 text-foreground disabled:opacity-40"
+        aria-label={t('songContent.practiceNext')}
+      >
+        <ChevronRightIcon className="h-5 w-5" />
+      </button>
+      <span className="ms-1 min-w-0 flex-1 truncate text-xs font-medium tabular-nums text-muted-foreground">
+        {lineIndex + 1} / {lineCount}
+      </span>
+      <button
+        type="button"
+        onClick={onExit}
+        className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        {t('songContent.practiceExit')}
+      </button>
+    </div>
+  );
+}
+
+function StructuredSongContent({
+  song,
+  onChordClick,
+  fontSize,
+  practiceMode = false,
+  practiceLineIndex = 0,
+}: StructuredSongContentProps) {
   const { t } = useLanguage();
   const measurementRef = useRef<HTMLDivElement>(null);
   const songTextDirection = useMemo(
@@ -940,16 +1096,22 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     return getResponsiveFontSize(baseFontSize, windowWidth);
   };
 
-  const renderSongLine = (line: any, lineIndex: number) => {
+  const renderSongLine = (line: any, lineIndex: number, globalLineIndex?: number) => {
     const optimalFontSize = getOptimalFontSize(fontSize);
     const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
     const isHebrewLine = containsHebrew(line.lyrics ?? line.chord_line ?? '');
     const lyricsFontFamily = getSongLyricsFontFamily(isHebrewLine);
     const chordFontFamily = getSongChordFontFamily();
+    const isPracticeActive =
+      practiceMode && typeof globalLineIndex === 'number' && globalLineIndex === practiceLineIndex;
+    const isPracticeDimmed =
+      practiceMode && typeof globalLineIndex === 'number' && globalLineIndex !== practiceLineIndex;
+
+    let content: React.ReactNode = null;
     
     if (line.type === 'lyrics_only') {
-      return (
-        <div key={lineIndex} className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={getTextDirection(line.lyrics)} style={{ 
+      content = (
+        <div className="text-gray-900 min-h-[1.8rem] break-words w-full" dir={getTextDirection(line.lyrics)} style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
           fontFamily: lyricsFontFamily,
@@ -961,11 +1123,9 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
           {line.lyrics || ''}
         </div>
       );
-    }
-    
-    if (line.type === 'chords_only') {
-      return (
-        <div key={lineIndex} dir={songTextDirection} className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
+    } else if (line.type === 'chords_only') {
+      content = (
+        <div dir={songTextDirection} className="text-blue-600 font-semibold min-h-[1.8rem] break-words w-full" style={{ 
           fontSize: `${optimalFontSize}px`, 
           lineHeight: optimalLineHeight,
           fontFamily: chordFontFamily,
@@ -977,20 +1137,31 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
           {line.chord_line ? renderClickableChordLine(line.chord_line) : ''}
         </div>
       );
-    }
-    
-    if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
-      return (
+    } else if (line.type === 'chord_over_lyrics' && line.chords && line.lyrics) {
+      content = (
         <ChordOverLyricsLine 
-          key={lineIndex}
           line={line}
           fontSize={optimalFontSize}
           onChordClick={onChordClick}
         />
       );
     }
-    
-    return null;
+
+    if (!content) return null;
+
+    return (
+      <div
+        key={lineIndex}
+        data-practice-line={globalLineIndex}
+        className={cn(
+          'rounded-lg transition-all duration-200',
+          isPracticeActive && 'bg-primary/10 ring-2 ring-primary/40 px-2 py-1.5 scale-[1.01]',
+          isPracticeDimmed && 'opacity-25'
+        )}
+      >
+        {content}
+      </div>
+    );
   };
   
   const renderClickableChordLine = (chordLine: string) => {
@@ -1024,7 +1195,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
     return parts;
   };
 
-  const renderSectionLines = (lines: any[]) => {
+  const renderSectionLines = (lines: any[], sectionStartIndex: number) => {
     return groupLinesForDisplay(lines).map((group, groupIndex) => {
       if (group.kind === 'repeat') {
         return (
@@ -1052,7 +1223,11 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
             </div>
             <div className="min-w-0 flex-1 space-y-1 py-1 pe-1">
               {group.lines.map((line, lineIndex) =>
-                renderSongLine(line, group.startIndex + lineIndex + 1)
+                renderSongLine(
+                  line,
+                  group.startIndex + lineIndex + 1,
+                  sectionStartIndex + group.startIndex + lineIndex
+                )
               )}
             </div>
           </div>
@@ -1060,11 +1235,46 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
       }
 
       return group.lines.map((line, lineIndex) =>
-        renderSongLine(line, group.startIndex + lineIndex)
+        renderSongLine(
+          line,
+          group.startIndex + lineIndex,
+          sectionStartIndex + group.startIndex + lineIndex
+        )
       );
     });
   };
   
+  useEffect(() => {
+    if (!practiceMode) return;
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      song.sections.forEach((s: { name: string }, i: number) => {
+        if (s.name !== 'Version Description') next.add(i);
+      });
+      return next;
+    });
+  }, [practiceMode, song.sections]);
+
+  useEffect(() => {
+    if (!practiceMode) return;
+    const el = document.querySelector(`[data-practice-line="${practiceLineIndex}"]`);
+    if (el instanceof HTMLElement) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [practiceMode, practiceLineIndex]);
+
+  const sectionStartOffsets = useMemo(() => {
+    const offsets: number[] = [];
+    let running = 0;
+    for (const section of song.sections as Array<{ name: string; lines?: unknown[] }>) {
+      offsets.push(running);
+      if (section.name !== 'Version Description') {
+        running += Array.isArray(section.lines) ? section.lines.length : 0;
+      }
+    }
+    return offsets;
+  }, [song.sections]);
+
   const optimalFontSize = getOptimalFontSize(fontSize);
   const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
   const songHasHebrew = songTextDirection === 'rtl';
@@ -1118,7 +1328,7 @@ function StructuredSongContent({ song, onChordClick, fontSize }: StructuredSongC
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="space-y-1 w-full pt-2" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                {renderSectionLines(section.lines)}
+                {renderSectionLines(section.lines, sectionStartOffsets[sectionIndex] ?? 0)}
               </div>
             </CollapsibleContent>
           </Collapsible>

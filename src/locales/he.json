@@ -703,7 +703,13 @@
     "noPlaylistsMatch": "אין סשני ג׳אם התואמים לחיפוש שלך.",
     "startCreating": "צור את סשן הג׳אם הראשון שלך.",
     "playPlaylist": "השמע",
-    "chooseCover": "תמונת כריכה"
+    "chooseCover": "תמונת כריכה",
+    "quickCreate": "ג'אם ריק",
+    "quickCreateDescription": "תן שם עכשיו, הוסף שירים אחר כך",
+    "quickCreateNamePlaceholder": "שם הג'אם",
+    "quickCreateButton": "צור",
+    "creating": "יוצר…",
+    "createError": "לא ניתן ליצור ג'אם"
   },
   "chords": {
     "markAsKnown": "סמן כלא ידוע",
@@ -841,6 +847,15 @@
     "TRANSPOSE_LABEL": "העבר טון",
     "BPM_LABEL": "{bpm} BPM",
     "seeThisFolder": "ראה פלייליסט זה",
+    "showDetails": "הצג פרטי שיר",
+    "hideDetails": "הסתר פרטי שיר",
+    "practiceMode": "שורה אחר שורה",
+    "practiceModeHint": "עקוב שורה אחר שורה עם המוזיקה",
+    "practicePlay": "נגן יחד",
+    "practicePause": "השהה",
+    "practiceExit": "צא מתרגול",
+    "practicePrev": "שורה קודמת",
+    "practiceNext": "שורה הבאה",
     "FULL_SONG_HIDDEN_TITLE": "השיר המלא מוסתר",
     "FULL_SONG_HIDDEN_DESCRIPTION": "התחבר כדי לגשת לכל השיר ולהוסיף אותו לספרייה שלך."
   },

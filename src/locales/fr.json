@@ -703,7 +703,13 @@
     "noPlaylistsMatch": "Aucune session jam ne correspond à votre recherche.",
     "startCreating": "Créez votre première session jam.",
     "playPlaylist": "Lire",
-    "chooseCover": "Image de couverture"
+    "chooseCover": "Image de couverture",
+    "quickCreate": "Jam vide",
+    "quickCreateDescription": "Nommez-le maintenant, ajoutez des chansons plus tard",
+    "quickCreateNamePlaceholder": "Nom de la jam",
+    "quickCreateButton": "Créer",
+    "creating": "Création…",
+    "createError": "Impossible de créer la jam"
   },
   "chords": {
     "markAsKnown": "Marquer comme inconnu",
@@ -841,6 +847,15 @@
     "TRANSPOSE_LABEL": "Transposer",
     "BPM_LABEL": "{bpm} BPM",
     "seeThisFolder": "Voir cette playlist",
+    "showDetails": "Afficher les détails",
+    "hideDetails": "Masquer les détails",
+    "practiceMode": "Ligne par ligne",
+    "practiceModeHint": "Suivez une ligne à la fois avec la musique",
+    "practicePlay": "Jouer avec",
+    "practicePause": "Pause",
+    "practiceExit": "Quitter",
+    "practicePrev": "Ligne précédente",
+    "practiceNext": "Ligne suivante",
     "FULL_SONG_HIDDEN_TITLE": "Chanson complète masquée",
     "FULL_SONG_HIDDEN_DESCRIPTION": "Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque."
   },

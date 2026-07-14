@@ -24,7 +24,7 @@ export default async function SongsData({
   const initialSongId = params?.songId || undefined
   const initialFolder = params?.folder || undefined
   const initialSortOrder = (params?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
-  const view = (params?.view === 'gallery' ? 'gallery' : 'table') as 'gallery' | 'table'
+  const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const easyChord = params?.easyChord === '1' || params?.easyChord === 'true'
   const capoParam = params?.capo as string | undefined
   const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'

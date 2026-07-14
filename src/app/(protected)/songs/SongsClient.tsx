@@ -57,7 +57,7 @@ interface SongsClientProps {
   folderSongCounts?: FolderSongCounts
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'table', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'gallery', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
   const { t } = useLanguage()
   const { folders, refreshFolders } = useFoldersContext()
   
@@ -734,7 +734,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </>
           ) : (
             <>
-              <SongGallery songs={sortedSongs} />
+              <SongGallery songs={sortedSongs} variant="folder" hasUser />
               <Pagination
                 page={displayPage}
                 limit={limit}
