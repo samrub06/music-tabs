@@ -27,7 +27,7 @@ import { addFolderAction, updateSongFolderAction, deleteSongsAction, deleteAllSo
 import { fetchUserSongsListAction } from './actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAddSongModal } from '@/context/AddSongModalContext'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
@@ -291,9 +291,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
   }, [searchParams])
 
-  // Configure sensors for drag and drop
+  // Mouse only — touch drag on song vignettes breaks scrolling on phone
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8,
       },

@@ -12,7 +12,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { Song, Folder } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '@/app/(protected)/dashboard/actions'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
@@ -136,8 +136,9 @@ export default function FolderSongsClient({
     }
   }, [searchParams])
 
+  // Mouse only — touch drag on song vignettes breaks scrolling on phone
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: { distance: 8 },
     })
   )

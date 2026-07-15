@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { useSongCover } from '@/lib/hooks/useSongCover'
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface SongGalleryProps {
   songs: Song[]
@@ -43,6 +44,10 @@ function DraggableSongCard({
   hasUser?: boolean
   variant?: 'default' | 'compact' | 'folder'
 }) {
+  const isMobile = useIsMobile()
+  // Drag-to-folder is desktop-only; on phone it fights scrolling and accidental moves.
+  const canDrag = Boolean(hasUser) && !isMobile
+
   const {
     attributes,
     listeners,
@@ -51,7 +56,7 @@ function DraggableSongCard({
     isDragging,
   } = useDraggable({
     id: song.id,
-    disabled: !hasUser,
+    disabled: !canDrag,
   })
 
   const style = {
@@ -98,9 +103,9 @@ function DraggableSongCard({
         className={cn(
           'relative aspect-square w-full cursor-pointer overflow-hidden bg-muted',
           isCompact ? 'rounded-lg' : 'rounded-xl',
-          hasUser && 'touch-none active:cursor-grabbing'
+          canDrag && 'active:cursor-grabbing'
         )}
-        {...(hasUser ? { ...listeners, ...attributes, style: { touchAction: 'none' } } : {})}
+        {...(canDrag ? { ...listeners, ...attributes } : {})}
       >
         {coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
