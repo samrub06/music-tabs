@@ -118,6 +118,7 @@ export interface Database {
           bpm: number | null
           all_chords: string[] | null
           is_liked: boolean
+          cloned_from_id: string | null
         }
         Insert: {
           id?: string
@@ -154,6 +155,7 @@ export interface Database {
           bpm?: number | null
           all_chords?: string[] | null
           is_liked?: boolean
+          cloned_from_id?: string | null
         }
         Update: {
           id?: string
@@ -190,6 +192,77 @@ export interface Database {
           decade?: number | null
           bpm?: number | null
           all_chords?: string[] | null
+          cloned_from_id?: string | null
+        }
+      }
+      song_recordings: {
+        Row: {
+          id: string
+          song_id: string
+          user_id: string
+          storage_path: string
+          duration_ms: number | null
+          line_markers: Json
+          is_public: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          song_id: string
+          user_id: string
+          storage_path: string
+          duration_ms?: number | null
+          line_markers?: Json
+          is_public?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          song_id?: string
+          user_id?: string
+          storage_path?: string
+          duration_ms?: number | null
+          line_markers?: Json
+          is_public?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      song_edit_suggestions: {
+        Row: {
+          id: string
+          catalog_song_id: string
+          from_user_id: string
+          from_song_id: string
+          message: string
+          status: string
+          created_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          id?: string
+          catalog_song_id: string
+          from_user_id: string
+          from_song_id: string
+          message?: string
+          status?: string
+          created_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          id?: string
+          catalog_song_id?: string
+          from_user_id?: string
+          from_song_id?: string
+          message?: string
+          status?: string
+          created_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
         }
       }
       playlists: {

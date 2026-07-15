@@ -83,6 +83,25 @@ export interface StructuredSong {
   allChords?: string[];
   isLiked?: boolean;
   isPublic?: boolean;
+  /** Catalog song this personal copy was cloned from (null for originals / catalog). */
+  clonedFromId?: string;
+}
+
+export interface SongLineMarker {
+  lineIndex: number
+  startMs: number
+}
+
+export interface SongRecording {
+  id: string
+  songId: string
+  userId: string
+  storagePath: string
+  durationMs?: number
+  lineMarkers: SongLineMarker[]
+  isPublic: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Type pour ajouter une nouvelle chanson (avec contenu texte)
@@ -111,6 +130,7 @@ export interface NewSongData {
   tabId?: string;
   genre?: string;
   bpm?: number;
+  clonedFromId?: string | null;
 }
 
 export interface SongStory {

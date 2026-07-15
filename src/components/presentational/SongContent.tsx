@@ -16,14 +16,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 import dynamic from 'next/dynamic';
-import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import React, { RefObject, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import ChordOverLyricsLine from '@/components/presentational/ChordOverLyricsLine';
 import SongStructuredEditor from '@/components/presentational/SongStructuredEditor';
 import { getOptimalLineHeight, getResponsiveFontSize } from '@/utils/textMeasurement';
 import { getSongChordFontFamily, getSongLyricsFontFamily } from '@/utils/songFonts';
 import type { ChordInstrument } from '@/components/chords/InstrumentToggle';
-import type { Chord, Folder, SongLine, SongSection } from '@/types';
+import type { Chord, Folder, SongLine, SongSection, SongRecording } from '@/types';
 import FolderDropdown from '@/components/FolderDropdown';
 import { normalizeChordNameForComparison } from '@/utils/chords';
 import { generateAllKeys } from '@/utils/chords';
@@ -37,21 +37,30 @@ import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import ShareWithFriendIconButton from '@/components/social/ShareWithFriendIconButton';
 import { containsHebrew, getTextDirection } from '@/utils/rtl';
-
-const ChordDiagramsGrid = dynamic(
-  () => import('./ChordDiagramsGrid').then((mod) => mod.ChordDiagramsGrid),
-  { ssr: false }
-);
+import { submitSongEditSuggestionAction } from '@/app/song/[id]/suggestion-actions';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
+import { SongRecordingPanel } from '@/components/practice/SongRecordingPanel';
+import { usePracticeAudio } from '@/lib/hooks/usePracticeAudio';
 import { SongStoryCard } from './SongStoryCard';
 import { StarRatingDisplay } from './StarRatingDisplay';
 import { useSongCover } from '@/lib/hooks/useSongCover';
+import { useLandscapePractice } from '@/lib/hooks/useLandscapePractice';
+import {
+  extractPracticeLines,
+  LandscapePracticeView,
+} from '@/components/practice/LandscapePracticeView';
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
+
+const ChordDiagramsGrid = dynamic(
+  () => import('./ChordDiagramsGrid').then((mod) => mod.ChordDiagramsGrid),
+  { ssr: false }
+);
+
 import {
   Select,
   SelectContent,
@@ -243,6 +252,32 @@ export default function SongContent({
   const [practiceMode, setPracticeMode] = useState(false);
   const [practiceLineIndex, setPracticeLineIndex] = useState(0);
   const [practicePlaying, setPracticePlaying] = useState(false);
+  const [selectedRecording, setSelectedRecording] = useState<SongRecording | null>(null);
+  const [recordingPlaybackUrl, setRecordingPlaybackUrl] = useState<string | null>(null);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestMessage, setSuggestMessage] = useState('');
+  const [suggestFeedback, setSuggestFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const [suggestPending, startSuggestTransition] = useTransition();
+  const practiceAudio = usePracticeAudio();
+
+  const isCatalogView = !isInLibrary;
+  const isPersonalCopy = isInLibrary && Boolean(transposedSong.clonedFromId);
+  const canSuggestToCatalog =
+    Boolean(isInLibrary && transposedSong.clonedFromId && onToggleEdit);
+
+  const useRecordingPractice =
+    practiceMode &&
+    Boolean(selectedRecording && selectedRecording.lineMarkers.length > 0 && recordingPlaybackUrl);
+  const { isLandscape } = useLandscapePractice();
+  const landscapePracticeActive = practiceMode && isLandscape;
+
+  const practiceLines = useMemo(
+    () => extractPracticeLines(transposedSong),
+    [transposedSong]
+  );
 
   const getTouchDistance = (touches: React.TouchList) => {
     if (touches.length < 2) return 0;
@@ -289,8 +324,35 @@ export default function SongContent({
     setPracticeLineIndex((i) => Math.min(i, practiceLineCount - 1));
   }, [practiceLineCount]);
 
+  // Wire selected recording into practice audio hook
   useEffect(() => {
-    if (!practiceMode || !practicePlaying) return;
+    if (!selectedRecording || !recordingPlaybackUrl) {
+      practiceAudio.setSrc(null);
+      practiceAudio.setMarkers([]);
+      return;
+    }
+    practiceAudio.setSrc(recordingPlaybackUrl);
+    practiceAudio.setMarkers(selectedRecording.lineMarkers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- practiceAudio setters are stable enough; avoid re-binding each render
+  }, [selectedRecording, recordingPlaybackUrl]);
+
+  // Sync highlighted line from audio markers
+  useEffect(() => {
+    if (!useRecordingPractice) return;
+    setPracticeLineIndex(
+      Math.min(practiceAudio.activeLineIndex, practiceLineCount - 1)
+    );
+  }, [useRecordingPractice, practiceAudio.activeLineIndex, practiceLineCount]);
+
+  // Keep play state mirrored when using recording audio
+  useEffect(() => {
+    if (!useRecordingPractice) return;
+    setPracticePlaying(practiceAudio.isPlaying);
+  }, [useRecordingPractice, practiceAudio.isPlaying]);
+
+  // BPM timer fallback when no recording markers are active
+  useEffect(() => {
+    if (!practiceMode || !practicePlaying || useRecordingPractice) return;
     const effectiveBpm = typeof bpm === 'number' && bpm > 0 ? bpm : 80;
     const msPerLine = Math.round((60_000 / effectiveBpm) * 4);
     const timer = window.setInterval(() => {
@@ -303,7 +365,33 @@ export default function SongContent({
       });
     }, msPerLine);
     return () => window.clearInterval(timer);
-  }, [practiceMode, practicePlaying, bpm, practiceLineCount]);
+  }, [practiceMode, practicePlaying, bpm, practiceLineCount, useRecordingPractice]);
+
+  const seekPracticeToLine = (lineIndex: number) => {
+    const clamped = Math.max(0, Math.min(lineIndex, practiceLineCount - 1));
+    setPracticeLineIndex(clamped);
+    if (useRecordingPractice && selectedRecording) {
+      const marker = selectedRecording.lineMarkers.find((m) => m.lineIndex === clamped);
+      if (marker) {
+        practiceAudio.seek(marker.startMs);
+      }
+    }
+  };
+
+  const togglePracticePlay = () => {
+    if (useRecordingPractice) {
+      if (practiceAudio.isPlaying) practiceAudio.pause();
+      else practiceAudio.play();
+      return;
+    }
+    setPracticePlaying((p) => !p);
+  };
+
+  const exitPracticeMode = () => {
+    setPracticeMode(false);
+    setPracticePlaying(false);
+    practiceAudio.pause();
+  };
 
   const songTitleBlock = (
     <div className="min-w-0 w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -697,6 +785,119 @@ export default function SongContent({
             ) : null}
           </div>
 
+          {(isCatalogView || isPersonalCopy) && (
+            <div
+              className={cn(
+                'rounded-xl border px-4 py-3 text-sm',
+                isCatalogView
+                  ? 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-100'
+                  : 'border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100'
+              )}
+            >
+              <p>
+                {isCatalogView
+                  ? t('songContent.catalogSharedBanner')
+                  : t('songContent.personalCopyBanner')}
+              </p>
+              {isCatalogView && onAddToLibrary && isAuthenticated ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="mt-2"
+                  disabled={isAddingToLibrary}
+                  onClick={onAddToLibrary}
+                >
+                  {isAddingToLibrary ? t('library.adding') : t('library.addToLibrary')}
+                </Button>
+              ) : null}
+              {canSuggestToCatalog ? (
+                <div className="mt-2 space-y-2">
+                  {!suggestOpen ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSuggestOpen(true);
+                        setSuggestFeedback(null);
+                      }}
+                    >
+                      {t('songContent.suggestToCatalog')}
+                    </Button>
+                  ) : (
+                    <div className="space-y-2 rounded-lg border border-border/60 bg-background/80 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        {t('songContent.suggestToCatalogHint')}
+                      </p>
+                      <textarea
+                        value={suggestMessage}
+                        onChange={(e) => setSuggestMessage(e.target.value)}
+                        rows={2}
+                        maxLength={1000}
+                        placeholder={t('songContent.suggestToCatalogMessage')}
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={suggestPending}
+                          onClick={() => {
+                            const catalogSongId = transposedSong.clonedFromId;
+                            if (!catalogSongId) return;
+                            startSuggestTransition(async () => {
+                              try {
+                                await submitSongEditSuggestionAction({
+                                  catalogSongId,
+                                  fromSongId: transposedSong.id,
+                                  message: suggestMessage,
+                                });
+                                setSuggestFeedback({
+                                  type: 'success',
+                                  message: t('songContent.suggestToCatalogSent'),
+                                });
+                                setSuggestOpen(false);
+                                setSuggestMessage('');
+                              } catch {
+                                setSuggestFeedback({
+                                  type: 'error',
+                                  message: t('songContent.suggestToCatalogError'),
+                                });
+                              }
+                            });
+                          }}
+                        >
+                          {t('songContent.suggestToCatalogSubmit')}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setSuggestOpen(false)}
+                        >
+                          {t('common.cancel')}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {suggestFeedback ? (
+                    <p
+                      role="status"
+                      className={cn(
+                        'text-xs font-medium',
+                        suggestFeedback.type === 'success'
+                          ? 'text-green-700 dark:text-green-400'
+                          : 'text-destructive'
+                      )}
+                    >
+                      {suggestFeedback.message}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          )}
+
           <SongStoryCard
             songId={transposedSong.id}
             title={transposedSong.title}
@@ -848,13 +1049,21 @@ export default function SongContent({
                   type="button"
                   onClick={() => {
                     if (practiceMode) {
-                      setPracticeMode(false);
-                      setPracticePlaying(false);
+                      exitPracticeMode();
                       return;
                     }
                     setPracticeMode(true);
                     setPracticeLineIndex(0);
-                    setPracticePlaying(true);
+                    if (
+                      selectedRecording &&
+                      selectedRecording.lineMarkers.length > 0 &&
+                      recordingPlaybackUrl
+                    ) {
+                      practiceAudio.seek(0);
+                      practiceAudio.play();
+                    } else {
+                      setPracticePlaying(true);
+                    }
                     onSelectYoutubeMode?.('original');
                   }}
                   className={cn(
@@ -868,6 +1077,21 @@ export default function SongContent({
                   {practiceMode ? t('songContent.practiceExit') : t('songContent.practiceMode')}
                 </button>
 
+                {isAuthenticated ? (
+                  <SongRecordingPanel
+                    songId={transposedSong.id}
+                    lineCount={practiceLineCount}
+                    onRecordingReady={(recording, playbackUrl) => {
+                      setSelectedRecording(recording);
+                      setRecordingPlaybackUrl(playbackUrl);
+                      if (recording && recording.lineMarkers.length > 0 && playbackUrl) {
+                        setPracticeMode(true);
+                        setPracticeLineIndex(0);
+                      }
+                    }}
+                  />
+                ) : null}
+
                 {bpm && (
                   <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     {t('songContent.BPM_LABEL').replace('{bpm}', String(bpm))}
@@ -877,31 +1101,42 @@ export default function SongContent({
             </CollapsibleContent>
           </Collapsible>
 
-          {practiceMode ? (
+          {practiceMode && !landscapePracticeActive ? (
             <PracticeModeBar
               lineIndex={practiceLineIndex}
               lineCount={practiceLineCount}
-              isPlaying={practicePlaying}
-              onPrev={() => setPracticeLineIndex((i) => Math.max(0, i - 1))}
-              onNext={() =>
-                setPracticeLineIndex((i) => Math.min(practiceLineCount - 1, i + 1))
-              }
-              onTogglePlay={() => setPracticePlaying((p) => !p)}
-              onExit={() => {
-                setPracticeMode(false);
-                setPracticePlaying(false);
-              }}
+              isPlaying={useRecordingPractice ? practiceAudio.isPlaying : practicePlaying}
+              onPrev={() => seekPracticeToLine(practiceLineIndex - 1)}
+              onNext={() => seekPracticeToLine(practiceLineIndex + 1)}
+              onTogglePlay={togglePracticePlay}
+              onExit={exitPracticeMode}
             />
           ) : null}
 
-          {/* Song Content */}
-          <StructuredSongContent 
-            song={transposedSong} 
-            onChordClick={onChordClick}
-            fontSize={fontSize}
-            practiceMode={practiceMode}
-            practiceLineIndex={practiceLineIndex}
-          />
+          {/* Song Content — portrait practice chrome; landscape uses fullscreen overlay */}
+          {!landscapePracticeActive ? (
+            <StructuredSongContent
+              song={transposedSong}
+              onChordClick={onChordClick}
+              fontSize={fontSize}
+              practiceMode={practiceMode}
+              practiceLineIndex={practiceLineIndex}
+            />
+          ) : null}
+
+          {landscapePracticeActive ? (
+            <LandscapePracticeView
+              songTitle={transposedSong?.title ?? ''}
+              lines={practiceLines}
+              activeLineIndex={practiceLineIndex}
+              lineCount={practiceLineCount}
+              isPlaying={useRecordingPractice ? practiceAudio.isPlaying : practicePlaying}
+              onPrev={() => seekPracticeToLine(practiceLineIndex - 1)}
+              onNext={() => seekPracticeToLine(practiceLineIndex + 1)}
+              onTogglePlay={togglePracticePlay}
+              onExit={exitPracticeMode}
+            />
+          ) : null}
 
           {isAuthenticated && (
             <div ref={endSuggestionsRef}>

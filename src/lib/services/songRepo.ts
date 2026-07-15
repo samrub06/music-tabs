@@ -52,6 +52,7 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     allChords: dbSong.all_chords || undefined,
     isLiked: dbSong.is_liked ?? false,
     isPublic: dbSong.is_public ?? false,
+    clonedFromId: dbSong.cloned_from_id || undefined,
   } as Song
 }
 
@@ -81,6 +82,7 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
     difficulty: dbSong.difficulty || undefined,
     decade: dbSong.decade || undefined,
     capo: dbSong.capo ?? undefined,
+    clonedFromId: dbSong.cloned_from_id || undefined,
   } as Song
 }
 
@@ -185,6 +187,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         tab_id: songData.tabId ?? null,
         genre: songData.genre ?? null,
         bpm: songData.bpm ?? null,
+        cloned_from_id: songData.clonedFromId ?? null,
         is_trending: false, // Default for user created songs
         is_public: false    // Default for user created songs
       }])

@@ -318,7 +318,8 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
     throw new Error('Song not found')
   }
   
-  // 2. Create new song for current user
+  // 2. Create new song for current user (link back to shared catalog when source is catalog)
+  const isCatalogSource = !sourceSong.userId || sourceSong.isPublic === true
   const newSongData: NewSongData = {
     title: sourceSong.title,
     author: sourceSong.author,
@@ -342,7 +343,8 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
     sourceSite: sourceSong.sourceSite,
     tabId: sourceSong.tabId,
     genre: sourceSong.genre,
-    bpm: sourceSong.bpm
+    bpm: sourceSong.bpm,
+    clonedFromId: isCatalogSource ? sourceSong.id : sourceSong.clonedFromId,
   }
   
   const created = await repo.createSong(newSongData)

@@ -101,6 +101,10 @@ export async function savePublicPlaylistAsFolderAction(playlistId: string) {
       tabId: sourceSong.tabId,
       genre: sourceSong.genre,
       bpm: sourceSong.bpm,
+      clonedFromId:
+        !sourceSong.userId || sourceSong.isPublic === true
+          ? sourceSong.id
+          : sourceSong.clonedFromId,
     }
 
     const created = await sRepo.createSong(newSongData)

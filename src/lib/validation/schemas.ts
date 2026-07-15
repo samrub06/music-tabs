@@ -65,7 +65,8 @@ export const createSongSchema = z.object({
   sourceSite: z.string().optional(),
   tabId: z.union([z.string(), z.number().transform(String)]).optional(),
   genre: z.string().optional(),
-  bpm: z.number().int().positive().optional()
+  bpm: z.number().int().positive().optional(),
+  clonedFromId: z.string().uuid().optional().nullable(),
 })
 
 export const requestChordSchema = z.object({
@@ -284,8 +285,54 @@ export const youtubeTutorialSearchSchema = z.object({
   lang: z.enum(['en', 'fr', 'he']).optional(),
 })
 
+const songLineMarkerSchema = z.object({
+  lineIndex: z.number().int().min(0),
+  startMs: z.number().int().min(0),
+})
+
+/** Max recording duration: 10 minutes */
+export const MAX_SONG_RECORDING_DURATION_MS = 10 * 60 * 1000
+
+/** Max upload size: 10MB */
+export const MAX_SONG_RECORDING_BYTES = 10 * 1024 * 1024
+
+export const saveSongRecordingSchema = z.object({
+  songId: z.string().uuid(),
+  durationMs: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_SONG_RECORDING_DURATION_MS)
+    .optional()
+    .nullable(),
+  lineMarkers: z.array(songLineMarkerSchema).optional(),
+  isPublic: z.boolean().optional(),
+})
+
+export const updateSongRecordingMarkersSchema = z.object({
+  recordingId: z.string().uuid(),
+  lineMarkers: z.array(songLineMarkerSchema),
+})
+
+export type SaveSongRecordingInput = z.infer<typeof saveSongRecordingSchema>
+export type UpdateSongRecordingMarkersInput = z.infer<typeof updateSongRecordingMarkersSchema>
+
 export type UserSongsListQueryInput = z.infer<typeof userSongsListQuerySchema>
 export type YoutubeTutorialSearchInput = z.infer<typeof youtubeTutorialSearchSchema>
+
+export const submitSongEditSuggestionSchema = z.object({
+  catalogSongId: z.string().uuid(),
+  fromSongId: z.string().uuid(),
+  message: z.string().trim().max(1000).default(''),
+})
+
+export const reviewSongEditSuggestionSchema = z.object({
+  suggestionId: z.string().uuid(),
+  status: z.enum(['accepted', 'rejected']),
+})
+
+export type SubmitSongEditSuggestionInput = z.infer<typeof submitSongEditSuggestionSchema>
+export type ReviewSongEditSuggestionInput = z.infer<typeof reviewSongEditSuggestionSchema>
 
 export type CreateFolderInput = z.infer<typeof createFolderSchema>
 export type UpdateFolderInput = z.infer<typeof updateFolderSchema>

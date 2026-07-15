@@ -12,6 +12,7 @@ import {
   Trophy,
   Users,
   Disc3,
+  MessageSquareText,
 } from 'lucide-react'
 import { AppLogo } from '@/components/AppLogo'
 import { SITE_NAME } from '@/lib/seo/site'
@@ -49,6 +50,13 @@ const ADMIN_NAV = [
     labelKey: 'navigation.adminSongs',
     icon: Disc3,
     match: (p: string) => p === '/admin/songs' || p.startsWith('/admin/songs/'),
+  },
+  {
+    href: '/admin/suggestions',
+    labelKey: 'navigation.adminSuggestions',
+    icon: MessageSquareText,
+    match: (p: string) =>
+      p === '/admin/suggestions' || p.startsWith('/admin/suggestions/'),
   },
   {
     href: '/admin/users',
