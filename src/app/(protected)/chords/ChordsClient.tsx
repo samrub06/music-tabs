@@ -483,69 +483,76 @@ export default function ChordsClient({
           </div>
 
           <div className="mb-6 space-y-4">
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-              </div>
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={localSearchValue}
-                onChange={(e) => setLocalSearchValue(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 150)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && chordNameSuggestions[0]) {
-                    e.preventDefault();
-                    applyChordSearch(chordNameSuggestions[0]);
-                  }
-                  if (e.key === 'Escape') {
-                    setIsSearchFocused(false);
-                    searchInputRef.current?.blur();
-                  }
-                }}
-                placeholder={t('chords.searchPlaceholder')}
-                className="block w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:py-3 sm:pl-12 sm:pr-12"
-                autoComplete="off"
-                role="combobox"
-                aria-controls={chordSuggestionsListId}
-                aria-expanded={showSuggestions}
-                aria-autocomplete="list"
-              />
-              {localSearchValue && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-3 text-muted-foreground hover:text-foreground sm:pr-4"
-                  aria-label={t('common.clear')}
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              )}
-              {showSuggestions && (
-                <ul
-                  id={chordSuggestionsListId}
-                  className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-md"
-                  role="listbox"
-                  onMouseDown={(e) => e.preventDefault()}
-                >
-                  {chordNameSuggestions.map((name) => (
-                    <li key={name} role="option" aria-selected={false}>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 flex-1 space-y-3">
+                <div className="flex flex-wrap items-start gap-2 sm:gap-3">
+                  <div className="relative min-w-0 flex-[999_1_16rem]">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
+                    </div>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={localSearchValue}
+                      onChange={(e) => setLocalSearchValue(e.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 150)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && chordNameSuggestions[0]) {
+                          e.preventDefault();
+                          applyChordSearch(chordNameSuggestions[0]);
+                        }
+                        if (e.key === 'Escape') {
+                          setIsSearchFocused(false);
+                          searchInputRef.current?.blur();
+                        }
+                      }}
+                      placeholder={t('chords.searchPlaceholder')}
+                      className="block w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:py-3 sm:pl-12 sm:pr-12"
+                      autoComplete="off"
+                      role="combobox"
+                      aria-controls={chordSuggestionsListId}
+                      aria-expanded={showSuggestions}
+                      aria-autocomplete="list"
+                    />
+                    {localSearchValue && (
                       <button
                         type="button"
-                        className="flex min-h-[44px] w-full items-center px-4 py-2.5 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
-                        onClick={() => applyChordSearch(name)}
+                        onClick={handleClearSearch}
+                        className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-3 text-muted-foreground hover:text-foreground sm:pr-4"
+                        aria-label={t('common.clear')}
                       >
-                        {name}
+                        <XMarkIcon className="h-5 w-5" />
                       </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="min-w-0 flex-1 space-y-3">
+                    )}
+                    {showSuggestions && (
+                      <ul
+                        id={chordSuggestionsListId}
+                        className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-md"
+                        role="listbox"
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
+                        {chordNameSuggestions.map((name) => (
+                          <li key={name} role="option" aria-selected={false}>
+                            <button
+                              type="button"
+                              className="flex min-h-[44px] w-full items-center px-4 py-2.5 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                              onClick={() => applyChordSearch(name)}
+                            >
+                              {name}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <InstrumentToggle
+                    value={instrument}
+                    onChange={handleInstrumentChange}
+                    compact
+                    className="w-full shrink-0 sm:w-auto"
+                  />
+                </div>
                 <FilterChipRow>
                   <FilterChip
                     active={statusFilter === 'all'}
@@ -593,12 +600,6 @@ export default function ChordsClient({
                   </FilterChip>
                 </FilterChipRow>
               </div>
-              <InstrumentToggle
-                value={instrument}
-                onChange={handleInstrumentChange}
-                compact
-                className="self-end sm:self-auto"
-              />
             </div>
 
             <Link
