@@ -239,18 +239,23 @@ export function SelectModeToggleButton({
   onToggle,
   t,
   className,
+  compact = false,
 }: {
   isSelectMode: boolean
   onToggle: () => void
   t: (key: string) => string
   className?: string
+  compact?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onToggle}
       className={cn(
-        'flex h-11 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-medium transition-all duration-200 sm:gap-2 sm:px-4',
+        'flex items-center justify-center rounded-full font-medium transition-all duration-200',
+        compact
+          ? 'h-8 gap-1 px-1.5 text-xs'
+          : 'h-11 gap-1.5 px-2 text-sm sm:gap-2 sm:px-4',
         isSelectMode
           ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
           : 'text-muted-foreground hover:text-foreground',
@@ -260,14 +265,19 @@ export function SelectModeToggleButton({
       title={isSelectMode ? t('songs.exitSelectMode') : t('songs.select')}
     >
       {isSelectMode ? (
-        <XMarkIcon className="h-4 w-4 shrink-0" aria-hidden />
+        <XMarkIcon className={cn('shrink-0', compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} aria-hidden />
       ) : (
         <span
-          className="flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 border-current"
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded border-2 border-current',
+            compact ? 'h-3.5 w-3.5' : 'h-4 w-4'
+          )}
           aria-hidden
         />
       )}
-      <span>{isSelectMode ? t('songs.selectModeOn') : t('songs.select')}</span>
+      {!compact && (
+        <span>{isSelectMode ? t('songs.selectModeOn') : t('songs.select')}</span>
+      )}
     </button>
   )
 }

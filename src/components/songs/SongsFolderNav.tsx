@@ -255,19 +255,24 @@ function FolderChip({
   isActive,
   onClick,
   className,
+  compact = false,
 }: {
   label: string
   count?: number
   isActive: boolean
   onClick: () => void
   className?: string
+  compact?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex min-w-0 items-center justify-center gap-1 rounded-full px-2.5 py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+        'inline-flex min-w-0 items-center justify-center gap-1 rounded-full font-medium transition-all duration-200',
+        compact
+          ? 'min-h-[28px] px-2 py-0.5 text-xs'
+          : 'min-h-[40px] px-2.5 py-2 text-sm',
         isActive
           ? 'bg-primary text-primary-foreground shadow-sm'
           : 'bg-muted/80 text-foreground hover:bg-muted',
@@ -278,7 +283,8 @@ function FolderChip({
       {count !== undefined && (
         <span
           className={cn(
-            'shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+            'shrink-0 rounded-full font-semibold tabular-nums',
+            compact ? 'px-1 py-0 text-[9px]' : 'px-1.5 py-0.5 text-[10px]',
             isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background/80 text-muted-foreground'
           )}
         >
@@ -358,9 +364,11 @@ function splitMobileChipItems(
 function FolderChipOverflowMenu({
   items,
   isActive,
+  compact = false,
 }: {
   items: FolderChipItem[]
   isActive: boolean
+  compact?: boolean
 }) {
   const { t } = useLanguage()
 
@@ -373,13 +381,16 @@ function FolderChipOverflowMenu({
           type="button"
           aria-label={t('common.more')}
           className={cn(
-            'inline-flex shrink-0 items-center justify-center rounded-full px-3 py-2 min-h-[40px] min-w-[40px] text-sm font-medium transition-all duration-200',
+            'inline-flex shrink-0 items-center justify-center rounded-full font-medium transition-all duration-200',
+            compact
+              ? 'min-h-[28px] min-w-[28px] px-2 py-0.5'
+              : 'min-h-[40px] min-w-[40px] px-3 py-2 text-sm',
             isActive
               ? 'bg-primary text-primary-foreground shadow-sm'
               : 'bg-muted/80 text-foreground hover:bg-muted'
           )}
         >
-          <EllipsisHorizontalIcon className="h-5 w-5" />
+          <EllipsisHorizontalIcon className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-[min(60vh,320px)] overflow-y-auto">
@@ -405,7 +416,8 @@ export function SongsFolderChips({
   folderSongCounts,
   currentFolder,
   onFolderSelect,
-}: Omit<SongsFolderNavProps, 'onCreateFolder' | 'isDragging'>) {
+  compact = false,
+}: Omit<SongsFolderNavProps, 'onCreateFolder' | 'isDragging'> & { compact?: boolean }) {
   const { t } = useLanguage()
   const foldersBySongCount = useMemo(
     () => sortFoldersBySongCount(folders, folderSongCounts),
@@ -451,8 +463,18 @@ export function SongsFolderChips({
   ])
 
   return (
-    <div className="lg:hidden w-full min-w-0 shrink-0">
-      <div className="flex w-full min-w-0 items-stretch gap-1.5">
+    <div
+      className={cn(
+        'lg:hidden min-w-0',
+        compact ? 'flex-1' : 'w-full shrink-0'
+      )}
+    >
+      <div
+        className={cn(
+          'flex min-w-0 items-stretch gap-1.5',
+          compact ? 'justify-start' : 'w-full'
+        )}
+      >
         {visible.map((item) => (
           <FolderChip
             key={item.id}
@@ -460,10 +482,11 @@ export function SongsFolderChips({
             count={item.count}
             isActive={item.isActive}
             onClick={item.onSelect}
-            className="flex-1 basis-0"
+            compact={compact}
+            className={compact ? 'shrink-0 max-w-[7rem]' : 'flex-1 basis-0'}
           />
         ))}
-        <FolderChipOverflowMenu items={overflow} isActive={overflowActive} />
+        <FolderChipOverflowMenu items={overflow} isActive={overflowActive} compact={compact} />
       </div>
     </div>
   )

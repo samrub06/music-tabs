@@ -264,11 +264,13 @@ export default function FriendsClient({
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
         <div className="container mx-auto max-w-2xl px-4 py-6">
-          <div className="mb-6">
+          <div className="mb-6 text-center">
             <h1 className="hidden text-2xl font-bold text-foreground lg:block">
               {t('friends.title')}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t('friends.description')}</p>
+            <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              {t('friends.description')}
+            </p>
           </div>
 
           <InviteFriendsSection />

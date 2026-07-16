@@ -275,36 +275,52 @@ export function SongRecordingPanel({
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-border/80 bg-muted/30 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">
-          {t('songContent.recordingTitle')}
-        </p>
-        {!isRecording ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-9 gap-1.5 rounded-xl"
-            onClick={() => void startRecording()}
-            disabled={pending}
-          >
-            <MicrophoneIcon className="h-4 w-4" />
-            {t('songContent.recordingRecord')}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            size="sm"
-            variant="destructive"
-            className="h-9 gap-1.5 rounded-xl"
-            onClick={stopRecording}
-          >
-            <StopIcon className="h-4 w-4" />
-            {t('songContent.recordingStop')}
-          </Button>
-        )}
+    <div className="space-y-3">
+      <div className="rounded-2xl border border-black/[0.06] bg-card p-4 dark:border-white/[0.08] sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-semibold text-foreground">
+                {t('songContent.recordingBannerTitle')}
+              </h2>
+              {isRecording ? (
+                <span className="inline-flex items-center rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:text-red-400">
+                  {t('songContent.recordingBannerRecording')}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('songContent.recordingBannerDescription')}
+            </p>
+          </div>
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+            {!isRecording ? (
+              <Button
+                type="button"
+                onClick={() => void startRecording()}
+                disabled={pending}
+                className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-red-600 text-white hover:bg-red-500 sm:w-auto"
+              >
+                <MicrophoneIcon className="h-4 w-4" aria-hidden />
+                {t('songContent.recordingBannerCta')}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={stopRecording}
+                className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl sm:w-auto"
+              >
+                <StopIcon className="h-4 w-4" aria-hidden />
+                {t('songContent.recordingStop')}
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
+
+      {(editorSrc || recordings.length > 0 || error) ? (
+      <div className="space-y-3 rounded-xl border border-border/80 bg-muted/30 p-3">
 
       {editorSrc ? (
         <div className="space-y-2 rounded-xl border border-border/60 bg-background/80 p-2.5">
@@ -438,11 +454,11 @@ export function SongRecordingPanel({
             )
           })}
         </ul>
-      ) : (
-        <p className="text-xs text-muted-foreground">{t('songContent.recordingEmpty')}</p>
-      )}
+      ) : null}
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      </div>
+      ) : null}
     </div>
   )
 }

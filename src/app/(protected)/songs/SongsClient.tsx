@@ -5,20 +5,8 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, PlusIcon } from '@heroicons/react/24/outline'
-
-const toolbarSegmentContainer =
-  'flex items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800'
-
-function toolbarSegmentButton(active: boolean, className?: string) {
-  return cn(
-    'flex h-11 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-medium transition-all duration-200 sm:gap-2 sm:px-4',
-    active
-      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-      : 'text-muted-foreground hover:text-foreground',
-    className
-  )
-}
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
+import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import { cn } from '@/lib/utils'
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { Song, Playlist } from '@/types'
@@ -37,6 +25,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { SongsFolderChips, SongsFolderSidebar, type FolderSongCounts } from '@/components/songs/SongsFolderNav'
 import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
+
+const toolbarSegmentContainer =
+  'flex items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800'
+
+function toolbarSegmentButton(
+  active: boolean,
+  className?: string,
+  compact = false
+) {
+  return cn(
+    'flex items-center justify-center rounded-full font-medium transition-all duration-200',
+    compact
+      ? 'h-8 gap-1 px-1.5 text-xs'
+      : 'h-11 gap-1.5 px-2 text-sm sm:gap-2 sm:px-4',
+    active
+      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+      : 'text-muted-foreground hover:text-foreground',
+    className
+  )
+}
 
 export type CapoFilter = 'any' | 'with' | 'without'
 
@@ -60,7 +68,8 @@ interface SongsClientProps {
 export default function SongsClient({ songs, total, page, limit, initialView = 'gallery', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
   const { t } = useLanguage()
   const { folders, refreshFolders } = useFoldersContext()
-  
+  const isLandscapeMobile = useLandscapeMobile()
+
   const sortFieldLabels: Record<SortField, string> = {
     title: t('songs.title'),
     author: t('songs.artist'),
@@ -534,19 +543,35 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           isDragging={activeId !== null}
         />
 
-        <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-3 sm:p-6 min-w-0">
         <div
           className={cn(
-            'relative shrink-0 space-y-3 pb-4',
+            'flex flex-1 flex-col min-h-0 overflow-hidden min-w-0',
+            isLandscapeMobile ? 'p-1.5' : 'p-3 sm:p-6'
+          )}
+        >
+        <div
+          className={cn(
+            'relative shrink-0',
+            isLandscapeMobile ? 'space-y-1 pb-1' : 'space-y-3 pb-4',
             isInputFocused && 'z-30'
           )}
         >
         {likedOnly && (
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h1
+            className={cn(
+              'font-semibold text-gray-900 dark:text-gray-100',
+              isLandscapeMobile ? 'text-sm' : 'text-lg'
+            )}
+          >
             {t('library.likedSongs')}
           </h1>
         )}
-        <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
+        <div
+          className={cn(
+            'flex items-stretch max-lg:transition-[gap] max-lg:duration-200',
+            isLandscapeMobile ? 'gap-1.5' : 'gap-2'
+          )}
+        >
           <div
             className={cn(
               'min-w-0 relative transition-[flex] duration-200',
@@ -554,8 +579,15 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             )}
           >
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              <div
+                className={cn(
+                  'absolute inset-y-0 left-0 flex items-center pointer-events-none',
+                  isLandscapeMobile ? 'pl-2.5' : 'pl-4'
+                )}
+              >
+                <MagnifyingGlassIcon
+                  className={cn('text-gray-400', isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')}
+                />
               </div>
               <input
                 ref={searchInputRef}
@@ -567,16 +599,26 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   window.setTimeout(() => setIsInputFocused(false), 150)
                 }}
                 placeholder={t('songs.search')}
-                className="block w-full pl-12 pr-12 py-3 sm:py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 dark:text-gray-100"
+                className={cn(
+                  'block w-full border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100',
+                  isLandscapeMobile
+                    ? 'h-8 pl-8 pr-8 py-1 text-sm'
+                    : 'pl-12 pr-12 py-3 sm:py-4 text-base'
+                )}
               />
               {localSearchValue && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 min-w-[44px] min-h-[44px] justify-center"
+                  className={cn(
+                    'absolute inset-y-0 right-0 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 justify-center',
+                    isLandscapeMobile
+                      ? 'pr-1.5 min-w-8 min-h-8'
+                      : 'pr-4 min-w-[44px] min-h-[44px]'
+                  )}
                   aria-label={t('common.clear')}
                 >
-                  <XMarkIcon className="h-5 w-5" />
+                  <XMarkIcon className={cn(isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')} />
                 </button>
               )}
             </div>
@@ -585,88 +627,168 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             type="button"
             onClick={() => setIsFilterSheetOpen(true)}
             className={cn(
-              'shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-all duration-200 flex items-center justify-center',
+              'shrink-0 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-all duration-200 flex items-center justify-center',
+              isLandscapeMobile ? 'h-8 w-8 p-0' : 'p-3 min-h-[44px] min-w-[44px]',
               isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0 max-lg:p-0'
             )}
             aria-label={t('songs.filters')}
           >
-            <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
+            <AdjustmentsHorizontalIcon
+              className={cn('max-lg:shrink-0', isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')}
+            />
           </button>
           <button
             type="button"
             onClick={() => openAddSongModal()}
-            className="shrink-0 p-3 min-h-[44px] min-w-[44px] rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center"
+            className={cn(
+              'shrink-0 rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center',
+              isLandscapeMobile ? 'h-8 w-8 p-0' : 'p-3 min-h-[44px] min-w-[44px]',
+              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0 max-lg:p-0'
+            )}
             aria-label={t('navigation.addSong')}
           >
-            <PlusIcon className="h-5 w-5" />
+            <PlusIcon className={isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'} />
           </button>
         </div>
 
-        <SongsFolderChips
-          folders={folders}
-          folderSongCounts={folderSongCounts}
-          currentFolder={currentFolder}
-          onFolderSelect={handleFolderChange}
-        />
-
-        {/* Filtering Tabs + View toggle - same row, touch-friendly */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1 min-w-0 lg:hidden">
-            <div className={cn(toolbarSegmentContainer, 'w-full')}>
+        {/* Landscape: one strip — folders + tabs + view (hidden while searching) */}
+        {isLandscapeMobile && !isInputFocused && (
+          <div className="flex min-w-0 items-center gap-1.5">
+            <SongsFolderChips
+              folders={folders}
+              folderSongCounts={folderSongCounts}
+              currentFolder={currentFolder}
+              onFolderSelect={handleFolderChange}
+              compact
+            />
+            <div className={cn(toolbarSegmentContainer, 'shrink-0')}>
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'all', page: 1 })}
-                className={toolbarSegmentButton(activeTab === 'all', 'flex-1')}
+                className={toolbarSegmentButton(activeTab === 'all', undefined, true)}
+                title={t('songs.all')}
+                aria-label={t('songs.all')}
               >
-                <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('songs.all')}</span>
+                <MusicalNoteIcon className="h-3.5 w-3.5 flex-shrink-0" />
               </button>
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'recent', page: 1 })}
-                className={toolbarSegmentButton(activeTab === 'recent', 'flex-1')}
+                className={toolbarSegmentButton(activeTab === 'recent', undefined, true)}
+                title={t('songs.recent')}
+                aria-label={t('songs.recent')}
               >
-                <ClockIcon className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('songs.recent')}</span>
+                <ClockIcon className="h-3.5 w-3.5 flex-shrink-0" />
               </button>
               <button
                 type="button"
                 onClick={() => applyQuery({ tab: 'popular', page: 1 })}
-                className={toolbarSegmentButton(activeTab === 'popular', 'flex-1')}
+                className={toolbarSegmentButton(activeTab === 'popular', undefined, true)}
+                title={t('songs.popular')}
+                aria-label={t('songs.popular')}
               >
-                <FireIcon className="h-4 w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('songs.popular')}</span>
+                <FireIcon className="h-3.5 w-3.5 flex-shrink-0" />
+              </button>
+            </div>
+            <div className={cn(toolbarSegmentContainer, 'shrink-0')}>
+              {(view === 'table' || isSelectMode) && (
+                <SelectModeToggleButton
+                  isSelectMode={isSelectMode}
+                  onToggle={toggleSelectMode}
+                  t={t}
+                  compact
+                />
+              )}
+              <button
+                type="button"
+                className={toolbarSegmentButton(view === 'gallery', undefined, true)}
+                onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                title={t('songs.galleryView')}
+                aria-label={t('songs.galleryView')}
+              >
+                <Squares2X2Icon className="h-3.5 w-3.5 flex-shrink-0" />
+              </button>
+              <button
+                type="button"
+                className={toolbarSegmentButton(view === 'table', undefined, true)}
+                onClick={() => applyQuery({ view: 'table', page: 1 })}
+                title={t('songs.tableView')}
+                aria-label={t('songs.tableView')}
+              >
+                <TableCellsIcon className="h-3.5 w-3.5 flex-shrink-0" />
               </button>
             </div>
           </div>
-          <div className={cn(toolbarSegmentContainer, 'shrink-0 lg:ml-auto')}>
-            {(view === 'table' || isSelectMode) && (
-              <SelectModeToggleButton
-                isSelectMode={isSelectMode}
-                onToggle={toggleSelectMode}
-                t={t}
-              />
-            )}
-            <button
-              type="button"
-              className={toolbarSegmentButton(view === 'gallery')}
-              onClick={() => applyQuery({ view: 'gallery', page: 1 })}
-              title={t('songs.galleryView')}
-            >
-              <Squares2X2Icon className="h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('songs.galleryView')}</span>
-            </button>
-            <button
-              type="button"
-              className={toolbarSegmentButton(view === 'table')}
-              onClick={() => applyQuery({ view: 'table', page: 1 })}
-              title={t('songs.tableView')}
-            >
-              <TableCellsIcon className="h-4 w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">{t('songs.tableView')}</span>
-            </button>
-          </div>
-        </div>
+        )}
+
+        {/* Portrait / tablet: folder chips, then tabs + view */}
+        {!isLandscapeMobile && (
+          <>
+            <SongsFolderChips
+              folders={folders}
+              folderSongCounts={folderSongCounts}
+              currentFolder={currentFolder}
+              onFolderSelect={handleFolderChange}
+            />
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0 lg:hidden">
+                <div className={cn(toolbarSegmentContainer, 'w-full')}>
+                  <button
+                    type="button"
+                    onClick={() => applyQuery({ tab: 'all', page: 1 })}
+                    className={toolbarSegmentButton(activeTab === 'all', 'flex-1')}
+                  >
+                    <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('songs.all')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyQuery({ tab: 'recent', page: 1 })}
+                    className={toolbarSegmentButton(activeTab === 'recent', 'flex-1')}
+                  >
+                    <ClockIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('songs.recent')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyQuery({ tab: 'popular', page: 1 })}
+                    className={toolbarSegmentButton(activeTab === 'popular', 'flex-1')}
+                  >
+                    <FireIcon className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('songs.popular')}</span>
+                  </button>
+                </div>
+              </div>
+              <div className={cn(toolbarSegmentContainer, 'shrink-0 lg:ml-auto')}>
+                {(view === 'table' || isSelectMode) && (
+                  <SelectModeToggleButton
+                    isSelectMode={isSelectMode}
+                    onToggle={toggleSelectMode}
+                    t={t}
+                  />
+                )}
+                <button
+                  type="button"
+                  className={toolbarSegmentButton(view === 'gallery')}
+                  onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                  title={t('songs.galleryView')}
+                >
+                  <Squares2X2Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{t('songs.galleryView')}</span>
+                </button>
+                <button
+                  type="button"
+                  className={toolbarSegmentButton(view === 'table')}
+                  onClick={() => applyQuery({ view: 'table', page: 1 })}
+                  title={t('songs.tableView')}
+                >
+                  <TableCellsIcon className="h-4 w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{t('songs.tableView')}</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
         </div>
 
         <div
