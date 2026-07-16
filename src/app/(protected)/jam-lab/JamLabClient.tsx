@@ -27,7 +27,6 @@ import {
   playDrums,
   playFlute,
   playGuitar,
-  playHarp,
   playMarimba,
   playPiano,
   playSax,
@@ -50,7 +49,6 @@ type InstrumentId =
   | 'synth'
   | 'marimba'
   | 'bell'
-  | 'harp'
 
 type NoteParticle = {
   id: number
@@ -189,22 +187,25 @@ const NOTE_COLORS = [
 const INSTRUMENTS: {
   id: InstrumentId
   play: () => void
-  color: string
+  accent: string
 }[] = [
-  { id: 'guitar', play: playGuitar, color: 'bg-amber-500 text-white' },
-  { id: 'piano', play: playPiano, color: 'bg-slate-600 text-white' },
-  { id: 'drums', play: playDrums, color: 'bg-rose-500 text-white' },
-  { id: 'bass', play: playBass, color: 'bg-orange-500 text-white' },
-  { id: 'trumpet', play: playTrumpet, color: 'bg-yellow-400 text-yellow-950' },
-  { id: 'violin', play: playViolin, color: 'bg-red-500 text-white' },
-  { id: 'sax', play: playSax, color: 'bg-amber-700 text-white' },
-  { id: 'flute', play: playFlute, color: 'bg-sky-500 text-white' },
-  { id: 'ukulele', play: playUkulele, color: 'bg-lime-500 text-lime-950' },
-  { id: 'synth', play: playSynth, color: 'bg-violet-500 text-white' },
-  { id: 'marimba', play: playMarimba, color: 'bg-teal-500 text-white' },
-  { id: 'bell', play: playBell, color: 'bg-yellow-300 text-yellow-950' },
-  { id: 'harp', play: playHarp, color: 'bg-pink-500 text-white' },
+  { id: 'guitar', play: playGuitar, accent: '#E8A54B' },
+  { id: 'piano', play: playPiano, accent: '#A8B0C0' },
+  { id: 'drums', play: playDrums, accent: '#F07178' },
+  { id: 'bass', play: playBass, accent: '#F0A060' },
+  { id: 'trumpet', play: playTrumpet, accent: '#F5D76E' },
+  { id: 'violin', play: playViolin, accent: '#E07070' },
+  { id: 'sax', play: playSax, accent: '#D4956A' },
+  { id: 'flute', play: playFlute, accent: '#7EB8D4' },
+  { id: 'ukulele', play: playUkulele, accent: '#B8D46A' },
+  { id: 'synth', play: playSynth, accent: '#FF5A1F' },
+  { id: 'marimba', play: playMarimba, accent: '#5CBCB0' },
+  { id: 'bell', play: playBell, accent: '#F0D78C' },
 ]
+
+const PAD_BASE = '#14171F'
+const GRID_LINE = '#0A0C10'
+const GRID_FRAME = '#1C212B'
 
 function loadBestScore(): number {
   try {
@@ -274,14 +275,14 @@ function spawnNotesFromIcon(count: number): NoteParticle[] {
 function InstrumentPad({
   id,
   label,
-  color,
+  accent,
   play,
   disabled,
   onHit,
 }: {
   id: InstrumentId
   label: string
-  color: string
+  accent: string
   play: () => void
   disabled: boolean
   onHit: () => void
@@ -343,7 +344,8 @@ function InstrumentPad({
       ))}
       {shockwave ? (
         <span
-          className="pointer-events-none absolute inset-0 z-[5] border-2 border-white/80 animate-explorer-shockwave"
+          className="pointer-events-none absolute inset-1 z-[5] rounded-md border animate-explorer-shockwave"
+          style={{ borderColor: `${accent}cc` }}
           aria-hidden
         />
       ) : null}
@@ -353,20 +355,111 @@ function InstrumentPad({
         disabled={disabled}
         aria-label={label}
         className={cn(
-          'relative z-0 flex h-full w-full items-center justify-center px-1.5 py-2 text-center transition-[filter,transform] duration-150',
-          'focus-visible:z-[1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/50',
-          'disabled:cursor-not-allowed disabled:opacity-45',
-          color,
-          pulse && 'brightness-125',
-          !disabled && 'hover:brightness-110 active:brightness-90'
+          'group relative z-0 flex h-full w-full flex-col items-center justify-center gap-1.5 px-1.5 py-2 text-center',
+          'transition-[transform,box-shadow,filter] duration-150 ease-out',
+          'focus-visible:z-[1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40',
+          'disabled:cursor-not-allowed disabled:opacity-40',
+          !disabled && 'active:scale-[0.97]',
+          pulse && 'scale-[0.98]'
         )}
+        style={
+          {
+            background: pulse
+              ? `linear-gradient(160deg, ${accent}55 0%, ${PAD_BASE} 48%, #0E1118 100%)`
+              : `linear-gradient(160deg, ${accent}28 0%, ${PAD_BASE} 42%, #0E1118 100%)`,
+            boxShadow: pulse
+              ? `inset 0 0 0 1px ${accent}99, 0 0 18px ${accent}33`
+              : 'inset 0 1px 0 rgba(255,255,255,0.07)',
+          } as CSSProperties
+        }
         data-instrument={id}
       >
-        <span className="text-[11px] font-bold uppercase tracking-wide leading-tight sm:text-xs">
+        <span
+          className="h-1 w-5 rounded-full opacity-90 transition-transform duration-150 group-hover:scale-110"
+          style={{ backgroundColor: accent, boxShadow: `0 0 8px ${accent}88` }}
+          aria-hidden
+        />
+        <span className="text-[10px] font-semibold tracking-wide text-white/90 sm:text-[11px]">
           {label}
         </span>
       </button>
     </div>
+  )
+}
+
+function JamStartHint({ visible }: { visible: boolean }) {
+  const { t } = useLanguage()
+  const [shown, setShown] = useState(false)
+
+  useEffect(() => {
+    if (!visible) {
+      setShown(false)
+      return
+    }
+    const start = window.setTimeout(() => setShown(true), 250)
+    const hide = window.setTimeout(() => setShown(false), 7000)
+    return () => {
+      window.clearTimeout(start)
+      window.clearTimeout(hide)
+    }
+  }, [visible])
+
+  if (!visible || !shown) return null
+
+  return (
+    <div
+      className={cn(
+        'pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-4',
+        'animate-swipe-hint-fade'
+      )}
+    >
+      <div
+        className={cn(
+          'inline-flex max-w-[min(100%,17rem)] items-center gap-3 rounded-2xl px-4 py-3',
+          'border border-white/12 bg-[#12151C]/92 text-white shadow-xl backdrop-blur-md',
+          'ring-1 ring-black/40'
+        )}
+        role="status"
+      >
+        <span
+          className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${TIMER_ORANGE}22` }}
+        >
+          <span
+            className="absolute inset-0 rounded-full animate-ping opacity-40"
+            style={{ backgroundColor: TIMER_ORANGE }}
+            aria-hidden
+          />
+          <FingerTapIcon
+            className="relative h-5 w-5"
+            style={{ color: TIMER_ORANGE }}
+          />
+        </span>
+        <p className="min-w-0 text-[13px] font-semibold leading-snug tracking-tight text-white">
+          {t('jamLab.timerIdle')}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function FingerTapIcon({
+  className,
+  style,
+}: {
+  className?: string
+  style?: CSSProperties
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      style={style}
+      aria-hidden
+    >
+      <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.29.29.68.45 1.09.45h6.85c.86 0 1.57-.64 1.68-1.48l.72-5.45a1.7 1.7 0 0 0-.89-1.71z" />
+    </svg>
   )
 }
 
@@ -563,12 +656,6 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
           </div>
         </section>
 
-        {roundState === 'idle' ? (
-          <p className="-mt-2 text-center text-xs text-muted-foreground">
-            {t('jamLab.timerIdle')}
-          </p>
-        ) : null}
-
         <Dialog
           open={roundState === 'ended'}
           onOpenChange={(open) => {
@@ -601,45 +688,58 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
                 {t('jamLab.guinnessBadge')}
               </p>
             )}
-            <button
-              type="button"
-              onClick={playAgain}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              {t('jamLab.playAgain')}
-            </button>
+            <div className="flex flex-col gap-2 pt-1">
+              <Link
+                href="/"
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                {t('jamLab.backToExplorer')}
+              </Link>
+              <button
+                type="button"
+                onClick={playAgain}
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-muted/50 px-4 text-sm font-semibold text-foreground hover:bg-muted"
+              >
+                {t('jamLab.tryAgain')}
+              </button>
+            </div>
           </DialogContent>
         </Dialog>
 
         <section className="space-y-3">
-          <h2 className="text-base font-semibold text-foreground sm:text-lg">
+          <h2 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
             {t('jamLab.instrumentsTitle')}
           </h2>
 
-          {/* Synth-style pad matrix: 1px gutters act as fine grid lines */}
+          {/* Modern synth pad matrix */}
           <div
-            className={cn(
-              'overflow-hidden rounded-lg border border-neutral-700/80 bg-neutral-700/80',
-              'dark:border-neutral-600 dark:bg-neutral-600'
-            )}
+            className="relative overflow-hidden rounded-2xl p-1 shadow-lg ring-1 ring-black/20"
+            style={{ backgroundColor: GRID_FRAME }}
           >
-            <div className="grid grid-cols-4 gap-px">
+            <JamStartHint visible={roundState === 'idle'} />
+            <div
+              className="grid grid-cols-4 gap-px overflow-hidden rounded-xl"
+              style={{ backgroundColor: GRID_LINE }}
+            >
               {INSTRUMENTS.map((instrument) => (
                 <InstrumentPad
                   key={instrument.id}
                   id={instrument.id}
                   label={t(`jamLab.instruments.${instrument.id}`)}
-                  color={instrument.color}
+                  accent={instrument.accent}
                   play={instrument.play}
                   disabled={roundState === 'ended'}
                   onHit={handleHit}
                 />
               ))}
-              {/* Fill last row so the matrix stays rectangular (13 → 16) */}
               {Array.from({ length: (4 - (INSTRUMENTS.length % 4)) % 4 }, (_, i) => (
                 <div
                   key={`empty-${i}`}
-                  className="aspect-square bg-neutral-900/90 dark:bg-neutral-950"
+                  className="aspect-square"
+                  style={{
+                    background:
+                      'linear-gradient(160deg, #1A1E28 0%, #0E1118 100%)',
+                  }}
                   aria-hidden
                 />
               ))}

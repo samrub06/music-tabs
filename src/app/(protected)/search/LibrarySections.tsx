@@ -92,6 +92,11 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
       </div>
 
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
+
+      <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
+      <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
+      <ExploreHubCta />
+
       {userId && forYouData?.topArtist && forYouData.artistSongs.length > 0 && (
         <ForYouArtistSection
           artistName={forYouData.topArtist}
@@ -99,10 +104,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           userId={userId}
         />
       )}
-
-      <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
-      <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
-      <ExploreHubCta />
 
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <PopularSongsSection songs={popularSongs} userId={userId} />
