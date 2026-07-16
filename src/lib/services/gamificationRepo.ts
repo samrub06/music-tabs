@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/db'
-import type { UserStats, XpTransaction, UserBadge, LeaderboardEntry, LeaderboardSheetData, XpAwardResult, StreakUpdateResult } from '@/types'
+import type { UserStats, XpTransaction, UserBadge, LeaderboardEntry, LeaderboardSheetData, XpAwardResult, StreakUpdateResult, UserActivityCharts } from '@/types'
 import { getBadgeDefinitions } from '@/utils/gamification'
 
 // Helper to map DB result to Domain Entity
@@ -439,5 +439,59 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     }
 
     return (data || []).map(mapDbTransactionToDomain)
-  }
+  },
+
+  async getUserActivityCharts(userId: string): Promise<UserActivityCharts> {
+    const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+    const activityByWeekday = weekdayLabels.map((label) => ({ label, count: 0 }))
+    const songsByMonth = new Map<string, number>()
+
+    const [songsResult, xpResult, stats] = await Promise.all([
+      (client.from('songs') as any).select('created_at').eq('user_id', userId),
+      (client.from('xp_transactions') as any)
+        .select('created_at, action_type')
+        .eq('user_id', userId)
+        .in('action_type', ['view_song', 'create_song', 'clone_song', 'edit_song']),
+      this.getUserStats(userId),
+    ])
+
+    if (songsResult.error) throw songsResult.error
+    if (xpResult.error) throw xpResult.error
+
+    for (const row of (songsResult.data || []) as Array<{ created_at: string }>) {
+      const date = new Date(row.created_at)
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      songsByMonth.set(key, (songsByMonth.get(key) ?? 0) + 1)
+    }
+
+    let viewCount = 0
+    for (const row of (xpResult.data || []) as Array<{ created_at: string; action_type: string }>) {
+      const date = new Date(row.created_at)
+      activityByWeekday[date.getDay()].count += 1
+      if (row.action_type === 'view_song') viewCount += 1
+    }
+
+    const sortedMonths = Array.from(songsByMonth.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-12)
+      .map(([key, count]) => {
+        const [year, month] = key.split('-')
+        const label = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString(undefined, {
+          month: 'short',
+          year: '2-digit',
+        })
+        return { label, count }
+      })
+
+    const timeSpentMinutes = Math.max(
+      viewCount * 4,
+      (stats?.totalSongsViewed ?? 0) * 4
+    )
+
+    return {
+      timeSpentMinutes,
+      songsAddedByMonth: sortedMonths,
+      activityByWeekday: [...activityByWeekday],
+    }
+  },
 })

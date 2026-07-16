@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthContext } from '@/context/AuthContext'
@@ -12,9 +12,9 @@ import UserStatsCard from '@/components/gamification/UserStatsCard'
 import BadgeDisplay from '@/components/gamification/BadgeDisplay'
 import { PencilIcon, CheckIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import { Guitar, Piano } from 'lucide-react'
-import { getUserStatsAction, getUserBadgesAction } from '@/app/(protected)/gamification/actions'
-import { useEffect, useRef } from 'react'
-import type { UserBadge } from '@/types'
+import { getUserStatsAction, getUserBadgesAction, getUserActivityChartsAction } from '@/app/(protected)/gamification/actions'
+import UserActivityCharts from '@/components/gamification/UserActivityCharts'
+import type { UserBadge, UserActivityCharts as UserActivityChartsData } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -53,6 +53,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const [spotifyError, setSpotifyError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats | null>(initialStats)
+  const [activityCharts, setActivityCharts] = useState<UserActivityChartsData | null>(null)
   const [badges, setBadges] = useState<UserBadge[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -72,6 +73,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   // Refresh stats
   useEffect(() => {
     getUserStatsAction().then(setStats).catch(console.error)
+    getUserActivityChartsAction().then(setActivityCharts).catch(console.error)
   }, [])
 
   const handleSave = () => {
@@ -405,41 +407,6 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
       </div>
 
       <div className={sectionCardClass}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold text-foreground">
-              {t('profile.tsnioutFilter')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t('profile.tsnioutFilterDescription')}
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={tsnioutFilterEnabled}
-            onClick={handleTsnioutToggle}
-            disabled={isPending}
-            className={cn(
-              'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors',
-              tsnioutFilterEnabled ? 'bg-primary' : 'bg-muted',
-              'disabled:opacity-50'
-            )}
-          >
-            <span
-              className={cn(
-                'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
-                tsnioutFilterEnabled ? 'translate-x-6' : 'translate-x-1'
-              )}
-            />
-          </button>
-        </div>
-        {error && !isEditing && (
-          <p className="mt-3 text-sm text-destructive">{error}</p>
-        )}
-      </div>
-
-      <div className={sectionCardClass}>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -498,9 +465,53 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
         )}
       </div>
 
+      <div className={sectionCardClass}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-foreground">
+              {t('profile.tsnioutFilter')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('profile.tsnioutFilterDescription')}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={tsnioutFilterEnabled}
+            onClick={handleTsnioutToggle}
+            disabled={isPending}
+            className={cn(
+              'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors',
+              tsnioutFilterEnabled ? 'bg-primary' : 'bg-muted',
+              'disabled:opacity-50'
+            )}
+          >
+            <span
+              className={cn(
+                'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform',
+                tsnioutFilterEnabled ? 'translate-x-6' : 'translate-x-1'
+              )}
+            />
+          </button>
+        </div>
+        {error && !isEditing && (
+          <p className="mt-3 text-sm text-destructive">{error}</p>
+        )}
+      </div>
+
       {/* Stats Card */}
       {stats && (
         <UserStatsCard initialStats={stats} />
+      )}
+
+      {activityCharts && (
+        <div className={sectionCardClass}>
+          <h2 className="mb-3 text-base font-semibold text-foreground sm:mb-4">
+            {t('profile.activity')}
+          </h2>
+          <UserActivityCharts data={activityCharts} />
+        </div>
       )}
 
       {/* Badges */}

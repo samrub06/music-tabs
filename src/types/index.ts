@@ -349,6 +349,12 @@ export interface StreakUpdateResult {
   dailyBonusAwarded: boolean;
 }
 
+export interface UserActivityCharts {
+  timeSpentMinutes: number;
+  songsAddedByMonth: Array<{ label: string; count: number }>;
+  activityByWeekday: Array<{ label: string; count: number }>;
+}
+
 // =============================================
 // SOCIAL TYPES
 // =============================================

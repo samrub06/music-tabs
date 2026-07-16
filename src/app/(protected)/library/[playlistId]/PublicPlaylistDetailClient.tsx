@@ -451,17 +451,20 @@ interface PublicPlaylistSongListProps {
   playlist: Playlist
   songs: Song[]
   userId?: string
+  libraryCatalogIds?: string[]
 }
 
 export function PublicPlaylistSongList({
   playlist,
   songs,
   userId,
+  libraryCatalogIds = [],
 }: PublicPlaylistSongListProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const [addingId, setAddingId] = useState<string | null>(null)
   const { searchQuery, setSongs } = usePublicPlaylistSearch()
+  const libraryIdSet = useMemo(() => new Set(libraryCatalogIds), [libraryCatalogIds])
 
   useEffect(() => {
     setSongs(songs)
@@ -530,6 +533,7 @@ export function PublicPlaylistSongList({
     <ul className="mt-4">
       {displayedSongs.map((song) => {
         const isAdding = addingId === song.id
+        const isInLibrary = libraryIdSet.has(song.id)
 
         return (
           <li key={song.id}>
@@ -560,21 +564,23 @@ export function PublicPlaylistSongList({
               </button>
 
               <div className="flex shrink-0 items-center gap-1.5">
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
-                  onClick={() => handleAddToLibrary(song)}
-                  disabled={isAdding || !userId}
-                  aria-label={t('library.addToLibrary')}
-                  title={t('library.addToLibrary')}
-                >
-                  {isAdding ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <PlusIcon className="h-4 w-4" />
-                  )}
-                </Button>
+                {!isInLibrary ? (
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
+                    onClick={() => handleAddToLibrary(song)}
+                    disabled={isAdding || !userId}
+                    aria-label={t('library.addToLibrary')}
+                    title={t('library.addToLibrary')}
+                  >
+                    {isAdding ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <PlusIcon className="h-4 w-4" />
+                    )}
+                  </Button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => navigateToSong(song.id)}

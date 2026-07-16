@@ -804,6 +804,25 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }))
   },
 
+  /** Catalog song IDs the user already has in their library (owned or cloned). */
+  async getUserLibraryCatalogSongIds(): Promise<string[]> {
+    const { data: { user } } = await client.auth.getUser()
+    if (!user) return []
+
+    const { data, error } = await (client.from('songs') as any)
+      .select('id, cloned_from_id')
+      .eq('user_id', user.id)
+
+    if (error) throw error
+
+    const ids = new Set<string>()
+    for (const row of data || []) {
+      if (row.id) ids.add(row.id)
+      if (row.cloned_from_id) ids.add(row.cloned_from_id)
+    }
+    return Array.from(ids)
+  },
+
   // Get songs by folder with pagination and search
   async getSongsByFolder(
     folderId: string,

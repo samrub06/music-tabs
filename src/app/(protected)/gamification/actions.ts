@@ -2,7 +2,7 @@
 
 import { createActionServerClient } from '@/lib/supabase/server'
 import { gamificationRepo } from '@/lib/services/gamificationRepo'
-import type { UserStats, StreakUpdateResult, LeaderboardEntry, LeaderboardSheetData, UserBadge } from '@/types'
+import type { UserStats, StreakUpdateResult, LeaderboardEntry, LeaderboardSheetData, UserBadge, UserActivityCharts } from '@/types'
 
 /**
  * Get current user's stats
@@ -86,4 +86,14 @@ export async function getUserBadgesAction(): Promise<UserBadge[]> {
   
   const gamification = gamificationRepo(supabase)
   return await gamification.getUserBadges(user.id)
+}
+
+export async function getUserActivityChartsAction(): Promise<UserActivityCharts | null> {
+  const supabase = await createActionServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const gamification = gamificationRepo(supabase)
+  return await gamification.getUserActivityCharts(user.id)
 }
