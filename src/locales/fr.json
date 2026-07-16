@@ -1154,6 +1154,8 @@
     "columnName": "Nom",
     "columnEmail": "E-mail",
     "columnSongs": "Chansons",
-    "columnJoined": "Inscrit le"
+    "columnLastActivity": "Dernière activité",
+    "columnJoined": "Inscrit le",
+    "noActivity": "—"
   }
 }

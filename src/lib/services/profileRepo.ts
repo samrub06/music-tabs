@@ -132,7 +132,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     page: number
     limit: number
   }): Promise<{
-    profiles: Array<Profile & { songCount: number }>
+    profiles: Array<Profile & { songCount: number; lastActivityDate: Date | null }>
     total: number
   }> {
     const { search, page, limit } = options
@@ -158,15 +158,32 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     const userIds = rows.map((r) => r.id)
 
     const songCounts = new Map<string, number>()
+    const lastActivityByUser = new Map<string, Date | null>()
     if (userIds.length > 0) {
-      const { data: songsData, error: songsError } = await (client.from('songs') as any)
-        .select('user_id')
-        .in('user_id', userIds)
+      const [{ data: songsData, error: songsError }, { data: statsData, error: statsError }] =
+        await Promise.all([
+          (client.from('songs') as any).select('user_id').in('user_id', userIds),
+          (client.from('user_stats') as any)
+            .select('user_id, last_activity_date')
+            .in('user_id', userIds),
+        ])
 
       if (songsError) throw songsError
+      if (statsError) throw statsError
+
       for (const row of songsData || []) {
         const uid = row.user_id as string
         songCounts.set(uid, (songCounts.get(uid) ?? 0) + 1)
+      }
+
+      for (const row of (statsData || []) as Array<{
+        user_id: string
+        last_activity_date: string | null
+      }>) {
+        lastActivityByUser.set(
+          row.user_id,
+          row.last_activity_date ? new Date(`${row.last_activity_date}T12:00:00`) : null
+        )
       }
     }
 
@@ -174,6 +191,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
       profiles: rows.map((row) => ({
         ...mapDbProfileToDomain(row),
         songCount: songCounts.get(row.id) ?? 0,
+        lastActivityDate: lastActivityByUser.get(row.id) ?? null,
       })),
       total: count ?? 0,
     }

@@ -1154,6 +1154,8 @@
     "columnName": "שם",
     "columnEmail": "אימייל",
     "columnSongs": "שירים",
-    "columnJoined": "הצטרף"
+    "columnLastActivity": "פעילות אחרונה",
+    "columnJoined": "הצטרף",
+    "noActivity": "—"
   }
 }

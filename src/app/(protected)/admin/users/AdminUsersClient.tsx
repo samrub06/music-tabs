@@ -9,7 +9,7 @@ import type { Profile } from '@/lib/services/profileRepo'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 
-type AdminUserRow = Profile & { songCount: number }
+type AdminUserRow = Profile & { songCount: number; lastActivityDate: Date | null }
 
 interface AdminUsersClientProps {
   profiles: AdminUserRow[]
@@ -77,6 +77,9 @@ export default function AdminUsersClient({
                 <th className="hidden px-4 py-3 font-medium sm:table-cell">
                   {t('admin.columnSongs')}
                 </th>
+                <th className="hidden px-4 py-3 font-medium lg:table-cell">
+                  {t('admin.columnLastActivity')}
+                </th>
                 <th className="hidden px-4 py-3 font-medium md:table-cell">
                   {t('admin.columnJoined')}
                 </th>
@@ -105,8 +108,13 @@ export default function AdminUsersClient({
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{profile.email}</td>
                   <td className="hidden px-4 py-3 sm:table-cell">{profile.songCount}</td>
+                  <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
+                    {profile.lastActivityDate
+                      ? new Date(profile.lastActivityDate).toLocaleDateString()
+                      : t('admin.noActivity')}
+                  </td>
                   <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
-                    {profile.createdAt.toLocaleDateString()}
+                    {new Date(profile.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link

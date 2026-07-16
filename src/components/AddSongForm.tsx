@@ -642,7 +642,7 @@ export default function AddSongForm({
                   }}
                   placeholder={t('songForm.searchPlaceholder')}
                   disabled={isSearching || isSaving}
-                  className="h-11 pl-10 pr-3"
+                  className="h-11 rounded-xl border-border/80 pl-10 pr-3 focus-visible:ring-primary/30"
                 />
               </div>
               {renderSearchResults()}
@@ -814,14 +814,15 @@ export default function AddSongForm({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
+        closeButtonClassName="rounded-full hover:bg-muted"
         className={cn(
-          'flex w-[calc(100%-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl',
+          'flex w-[calc(100%-2rem)] max-w-xl flex-col gap-0 overflow-hidden rounded-2xl border-border/60 p-0 shadow-xl sm:rounded-3xl',
           'max-lg:top-[calc(3rem+env(safe-area-inset-top,0px))] max-lg:translate-y-0',
           'max-lg:max-h-[min(calc(100dvh-7rem-env(safe-area-inset-bottom,0px)),680px)]',
           'sm:max-h-[min(88dvh,680px)]'
         )}
       >
-        <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left">
+        <DialogHeader className="shrink-0 px-4 pb-1 pt-4 pr-12 text-left sm:px-5 sm:pt-5">
           <DialogTitle>{t('songForm.addSong')}</DialogTitle>
         </DialogHeader>
         {tabsRow}
