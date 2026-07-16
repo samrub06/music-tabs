@@ -87,7 +87,7 @@ export default function BottomNavigation() {
     <>
       <nav
         aria-label={t('navigation.MENU')}
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 lg:hidden safe-area-inset-bottom"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background lg:hidden safe-area-inset-bottom"
       >
         <div className="flex items-stretch h-16 px-0.5">
           {navItems.map((item) => {

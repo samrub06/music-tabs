@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useTransition, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
-import { updateProfileAction, unlinkSpotifyAccountAction } from './actions'
+import { updateProfileAction } from './actions'
 import type { Profile, PreferredInstrument } from '@/lib/services/profileRepo'
 import type { UserStats } from '@/types'
 import UserStatsCard from '@/components/gamification/UserStatsCard'
@@ -47,19 +46,11 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const [tsnioutFilterEnabled, setTsnioutFilterEnabled] = useState(
     initialProfile?.tsnioutFilterEnabled ?? false
   )
-  const [spotifyConnected, setSpotifyConnected] = useState(
-    !!(initialProfile?.spotifyId || contextProfile?.spotify_id)
-  )
-  const [spotifyError, setSpotifyError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats | null>(initialStats)
   const [activityCharts, setActivityCharts] = useState<UserActivityChartsData | null>(null)
   const [badges, setBadges] = useState<UserBadge[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    setSpotifyConnected(!!(initialProfile?.spotifyId || contextProfile?.spotify_id))
-  }, [initialProfile?.spotifyId, contextProfile?.spotify_id])
 
   usePageHeader(t('navigation.profile'), '/')
 
@@ -179,28 +170,6 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
     })
   }
 
-  const handleDisconnectSpotify = () => {
-    if (!window.confirm(t('profile.spotifyDisconnectConfirm'))) return
-
-    setSpotifyError(null)
-    startTransition(async () => {
-      try {
-        await unlinkSpotifyAccountAction()
-        setSpotifyConnected(false)
-        await refetchProfile()
-        router.refresh()
-      } catch (err) {
-        setSpotifyError(
-          err instanceof Error ? err.message : t('profile.spotifyDisconnectError')
-        )
-      }
-    })
-  }
-
-  const handleConnectSpotify = () => {
-    window.location.assign('/api/spotify/auth')
-  }
-
   const getInitials = (name: string | null | undefined, email: string | null | undefined) => {
     if (name) {
       const parts = name.trim().split(' ')
@@ -306,6 +275,9 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
                     <Label className="mb-2 block text-[11px] font-medium text-muted-foreground">
                       {t('profile.preferredInstrument')}
                     </Label>
+                    <p className="mb-2 text-xs text-muted-foreground">
+                      {t('profile.preferredInstrumentHint')}
+                    </p>
                     <div className="grid grid-cols-2 gap-2 sm:max-w-xs">
                       <button
                         type="button"
@@ -407,65 +379,6 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
       </div>
 
       <div className={sectionCardClass}>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-semibold text-foreground">
-                {t('profile.spotify')}
-              </h2>
-              <span
-                className={cn(
-                  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                  spotifyConnected
-                    ? 'bg-[#1DB954]/15 text-[#0d7a34] dark:text-[#1ed760]'
-                    : 'bg-muted text-muted-foreground'
-                )}
-              >
-                {spotifyConnected
-                  ? t('profile.spotifyConnected')
-                  : t('profile.spotifyNotConnected')}
-              </span>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {spotifyConnected
-                ? t('profile.spotifyConnectedDescription')
-                : t('profile.spotifyDisconnectedDescription')}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 sm:shrink-0">
-            {spotifyConnected ? (
-              <>
-                <Button asChild variant="outline" className="h-10 min-h-[44px] rounded-xl">
-                  <Link href="/spotify">{t('profile.spotifyImportPlaylists')}</Link>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDisconnectSpotify}
-                  disabled={isPending}
-                  className="h-10 min-h-[44px] rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
-                  {t('profile.spotifyDisconnect')}
-                </Button>
-              </>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleConnectSpotify}
-                disabled={isPending}
-                className="h-10 min-h-[44px] rounded-xl bg-[#1DB954] text-black hover:bg-[#1ed760]"
-              >
-                {t('profile.spotifyConnect')}
-              </Button>
-            )}
-          </div>
-        </div>
-        {spotifyError && (
-          <p className="mt-3 text-sm text-destructive">{spotifyError}</p>
-        )}
-      </div>
-
-      <div className={sectionCardClass}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-foreground">
@@ -500,18 +413,15 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
         )}
       </div>
 
+      {activityCharts && (
+        <div className={sectionCardClass}>
+          <UserActivityCharts data={activityCharts} />
+        </div>
+      )}
+
       {/* Stats Card */}
       {stats && (
         <UserStatsCard initialStats={stats} />
-      )}
-
-      {activityCharts && (
-        <div className={sectionCardClass}>
-          <h2 className="mb-3 text-base font-semibold text-foreground sm:mb-4">
-            {t('profile.activity')}
-          </h2>
-          <UserActivityCharts data={activityCharts} />
-        </div>
       )}
 
       {/* Badges */}
@@ -566,6 +476,33 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
           </div>
         </div>
       )}
+
+      <div className={cn(sectionCardClass, 'opacity-70')}>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-semibold text-foreground">
+                {t('profile.spotify')}
+              </h2>
+              <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                {t('common.comingSoon')}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('profile.spotifyDisconnectedDescription')}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:shrink-0">
+            <Button
+              type="button"
+              disabled
+              className="h-10 min-h-[44px] cursor-not-allowed rounded-xl bg-[#1DB954] text-black opacity-90"
+            >
+              {t('profile.spotifyConnect')}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

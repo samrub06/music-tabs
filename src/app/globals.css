@@ -244,11 +244,98 @@
     animation: chip-border-fill 2s linear forwards;
   }
 
+  /* Promo banner: same snake, 10s fill (PracticeComingSoonBanner) */
+  .promo-snake-border {
+    overflow: hidden;
+    padding: 2px;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .promo-snake-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(
+      from -90deg,
+      var(--promo-snake-color, hsl(var(--primary))) 0deg,
+      var(--promo-snake-color, hsl(var(--primary))) var(--chip-border-fill),
+      transparent var(--chip-border-fill)
+    );
+    animation: chip-border-fill 10s linear forwards;
+  }
+
+  .promo-snake-border-filled::before {
+    animation: none;
+    --chip-border-fill: 360deg;
+    background: var(--promo-snake-color, hsl(var(--primary)));
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .chip-snake-border::before {
       animation: none;
       --chip-border-fill: 360deg;
       background: hsl(var(--primary));
+    }
+
+    .promo-snake-border::before {
+      animation: none;
+      --chip-border-fill: 360deg;
+      background: var(--promo-snake-color, hsl(var(--primary)));
+    }
+  }
+
+  /* Invite click on Add to library meta tile */
+  @keyframes add-library-invite {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45);
+    }
+    50% {
+      transform: scale(1.04);
+      box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+    }
+  }
+
+  .animate-add-library-invite {
+    animation: add-library-invite 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-add-library-invite {
+      animation: none;
+    }
+  }
+
+  /* Icon wiggle on parent hover (YouTube, add playlist, …) */
+  @keyframes icon-hover-wiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    35% {
+      transform: rotate(-20deg);
+    }
+    70% {
+      transform: rotate(20deg);
+    }
+  }
+
+  .group\/wiggle:hover .icon-hover-wiggle {
+    animation: icon-hover-wiggle 0.55s ease-in-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .group\/wiggle:hover .icon-hover-wiggle {
+      animation: none;
     }
   }
 

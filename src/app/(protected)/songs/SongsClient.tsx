@@ -25,7 +25,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { SongsFolderChips, SongsFolderSidebar, type FolderSongCounts } from '@/components/songs/SongsFolderNav'
 import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
-import { FilterChip, FilterChipRow } from '@/components/ui/filter-chip'
 
 const toolbarSegmentContainer =
   'flex items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800'
@@ -36,7 +35,7 @@ function toolbarSegmentButton(
   compact = false
 ) {
   return cn(
-    'flex items-center justify-center rounded-full font-medium transition-all duration-200',
+    'flex items-center justify-center rounded-full font-medium transition-all duration-300 ease-out',
     compact
       ? 'h-8 gap-1 px-1.5 text-xs'
       : 'h-11 gap-1.5 px-2 text-sm sm:gap-2 sm:px-4',
@@ -252,12 +251,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         return
       }
 
-      setDisplaySongs(songs)
-      setDisplayTotal(total)
+      // Refetch with current tab/folder — don't reset to stale RSC props
+      void fetchSongList({ page: 1, searchQuery: '' })
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [localSearchValue, fetchSongList, songs, total])
+  }, [localSearchValue, fetchSongList])
 
   // Handle songId from URL - navigate to song page if present
   useEffect(() => {
@@ -464,6 +463,23 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     void fetchSongList({ folder: folderId, page: 1 })
   }
 
+  const handleTabChange = (tab: 'all' | 'recent' | 'popular') => {
+    if (tab === activeTab && !isListLoading) return
+
+    setActiveTab(tab)
+    replaceQueryParams((params) => {
+      if (tab !== 'all') params.set('tab', tab)
+      else params.delete('tab')
+      params.set('page', '1')
+    })
+
+    void fetchSongList({
+      tab,
+      page: 1,
+      searchQuery: searchQuery.trim() || undefined,
+    })
+  }
+
   const handleCreateFolder = async (name: string) => {
     await addFolderAction(name)
     await refreshFolders()
@@ -642,13 +658,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             type="button"
             onClick={() => openAddSongModal()}
             className={cn(
-              'shrink-0 rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center',
+              'group/wiggle shrink-0 rounded-xl text-white bg-primary hover:bg-primary/90 transition-colors flex items-center justify-center',
               isLandscapeMobile ? 'h-8 w-8 p-0' : 'p-3 min-h-[44px] min-w-[44px]',
               isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0 max-lg:p-0'
             )}
             aria-label={t('navigation.addSong')}
           >
-            <PlusIcon className={isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'} />
+            <PlusIcon
+              className={cn(
+                'icon-hover-wiggle',
+                isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
+              )}
+            />
           </button>
         </div>
 
@@ -662,35 +683,35 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               onFolderSelect={handleFolderChange}
               compact
             />
-            <FilterChipRow className="min-w-0 flex-1">
-              <FilterChip
-                compact
-                active={activeTab === 'all'}
-                onClick={() => applyQuery({ tab: 'all', page: 1 })}
+            <div className={cn(toolbarSegmentContainer, 'shrink-0')}>
+              <button
+                type="button"
+                onClick={() => handleTabChange('all')}
+                className={toolbarSegmentButton(activeTab === 'all', undefined, true)}
                 title={t('songs.all')}
                 aria-label={t('songs.all')}
               >
                 <MusicalNoteIcon className="h-3.5 w-3.5 flex-shrink-0" />
-              </FilterChip>
-              <FilterChip
-                compact
-                active={activeTab === 'recent'}
-                onClick={() => applyQuery({ tab: 'recent', page: 1 })}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('recent')}
+                className={toolbarSegmentButton(activeTab === 'recent', undefined, true)}
                 title={t('songs.recent')}
                 aria-label={t('songs.recent')}
               >
                 <ClockIcon className="h-3.5 w-3.5 flex-shrink-0" />
-              </FilterChip>
-              <FilterChip
-                compact
-                active={activeTab === 'popular'}
-                onClick={() => applyQuery({ tab: 'popular', page: 1 })}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('popular')}
+                className={toolbarSegmentButton(activeTab === 'popular', undefined, true)}
                 title={t('songs.popular')}
                 aria-label={t('songs.popular')}
               >
                 <FireIcon className="h-3.5 w-3.5 flex-shrink-0" />
-              </FilterChip>
-            </FilterChipRow>
+              </button>
+            </div>
             <div className={cn(toolbarSegmentContainer, 'shrink-0')}>
               {(view === 'table' || isSelectMode) && (
                 <SelectModeToggleButton
@@ -733,29 +754,32 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             />
             <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1 lg:hidden">
-                <FilterChipRow>
-                  <FilterChip
-                    active={activeTab === 'all'}
-                    onClick={() => applyQuery({ tab: 'all', page: 1 })}
+                <div className={cn(toolbarSegmentContainer, 'w-full')}>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('all')}
+                    className={toolbarSegmentButton(activeTab === 'all', 'flex-1')}
                   >
                     <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('songs.all')}</span>
-                  </FilterChip>
-                  <FilterChip
-                    active={activeTab === 'recent'}
-                    onClick={() => applyQuery({ tab: 'recent', page: 1 })}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('recent')}
+                    className={toolbarSegmentButton(activeTab === 'recent', 'flex-1')}
                   >
                     <ClockIcon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('songs.recent')}</span>
-                  </FilterChip>
-                  <FilterChip
-                    active={activeTab === 'popular'}
-                    onClick={() => applyQuery({ tab: 'popular', page: 1 })}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('popular')}
+                    className={toolbarSegmentButton(activeTab === 'popular', 'flex-1')}
                   >
                     <FireIcon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('songs.popular')}</span>
-                  </FilterChip>
-                </FilterChipRow>
+                  </button>
+                </div>
               </div>
               <div className={cn(toolbarSegmentContainer, 'shrink-0 lg:ml-auto')}>
                 {(view === 'table' || isSelectMode) && (
@@ -792,10 +816,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         <div
           ref={scrollContainerRef}
           data-main-scroll
+          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
+        <div
           className={cn(
-            'relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain transition-opacity duration-150',
-            isListLoading && 'opacity-60 pointer-events-none'
+            'transition-opacity duration-300 ease-out',
+            isListLoading ? 'pointer-events-none opacity-45' : 'opacity-100'
           )}
+          aria-busy={isListLoading}
         >
         {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' ? (
@@ -884,6 +912,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         )}
         </div>
         </div>
+      </div>
       </div>
 
       {/* Drag overlay */}

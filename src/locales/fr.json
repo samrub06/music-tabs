@@ -87,6 +87,7 @@
     "foldersCreated": "Playlists créées",
     "playlistsCreated": "Sessions jam créées",
     "preferredInstrument": "Instrument préféré",
+    "preferredInstrumentHint": "Utilisé par défaut pour les diagrammes d’accords sur les chansons (piano ou guitare).",
     "piano": "Piano",
     "guitar": "Guitare",
     "tsnioutFilter": "Filtre tsniout",
@@ -104,7 +105,14 @@
     "spotifyImportPlaylists": "Importer des playlists",
     "timeSpent": "Temps passé",
     "songsAddedChart": "Chansons ajoutées",
-    "activityByDay": "Activité par jour"
+    "activityByDay": "Activité par jour",
+    "activityPeriod": {
+      "7d": "7 derniers jours",
+      "30d": "30 derniers jours",
+      "90d": "90 derniers jours",
+      "12m": "12 derniers mois",
+      "all": "Tout"
+    }
   },
   "leaderboard": {
     "title": "Classement",
@@ -157,13 +165,17 @@
   },
   "invitations": {
     "title": "Invitation",
-    "sendTitle": "Inviter sur TABasco",
-    "sendDescription": "Envoyez un lien personnel. À l'inscription, vous deviendrez amis automatiquement.",
-    "emailOptional": "Email de l'ami (optionnel)",
+    "sendTitle": "Parrainer un ami",
+    "sendDescription": "Partagez votre lien personnel, ou envoyez un email. À l'inscription, vous deviendrez amis automatiquement.",
+    "emailOptional": "ami@email.com, autre@email.com",
+    "emailHint": "Optionnel — un ou plusieurs emails séparés par des virgules",
     "createLink": "Créer un lien d'invitation",
-    "latestLink": "Partagez ce lien",
+    "shareLink": "Partager le lien",
+    "sendEmail": "Envoyer un email",
+    "latestLink": "Votre lien d'invitation",
     "pendingCount": "{count} invitation(s) en attente",
     "copy": "Copier",
+    "copied": "Copié",
     "cancel": "Annuler l'invitation",
     "someone": "Un musicien",
     "landingTitle": "{name} vous invite sur TABasco",
@@ -171,7 +183,12 @@
     "invalid": "Cette invitation n'est plus valide.",
     "joinWithGoogle": "Rejoindre avec Google",
     "continueOnboarding": "Continuer la configuration",
-    "freeToJoin": "Gratuit. Sans publicité."
+    "freeToJoin": "Gratuit. Sans publicité.",
+    "invalidEmail": "Email invalide : {email}",
+    "shareTitle": "Rejoins-moi sur TABasco",
+    "shareText": "J'utilise TABasco pour les accords et les songbooks — rejoins-moi avec mon invitation :",
+    "emailSubject": "{name} vous invite sur TABasco",
+    "emailBody": "Salut,\n\nJ'utilise TABasco pour organiser mes chansons, transposer et partager des playlists. Rejoins-moi avec mon invitation :\n\n{link}\n\nÀ bientôt !"
   },
   "onboarding": {
     "title": "Bienvenue",
@@ -442,6 +459,22 @@
     "title": "Salle de jam secrète",
     "subtitle": "Tu as trop tapoté la guitare. Bon — fais du bruit.",
     "hitCount": "{count} coups · encore ?",
+    "scoreLabel": "Score",
+    "bestScore": "Record · {count}",
+    "timerLabel": "Temps",
+    "timerIdle": "Tape un instrument pour démarrer",
+    "timerReady": "Prêt",
+    "timerRunning": "secondes restantes",
+    "timerDone": "Temps écoulé",
+    "instrumentsTitle": "Fais du bruit",
+    "roundOverTitle": "Manche terminée",
+    "roundOverBody": "Tu as marqué {count}. Pas encore Guinness.",
+    "newRecordTitle": "Nouveau record Guinness !",
+    "newRecordBody": "{count} coups enregistrés. Officiellement ridicule.",
+    "guinnessBadge": "Record Guinness du jam",
+    "playAgain": "Rejouer",
+    "recordLogTitle": "Journal des records Guinness",
+    "recordLogEntry": "{count} coups",
     "stopNonsense": "Bon, assez de bêtises.",
     "stopNonsenseHint": "Retourne à l’explorer et arrête les conneries.",
     "backToExplorer": "Retour à l’explorer",
@@ -895,6 +928,9 @@
     "shareThisSong": "Partager cette chanson",
     "practiceMode": "Ligne par ligne",
     "practiceModeHint": "Suivez une ligne à la fois avec la musique",
+    "practiceBannerTitle": "Ligne par ligne",
+    "practiceBannerDescription": "Suivez une ligne à la fois avec la musique.",
+    "practiceBannerCta": "Essayer le mode pratique",
     "practicePlay": "Jouer avec",
     "practicePause": "Pause",
     "practiceExit": "Quitter",
@@ -937,8 +973,14 @@
       "noChords": "Aucun accord à venir",
       "emptyLine": "—"
     },
-    "FULL_SONG_HIDDEN_TITLE": "Chanson complète masquée",
-    "FULL_SONG_HIDDEN_DESCRIPTION": "Connectez-vous pour accéder à l'intégralité de la chanson et l'ajouter à votre bibliothèque."
+    "FULL_SONG_HIDDEN_TITLE": "Garde cette chanson",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "Connecte-toi avec Google pour l’ajouter à ta bibliothèque — c’est gratuit pour l’instant.",
+    "signInPromoBadge": "Gratuit pour l’instant",
+    "switchInstrumentHint": "Touche pour passer piano / guitare",
+    "chordsHintTap": "Touche un accord pour le voir",
+    "chordsHintSwipe": "Glisse pour voir les autres",
+    "chordsHintInstrument": "En dessous : change piano / guitare",
+    "changeDefaultInstrument": "Change ton défaut dans le Profil"
   },
 
   "songEditor": {
@@ -1069,7 +1111,7 @@
     "seeMoreSongs": "Voir plus de chansons"
   },
   "songStory": {
-    "title": "À propos de cette chanson",
+    "title": "Histoire de la chanson",
     "loading": "Chargement…",
     "anecdotes": "Genèse et anecdotes",
     "about": "L'histoire",

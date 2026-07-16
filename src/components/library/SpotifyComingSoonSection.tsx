@@ -68,18 +68,24 @@ export default function SpotifyComingSoonSection({ spotifyId: spotifyIdProp }: S
           {t('library.spotifySoon')}
         </span>
 
-        <div className="pointer-events-none absolute -bottom-14 -right-8 sm:-bottom-20 sm:-right-6" aria-hidden>
-          <Image
-            src="/spotify_logo_V2.png"
-            alt=""
-            width={756}
-            height={846}
-            className="h-48 w-auto rotate-[28deg] object-contain opacity-95 sm:h-60"
-          />
+        {/* Decorative art capped at half width so left copy stays clear */}
+        <div
+          className="pointer-events-none absolute inset-y-0 end-0 w-1/2 overflow-hidden"
+          aria-hidden
+        >
+          <div className="absolute -bottom-14 -end-6 sm:-bottom-20 sm:-end-4">
+            <Image
+              src="/spotify_logo_V2.png"
+              alt=""
+              width={756}
+              height={846}
+              className="h-48 w-auto max-w-none rotate-[28deg] object-contain opacity-95 sm:h-60"
+            />
+          </div>
         </div>
 
         <div className="relative z-10 flex min-h-[8.5rem] flex-col items-start justify-between p-5 sm:min-h-[9.5rem] sm:p-6">
-          <div className="flex min-w-0 max-w-[72%] flex-col items-start justify-start pr-2 sm:max-w-[68%]">
+          <div className="flex min-w-0 max-w-[50%] flex-col items-start justify-start pr-2 sm:max-w-[52%]">
             <Image
               src="/spotify_text.png"
               alt="Spotify"

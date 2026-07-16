@@ -564,6 +564,35 @@ export interface Database {
           created_at?: string
         }
       }
+      email_sends: {
+        Row: {
+          id: string
+          user_id: string
+          campaign: string
+          sent_at: string
+          resend_id: string | null
+          entity_type: string | null
+          entity_id: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          campaign: string
+          sent_at?: string
+          resend_id?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          campaign?: string
+          sent_at?: string
+          resend_id?: string | null
+          entity_type?: string | null
+          entity_id?: string | null
+        }
+      }
       app_invitations: {
         Row: {
           id: string

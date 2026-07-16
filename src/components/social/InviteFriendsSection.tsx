@@ -8,17 +8,36 @@ import {
   getMyInvitationsAction,
 } from '@/app/(protected)/onboarding/actions'
 import { useLanguage } from '@/context/LanguageContext'
+import { useAuthContext } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { CheckIcon, LinkIcon, PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  CheckIcon,
+  EnvelopeIcon,
+  LinkIcon,
+  ShareIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import {
+  buildInviteMailto,
+  normalizeInviteeEmailField,
+  parseInviteeEmails,
+  shareOrCopyInviteLink,
+  validateInviteeEmails,
+} from '@/utils/inviteShare'
 
 export default function InviteFriendsSection() {
   const { t } = useLanguage()
+  const { profile } = useAuthContext()
   const [inviteeEmail, setInviteeEmail] = useState('')
   const [latestLink, setLatestLink] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [invitations, setInvitations] = useState<AppInvitation[]>([])
   const [pending, startTransition] = useTransition()
+
+  const inviterName =
+    profile?.full_name?.trim() || profile?.email?.trim() || t('invitations.someone')
 
   useEffect(() => {
     getMyInvitationsAction().then(setInvitations).catch(console.error)
@@ -29,17 +48,74 @@ export default function InviteFriendsSection() {
     return `${window.location.origin}/invite/${code}`
   }
 
-  const handleCreateInvitation = () => {
+  const parseEmailsOrShowError = (): string[] | null => {
+    const invalid = validateInviteeEmails(inviteeEmail)
+    if (invalid) {
+      setEmailError(t('invitations.invalidEmail').replace('{email}', invalid))
+      return null
+    }
+    setEmailError(null)
+    return parseInviteeEmails(inviteeEmail)
+  }
+
+  const ensureInviteLink = async (): Promise<{ url: string; emails: string[] } | null> => {
+    const emails = parseEmailsOrShowError()
+    if (emails === null) return null
+
+    if (latestLink) {
+      return { url: latestLink, emails }
+    }
+
+    const invitation = await createInvitationAction({
+      inviteeEmail: normalizeInviteeEmailField(inviteeEmail),
+    })
+    const url = buildInviteUrl(invitation.code)
+    setLatestLink(url)
+    const updated = await getMyInvitationsAction()
+    setInvitations(updated)
+    return { url, emails }
+  }
+
+  const handleShareLink = () => {
     startTransition(async () => {
       try {
-        const invitation = await createInvitationAction({
-          inviteeEmail: inviteeEmail.trim() || null,
+        const result = await ensureInviteLink()
+        if (!result) return
+
+        const outcome = await shareOrCopyInviteLink({
+          url: result.url,
+          title: t('invitations.shareTitle'),
+          text: t('invitations.shareText'),
         })
-        const url = buildInviteUrl(invitation.code)
-        setLatestLink(url)
-        setInviteeEmail('')
-        const updated = await getMyInvitationsAction()
-        setInvitations(updated)
+        if (outcome === 'copied') {
+          setCopied(true)
+          window.setTimeout(() => setCopied(false), 2000)
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        console.error(error)
+      }
+    })
+  }
+
+  const handleSendEmail = () => {
+    startTransition(async () => {
+      try {
+        const result = await ensureInviteLink()
+        if (!result) return
+
+        const subject = t('invitations.emailSubject').replace('{name}', inviterName)
+        const body = t('invitations.emailBody')
+          .replace('{name}', inviterName)
+          .replace('{link}', result.url)
+
+        const mailto = buildInviteMailto({
+          emails: result.emails,
+          inviteUrl: result.url,
+          subject,
+          body,
+        })
+        window.location.href = mailto
       } catch (error) {
         console.error(error)
       }
@@ -50,7 +126,7 @@ export default function InviteFriendsSection() {
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      window.setTimeout(() => setCopied(false), 2000)
     } catch (error) {
       console.error(error)
     }
@@ -74,30 +150,59 @@ export default function InviteFriendsSection() {
   const pendingInvites = invitations.filter((inv) => inv.status === 'pending')
 
   return (
-    <div className="mb-6 rounded-2xl border border-black/[0.06] bg-muted/30 p-4 dark:border-white/[0.08]">
-      <h2 className="text-sm font-semibold text-foreground">{t('invitations.sendTitle')}</h2>
-      <p className="mt-1 text-xs text-muted-foreground">{t('invitations.sendDescription')}</p>
+    <div className="mb-6 rounded-2xl border border-black/[0.06] bg-card p-4 dark:border-white/[0.08] sm:p-5">
+      <h2 className="text-base font-semibold text-foreground">{t('invitations.sendTitle')}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{t('invitations.sendDescription')}</p>
 
       <div className="mt-4 space-y-3">
-        <Input
-          type="email"
-          value={inviteeEmail}
-          onChange={(e) => setInviteeEmail(e.target.value)}
-          placeholder={t('invitations.emailOptional')}
-          className="rounded-xl"
-        />
-        <Button
-          type="button"
-          className="w-full rounded-xl"
-          disabled={pending}
-          onClick={handleCreateInvitation}
-        >
-          <PaperAirplaneIcon className="mr-1.5 h-4 w-4" />
-          {t('invitations.createLink')}
-        </Button>
+        <div>
+          <Input
+            type="text"
+            inputMode="email"
+            autoComplete="email"
+            value={inviteeEmail}
+            onChange={(e) => {
+              setInviteeEmail(e.target.value)
+              if (emailError) setEmailError(null)
+            }}
+            placeholder={t('invitations.emailOptional')}
+            className="h-10 rounded-xl"
+            aria-invalid={!!emailError}
+            aria-describedby="invite-email-hint"
+          />
+          <p id="invite-email-hint" className="mt-1.5 text-[11px] text-muted-foreground">
+            {emailError ? (
+              <span className="text-destructive">{emailError}</span>
+            ) : (
+              t('invitations.emailHint')
+            )}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            className="h-10 min-h-[44px] w-full rounded-xl sm:flex-1"
+            disabled={pending}
+            onClick={handleShareLink}
+          >
+            <ShareIcon className="mr-1.5 h-4 w-4" />
+            {copied ? t('invitations.copied') : t('invitations.shareLink')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 min-h-[44px] w-full rounded-xl sm:flex-1"
+            disabled={pending}
+            onClick={handleSendEmail}
+          >
+            <EnvelopeIcon className="mr-1.5 h-4 w-4" />
+            {t('invitations.sendEmail')}
+          </Button>
+        </div>
 
         {latestLink && (
-          <div className="rounded-xl border border-border bg-background p-3">
+          <div className="rounded-xl border border-black/[0.06] bg-background p-3 dark:border-white/[0.08]">
             <p className="mb-2 text-[11px] font-medium text-muted-foreground">
               {t('invitations.latestLink')}
             </p>
@@ -106,8 +211,9 @@ export default function InviteFriendsSection() {
               <Button
                 type="button"
                 variant="outline"
-                className="shrink-0 rounded-xl"
+                className="h-10 min-h-[44px] shrink-0 rounded-xl"
                 onClick={() => void handleCopy(latestLink)}
+                aria-label={t('invitations.copy')}
               >
                 {copied ? (
                   <CheckIcon className="h-4 w-4 text-green-600" />

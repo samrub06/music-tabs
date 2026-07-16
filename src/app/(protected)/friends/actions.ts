@@ -1,9 +1,11 @@
 'use server'
 
+import * as Sentry from '@sentry/nextjs'
 import { revalidatePath } from 'next/cache'
-import { createActionServerClient } from '@/lib/supabase/server'
+import { createActionServerClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { friendsRepo } from '@/lib/services/friendsRepo'
 import { notificationsRepo } from '@/lib/services/notificationsRepo'
+import { sendItemSharedEmail } from '@/lib/services/shareNotificationEmailService'
 import {
   friendshipIdSchema,
   friendRelationUserIdSchema,
@@ -221,6 +223,20 @@ export async function shareWithFriendAction(payload: unknown) {
         : 'Playlist shared with you',
     message: `${ownerName} shared "${validated.entityTitle}" with you`,
   })
+
+  try {
+    const serviceClient = createServiceRoleClient()
+    await sendItemSharedEmail(serviceClient, {
+      recipientUserId: validated.friendUserId,
+      ownerName,
+      entityType: validated.entityType,
+      entityId: validated.entityId,
+      entityTitle: validated.entityTitle,
+    })
+  } catch (error) {
+    console.error('Failed to send share notification email:', error)
+    Sentry.captureException(error)
+  }
 
   revalidatePath('/friends')
 }

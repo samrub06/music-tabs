@@ -2,7 +2,10 @@
 
 import { createActionServerClient } from '@/lib/supabase/server'
 import { gamificationRepo } from '@/lib/services/gamificationRepo'
-import type { UserStats, StreakUpdateResult, LeaderboardEntry, LeaderboardSheetData, UserBadge, UserActivityCharts } from '@/types'
+import type { UserStats, StreakUpdateResult, LeaderboardEntry, LeaderboardSheetData, UserBadge, UserActivityCharts, ActivityPeriod } from '@/types'
+import { z } from 'zod'
+
+const activityPeriodSchema = z.enum(['7d', '30d', '90d', '12m', 'all'])
 
 /**
  * Get current user's stats
@@ -88,12 +91,15 @@ export async function getUserBadgesAction(): Promise<UserBadge[]> {
   return await gamification.getUserBadges(user.id)
 }
 
-export async function getUserActivityChartsAction(): Promise<UserActivityCharts | null> {
+export async function getUserActivityChartsAction(
+  period: ActivityPeriod = '12m'
+): Promise<UserActivityCharts | null> {
   const supabase = await createActionServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return null
 
+  const validatedPeriod = activityPeriodSchema.parse(period)
   const gamification = gamificationRepo(supabase)
-  return await gamification.getUserActivityCharts(user.id)
+  return await gamification.getUserActivityCharts(user.id, validatedPeriod)
 }

@@ -1,10 +1,19 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
+import { MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import type { Song } from '@/types'
+import { triggerXpConfetti } from '@/utils/triggerXpConfetti'
 import {
   playBass,
   playBell,
@@ -36,88 +45,606 @@ type InstrumentId =
   | 'bell'
   | 'harp'
 
+type NoteParticle = {
+  id: number
+  char: string
+  dx: number
+  dy: number
+  delayMs: number
+  sizePx: number
+  spinDeg: number
+  colorClass: string
+  durationMs: number
+}
+
+type RecordLogEntry = {
+  score: number
+  at: string
+}
+
+const ROUND_SECONDS = 10
+const BANNER_BG = '#0B0B0F'
+const TIMER_ORANGE = '#FF5A1F'
+const TIMER_TRACK = '#3A3A42'
+
+function JamRoundTimer({
+  secondsLeft,
+  totalSeconds,
+  roundState,
+  idleLabel,
+  runningLabel,
+  doneLabel,
+}: {
+  secondsLeft: number
+  totalSeconds: number
+  roundState: 'idle' | 'playing' | 'ended'
+  idleLabel: string
+  runningLabel: string
+  doneLabel: string
+}) {
+  const size = 108
+  const stroke = 10
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const progress =
+    roundState === 'idle'
+      ? 1
+      : roundState === 'ended'
+        ? 0
+        : Math.max(0, Math.min(1, secondsLeft / totalSeconds))
+  const dashOffset = circumference * (1 - progress)
+  const urgent = roundState === 'playing' && secondsLeft <= 3
+
+  return (
+    <div className="relative flex h-[108px] w-[108px] shrink-0 items-center justify-center">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="-rotate-90"
+        aria-hidden
+      >
+        {/* Segment ticks like Wolt */}
+        {Array.from({ length: 12 }, (_, i) => {
+          const angle = (i / 12) * Math.PI * 2
+          const inner = radius - stroke / 2 - 1
+          const outer = radius + stroke / 2 + 1
+          const cx = size / 2
+          const cy = size / 2
+          return (
+            <line
+              key={i}
+              x1={cx + Math.cos(angle) * inner}
+              y1={cy + Math.sin(angle) * inner}
+              x2={cx + Math.cos(angle) * outer}
+              y2={cy + Math.sin(angle) * outer}
+              stroke="rgba(255,255,255,0.12)"
+              strokeWidth="2"
+            />
+          )
+        })}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={TIMER_TRACK}
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={urgent ? '#EF4444' : TIMER_ORANGE}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          className="transition-[stroke-dashoffset] duration-1000 ease-linear"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
+        <p
+          className={cn(
+            'text-3xl font-bold tabular-nums leading-none text-white',
+            urgent && 'animate-pulse text-red-400'
+          )}
+          aria-live="polite"
+        >
+          {secondsLeft}
+        </p>
+        <p className="mt-1 max-w-[4.5rem] text-[9px] font-medium leading-tight text-white/65">
+          {roundState === 'idle'
+            ? idleLabel
+            : roundState === 'playing'
+              ? runningLabel
+              : doneLabel}
+        </p>
+      </div>
+    </div>
+  )
+}
+const BEST_SCORE_KEY = 'jam-lab-best-score'
+const RECORD_LOG_KEY = 'jam-lab-record-log'
+const MAX_LOG_ENTRIES = 12
+
+const NOTE_CHARS = ['♪', '♫', '♩', '♬', '♮', '𝄞'] as const
+const NOTE_COLORS = [
+  'text-amber-500 dark:text-amber-300',
+  'text-primary',
+  'text-orange-500 dark:text-orange-300',
+  'text-rose-500 dark:text-rose-300',
+  'text-yellow-500 dark:text-yellow-300',
+  'text-red-500 dark:text-red-400',
+] as const
+
 const INSTRUMENTS: {
   id: InstrumentId
-  emoji: string
   play: () => void
-  tint: string
+  color: string
 }[] = [
-  { id: 'guitar', emoji: '🎸', play: playGuitar, tint: 'from-amber-500/20 to-amber-700/10' },
-  { id: 'piano', emoji: '🎹', play: playPiano, tint: 'from-slate-400/20 to-slate-600/10' },
-  { id: 'drums', emoji: '🥁', play: playDrums, tint: 'from-rose-500/20 to-rose-700/10' },
-  { id: 'bass', emoji: '🪕', play: playBass, tint: 'from-orange-500/20 to-orange-800/10' },
-  { id: 'trumpet', emoji: '🎺', play: playTrumpet, tint: 'from-yellow-400/25 to-amber-600/10' },
-  { id: 'violin', emoji: '🎻', play: playViolin, tint: 'from-red-500/20 to-red-800/10' },
-  { id: 'sax', emoji: '🎷', play: playSax, tint: 'from-amber-400/25 to-yellow-700/10' },
-  { id: 'flute', emoji: '🪈', play: playFlute, tint: 'from-sky-400/20 to-sky-700/10' },
-  { id: 'ukulele', emoji: '🏝️', play: playUkulele, tint: 'from-lime-400/20 to-green-700/10' },
-  { id: 'synth', emoji: '🎧', play: playSynth, tint: 'from-violet-400/20 to-fuchsia-700/10' },
-  { id: 'marimba', emoji: '🪘', play: playMarimba, tint: 'from-teal-400/20 to-teal-700/10' },
-  { id: 'bell', emoji: '🔔', play: playBell, tint: 'from-yellow-300/25 to-amber-500/10' },
-  { id: 'harp', emoji: '🎼', play: playHarp, tint: 'from-pink-400/20 to-rose-600/10' },
+  { id: 'guitar', play: playGuitar, color: 'bg-amber-500 text-white' },
+  { id: 'piano', play: playPiano, color: 'bg-slate-600 text-white' },
+  { id: 'drums', play: playDrums, color: 'bg-rose-500 text-white' },
+  { id: 'bass', play: playBass, color: 'bg-orange-500 text-white' },
+  { id: 'trumpet', play: playTrumpet, color: 'bg-yellow-400 text-yellow-950' },
+  { id: 'violin', play: playViolin, color: 'bg-red-500 text-white' },
+  { id: 'sax', play: playSax, color: 'bg-amber-700 text-white' },
+  { id: 'flute', play: playFlute, color: 'bg-sky-500 text-white' },
+  { id: 'ukulele', play: playUkulele, color: 'bg-lime-500 text-lime-950' },
+  { id: 'synth', play: playSynth, color: 'bg-violet-500 text-white' },
+  { id: 'marimba', play: playMarimba, color: 'bg-teal-500 text-white' },
+  { id: 'bell', play: playBell, color: 'bg-yellow-300 text-yellow-950' },
+  { id: 'harp', play: playHarp, color: 'bg-pink-500 text-white' },
 ]
+
+function loadBestScore(): number {
+  try {
+    const n = Number.parseInt(localStorage.getItem(BEST_SCORE_KEY) ?? '0', 10)
+    return Number.isFinite(n) && n > 0 ? n : 0
+  } catch {
+    return 0
+  }
+}
+
+function saveBestScore(score: number) {
+  try {
+    localStorage.setItem(BEST_SCORE_KEY, String(score))
+  } catch {
+    // ignore
+  }
+}
+
+function loadRecordLog(): RecordLogEntry[] {
+  try {
+    const raw = localStorage.getItem(RECORD_LOG_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(
+        (e): e is RecordLogEntry =>
+          typeof e === 'object' &&
+          e !== null &&
+          typeof (e as RecordLogEntry).score === 'number' &&
+          typeof (e as RecordLogEntry).at === 'string'
+      )
+      .slice(0, MAX_LOG_ENTRIES)
+  } catch {
+    return []
+  }
+}
+
+function appendRecordLog(entry: RecordLogEntry): RecordLogEntry[] {
+  const next = [entry, ...loadRecordLog()].slice(0, MAX_LOG_ENTRIES)
+  try {
+    localStorage.setItem(RECORD_LOG_KEY, JSON.stringify(next))
+  } catch {
+    // ignore
+  }
+  return next
+}
+
+function spawnNotesFromIcon(count: number): NoteParticle[] {
+  return Array.from({ length: count }, (_, i) => {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5
+    const distance = 48 + Math.random() * 72
+    return {
+      id: 0,
+      char: NOTE_CHARS[i % NOTE_CHARS.length],
+      dx: Math.cos(angle) * distance,
+      dy: Math.sin(angle) * distance,
+      delayMs: Math.floor(Math.random() * 80),
+      sizePx: 14 + Math.floor(Math.random() * 14),
+      spinDeg: (Math.random() - 0.5) * 260,
+      colorClass: NOTE_COLORS[i % NOTE_COLORS.length],
+      durationMs: 700 + Math.floor(Math.random() * 400),
+    }
+  })
+}
+
+function InstrumentPad({
+  id,
+  label,
+  color,
+  play,
+  disabled,
+  onHit,
+}: {
+  id: InstrumentId
+  label: string
+  color: string
+  play: () => void
+  disabled: boolean
+  onHit: () => void
+}) {
+  const [notes, setNotes] = useState<NoteParticle[]>([])
+  const [pulse, setPulse] = useState(false)
+  const [shockwave, setShockwave] = useState(false)
+  const noteIdRef = useRef(0)
+  const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleClick = () => {
+    if (disabled) return
+    play()
+    onHit()
+    setPulse(true)
+    setShockwave(true)
+    window.setTimeout(() => setPulse(false), 220)
+    window.setTimeout(() => setShockwave(false), 650)
+
+    const burst = spawnNotesFromIcon(6).map((n) => ({
+      ...n,
+      id: ++noteIdRef.current,
+    }))
+    setNotes(burst)
+    if (clearRef.current) clearTimeout(clearRef.current)
+    clearRef.current = setTimeout(() => setNotes([]), 1100)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (clearRef.current) clearTimeout(clearRef.current)
+    }
+  }, [])
+
+  return (
+    <div className="relative">
+      {notes.map((note) => (
+        <span
+          key={note.id}
+          className={cn(
+            'pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 select-none font-serif font-bold leading-none drop-shadow-md',
+            'animate-explorer-note',
+            note.colorClass
+          )}
+          style={
+            {
+              '--note-dx': `${note.dx}px`,
+              '--note-dy': `${note.dy}px`,
+              '--note-spin': `${note.spinDeg}deg`,
+              fontSize: note.sizePx,
+              animationDelay: `${note.delayMs}ms`,
+              animationDuration: `${note.durationMs}ms`,
+            } as CSSProperties
+          }
+          aria-hidden
+        >
+          {note.char}
+        </span>
+      ))}
+      {shockwave ? (
+        <span
+          className="pointer-events-none absolute inset-0 z-[5] rounded-xl border-2 border-white/80 animate-explorer-shockwave"
+          aria-hidden
+        />
+      ) : null}
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={disabled}
+        aria-label={label}
+        className={cn(
+          'relative z-0 flex min-h-[4.5rem] w-full items-center justify-center rounded-xl px-1.5 py-3 text-center transition-transform duration-150',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2',
+          'disabled:cursor-not-allowed disabled:opacity-45',
+          color,
+          pulse && 'scale-105',
+          !disabled && 'hover:brightness-110 active:scale-95'
+        )}
+        data-instrument={id}
+      >
+        <span className="text-xs font-bold leading-tight sm:text-sm">{label}</span>
+      </button>
+    </div>
+  )
+}
 
 interface JamLabClientProps {
   suggestedSong: Song | null
 }
 
 export function JamLabClient({ suggestedSong }: JamLabClientProps) {
-  const { t } = useLanguage()
-  const [activeId, setActiveId] = useState<InstrumentId | null>(null)
-  const [hits, setHits] = useState(0)
+  const { t, language } = useLanguage()
+  const [score, setScore] = useState(0)
+  const [bestScore, setBestScore] = useState(0)
+  const [recordLog, setRecordLog] = useState<RecordLogEntry[]>([])
+  const [secondsLeft, setSecondsLeft] = useState(ROUND_SECONDS)
+  const [roundState, setRoundState] = useState<'idle' | 'playing' | 'ended'>('idle')
+  const [isNewRecord, setIsNewRecord] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [roundKey, setRoundKey] = useState(0)
 
-  const handlePlay = (id: InstrumentId, play: () => void) => {
-    play()
-    setActiveId(id)
-    setHits((n) => n + 1)
-    window.setTimeout(() => {
-      setActiveId((current) => (current === id ? null : current))
-    }, 280)
+  const scoreRef = useRef(0)
+  const bestRef = useRef(0)
+  const roundStateRef = useRef<'idle' | 'playing' | 'ended'>('idle')
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const endedRef = useRef(false)
+
+  useEffect(() => {
+    const best = loadBestScore()
+    setBestScore(best)
+    bestRef.current = best
+    setRecordLog(loadRecordLog())
+    setMounted(true)
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
+
+  const finishRound = useCallback(() => {
+    if (endedRef.current) return
+    endedRef.current = true
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    roundStateRef.current = 'ended'
+    setRoundState('ended')
+    setSecondsLeft(0)
+
+    const finalScore = scoreRef.current
+    triggerXpConfetti('levelUp')
+
+    if (finalScore > bestRef.current) {
+      saveBestScore(finalScore)
+      bestRef.current = finalScore
+      setBestScore(finalScore)
+      setIsNewRecord(true)
+      const entry = { score: finalScore, at: new Date().toISOString() }
+      setRecordLog(appendRecordLog(entry))
+      window.setTimeout(() => triggerXpConfetti('levelUp'), 280)
+    } else {
+      setIsNewRecord(false)
+    }
+  }, [])
+
+  const startRoundIfNeeded = useCallback(() => {
+    if (roundStateRef.current !== 'idle') return
+    endedRef.current = false
+    roundStateRef.current = 'playing'
+    setIsNewRecord(false)
+    setSecondsLeft(ROUND_SECONDS)
+    setRoundState('playing')
+    setRoundKey((k) => k + 1)
+
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          window.setTimeout(() => finishRound(), 0)
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+  }, [finishRound])
+
+  const handleHit = () => {
+    if (roundStateRef.current === 'ended') return
+    startRoundIfNeeded()
+    setScore((n) => {
+      const next = n + 1
+      scoreRef.current = next
+      return next
+    })
+  }
+
+  const playAgain = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    endedRef.current = false
+    scoreRef.current = 0
+    roundStateRef.current = 'idle'
+    setScore(0)
+    setSecondsLeft(ROUND_SECONDS)
+    setRoundState('idle')
+    setIsNewRecord(false)
+  }
+
+  const formatRecordDate = (iso: string) => {
+    try {
+      return new Intl.DateTimeFormat(language === 'he' ? 'he-IL' : language === 'fr' ? 'fr-FR' : 'en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(iso))
+    } catch {
+      return iso
+    }
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="mx-auto w-full max-w-lg space-y-5 px-4 py-5 pb-8">
-        <header className="space-y-2 text-center">
-          <p className="text-3xl" aria-hidden>
-            🎪
-          </p>
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-5 px-4 py-5 pb-8">
+        <header className="space-y-1.5 text-center">
           <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {t('jamLab.title')}
           </h1>
           <p className="text-sm text-muted-foreground">{t('jamLab.subtitle')}</p>
-          {hits > 0 ? (
-            <p className="text-xs font-medium text-primary">
-              {t('jamLab.hitCount').replace('{count}', String(hits))}
-            </p>
-          ) : null}
         </header>
 
-        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4">
-          {INSTRUMENTS.map((instrument) => {
-            const label = t(`jamLab.instruments.${instrument.id}`)
-            const isActive = activeId === instrument.id
-            return (
-              <button
-                key={instrument.id}
-                type="button"
-                onClick={() => handlePlay(instrument.id, instrument.play)}
-                className={cn(
-                  'flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-black/[0.06] bg-gradient-to-br p-2 transition-transform duration-150',
-                  'dark:border-white/[0.08]',
-                  instrument.tint,
-                  isActive ? 'scale-95 ring-2 ring-primary/50' : 'active:scale-95 hover:brightness-110'
-                )}
-                aria-label={label}
+        {/* Score board — game banner + Wolt-style circular timer */}
+        <section
+          className={cn(
+            'relative overflow-hidden rounded-2xl border border-white/10 shadow-sm'
+          )}
+          style={
+            {
+              backgroundColor: BANNER_BG,
+              '--promo-snake-color': TIMER_ORANGE,
+            } as CSSProperties
+          }
+        >
+          {roundState === 'playing' || roundState === 'ended' ? (
+            <span
+              key={roundKey}
+              aria-hidden
+              className={cn(
+                'promo-snake-border pointer-events-none absolute inset-0 z-20 rounded-2xl',
+                roundState === 'ended' && 'promo-snake-border-filled'
+              )}
+            />
+          ) : null}
+
+          <div className="relative z-10 flex items-center gap-2 p-4 sm:gap-3 sm:p-5">
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
+                  <MusicalNoteIcon className="h-4 w-4" />
+                </div>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-white/80">
+                  {t('jamLab.scoreLabel')}
+                </p>
+              </div>
+              <p
+                className="text-5xl font-bold tabular-nums leading-none tracking-tight text-white sm:text-6xl"
+                aria-live="polite"
               >
-                <span className="text-3xl leading-none" aria-hidden>
-                  {instrument.emoji}
-                </span>
-                <span className="text-[11px] font-medium text-foreground/90">{label}</span>
-              </button>
-            )
-          })}
-        </div>
+                {mounted ? score : 0}
+              </p>
+              <p className="text-xs font-medium text-white/60">
+                {t('jamLab.bestScore').replace('{count}', String(mounted ? bestScore : 0))}
+              </p>
+            </div>
+
+            <div className="flex shrink-0 items-center justify-center" aria-hidden>
+              <Image
+                src="/game.png"
+                alt=""
+                width={96}
+                height={96}
+                className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                priority={false}
+              />
+            </div>
+
+            <div className="flex shrink-0 justify-end">
+              <JamRoundTimer
+                secondsLeft={secondsLeft}
+                totalSeconds={ROUND_SECONDS}
+                roundState={roundState}
+                idleLabel={t('jamLab.timerReady')}
+                runningLabel={t('jamLab.timerRunning')}
+                doneLabel={t('jamLab.timerDone')}
+              />
+            </div>
+          </div>
+        </section>
+
+        {roundState === 'idle' ? (
+          <p className="-mt-2 text-center text-xs text-muted-foreground">
+            {t('jamLab.timerIdle')}
+          </p>
+        ) : null}
+
+        {roundState === 'ended' && (
+          <div
+            className={cn(
+              'space-y-2 rounded-2xl border p-4 text-center',
+              isNewRecord
+                ? 'border-amber-500/40 bg-amber-500/10'
+                : 'border-black/[0.06] bg-muted/40 dark:border-white/[0.08] dark:bg-white/[0.04]'
+            )}
+            role="status"
+          >
+            <p className="text-sm font-semibold text-foreground">
+              {isNewRecord
+                ? t('jamLab.newRecordTitle')
+                : t('jamLab.roundOverTitle')}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {isNewRecord
+                ? t('jamLab.newRecordBody').replace('{count}', String(score))
+                : t('jamLab.roundOverBody').replace('{count}', String(score))}
+            </p>
+            {isNewRecord && (
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                {t('jamLab.guinnessBadge')}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={playAgain}
+              className="mt-1 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              {t('jamLab.playAgain')}
+            </button>
+          </div>
+        )}
+
+        <section className="space-y-3">
+          <h2 className="text-base font-semibold text-foreground sm:text-lg">
+            {t('jamLab.instrumentsTitle')}
+          </h2>
+
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-2.5">
+            {INSTRUMENTS.map((instrument) => (
+              <InstrumentPad
+                key={instrument.id}
+                id={instrument.id}
+                label={t(`jamLab.instruments.${instrument.id}`)}
+                color={instrument.color}
+                play={instrument.play}
+                disabled={roundState === 'ended'}
+                onHit={handleHit}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Guinness record log */}
+        {mounted && recordLog.length > 0 && (
+          <section
+            className={cn(
+              'space-y-2.5 rounded-2xl border border-black/[0.06] bg-card/60 p-4',
+              'dark:border-white/[0.08] dark:bg-white/[0.03]'
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base" aria-hidden>
+                🏆
+              </span>
+              <h2 className="text-sm font-semibold text-foreground">
+                {t('jamLab.recordLogTitle')}
+              </h2>
+            </div>
+            <ul className="max-h-40 space-y-2 overflow-y-auto text-xs">
+              {recordLog.map((entry, i) => (
+                <li
+                  key={`${entry.at}-${entry.score}-${i}`}
+                  className="flex items-baseline justify-between gap-3 border-b border-border/60 pb-1.5 last:border-0 last:pb-0"
+                >
+                  <span className="font-semibold tabular-nums text-foreground">
+                    {t('jamLab.recordLogEntry').replace('{count}', String(entry.score))}
+                  </span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {formatRecordDate(entry.at)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section
           className={cn(

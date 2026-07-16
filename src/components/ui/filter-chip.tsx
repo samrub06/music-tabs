@@ -31,7 +31,8 @@ export function FilterChip({
       title={title}
       aria-label={ariaLabel}
       className={cn(
-        'relative inline-flex shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full font-medium transition-colors duration-200 whitespace-nowrap',
+        'relative inline-flex shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full font-medium whitespace-nowrap',
+        'transition-[color,background-color,transform,box-shadow] duration-300 ease-out',
         compact
           ? 'min-h-[28px] px-2 py-0.5 text-xs'
           : 'min-h-[36px] px-3.5 py-2 text-sm',

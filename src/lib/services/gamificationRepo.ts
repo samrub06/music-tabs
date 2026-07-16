@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/db'
-import type { UserStats, XpTransaction, UserBadge, LeaderboardEntry, LeaderboardSheetData, XpAwardResult, StreakUpdateResult, UserActivityCharts } from '@/types'
+import type { UserStats, XpTransaction, UserBadge, LeaderboardEntry, LeaderboardSheetData, XpAwardResult, StreakUpdateResult, UserActivityCharts, ActivityPeriod } from '@/types'
 import { getBadgeDefinitions } from '@/utils/gamification'
 
 // Helper to map DB result to Domain Entity
@@ -441,27 +441,56 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     return (data || []).map(mapDbTransactionToDomain)
   },
 
-  async getUserActivityCharts(userId: string): Promise<UserActivityCharts> {
+  async getUserActivityCharts(
+    userId: string,
+    period: ActivityPeriod = '12m'
+  ): Promise<UserActivityCharts> {
     const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
     const activityByWeekday = weekdayLabels.map((label) => ({ label, count: 0 }))
-    const songsByMonth = new Map<string, number>()
+    const songsByBucket = new Map<string, number>()
 
-    const [songsResult, xpResult, stats] = await Promise.all([
-      (client.from('songs') as any).select('created_at').eq('user_id', userId),
-      (client.from('xp_transactions') as any)
-        .select('created_at, action_type')
-        .eq('user_id', userId)
-        .in('action_type', ['view_song', 'create_song', 'clone_song', 'edit_song']),
-      this.getUserStats(userId),
-    ])
+    const now = new Date()
+    const since = (() => {
+      switch (period) {
+        case '7d':
+          return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        case '30d':
+          return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        case '90d':
+          return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+        case '12m':
+          return new Date(now.getFullYear(), now.getMonth() - 11, 1)
+        case 'all':
+        default:
+          return null
+      }
+    })()
+
+    const useDailyBuckets = period === '7d' || period === '30d'
+
+    let songsQuery = (client.from('songs') as any).select('created_at').eq('user_id', userId)
+    let xpQuery = (client.from('xp_transactions') as any)
+      .select('created_at, action_type')
+      .eq('user_id', userId)
+      .in('action_type', ['view_song', 'create_song', 'clone_song', 'edit_song'])
+
+    if (since) {
+      const iso = since.toISOString()
+      songsQuery = songsQuery.gte('created_at', iso)
+      xpQuery = xpQuery.gte('created_at', iso)
+    }
+
+    const [songsResult, xpResult] = await Promise.all([songsQuery, xpQuery])
 
     if (songsResult.error) throw songsResult.error
     if (xpResult.error) throw xpResult.error
 
     for (const row of (songsResult.data || []) as Array<{ created_at: string }>) {
       const date = new Date(row.created_at)
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      songsByMonth.set(key, (songsByMonth.get(key) ?? 0) + 1)
+      const key = useDailyBuckets
+        ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+        : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      songsByBucket.set(key, (songsByBucket.get(key) ?? 0) + 1)
     }
 
     let viewCount = 0
@@ -471,10 +500,19 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
       if (row.action_type === 'view_song') viewCount += 1
     }
 
-    const sortedMonths = Array.from(songsByMonth.entries())
+    const maxPoints = useDailyBuckets ? (period === '7d' ? 7 : 30) : 12
+    const sortedBuckets = Array.from(songsByBucket.entries())
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-12)
+      .slice(-maxPoints)
       .map(([key, count]) => {
+        if (useDailyBuckets) {
+          const [year, month, day] = key.split('-')
+          const label = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString(
+            undefined,
+            { month: 'short', day: 'numeric' }
+          )
+          return { label, count }
+        }
         const [year, month] = key.split('-')
         const label = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString(undefined, {
           month: 'short',
@@ -483,15 +521,11 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
         return { label, count }
       })
 
-    const timeSpentMinutes = Math.max(
-      viewCount * 4,
-      (stats?.totalSongsViewed ?? 0) * 4
-    )
-
     return {
-      timeSpentMinutes,
-      songsAddedByMonth: sortedMonths,
+      timeSpentMinutes: viewCount * 4,
+      songsAddedByMonth: sortedBuckets,
       activityByWeekday: [...activityByWeekday],
+      period,
     }
   },
 })

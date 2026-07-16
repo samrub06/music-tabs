@@ -374,67 +374,68 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
                 <DropdownMenuSeparator className="mx-0 my-0 bg-black/[0.08] dark:bg-white/[0.1]" />
 
-                <div
-                  className="flex items-center justify-between gap-3 px-3.5 py-2.5"
-                  onPointerDown={(event) => event.preventDefault()}
-                >
-                  <span className="text-sm text-foreground">{t('common.theme')}</span>
-                  <div className="flex rounded-full bg-neutral-100 p-0.5 dark:bg-white/[0.08]">
-                    {(
-                      [
-                        { value: 'light', icon: Sun, label: t('common.lightMode') },
-                        { value: 'dark', icon: Moon, label: t('common.darkMode') },
-                        { value: 'system', icon: Contrast, label: t('common.systemMode') },
-                      ] as const
-                    ).map(({ value, icon: Icon, label }) => {
-                      const active = theme === value
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          aria-label={label}
-                          aria-pressed={active}
-                          onClick={() => setTheme(value as ThemePreference)}
-                          className={cn(
-                            'inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors',
-                            active
-                              ? 'bg-white text-foreground shadow-sm dark:bg-white/[0.16]'
-                              : 'text-muted-foreground hover:text-foreground'
-                          )}
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                        </button>
-                      )
-                    })}
+                <div className="space-y-3 px-3.5 py-3">
+                  <div
+                    className="flex min-h-11 items-center justify-between gap-3"
+                    onPointerDown={(event) => event.preventDefault()}
+                  >
+                    <span className="text-sm text-foreground">{t('common.theme')}</span>
+                    <div className="flex rounded-full bg-neutral-100 p-0.5 dark:bg-white/[0.08]">
+                      {(
+                        [
+                          { value: 'light', icon: Sun, label: t('common.lightMode') },
+                          { value: 'dark', icon: Moon, label: t('common.darkMode') },
+                          { value: 'system', icon: Contrast, label: t('common.systemMode') },
+                        ] as const
+                      ).map(({ value, icon: Icon, label }) => {
+                        const active = theme === value
+                        return (
+                          <button
+                            key={value}
+                            type="button"
+                            aria-label={label}
+                            aria-pressed={active}
+                            onClick={() => setTheme(value as ThemePreference)}
+                            className={cn(
+                              'inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors',
+                              active
+                                ? 'bg-white text-foreground shadow-sm dark:bg-white/[0.16]'
+                                : 'text-muted-foreground hover:text-foreground'
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-
-                <div
-                  className="flex items-center justify-between gap-3 px-3.5 pb-2.5"
-                  onPointerDown={(event) => event.preventDefault()}
-                >
-                  <span className="text-sm text-foreground">{t('common.language')}</span>
-                  <div className="flex rounded-full bg-neutral-100 p-0.5 dark:bg-white/[0.08]">
-                    {LANGUAGES.map((lang) => {
-                      const active = language === lang.code
-                      return (
-                        <button
-                          key={lang.code}
-                          type="button"
-                          aria-label={lang.name}
-                          aria-pressed={active}
-                          onClick={() => setLanguage(lang.code)}
-                          className={cn(
-                            'inline-flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 text-sm transition-colors',
-                            active
-                              ? 'bg-white shadow-sm dark:bg-white/[0.16]'
-                              : 'opacity-60 hover:opacity-100'
-                          )}
-                        >
-                          <span aria-hidden>{lang.flag}</span>
-                        </button>
-                      )
-                    })}
+                  <div
+                    className="flex min-h-11 items-center justify-between gap-3"
+                    onPointerDown={(event) => event.preventDefault()}
+                  >
+                    <span className="text-sm text-foreground">{t('common.language')}</span>
+                    <div className="flex rounded-full bg-neutral-100 p-0.5 dark:bg-white/[0.08]">
+                      {LANGUAGES.map((lang) => {
+                        const active = language === lang.code
+                        return (
+                          <button
+                            key={lang.code}
+                            type="button"
+                            aria-label={lang.name}
+                            aria-pressed={active}
+                            onClick={() => setLanguage(lang.code)}
+                            className={cn(
+                              'inline-flex h-9 min-w-9 items-center justify-center rounded-full px-1.5 text-base transition-colors',
+                              active
+                                ? 'bg-white shadow-sm dark:bg-white/[0.16]'
+                                : 'opacity-60 hover:opacity-100'
+                            )}
+                          >
+                            <span aria-hidden>{lang.flag}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
 

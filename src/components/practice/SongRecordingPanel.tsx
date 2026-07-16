@@ -25,12 +25,25 @@ export type SongRecordingPanelProps = {
   songId: string
   lineCount: number
   onRecordingReady?: (recording: SongRecording | null, playbackUrl: string | null) => void
+  /** Hide the built-in promo card when SongContent owns the hero banner. */
+  hidePromoBanner?: boolean
+  /** When hero is collapsed/dismissed, show a compact start control. */
+  showFallbackStart?: boolean
+  /** Expose start/stop so the hero banner CTA can trigger recording. */
+  onControlsReady?: (controls: {
+    startRecording: () => void
+    stopRecording: () => void
+    isRecording: boolean
+  }) => void
 }
 
 export function SongRecordingPanel({
   songId,
   lineCount,
   onRecordingReady,
+  hidePromoBanner = false,
+  showFallbackStart = false,
+  onControlsReady,
 }: SongRecordingPanelProps) {
   const { t } = useLanguage()
   const [pending, startTransition] = useTransition()
@@ -121,11 +134,15 @@ export function SongRecordingPanel({
         setPreviewBlob(blob)
         setPreviewUrl(url)
         setIsRecording(false)
+        setRecordingStartedAt(null)
       }
 
       recorder.start(250)
-      setRecordingStartedAt(Date.now())
       setIsRecording(true)
+      setRecordingStartedAt(Date.now())
+      setSelectedId(null)
+      setMarkers([])
+      setMarkLineIndex(0)
       setPreviewBlob(null)
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl)
@@ -133,9 +150,9 @@ export function SongRecordingPanel({
       }
     } catch (err) {
       console.error(err)
-      setError(t('songContent.recordingMicError'))
-      setIsRecording(false)
       stopMic()
+      setIsRecording(false)
+      setError(t('songContent.recordingMicError'))
     }
   }
 
@@ -148,6 +165,18 @@ export function SongRecordingPanel({
       stopMic()
     }
   }
+
+  useEffect(() => {
+    onControlsReady?.({
+      startRecording: () => {
+        void startRecording()
+      },
+      stopRecording,
+      isRecording,
+    })
+    // Intentionally omit startRecording/stopRecording — parent only needs isRecording flips
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording, onControlsReady])
 
   const discardPreview = () => {
     editorAudioRef.current?.pause()
@@ -276,48 +305,75 @@ export function SongRecordingPanel({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-black/[0.06] bg-card p-4 dark:border-white/[0.08] sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-semibold text-foreground">
-                {t('songContent.recordingBannerTitle')}
-              </h2>
-              {isRecording ? (
-                <span className="inline-flex items-center rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:text-red-400">
-                  {t('songContent.recordingBannerRecording')}
-                </span>
-              ) : null}
+      {!hidePromoBanner ? (
+        <div className="rounded-2xl border border-black/[0.06] bg-card p-4 dark:border-white/[0.08] sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-semibold text-foreground">
+                  {t('songContent.recordingBannerTitle')}
+                </h2>
+                {isRecording ? (
+                  <span className="inline-flex items-center rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:text-red-400">
+                    {t('songContent.recordingBannerRecording')}
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('songContent.recordingBannerDescription')}
+              </p>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t('songContent.recordingBannerDescription')}
-            </p>
-          </div>
-          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
-            {!isRecording ? (
-              <Button
-                type="button"
-                onClick={() => void startRecording()}
-                disabled={pending}
-                className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-red-600 text-white hover:bg-red-500 sm:w-auto"
-              >
-                <MicrophoneIcon className="h-4 w-4" aria-hidden />
-                {t('songContent.recordingBannerCta')}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={stopRecording}
-                className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl sm:w-auto"
-              >
-                <StopIcon className="h-4 w-4" aria-hidden />
-                {t('songContent.recordingStop')}
-              </Button>
-            )}
+            <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
+              {!isRecording ? (
+                <Button
+                  type="button"
+                  onClick={() => void startRecording()}
+                  disabled={pending}
+                  className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-red-600 text-white hover:bg-red-500 sm:w-auto"
+                >
+                  <MicrophoneIcon className="h-4 w-4" aria-hidden />
+                  {t('songContent.recordingBannerCta')}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={stopRecording}
+                  className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl sm:w-auto"
+                >
+                  <StopIcon className="h-4 w-4" aria-hidden />
+                  {t('songContent.recordingStop')}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : isRecording ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2.5">
+          <span className="text-sm font-medium text-red-700 dark:text-red-400">
+            {t('songContent.recordingBannerRecording')}
+          </span>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={stopRecording}
+            className="h-9 min-h-[40px] gap-1.5 rounded-xl"
+          >
+            <StopIcon className="h-4 w-4" aria-hidden />
+            {t('songContent.recordingStop')}
+          </Button>
+        </div>
+      ) : showFallbackStart ? (
+        <Button
+          type="button"
+          onClick={() => void startRecording()}
+          disabled={pending}
+          className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-red-600 text-white hover:bg-red-500"
+        >
+          <MicrophoneIcon className="h-4 w-4" aria-hidden />
+          {t('songContent.recordingBannerCta')}
+        </Button>
+      ) : null}
 
       {(editorSrc || recordings.length > 0 || error) ? (
       <div className="space-y-3 rounded-xl border border-border/80 bg-muted/30 p-3">

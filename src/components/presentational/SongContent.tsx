@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 import dynamic from 'next/dynamic';
-import React, { RefObject, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import ChordOverLyricsLine from '@/components/presentational/ChordOverLyricsLine';
 import SongStructuredEditor from '@/components/presentational/SongStructuredEditor';
@@ -32,7 +32,9 @@ import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
 import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Piano, Guitar, Youtube } from 'lucide-react';
+import { Youtube } from 'lucide-react';
+import { InstrumentToggle } from '@/components/chords/InstrumentToggle';
+import { InstrumentSwitchHint } from '@/components/chords/InstrumentSwitchHint';
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import ShareWithFriendIconButton from '@/components/social/ShareWithFriendIconButton';
@@ -45,6 +47,17 @@ import {
 } from '@/components/ui/collapsible';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { SongRecordingPanel } from '@/components/practice/SongRecordingPanel';
+import {
+  PracticeComingSoonBanner,
+  PracticeComingSoonChip,
+  usePracticeComingSoonPromo,
+} from '@/components/practice/PracticeComingSoonBanner';
+import {
+  RecordSongBanner,
+  RecordSongChip,
+  useRecordSongPromo,
+} from '@/components/practice/RecordSongPromoBanner';
+import { SignInPromoBanner } from '@/components/auth/SignInPromoBanner';
 import { usePracticeAudio } from '@/lib/hooks/usePracticeAudio';
 import { SongStoryCard } from './SongStoryCard';
 import { StarRatingDisplay } from './StarRatingDisplay';
@@ -69,14 +82,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
-const segmentOptionClass = (active: boolean) =>
-  cn(
-    'flex-1 rounded-full px-2.5 py-1.5 min-h-9 min-w-9 text-xs font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-sm',
-    active
-      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-      : 'text-muted-foreground hover:text-foreground'
-  );
 const toolPillClass = (active: boolean) =>
   cn(
     'shrink-0 whitespace-nowrap rounded-full px-2.5 py-1.5 min-h-9 text-xs font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-sm',
@@ -262,6 +267,36 @@ export default function SongContent({
   } | null>(null);
   const [suggestPending, startSuggestTransition] = useTransition();
   const practiceAudio = usePracticeAudio();
+  const {
+    phase: practicePromoPhase,
+    markBannerReady: markPracticePromoReady,
+    reopenBanner: reopenPracticePromo,
+    collapseToChip: collapsePracticePromo,
+  } = usePracticeComingSoonPromo();
+  const {
+    phase: recordPromoPhase,
+    markBannerReady: markRecordPromoReady,
+    reopenBanner: reopenRecordPromo,
+    collapseToChip: collapseRecordPromo,
+  } = useRecordSongPromo();
+  const [recordIsActive, setRecordIsActive] = useState(false);
+  const [recordReady, setRecordReady] = useState(false);
+  const recordStartRef = useRef<(() => void) | null>(null);
+
+  const handleRecordControlsReady = useCallback(
+    (controls: {
+      startRecording: () => void;
+      stopRecording: () => void;
+      isRecording: boolean;
+    }) => {
+      recordStartRef.current = controls.startRecording;
+      setRecordReady(true);
+      setRecordIsActive((prev) =>
+        prev === controls.isRecording ? prev : controls.isRecording
+      );
+    },
+    []
+  );
 
   const isCatalogView = !isInLibrary;
   const isPersonalCopy = isInLibrary && Boolean(transposedSong.clonedFromId);
@@ -510,9 +545,9 @@ export default function SongContent({
       </div>
     ) : null;
 
-  const metaRowActionSize = 'h-11 min-h-11';
+  const metaRowActionSize = 'h-11 min-h-11 w-full';
   const metaRowActionTileClass = cn(
-    'inline-flex min-w-0 flex-1 items-center justify-center rounded-xl border transition-colors',
+    'inline-flex min-w-0 w-full flex-1 items-center justify-center rounded-xl border transition-colors',
     metaRowActionSize
   );
 
@@ -538,7 +573,7 @@ export default function SongContent({
           'disabled:opacity-70',
           isInLibrary
             ? 'border-green-600/25 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25'
-            : 'border-border/80 bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+            : 'animate-add-library-invite border-primary/50 bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
         )}
         aria-label={
           isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary')
@@ -546,11 +581,11 @@ export default function SongContent({
         title={isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary')}
       >
         {isAddingToLibrary || isRemovingFromLibrary ? (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
         ) : isInLibrary ? (
-          <CheckIcon className="h-4 w-4 shrink-0" aria-hidden />
+          <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
         ) : (
-          <PlusIcon className="h-4 w-4 shrink-0" aria-hidden />
+          <PlusIcon className="h-5 w-5 shrink-0" strokeWidth={2.5} aria-hidden />
         )}
       </button>
     ) : null;
@@ -626,28 +661,28 @@ export default function SongContent({
           type="button"
           onClick={() => onSelectYoutubeMode('tutorial')}
           className={cn(
-            'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
             youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
               ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
               : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
         >
-          <Youtube className="h-4 w-4 shrink-0" />
+          <Youtube className="icon-hover-wiggle h-4 w-4 shrink-0" />
           <span className="truncate">{t('youtubeTutorial.modeTutorial')}</span>
         </button>
         <button
           type="button"
           onClick={() => onSelectYoutubeMode('original')}
           className={cn(
-            'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
             youtubeTutorialOpen && youtubeVideoMode === 'original'
               ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
               : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
         >
-          <Youtube className="h-4 w-4 shrink-0" />
+          <Youtube className="icon-hover-wiggle h-4 w-4 shrink-0" />
           <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
         </button>
       </div>
@@ -667,13 +702,21 @@ export default function SongContent({
 
   const labeledActionButton = (
     label: string,
-    button: React.ReactNode
-  ) => (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
-      {button}
-      <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
-    </div>
-  );
+    button: React.ReactNode,
+    showLabel = true
+  ) =>
+    showLabel ? (
+      <div className="flex min-w-0 flex-1 flex-col items-stretch gap-1">
+        {button}
+        <span className="text-center text-[10px] font-medium text-muted-foreground">
+          {label}
+        </span>
+      </div>
+    ) : (
+      button
+    );
+
+  const showActionLabels = !isInLibrary;
 
   const actionButtonsRow =
     ratingDisplay ||
@@ -688,18 +731,26 @@ export default function SongContent({
         {favoriteButton
           ? labeledActionButton(
               isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites'),
-              favoriteButton
+              favoriteButton,
+              showActionLabels
             )
           : null}
         {libraryToggleButton
           ? labeledActionButton(
               isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary'),
-              libraryToggleButton
+              libraryToggleButton,
+              showActionLabels
             )
           : null}
-        {editButton ? labeledActionButton(t('songHeader.edit'), editButton) : null}
+        {editButton
+          ? labeledActionButton(t('songHeader.edit'), editButton, showActionLabels)
+          : null}
         {shareButton
-          ? labeledActionButton(t('songContent.shareThisSong'), shareButton)
+          ? labeledActionButton(
+              t('songContent.shareThisSong'),
+              shareButton,
+              showActionLabels
+            )
           : null}
       </div>
     ) : null;
@@ -707,8 +758,7 @@ export default function SongContent({
   const hasCollapsibleDetails =
     Boolean(actionButtonsRow) ||
     Boolean(folderControl) ||
-    Boolean(libraryActionFeedback) ||
-    Boolean(!isInLibrary && onAddToLibrary && isAuthenticated);
+    Boolean(libraryActionFeedback);
 
   if (isEditing) {
     return (
@@ -733,7 +783,7 @@ export default function SongContent({
   return (
     <div 
       ref={contentRef}
-      className={`song-content-scrollable flex-1 min-h-0 ${isAuthenticated || autoScrollIsActive ? 'overflow-y-auto' : 'overflow-hidden'} overflow-x-hidden relative`}
+      className="song-content-scrollable relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto"
       style={{ 
         WebkitOverflowScrolling: 'touch',
         width: '100%',
@@ -776,17 +826,6 @@ export default function SongContent({
                   )}
                 />
               </button>
-            ) : null}
-
-            {!isInLibrary && onAddToLibrary && isAuthenticated ? (
-              <Button
-                type="button"
-                className="h-11 w-full rounded-xl font-medium"
-                disabled={isAddingToLibrary}
-                onClick={onAddToLibrary}
-              >
-                {isAddingToLibrary ? t('library.adding') : t('library.addToLibrary')}
-              </Button>
             ) : null}
 
             {hasCollapsibleDetails && metaDetailsOpen ? (
@@ -925,6 +964,40 @@ export default function SongContent({
             chordProgression={transposedSong.chordProgression}
           />
 
+          {/* Promo banners — always visible (not inside the chords accordion) */}
+          <div className="space-y-3">
+            <PracticeComingSoonBanner
+              phase={practicePromoPhase}
+              onSnakeFilled={markPracticePromoReady}
+              onDismiss={collapsePracticePromo}
+            />
+            {isAuthenticated ? (
+              <RecordSongBanner
+                phase={recordPromoPhase}
+                onSnakeFilled={markRecordPromoReady}
+                onDismiss={collapseRecordPromo}
+                onStartRecording={() => recordStartRef.current?.()}
+                isRecording={recordIsActive}
+                disabled={!recordReady}
+              />
+            ) : null}
+            {(practicePromoPhase === 'chip' ||
+              (isAuthenticated && recordPromoPhase === 'chip')) && (
+              <div className="flex flex-wrap items-center gap-2">
+                <PracticeComingSoonChip
+                  visible={practicePromoPhase === 'chip'}
+                  onReopen={reopenPracticePromo}
+                />
+                {isAuthenticated ? (
+                  <RecordSongChip
+                    visible={recordPromoPhase === 'chip'}
+                    onReopen={reopenRecordPromo}
+                  />
+                ) : null}
+              </div>
+            )}
+          </div>
+
           {/* Chord Diagrams Section - accordion */}
           <Collapsible
             open={chordSectionOpen}
@@ -943,6 +1016,10 @@ export default function SongContent({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="pt-4 space-y-2.5">
+                {onSetSelectedInstrument ? (
+                  <InstrumentSwitchHint showProfileLink={isAuthenticated} />
+                ) : null}
+
                 {chordSectionOpen && (
                 <ChordDiagramsGrid
                   song={transposedSong}
@@ -1038,66 +1115,25 @@ export default function SongContent({
                   </button>
                 )}
 
-                {onSetSelectedInstrument && (
-                  <div className={cn(segmentClass, 'shrink-0')}>
-                    <button
-                      type="button"
-                      onClick={() => onSetSelectedInstrument('piano')}
-                      className={segmentOptionClass(selectedInstrument === 'piano')}
-                      aria-label={t('songHeader.piano')}
-                      title={t('songHeader.piano')}
-                    >
-                      <Piano className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSetSelectedInstrument('guitar')}
-                      className={segmentOptionClass(selectedInstrument === 'guitar')}
-                      aria-label={t('songHeader.guitar')}
-                      title={t('songHeader.guitar')}
-                    >
-                      <Guitar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </button>
-                  </div>
-                )}
+                {onSetSelectedInstrument ? (
+                  <InstrumentToggle
+                    value={selectedInstrument}
+                    onChange={onSetSelectedInstrument}
+                    compact
+                    showLabels
+                    autoHideMs={10_000}
+                    className="shrink-0"
+                  />
+                ) : null}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (practiceMode) {
-                      exitPracticeMode();
-                      return;
-                    }
-                    setPracticeMode(true);
-                    setPracticeLineIndex(0);
-                    if (
-                      selectedRecording &&
-                      selectedRecording.lineMarkers.length > 0 &&
-                      recordingPlaybackUrl
-                    ) {
-                      practiceAudio.seek(0);
-                      practiceAudio.play();
-                    } else {
-                      setPracticePlaying(true);
-                    }
-                    onSelectYoutubeMode?.('original');
-                  }}
-                  className={cn(
-                    'flex h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors',
-                    practiceMode
-                      ? 'border-primary/40 bg-primary text-primary-foreground'
-                      : 'border-border/80 bg-muted/40 text-foreground hover:bg-muted/70'
-                  )}
-                  title={t('songContent.practiceModeHint')}
-                >
-                  {practiceMode ? t('songContent.practiceExit') : t('songContent.practiceMode')}
-                </button>
 
                 {isAuthenticated ? (
                   <SongRecordingPanel
                     songId={transposedSong.id}
                     lineCount={practiceLineCount}
+                    hidePromoBanner
+                    showFallbackStart={recordPromoPhase === 'gone'}
+                    onControlsReady={handleRecordControlsReady}
                     onRecordingReady={(recording, playbackUrl) => {
                       setSelectedRecording(recording);
                       setRecordingPlaybackUrl(playbackUrl);
@@ -1155,7 +1191,7 @@ export default function SongContent({
             />
           ) : null}
 
-          {isAuthenticated && (
+          {isAuthenticated ? (
             <div ref={endSuggestionsRef}>
               <SongEndSuggestions
                 currentSongId={transposedSong.id}
@@ -1165,31 +1201,11 @@ export default function SongContent({
                 onPlayNext={onPlayNext}
               />
             </div>
+          ) : (
+            <SignInPromoBanner onSignIn={() => void signInWithGoogle(pathname)} />
           )}
         </div>
       </div>
-
-      {!isAuthenticated && (
-        <div className="absolute inset-x-0 bottom-0 h-2/3 z-20 flex flex-col items-center justify-end pb-12 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent backdrop-blur-[1px] dark:from-background dark:via-background/95">
-          <div className="bg-card/95 backdrop-blur-md p-6 rounded-xl shadow-xl border border-border max-w-sm mx-4 text-center transform translate-y-2">
-            <h3 className="text-xl font-bold text-foreground mb-2">
-              {t('songContent.FULL_SONG_HIDDEN_TITLE')}
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {t('songContent.FULL_SONG_HIDDEN_DESCRIPTION')}
-            </p>
-            <div className="flex flex-col gap-3">
-              <Button
-                type="button"
-                onClick={() => signInWithGoogle(pathname)}
-                className="w-full h-9 text-sm font-medium sm:h-10"
-              >
-                {t('auth.signInWithGoogle')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -1283,10 +1299,12 @@ function StructuredSongContent({
     [song]
   );
   const [openSections, setOpenSections] = useState<Set<number>>(() => {
-    const firstSectionIndex = song.sections.findIndex(
-      (s: { name: string }) => s.name !== 'Version Description'
-    );
-    return firstSectionIndex >= 0 ? new Set([firstSectionIndex]) : new Set<number>();
+    // View mode: all sections expanded. Edit mode collapses to first verse only.
+    const open = new Set<number>();
+    song.sections.forEach((s: { name: string }, i: number) => {
+      if (s.name !== 'Version Description') open.add(i);
+    });
+    return open;
   });
 
   const toggleSection = (sectionIndex: number, open: boolean) => {

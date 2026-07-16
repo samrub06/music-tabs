@@ -250,7 +250,28 @@ export const invitationIdSchema = z.object({
 })
 
 export const createInvitationSchema = z.object({
-  inviteeEmail: z.string().email().optional().nullable(),
+  inviteeEmail: z
+    .union([z.string(), z.null()])
+    .optional()
+    .transform((value) => {
+      if (value == null || !String(value).trim()) return null
+      const emails = String(value)
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+      return emails.length > 0 ? emails.join(', ') : null
+    })
+    .superRefine((value, ctx) => {
+      if (!value) return
+      for (const email of value.split(',').map((part) => part.trim()).filter(Boolean)) {
+        if (!z.string().email().safeParse(email).success) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Invalid email: ${email}`,
+          })
+        }
+      }
+    }),
 })
 
 export const redeemInvitationSchema = z.object({

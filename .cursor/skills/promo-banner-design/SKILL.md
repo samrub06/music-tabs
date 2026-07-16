@@ -26,6 +26,15 @@ Before inventing layout:
    - Primary CTA: `h-10 min-h-[44px] rounded-xl` + thematic fill
 3. Also note the **library hero variant** in `SpotifyComingSoonSection.tsx` (full-bleed dark panel + PNG logo) when the user wants a louder promo with a brand asset — still use app tokens, not a new theme.
 
+### Decorative asset width (hero / asset-forward banners)
+
+When a PNG/SVG sits on the right as decoration (rotated logo, sheet music, etc.):
+
+- It should **not take more than half of the banner width** — cut/clip the picture so the description stays clear on the left.
+- Reserve copy + CTA in a left column with at least ~50% of the banner (`max-w-[50%]` or wider safe zone like `max-w-[55%]`–`max-w-[68%]`).
+- Clip the decorative layer with a right-side container capped at `w-1/2` + `overflow-hidden` (parent already `overflow-hidden`), so oversized/rotated art is cropped instead of covering title/description.
+- Never let the asset overlap readable copy; if it still crowds text, shrink the image or push it further off the right edge.
+
 ## 2. User workflow (asset → banner)
 
 1. User provides a **PNG or SVG** (e.g. Spotify logo) — or an icon name if no asset.
@@ -34,7 +43,8 @@ Before inventing layout:
    - **Description** (one supporting sentence)
    - **CTA** label + wired action (link, `window.location`, or existing handler)
 3. Match spacing, type, border, and dark mode from the reference card.
-4. Add **en / fr / he** locale keys; never hardcode user-facing strings.
+4. If using a right-side decorative image: clip it to ≤ half banner width so left copy stays fully legible.
+5. Add **en / fr / he** locale keys; never hardcode user-facing strings.
 
 ## 3. Recipe (reusable structure)
 
@@ -77,6 +87,7 @@ const sectionCardClass =
 - [ ] Accessibility: meaningful title hierarchy, CTA has clear label, decorative images `alt=""`, status `role="status"` when needed, touch targets ≥ 44px
 - [ ] Dark mode: borders/backgrounds use `dark:` variants from the recipe; accent text readable on dark
 - [ ] Mobile: primary CTA `w-full` on small screens; stack title block above actions
+- [ ] Hero decorative art: ≤ half banner width (clip/cut); left copy fully readable with no overlap
 - [ ] i18n: keys in `src/locales/en.json`, `fr.json`, `he.json`
 - [ ] CTA wired to a real flow (handler, route, or Server Action) — no dead buttons
 - [ ] Visual system matches Profile Spotify card / app tokens — **do not** invent purple AI-slop themes
@@ -85,5 +96,6 @@ const sectionCardClass =
 
 - Invent purple-on-white / indigo glow / generic SaaS promo looks
 - Replace `bg-card` shells with heavy multi-shadow card stacks
+- Let a right-side decorative image cover more than half the banner or obscure title/description
 - Hardcode copy in components
 - Skip dark mode or mobile full-width CTAs

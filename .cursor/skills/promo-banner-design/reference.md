@@ -62,12 +62,19 @@ Use when the user supplies a **PNG/SVG** and wants a louder promo:
 
 - Panel: `rounded-xl bg-[#011E0B]`, min-height ~`8.5rem` / `sm:9.5rem`
 - Decorative logo: absolute, rotated, large (`spotify_logo_V2.png`)
+- **Half-width clip (required):** decorative art must not take more than half of the banner width — cut/clip the picture so the description stays clear on the left. Cap the asset layer at `w-1/2` + `overflow-hidden` (banner already `overflow-hidden`); keep copy in a left safe zone (`max-w-[50%]` or up to ~`max-w-[68%]` when the art is well cropped).
 - Wordmark: `spotify_text.png` in the copy column
-- Copy: `text-white/80`, constrained width (`max-w-[72%]`)
+- Copy: `text-white/80`, constrained width so it never sits under the art
 - CTA: `rounded-full bg-[#1DB954] … text-black` (or muted pill when connected)
 - Optional corner chip: `rounded-full border border-white/20 bg-white/15`
 
 Still pair with the Profile **card recipe** for in-page feature banners (record, settings, etc.); reserve the hero for brand-forward library/search surfaces.
+
+### Practice hero example
+
+**File:** `src/components/practice/PracticeComingSoonBanner.tsx`
+
+Same half-width rule: parchment asset on the right is clipped to ≤ 50% width; title + description + CTA stay fully legible on the left.
 
 ---
 

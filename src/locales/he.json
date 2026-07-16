@@ -87,6 +87,7 @@
     "foldersCreated": "פלייליסטים שנוצרו",
     "playlistsCreated": "סשני ג׳אם שנוצרו",
     "preferredInstrument": "כלי נגינה מועדף",
+    "preferredInstrumentHint": "ברירת המחדל לדיאגרמות אקורדים בשירים (פסנתר או גיטרה).",
     "piano": "פסנתר",
     "guitar": "גיטרה",
     "tsnioutFilter": "מסנן צניעות",
@@ -104,7 +105,14 @@
     "spotifyImportPlaylists": "ייבוא פלייליסטים",
     "timeSpent": "זמן שהושקע",
     "songsAddedChart": "שירים שנוספו לאורך זמן",
-    "activityByDay": "פעילות לפי יום בשבוע"
+    "activityByDay": "פעילות לפי יום בשבוע",
+    "activityPeriod": {
+      "7d": "7 הימים האחרונים",
+      "30d": "30 הימים האחרונים",
+      "90d": "90 הימים האחרונים",
+      "12m": "12 החודשים האחרונים",
+      "all": "הכל"
+    }
   },
   "leaderboard": {
     "title": "לוח תוצאות",
@@ -157,13 +165,17 @@
   },
   "invitations": {
     "title": "הזמנה",
-    "sendTitle": "הזמן ל-TABasco",
-    "sendDescription": "שלח קישור אישי. בהרשמה תהיו חברים אוטומטית.",
-    "emailOptional": "אימייל של החבר (אופציונלי)",
+    "sendTitle": "הזמן חבר",
+    "sendDescription": "שתף קישור אישי או שלח אימייל. בהרשמה תהיו חברים אוטומטית.",
+    "emailOptional": "friend@email.com, other@email.com",
+    "emailHint": "אופציונלי — אימייל אחד או יותר מופרדים בפסיקים",
     "createLink": "צור קישור הזמנה",
-    "latestLink": "שתף את הקישור",
+    "shareLink": "שתף קישור",
+    "sendEmail": "שלח אימייל",
+    "latestLink": "קישור ההזמנה שלך",
     "pendingCount": "{count} הזמנה(ות) ממתינות",
     "copy": "העתק",
+    "copied": "הועתק",
     "cancel": "בטל הזמנה",
     "someone": "מוזיקאי",
     "landingTitle": "{name} מזמין אותך ל-TABasco",
@@ -171,7 +183,12 @@
     "invalid": "ההזמנה הזו כבר לא תקפה.",
     "joinWithGoogle": "הצטרף עם Google",
     "continueOnboarding": "המשך הגדרה",
-    "freeToJoin": "חינם. בלי פרסומות."
+    "freeToJoin": "חינם. בלי פרסומות.",
+    "invalidEmail": "אימייל לא תקין: {email}",
+    "shareTitle": "הצטרף אליי ב-TABasco",
+    "shareText": "אני משתמש ב-TABasco לאקורדים וספרי שירים — הצטרף עם ההזמנה שלי:",
+    "emailSubject": "{name} מזמין אותך ל-TABasco",
+    "emailBody": "היי,\n\nאני משתמש ב-TABasco לארגון שירים, טרנספוז ושיתוף פלייליסטים. הצטרף עם ההזמנה שלי:\n\n{link}\n\nנתראה!"
   },
   "onboarding": {
     "title": "ברוך הבא",
@@ -442,6 +459,22 @@
     "title": "חדר ג׳אם סודי",
     "subtitle": "נגעת בגיטרה יותר מדי. בסדר — תעשו רעש.",
     "hitCount": "{count} נגיעות · עוד?",
+    "scoreLabel": "ניקוד",
+    "bestScore": "שיא · {count}",
+    "timerLabel": "זמן",
+    "timerIdle": "לחצו על כלי כדי להתחיל",
+    "timerReady": "מוכנים",
+    "timerRunning": "שניות נותרות",
+    "timerDone": "הזמן נגמר",
+    "instrumentsTitle": "עשו רעש",
+    "roundOverTitle": "הסיבוב נגמר",
+    "roundOverBody": "השגתם {count}. עדיין לא גינס.",
+    "newRecordTitle": "שיא גינס חדש!",
+    "newRecordBody": "{count} נגיעות נרשמו. רשמית מגוחך.",
+    "guinnessBadge": "שיא גינס של הג׳אם",
+    "playAgain": "שחקו שוב",
+    "recordLogTitle": "יומן שיאי גינס",
+    "recordLogEntry": "{count} נגיעות",
     "stopNonsense": "טוב, מספיק שטויות.",
     "stopNonsenseHint": "חזרו לאקספלורר ותפסיקו לשחק.",
     "backToExplorer": "חזרה לאקספלורר",
@@ -895,6 +928,9 @@
     "shareThisSong": "שתף שיר זה",
     "practiceMode": "שורה אחר שורה",
     "practiceModeHint": "עקוב שורה אחר שורה עם המוזיקה",
+    "practiceBannerTitle": "שורה אחר שורה",
+    "practiceBannerDescription": "עקבו שורה אחר שורה עם המוזיקה.",
+    "practiceBannerCta": "נסו מצב תרגול",
     "practicePlay": "נגן יחד",
     "practicePause": "השהה",
     "practiceExit": "צא מתרגול",
@@ -937,8 +973,14 @@
       "noChords": "אין אקורדים קדימה",
       "emptyLine": "—"
     },
-    "FULL_SONG_HIDDEN_TITLE": "השיר המלא מוסתר",
-    "FULL_SONG_HIDDEN_DESCRIPTION": "התחבר כדי לגשת לכל השיר ולהוסיף אותו לספרייה שלך."
+    "FULL_SONG_HIDDEN_TITLE": "שמרו את השיר",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "התחברו עם Google כדי לשמור בספרייה — זה חינם לעת עתה.",
+    "signInPromoBadge": "חינם לעת עתה",
+    "switchInstrumentHint": "לחצו כדי לעבור בין פסנתר / גיטרה",
+    "chordsHintTap": "לחצו על אקורד כדי לראות אותו",
+    "chordsHintSwipe": "החליקו כדי לראות את האחרים",
+    "chordsHintInstrument": "למטה: החלפה בין פסנתר / גיטרה",
+    "changeDefaultInstrument": "שנו את ברירת המחדל בפרופיל"
   },
 
   "songEditor": {
@@ -1069,7 +1111,7 @@
     "seeMoreSongs": "חפש עוד שירים"
   },
   "songStory": {
-    "title": "על השיר",
+    "title": "סיפור השיר",
     "loading": "טוען…",
     "anecdotes": "מקור ואנקדוטות",
     "about": "הסיפור",

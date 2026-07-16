@@ -5,8 +5,6 @@ import {
   PlayIcon,
   MusicalNoteIcon,
   PlusIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
   FolderPlusIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
@@ -26,19 +24,11 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useRef,
   useEffect,
   type ReactNode,
-  type RefObject,
 } from 'react'
 
 interface PublicPlaylistSearchContextValue {
-  isSearchOpen: boolean
-  searchQuery: string
-  setSearchQuery: (query: string) => void
-  toggleSearch: () => void
-  closeSearch: () => void
-  searchInputRef: RefObject<HTMLInputElement>
   songs: Song[]
   setSongs: (songs: Song[]) => void
   handleStartPlaylist: () => void
@@ -52,16 +42,6 @@ function usePublicPlaylistSearch() {
     throw new Error('usePublicPlaylistSearch must be used within PublicPlaylistSearchProvider')
   }
   return context
-}
-
-function filterPlaylistSongs(songs: Song[], searchQuery: string) {
-  const q = searchQuery.trim().toLowerCase()
-  if (!q) return songs
-  return songs.filter(
-    (song) =>
-      song.title.toLowerCase().includes(q) ||
-      (song.author || '').toLowerCase().includes(q)
-  )
 }
 
 function storePlaylistNavigation(
@@ -110,28 +90,6 @@ export function PublicPlaylistSearchProvider({
 }) {
   const router = useRouter()
   const [songs, setSongs] = useState<Song[]>([])
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const searchInputRef = useRef<HTMLInputElement>(null)
-
-  const openSearch = useCallback(() => {
-    setIsSearchOpen(true)
-    window.requestAnimationFrame(() => searchInputRef.current?.focus())
-  }, [])
-
-  const closeSearch = useCallback(() => {
-    setIsSearchOpen(false)
-    setSearchQuery('')
-    searchInputRef.current?.blur()
-  }, [])
-
-  const toggleSearch = useCallback(() => {
-    if (isSearchOpen) {
-      closeSearch()
-    } else {
-      openSearch()
-    }
-  }, [isSearchOpen, closeSearch, openSearch])
 
   const handleStartPlaylist = useCallback(() => {
     if (songs.length === 0) return
@@ -141,89 +99,17 @@ export function PublicPlaylistSearchProvider({
 
   const value = useMemo(
     () => ({
-      isSearchOpen,
-      searchQuery,
-      setSearchQuery,
-      toggleSearch,
-      closeSearch,
-      searchInputRef,
       songs,
       setSongs,
       handleStartPlaylist,
     }),
-    [
-      isSearchOpen,
-      searchQuery,
-      toggleSearch,
-      closeSearch,
-      songs,
-      handleStartPlaylist,
-    ]
+    [songs, handleStartPlaylist]
   )
 
   return (
     <PublicPlaylistSearchContext.Provider value={value}>
       {children}
     </PublicPlaylistSearchContext.Provider>
-  )
-}
-
-function PublicPlaylistExpandableSearch() {
-  const { t } = useLanguage()
-  const {
-    isSearchOpen,
-    searchQuery,
-    setSearchQuery,
-    toggleSearch,
-    closeSearch,
-    searchInputRef,
-  } = usePublicPlaylistSearch()
-
-  return (
-    <div
-      className={cn(
-        'flex min-w-0 items-center overflow-hidden rounded-full border border-border bg-muted/40 transition-all duration-200',
-        isSearchOpen ? 'min-w-0 flex-1' : 'w-10 shrink-0 border-transparent bg-transparent'
-      )}
-    >
-      <button
-        type="button"
-        onClick={toggleSearch}
-        className={cn(
-          'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
-          isSearchOpen && 'text-primary'
-        )}
-        aria-label={isSearchOpen ? t('common.close') : t('common.search')}
-      >
-        <MagnifyingGlassIcon className="h-5 w-5" />
-      </button>
-      <input
-        ref={searchInputRef}
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') closeSearch()
-        }}
-        placeholder={t('songs.search')}
-        tabIndex={isSearchOpen ? 0 : -1}
-        aria-hidden={!isSearchOpen}
-        className={cn(
-          'min-w-0 border-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all duration-200',
-          isSearchOpen ? 'w-full pe-3 opacity-100' : 'w-0 pe-0 opacity-0'
-        )}
-      />
-      {isSearchOpen && searchQuery ? (
-        <button
-          type="button"
-          onClick={() => setSearchQuery('')}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label={t('common.clear')}
-        >
-          <XMarkIcon className="h-4 w-4" />
-        </button>
-      ) : null}
-    </div>
   )
 }
 
@@ -292,11 +178,11 @@ function AddPlaylistCtaButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'h-12 w-full gap-2 rounded-xl text-sm font-semibold shadow-sm sm:h-14 sm:rounded-2xl sm:text-base',
+        'group/wiggle h-12 w-full gap-2 rounded-xl text-sm font-semibold shadow-sm sm:h-14 sm:rounded-2xl sm:text-base',
         className
       )}
     >
-      <FolderPlusIcon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
+      <FolderPlusIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
       <span>
         {isSaving ? t('library.addingPlaylist') : t('library.addPlaylistToFolders')}
       </span>
@@ -317,7 +203,7 @@ function PublicPlaylistHeader({
 }) {
   const { t } = useLanguage()
   const { signInWithGoogle } = useAuthContext()
-  const { isSearchOpen, songs, handleStartPlaylist } = usePublicPlaylistSearch()
+  const { songs, handleStartPlaylist } = usePublicPlaylistSearch()
   const {
     isSaving,
     snackbarMessage,
@@ -352,12 +238,7 @@ function PublicPlaylistHeader({
               )}
             </div>
 
-            <div
-              className={cn(
-                'min-w-0 flex-1 self-center transition-all duration-200',
-                isSearchOpen && 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
-              )}
-            >
+            <div className="min-w-0 flex-1 self-center">
               <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-base">
                 {playlist.name}
               </h1>
@@ -365,7 +246,6 @@ function PublicPlaylistHeader({
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5 self-center">
-              <PublicPlaylistExpandableSearch />
               <button
                 type="button"
                 onClick={handleStartPlaylist}
@@ -389,9 +269,9 @@ function PublicPlaylistHeader({
               type="button"
               variant="outline"
               onClick={handleSignInToSave}
-              className="flex h-12 w-full gap-2 rounded-xl text-sm font-semibold sm:h-14 sm:text-base"
+              className="group/wiggle flex h-12 w-full gap-2 rounded-xl text-sm font-semibold sm:h-14 sm:text-base"
             >
-              <FolderPlusIcon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
+              <FolderPlusIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
               {t('library.signInToAddPlaylist')}
             </Button>
           )}
@@ -463,20 +343,13 @@ export function PublicPlaylistSongList({
   const { t } = useLanguage()
   const router = useRouter()
   const [addingId, setAddingId] = useState<string | null>(null)
-  const { searchQuery, setSongs } = usePublicPlaylistSearch()
+  const { setSongs } = usePublicPlaylistSearch()
   const libraryIdSet = useMemo(() => new Set(libraryCatalogIds), [libraryCatalogIds])
 
   useEffect(() => {
     setSongs(songs)
     return () => setSongs([])
   }, [songs, setSongs])
-
-  const displayedSongs = useMemo(
-    () => filterPlaylistSongs(songs, searchQuery),
-    [songs, searchQuery]
-  )
-
-  const isFiltering = searchQuery.trim().length > 0
 
   const handleAddToLibrary = useCallback(
     async (song: Song) => {
@@ -520,18 +393,9 @@ export function PublicPlaylistSongList({
     )
   }
 
-  if (isFiltering && displayedSongs.length === 0) {
-    return (
-      <div className="px-4 py-16 text-center sm:px-6">
-        <MagnifyingGlassIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
-        <h3 className="text-base font-medium text-foreground">{t('songs.noResults')}</h3>
-      </div>
-    )
-  }
-
   return (
     <ul className="mt-4">
-      {displayedSongs.map((song) => {
+      {songs.map((song) => {
         const isAdding = addingId === song.id
         const isInLibrary = libraryIdSet.has(song.id)
 
