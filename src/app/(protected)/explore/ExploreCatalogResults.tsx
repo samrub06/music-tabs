@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import type { Song } from '@/types'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import ExploreSongGallery from '@/components/explore/ExploreSongGallery'
+import SongGallery from '@/components/SongGallery'
 import SongTable from '@/components/SongTable'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
@@ -81,7 +81,7 @@ export default function ExploreCatalogResults({
 
   return (
     <>
-      <ExploreSongGallery songs={songs} />
+      <SongGallery songs={songs} variant="folder" hasUser={!!userId} />
       <Pagination page={page} limit={limit} total={total} />
     </>
   )

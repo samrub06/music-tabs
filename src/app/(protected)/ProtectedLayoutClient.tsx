@@ -11,6 +11,7 @@ import { updateStreakAction } from '@/app/(protected)/gamification/actions'
 import { needsOnboardingAction } from '@/app/(protected)/onboarding/actions'
 import { ScrollChromeProvider } from '@/context/ScrollChromeContext'
 import { PageHeaderProvider } from '@/context/PageHeaderContext'
+import { cn } from '@/lib/utils'
 
 function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuthContext()
@@ -61,19 +62,25 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     <PageHeaderProvider>
     <SidebarProvider defaultOpen>
       <div className="flex h-svh w-full bg-background">
-        {user && <AppSidebar />}
-        <SidebarInset className="flex flex-col overflow-hidden bg-background lg:px-4 xl:px-5">
-          <Header />
+        {user && !isOnboardingRoute && <AppSidebar />}
+        <SidebarInset
+          className={cn(
+            'flex flex-col overflow-hidden bg-background',
+            !isOnboardingRoute && 'lg:px-4 xl:px-5'
+          )}
+        >
+          {!isOnboardingRoute ? <Header /> : null}
           <div
-            className={`flex-1 flex flex-col min-h-0 w-full max-w-full overflow-hidden ${
-              user ? 'pb-16 lg:pb-0' : ''
-            }`}
+            className={cn(
+              'flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden',
+              user && !isOnboardingRoute ? 'pb-16 lg:pb-0' : ''
+            )}
           >
             {children}
           </div>
         </SidebarInset>
         {/* Keep outside SidebarInset: overflow-hidden there clips position:fixed on mobile */}
-        {user && <BottomNavigation />}
+        {user && !isOnboardingRoute ? <BottomNavigation /> : null}
       </div>
     </SidebarProvider>
     </PageHeaderProvider>

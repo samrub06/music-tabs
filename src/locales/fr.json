@@ -974,7 +974,8 @@
       "emptyLine": "—"
     },
     "FULL_SONG_HIDDEN_TITLE": "Garde cette chanson",
-    "FULL_SONG_HIDDEN_DESCRIPTION": "Connecte-toi avec Google pour l’ajouter à ta bibliothèque — c’est gratuit pour l’instant.",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "Connecte-toi pour sauvegarder dans ton profil, C’est {free} !",
+    "signInPromoFree": "gratuit",
     "signInPromoBadge": "Gratuit pour l’instant",
     "switchInstrumentHint": "Touche pour passer piano / guitare",
     "chordsHintTap": "Touche un accord pour le voir",

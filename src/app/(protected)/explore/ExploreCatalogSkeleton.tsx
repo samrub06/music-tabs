@@ -16,12 +16,12 @@ export default function ExploreCatalogSkeleton({ view = 'gallery' }: ExploreCata
 
   return (
     <div className="pb-6">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="space-y-2">
-            <div className="aspect-square animate-pulse rounded-xl bg-muted" />
-            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+      <div className="grid grid-cols-5 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div key={i} className="space-y-1">
+            <div className="aspect-square animate-pulse rounded-lg bg-muted" />
+            <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="h-2.5 w-1/2 animate-pulse rounded bg-muted" />
           </div>
         ))}
       </div>

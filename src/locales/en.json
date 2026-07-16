@@ -971,7 +971,8 @@
       "emptyLine": "—"
     },
     "FULL_SONG_HIDDEN_TITLE": "Save this song",
-    "FULL_SONG_HIDDEN_DESCRIPTION": "Sign in with Google to keep it in your library — it’s free for now.",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "Sign in to save in your profile, It's {free}!",
+    "signInPromoFree": "free",
     "signInPromoBadge": "Free for now",
     "switchInstrumentHint": "Tap to switch piano / guitar",
     "chordsHintTap": "Tap a chord to see it",

@@ -1,24 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
 
 interface InstrumentSwitchHintProps {
   className?: string
-  /** Show profile link to change default instrument */
-  showProfileLink?: boolean
 }
 
 /**
- * Tip under the chords row: tap / swipe / switch instrument below.
+ * Tip overlaid on the chords row: tap / swipe / switch instrument.
  * Auto-hides after a few seconds (same vibe as explorer swipe hint).
  */
-export function InstrumentSwitchHint({
-  className,
-  showProfileLink = true,
-}: InstrumentSwitchHintProps) {
+export function InstrumentSwitchHint({ className }: InstrumentSwitchHintProps) {
   const { t, isRtl } = useLanguage()
   const [visible, setVisible] = useState(false)
 
@@ -36,15 +30,15 @@ export function InstrumentSwitchHint({
   return (
     <div
       className={cn(
-        'animate-swipe-hint-fade flex flex-col items-start gap-1.5',
+        'animate-swipe-hint-fade flex flex-col items-center gap-1.5',
         className
       )}
     >
       <div
         className={cn(
-          'inline-flex max-w-full items-start gap-2.5 rounded-2xl px-3 py-2.5',
-          'border border-black/[0.06] bg-white/80 text-muted-foreground shadow-sm backdrop-blur-md',
-          'dark:border-white/[0.08] dark:bg-white/[0.08]'
+          'pointer-events-none inline-flex max-w-full items-start gap-2.5 rounded-2xl px-3 py-2.5',
+          'border border-black/[0.06] bg-white/90 text-muted-foreground shadow-md backdrop-blur-md',
+          'dark:border-white/[0.1] dark:bg-[#1c1c1c]/90'
         )}
         role="status"
       >
@@ -64,16 +58,6 @@ export function InstrumentSwitchHint({
           <li>{t('songContent.chordsHintInstrument')}</li>
         </ul>
       </div>
-      {showProfileLink ? (
-        <p className="ps-1 text-[11px] text-muted-foreground">
-          <Link
-            href="/profile"
-            className="font-medium text-primary underline-offset-2 hover:underline"
-          >
-            {t('songContent.changeDefaultInstrument')}
-          </Link>
-        </p>
-      ) : null}
     </div>
   )
 }

@@ -253,7 +253,7 @@ export default function SongContent({
 
   const [chordSectionOpen, setChordSectionOpen] = useState(true);
   const [showTransposeControls, setShowTransposeControls] = useState(false);
-  const [metaDetailsOpen, setMetaDetailsOpen] = useState(false);
+  const [metaDetailsOpen, setMetaDetailsOpen] = useState(!isAuthenticated);
   const [practiceMode, setPracticeMode] = useState(false);
   const [practiceLineIndex, setPracticeLineIndex] = useState(0);
   const [practicePlaying, setPracticePlaying] = useState(false);
@@ -552,11 +552,15 @@ export default function SongContent({
   );
 
   const libraryToggleButton =
-    isAuthenticated && (onAddToLibrary || onRemoveFromLibrary) ? (
+    !isAuthenticated || onAddToLibrary || onRemoveFromLibrary ? (
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          if (!isAuthenticated) {
+            void signInWithGoogle(pathname);
+            return;
+          }
           if (isInLibrary) {
             onRemoveFromLibrary?.();
             return;
@@ -564,25 +568,32 @@ export default function SongContent({
           onAddToLibrary?.();
         }}
         disabled={
-          isAddingToLibrary ||
-          isRemovingFromLibrary ||
-          (isInLibrary ? !onRemoveFromLibrary : !onAddToLibrary)
+          isAuthenticated &&
+          (isAddingToLibrary ||
+            isRemovingFromLibrary ||
+            (isInLibrary ? !onRemoveFromLibrary : !onAddToLibrary))
         }
         className={cn(
           metaRowActionTileClass,
           'disabled:opacity-70',
-          isInLibrary
+          isAuthenticated && isInLibrary
             ? 'border-green-600/25 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25'
             : 'animate-add-library-invite border-primary/50 bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
         )}
         aria-label={
-          isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary')
+          isAuthenticated && isInLibrary
+            ? t('library.removeFromLibrary')
+            : t('library.addToLibrary')
         }
-        title={isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary')}
+        title={
+          isAuthenticated && isInLibrary
+            ? t('library.removeFromLibrary')
+            : t('library.addToLibrary')
+        }
       >
-        {isAddingToLibrary || isRemovingFromLibrary ? (
+        {isAuthenticated && (isAddingToLibrary || isRemovingFromLibrary) ? (
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        ) : isInLibrary ? (
+        ) : isAuthenticated && isInLibrary ? (
           <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
         ) : (
           <PlusIcon className="h-5 w-5 shrink-0" strokeWidth={2.5} aria-hidden />
@@ -781,9 +792,13 @@ export default function SongContent({
   }
 
   return (
+    <>
     <div 
       ref={contentRef}
-      className="song-content-scrollable relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto"
+      className={cn(
+        'song-content-scrollable relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto',
+        !isAuthenticated && 'pb-[5.5rem] sm:pb-24'
+      )}
       style={{ 
         WebkitOverflowScrolling: 'touch',
         width: '100%',
@@ -1016,21 +1031,25 @@ export default function SongContent({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="pt-4 space-y-2.5">
-                {onSetSelectedInstrument ? (
-                  <InstrumentSwitchHint showProfileLink={isAuthenticated} />
-                ) : null}
+                <div className="relative">
+                  {chordSectionOpen && (
+                  <ChordDiagramsGrid
+                    song={transposedSong}
+                    onChordClick={onChordClick}
+                    fontSize={fontSize}
+                    selectedInstrument={selectedInstrument}
+                    knownChordIds={knownChordIds}
+                    chordNameToIdMap={chordNameToIdMap}
+                    chords={chords}
+                  />
+                  )}
 
-                {chordSectionOpen && (
-                <ChordDiagramsGrid
-                  song={transposedSong}
-                  onChordClick={onChordClick}
-                  fontSize={fontSize}
-                  selectedInstrument={selectedInstrument}
-                  knownChordIds={knownChordIds}
-                  chordNameToIdMap={chordNameToIdMap}
-                  chords={chords}
-                />
-                )}
+                  {onSetSelectedInstrument ? (
+                    <InstrumentSwitchHint
+                      className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 justify-center px-2"
+                    />
+                  ) : null}
+                </div>
 
                 <div className="flex items-center gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:pb-0.5 sm:flex-wrap sm:gap-2">
                 {/* Fixed height so expand/collapse does not shift sibling controls */}
@@ -1201,12 +1220,14 @@ export default function SongContent({
                 onPlayNext={onPlayNext}
               />
             </div>
-          ) : (
-            <SignInPromoBanner onSignIn={() => void signInWithGoogle(pathname)} />
-          )}
+          ) : null}
         </div>
       </div>
     </div>
+    {!isAuthenticated ? (
+      <SignInPromoBanner onSignIn={() => void signInWithGoogle(pathname)} />
+    ) : null}
+    </>
   );
 }
 

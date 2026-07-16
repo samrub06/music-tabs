@@ -94,7 +94,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         <ExploreHubCta />
       </div>
 
-      <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
       {userId && forYouData?.topArtist && forYouData.artistSongs.length > 0 && (
         <ForYouArtistSection
@@ -103,6 +102,8 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           userId={userId}
         />
       )}
+
+      <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <PopularSongsSection songs={popularSongs} userId={userId} />
     </>
   )

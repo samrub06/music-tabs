@@ -7,7 +7,6 @@ import {
   Globe,
   Menu,
   Moon,
-  Search,
   Sun,
   Trophy,
   Users,
@@ -258,14 +257,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
           ) : (
             <SidebarTrigger className="hidden lg:flex -ms-1" />
           )
-        )}
-
-        {!user && !isLandingPage && (
-          <Button variant="ghost" size="icon" className="md:hidden" asChild>
-            <Link href="/" aria-label={t('navigation.home')}>
-              <Search className="h-5 w-5" />
-            </Link>
-          </Button>
         )}
 
         {showBack ? (

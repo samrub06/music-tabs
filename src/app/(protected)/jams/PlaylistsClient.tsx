@@ -65,9 +65,9 @@ function PlaylistCard({
         <button
           onClick={onPlay}
           aria-label={t('playlistsPage.playPlaylist')}
-          className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg transition-all hover:bg-primary sm:opacity-0 sm:group-hover:opacity-100"
+          className="absolute right-1.5 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-red-500 shadow-lg transition-all hover:bg-background sm:opacity-0 sm:group-hover:opacity-100"
         >
-          <PlayIcon className="h-4 w-4 flex-shrink-0" />
+          <PlayIcon className="h-4 w-4 flex-shrink-0 animate-play-icon-rotate" />
         </button>
       </div>
       <h3 className="truncate text-xs font-medium text-foreground">{playlist.name}</h3>
@@ -121,9 +121,9 @@ function PlaylistListRow({
           type="button"
           onClick={onPlay}
           aria-label={t('playlistsPage.playPlaylist')}
-          className="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+          className="ms-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-500/10"
         >
-          <PlayIcon className="h-5 w-5" />
+          <PlayIcon className="h-5 w-5 animate-play-icon-rotate" />
         </button>
       </div>
     </li>

@@ -974,7 +974,8 @@
       "emptyLine": "—"
     },
     "FULL_SONG_HIDDEN_TITLE": "שמרו את השיר",
-    "FULL_SONG_HIDDEN_DESCRIPTION": "התחברו עם Google כדי לשמור בספרייה — זה חינם לעת עתה.",
+    "FULL_SONG_HIDDEN_DESCRIPTION": "התחברו כדי לשמור בפרופיל, זה {free}!",
+    "signInPromoFree": "חינם",
     "signInPromoBadge": "חינם לעת עתה",
     "switchInstrumentHint": "לחצו כדי לעבור בין פסנתר / גיטרה",
     "chordsHintTap": "לחצו על אקורד כדי לראות אותו",

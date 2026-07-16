@@ -25,7 +25,6 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-/** Large decorative Google G for the hero panel (same role as Spotify logo). */
 function GoogleMarkDecorative({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 48 48" aria-hidden>
@@ -53,54 +52,56 @@ interface SignInPromoBannerProps {
   onSignIn: () => void
 }
 
-/**
- * End-of-song Google sign-in promo — same hero layout as Spotify / practice banners.
- */
+function DescriptionWithRainbowFree({
+  template,
+  freeWord,
+}: {
+  template: string
+  freeWord: string
+}) {
+  const parts = template.split('{free}')
+  return (
+    <p className="mt-0.5 line-clamp-2 text-[10px] font-medium leading-snug text-white/75 sm:text-[11px]">
+      {parts[0]}
+      <span className="animate-rainbow-text font-bold">{freeWord}</span>
+      {parts[1] ?? ''}
+    </p>
+  )
+}
+
+/** Compact sticky Google sign-in bar for guest song view. */
 export function SignInPromoBanner({ onSignIn }: SignInPromoBannerProps) {
   const { t } = useLanguage()
 
   return (
-    <section className="pt-2">
-      <div className="relative min-h-[8.5rem] w-full overflow-hidden rounded-xl bg-[#202124] sm:min-h-[9.5rem]">
-        <span className="absolute end-2.5 top-2.5 z-20 rounded-full border border-white/20 bg-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/95 sm:end-3 sm:top-3 sm:px-2.5 sm:text-[11px]">
-          {t('songContent.signInPromoBadge')}
-        </span>
-
-        {/* Decorative mark capped at half width so left copy stays clear */}
-        <div
-          className="pointer-events-none absolute inset-y-0 end-0 w-1/2 overflow-hidden"
-          aria-hidden
-        >
-          <div className="absolute -bottom-10 -end-8 sm:-bottom-14 sm:-end-6">
-            <GoogleMarkDecorative className="h-44 w-44 rotate-[18deg] opacity-90 sm:h-56 sm:w-56" />
-          </div>
-        </div>
-
-        <div className="relative z-10 flex min-h-[8.5rem] flex-col items-start justify-between p-5 sm:min-h-[9.5rem] sm:p-6">
-          <div className="flex min-w-0 max-w-[55%] flex-col items-start pr-2 sm:max-w-[58%]">
-            <div className="flex items-center gap-2">
-              <GoogleIcon className="h-6 w-6 shrink-0 sm:h-7 sm:w-7" />
-              <h2 className="text-base font-semibold tracking-tight text-white sm:text-lg">
-                {t('songContent.FULL_SONG_HIDDEN_TITLE')}
-              </h2>
-            </div>
-            <p className="mt-1.5 text-[11px] font-medium leading-relaxed text-white/80 min-[400px]:text-xs sm:mt-2 sm:max-w-sm sm:text-sm">
-              {t('songContent.FULL_SONG_HIDDEN_DESCRIPTION')}
-            </p>
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:px-4">
+      <div className="pointer-events-auto relative mx-auto max-w-4xl overflow-hidden rounded-xl bg-[#202124] shadow-[0_-8px_28px_-10px_rgba(0,0,0,0.45)]">
+        <div className="relative z-10 flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-sm font-semibold tracking-tight text-white sm:text-base">
+              {t('songContent.FULL_SONG_HIDDEN_TITLE')}
+            </h2>
+            <DescriptionWithRainbowFree
+              template={t('songContent.FULL_SONG_HIDDEN_DESCRIPTION')}
+              freeWord={t('songContent.signInPromoFree')}
+            />
           </div>
 
-          <div className="mt-3 shrink-0 sm:mt-4">
-            <button
-              type="button"
-              onClick={onSignIn}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#202124] transition-colors hover:bg-white/90 sm:gap-2.5 sm:px-5 sm:text-sm"
-            >
-              <GoogleIcon className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-              <span>{t('auth.signInWithGoogle')}</span>
-            </button>
+          <div className="flex shrink-0 items-center justify-center" aria-hidden>
+            <GoogleMarkDecorative className="h-11 w-11 opacity-95 sm:h-12 sm:w-12" />
           </div>
+
+          <button
+            type="button"
+            onClick={onSignIn}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3 text-[10px] font-bold uppercase tracking-wide text-[#202124] transition-colors hover:bg-white/90 sm:h-10 sm:gap-2 sm:px-4 sm:text-xs"
+          >
+            <GoogleIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            <span className="max-sm:sr-only">{t('auth.signInWithGoogle')}</span>
+            <span className="sm:hidden">{t('auth.signIn')}</span>
+          </button>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

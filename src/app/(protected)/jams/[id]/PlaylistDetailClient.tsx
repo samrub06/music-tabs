@@ -458,10 +458,10 @@ export default function PlaylistDetailClient({
                 type="button"
                 onClick={handleStartPlaylist}
                 disabled={songs.length === 0}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:w-12"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:w-12"
                 aria-label={t('playlistView.startPlaylist')}
               >
-                <PlayIcon className="h-5 w-5 translate-x-0.5 sm:h-6 sm:w-6" />
+                <PlayIcon className="h-5 w-5 animate-play-icon-rotate sm:h-6 sm:w-6" />
               </button>
             </div>
           </div>
