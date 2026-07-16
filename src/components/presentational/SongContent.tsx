@@ -665,6 +665,16 @@ export default function SongContent({
     />
   ) : null;
 
+  const labeledActionButton = (
+    label: string,
+    button: React.ReactNode
+  ) => (
+    <div className="flex min-w-0 flex-1 flex-col items-center gap-1">
+      {button}
+      <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+    </div>
+  );
+
   const actionButtonsRow =
     ratingDisplay ||
     viewsDisplay ||
@@ -672,20 +682,33 @@ export default function SongContent({
     favoriteButton ||
     libraryToggleButton ||
     editButton ? (
-      <div className="flex h-11 w-full items-stretch gap-1.5 sm:gap-2">
+      <div className="flex w-full items-start gap-1.5 sm:gap-2">
         {viewsDisplay}
         {ratingDisplay}
-        {shareButton}
-        {favoriteButton}
-        {libraryToggleButton}
-        {editButton}
+        {favoriteButton
+          ? labeledActionButton(
+              isLiked ? t('library.removeFromFavorites') : t('library.addToFavorites'),
+              favoriteButton
+            )
+          : null}
+        {libraryToggleButton
+          ? labeledActionButton(
+              isInLibrary ? t('library.removeFromLibrary') : t('library.addToLibrary'),
+              libraryToggleButton
+            )
+          : null}
+        {editButton ? labeledActionButton(t('songHeader.edit'), editButton) : null}
+        {shareButton
+          ? labeledActionButton(t('songContent.shareThisSong'), shareButton)
+          : null}
       </div>
     ) : null;
 
   const hasCollapsibleDetails =
     Boolean(actionButtonsRow) ||
     Boolean(folderControl) ||
-    Boolean(libraryActionFeedback);
+    Boolean(libraryActionFeedback) ||
+    Boolean(!isInLibrary && onAddToLibrary && isAuthenticated);
 
   if (isEditing) {
     return (
@@ -755,6 +778,17 @@ export default function SongContent({
               </button>
             ) : null}
 
+            {!isInLibrary && onAddToLibrary && isAuthenticated ? (
+              <Button
+                type="button"
+                className="h-11 w-full rounded-xl font-medium"
+                disabled={isAddingToLibrary}
+                onClick={onAddToLibrary}
+              >
+                {isAddingToLibrary ? t('library.adding') : t('library.addToLibrary')}
+              </Button>
+            ) : null}
+
             {hasCollapsibleDetails && metaDetailsOpen ? (
               <div className="flex flex-col gap-2">
                 {actionButtonsRow}
@@ -785,31 +819,14 @@ export default function SongContent({
             ) : null}
           </div>
 
-          {(isCatalogView || isPersonalCopy) && (
+          {isPersonalCopy && (
             <div
               className={cn(
                 'rounded-xl border px-4 py-3 text-sm',
-                isCatalogView
-                  ? 'border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-100'
-                  : 'border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100'
+                'border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100'
               )}
             >
-              <p>
-                {isCatalogView
-                  ? t('songContent.catalogSharedBanner')
-                  : t('songContent.personalCopyBanner')}
-              </p>
-              {isCatalogView && onAddToLibrary && isAuthenticated ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="mt-2"
-                  disabled={isAddingToLibrary}
-                  onClick={onAddToLibrary}
-                >
-                  {isAddingToLibrary ? t('library.adding') : t('library.addToLibrary')}
-                </Button>
-              ) : null}
+              <p>{t('songContent.personalCopyBanner')}</p>
               {canSuggestToCatalog ? (
                 <div className="mt-2 space-y-2">
                   {!suggestOpen ? (
@@ -1266,11 +1283,10 @@ function StructuredSongContent({
     [song]
   );
   const [openSections, setOpenSections] = useState<Set<number>>(() => {
-    const indices = new Set<number>();
-    song.sections.forEach((s: { name: string }, i: number) => {
-      if (s.name !== 'Version Description') indices.add(i);
-    });
-    return indices;
+    const firstSectionIndex = song.sections.findIndex(
+      (s: { name: string }) => s.name !== 'Version Description'
+    );
+    return firstSectionIndex >= 0 ? new Set([firstSectionIndex]) : new Set<number>();
   });
 
   const toggleSection = (sectionIndex: number, open: boolean) => {

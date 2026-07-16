@@ -28,6 +28,7 @@ import { mountXpCelebration } from '@/utils/mountXpCelebration';
 import type { SongProgressResult } from '@/types';
 import { updateSongFolderAction, cloneSongAction } from '@/app/(protected)/dashboard/actions';
 import { deleteSongAction } from '@/app/song/[id]/actions';
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { useLanguage } from '@/context/LanguageContext';
 import { useFoldersContext } from '@/context/FoldersContext';
 
@@ -136,6 +137,7 @@ export default function SongViewerContainerSSR({
 
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false);
   const [isRemovingFromLibrary, setIsRemovingFromLibrary] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [libraryActionFeedback, setLibraryActionFeedback] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -181,15 +183,11 @@ export default function SongViewerContainerSSR({
     const idToDelete = localLibrarySongId ?? (isOwnedByUser ? song.id : undefined);
     if (!idToDelete) return;
 
-    const confirmMessage = isOwnedByUser
-      ? t('songs.confirmDeleteSong')
-      : t('library.confirmRemoveFromLibrary');
-    if (!confirm(confirmMessage)) return;
-
     setIsRemovingFromLibrary(true);
     setLibraryActionFeedback(null);
     try {
       await deleteSongAction(idToDelete);
+      setRemoveDialogOpen(false);
       if (isOwnedByUser || idToDelete === song.id) {
         router.push('/songs');
         return;
@@ -209,6 +207,11 @@ export default function SongViewerContainerSSR({
     } finally {
       setIsRemovingFromLibrary(false);
     }
+  };
+
+  const requestRemoveFromLibrary = () => {
+    if (!isAuthenticated || !localIsInLibrary) return;
+    setRemoveDialogOpen(true);
   };
 
   // Load hasUsedNext from sessionStorage on mount and sync current song index
@@ -712,7 +715,7 @@ export default function SongViewerContainerSSR({
     isLiked,
     onAddToLibrary: handleAddToLibrary,
     isAddingToLibrary,
-    onRemoveFromLibrary: handleRemoveFromLibrary,
+    onRemoveFromLibrary: requestRemoveFromLibrary,
     isRemovingFromLibrary,
     libraryActionFeedback,
     onToggleFavorite: localIsInLibrary ? handleToggleFavorite : undefined,
@@ -730,6 +733,24 @@ export default function SongViewerContainerSSR({
   return (
     <div className="h-full min-h-0 flex flex-col">
       <SongViewer {...songViewerProps} />
+      <ConfirmActionDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        title={
+          isOwnedByUser
+            ? t('songs.confirmDeleteSong')
+            : t('library.confirmRemoveFromLibrary')
+        }
+        description={
+          isOwnedByUser
+            ? t('songs.confirmDeleteSongMessage')
+            : t('library.confirmRemoveFromLibraryMessage')
+        }
+        confirmLabel={isOwnedByUser ? t('songs.delete') : t('library.removeFromLibrary')}
+        onConfirm={handleRemoveFromLibrary}
+        isPending={isRemovingFromLibrary}
+        destructive
+      />
     </div>
   );
 }

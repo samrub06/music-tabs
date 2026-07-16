@@ -21,6 +21,7 @@ import { CHORD_PREVIEW_DIAGRAM_OPTS } from '@/components/chords/chordCardDimensi
 import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
 import type { ChordVariantGroup } from '@/types/chordVariants';
 import { FilterChip, FilterChipRow } from '@/components/ui/filter-chip';
+import { usePageHeader } from '@/context/PageHeaderContext';
 
 const CHORDS_INSTRUMENT_STORAGE_KEY = 'chords-instrument';
 
@@ -191,6 +192,7 @@ export default function ChordsClient({
   initialKnownChordIds
 }: ChordsClientProps) {
   const { t } = useLanguage();
+  usePageHeader(t('chords.pageTitle'), '/');
   const [chords] = useState<Chord[]>(initialChords);
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set(initialKnownChordIds));
   const [searchQuery, setSearchQuery] = useState('');
@@ -472,8 +474,8 @@ export default function ChordsClient({
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="mb-6 space-y-1">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
+          <div className="mb-6 hidden space-y-1 sm:block">
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
               {t('chords.pageTitle')}
             </h1>
@@ -482,7 +484,7 @@ export default function ChordsClient({
 
           <div className="mb-6 space-y-4">
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
               </div>
               <input
@@ -503,7 +505,7 @@ export default function ChordsClient({
                   }
                 }}
                 placeholder={t('chords.searchPlaceholder')}
-                className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
+                className="block w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:py-3 sm:pl-12 sm:pr-12"
                 autoComplete="off"
                 role="combobox"
                 aria-controls={chordSuggestionsListId}

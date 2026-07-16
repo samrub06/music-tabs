@@ -15,6 +15,11 @@ import { containsHebrew, getTextDirection } from '@/utils/rtl';
 import ChordOverLyricsLine from '@/components/presentational/ChordOverLyricsLine';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface SongStructuredEditorProps {
   sections: SongSection[];
@@ -54,6 +59,19 @@ export default function SongStructuredEditor({
   const { t } = useLanguage();
   const [chordPopover, setChordPopover] = useState<ChordPopoverState | null>(null);
   const [chordInput, setChordInput] = useState('');
+  const [openSections, setOpenSections] = useState<Set<number>>(() => {
+    const firstIndex = sections.findIndex((s) => s.name !== 'Version Description');
+    return firstIndex >= 0 ? new Set([firstIndex]) : new Set<number>();
+  });
+
+  const toggleSection = (sectionIndex: number, open: boolean) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(sectionIndex);
+      else next.delete(sectionIndex);
+      return next;
+    });
+  };
 
   const openChordPopover = (state: ChordPopoverState) => {
     setChordPopover(state);
@@ -256,15 +274,32 @@ export default function SongStructuredEditor({
   return (
     <div className="flex flex-1 flex-col min-h-0">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {sections.map((section, sectionIndex) => (
-          <div
+        {sections.map((section, sectionIndex) => {
+          if (section.name === 'Version Description') return null;
+          const isOpen = openSections.has(sectionIndex);
+
+          return (
+          <Collapsible
             key={`${section.name}-${sectionIndex}`}
-            className="rounded-2xl border border-black/[0.06] bg-white/70 p-3.5 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.06]"
+            open={isOpen}
+            onOpenChange={(open) => toggleSection(sectionIndex, open)}
+            className="rounded-2xl border border-black/[0.06] bg-white/70 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.06]"
           >
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-foreground">
-                [{formatSectionDisplayName(section.name, t)}]
-              </h3>
+            <div className="flex items-center justify-between gap-2 p-3.5 pb-0">
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex min-h-10 flex-1 items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2.5 text-start text-sm font-semibold text-foreground hover:bg-muted"
+                >
+                  <span>[{formatSectionDisplayName(section.name, t)}]</span>
+                  <ChevronDownIcon
+                    className={cn(
+                      'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                      isOpen && 'rotate-180'
+                    )}
+                  />
+                </button>
+              </CollapsibleTrigger>
               <button
                 type="button"
                 onClick={() => handleDeleteSection(sectionIndex)}
@@ -275,6 +310,7 @@ export default function SongStructuredEditor({
               </button>
             </div>
 
+            <CollapsibleContent className="p-3.5 pt-3">
             <div className="space-y-3">
               {section.lines.map((line, lineIndex) => (
                 <div
@@ -351,8 +387,10 @@ export default function SongStructuredEditor({
                 {t('songEditor.addChordLyricsLine')}
               </Button>
             </div>
-          </div>
-        ))}
+            </CollapsibleContent>
+          </Collapsible>
+          );
+        })}
 
         <Button
           type="button"

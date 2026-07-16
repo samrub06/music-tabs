@@ -384,7 +384,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
                   placeholder={t('folders.searchPlaceholder')}
-                  className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
+                  className="block min-h-[44px] w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:pl-12 sm:pr-12"
                 />
                 {localSearchValue && (
                   <button

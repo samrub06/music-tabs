@@ -97,7 +97,10 @@
     "spotifyDisconnectConfirm": "Disconnect Spotify from your account?",
     "spotifyDisconnectError": "Could not disconnect Spotify",
     "spotifyConnect": "Connect Spotify",
-    "spotifyImportPlaylists": "Import playlists"
+    "spotifyImportPlaylists": "Import playlists",
+    "timeSpent": "Time spent",
+    "songsAddedChart": "Songs added over time",
+    "activityByDay": "Activity by day of week"
   },
   "leaderboard": {
     "title": "Leaderboard",
@@ -282,6 +285,7 @@
     "emptyDescNoSongs": "Start by adding your first song",
     "viewAllSongs": "View all songs",
     "confirmDeleteSong": "Are you sure you want to delete this song?",
+    "confirmDeleteSongMessage": "This will permanently remove the song from your library. This action cannot be undone.",
     "addFromArtistPrompt": "Want to add more songs from {artist}?",
     "addSongs": "Add songs",
     "searchMoreFromArtist": "Search more songs from {artist}"
@@ -372,6 +376,7 @@
     "addedToLibrary": "Added to your library",
     "removedFromLibrary": "Removed from your library",
     "confirmRemoveFromLibrary": "Remove this song from your library?",
+    "confirmRemoveFromLibraryMessage": "The song will be removed from your library. You can add it again later from the catalog.",
     "editYourCopy": "Edit your copy",
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
@@ -490,6 +495,8 @@
     "createFolderDescription": "Organize your songs in a new playlist",
     "importUltimateGuitar": "Import Ultimate Guitar",
     "importUltimateGuitarDescription": "Import your MyTabs playlist from Ultimate Guitar",
+    "manualEntryShort": "Manual entry",
+    "importShort": "Import UG",
     "back": "Back",
     "playlistName": "Jam session name",
     "folderName": "Playlist name",
@@ -852,6 +859,7 @@
     "seeThisFolder": "See this playlist",
     "showDetails": "Show song details",
     "hideDetails": "Hide song details",
+    "shareThisSong": "Share this song",
     "practiceMode": "Line by line",
     "practiceModeHint": "Follow one line at a time with the music",
     "practicePlay": "Play along",

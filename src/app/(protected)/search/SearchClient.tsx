@@ -93,14 +93,6 @@ export default function SearchClient({
     setRecentSearches(loadRecentSearches())
   }, [])
 
-  useEffect(() => {
-    if (isAIMode) {
-      aiTextareaRef.current?.focus()
-    } else {
-      searchInputRef.current?.focus()
-    }
-  }, [isAIMode])
-
   const saveToRecentSearches = (query: string, previewResult?: SearchResult) => {
     const updated = upsertRecentSearch(query, previewResult)
     setRecentSearches(updated)
@@ -519,13 +511,13 @@ export default function SearchClient({
               'relative rounded-xl border bg-card transition-all duration-300 ease-in-out',
               isAIMode
                 ? 'border-primary/40 ring-2 ring-primary/15 shadow-sm'
-                : 'min-h-[3.5rem] border-border focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary'
+                : 'min-h-[3.5rem] border-border'
             )}
           >
             {isAIMode ? (
               <div className="flex min-h-[3.5rem] items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3 sm:py-2.5">
                 <SparklesIcon
-                  className="h-5 w-5 shrink-0 text-primary"
+                  className="h-5 w-5 shrink-0 text-muted-foreground"
                   aria-hidden
                 />
                 <textarea
@@ -542,7 +534,7 @@ export default function SearchClient({
                     type="button"
                     onClick={handleSubmitSearch}
                     disabled={!queryTrimmed || isSearching}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10 disabled:pointer-events-none disabled:opacity-40"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
                     aria-label={t('search.askWithAI')}
                   >
                     {isSearching ? (
@@ -557,7 +549,7 @@ export default function SearchClient({
                         e.preventDefault()
                         setIsAIMode(false)
                       }}
-                      className="flex min-h-9 max-w-[7.5rem] shrink-0 items-center gap-1 rounded-lg px-1.5 py-1 text-primary transition-colors hover:bg-primary/10 sm:max-w-none sm:gap-1.5 sm:px-2 sm:py-1.5"
+                      className="flex min-h-[40px] shrink-0 items-center gap-1 rounded-lg px-1.5 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:max-w-none sm:gap-1.5 sm:px-2 sm:py-1.5"
                       aria-label={t('search.backToNormalSearch')}
                       type="button"
                     >
@@ -609,7 +601,7 @@ export default function SearchClient({
                         e.preventDefault()
                         setIsAIMode(true)
                       }}
-                      className="flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-purple-600 transition-colors hover:bg-purple-500/10 dark:text-purple-400"
+                      className="flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       aria-label={t('search.enableAIStyleSearch')}
                       aria-pressed={false}
                       type="button"

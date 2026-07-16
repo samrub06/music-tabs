@@ -66,9 +66,8 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
             </div>
           </div>
 
-          {/* Bottom section - Title left, Stats right */}
+          {/* Bottom section - Title */}
           <div className="flex items-end justify-between">
-            {/* Title and Artist - Left */}
             <div className="flex-1 pr-4">
               <div className="text-white/90 text-xs sm:text-sm font-medium mb-1 uppercase tracking-wider">
                 {song.author}
@@ -76,22 +75,6 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
               <h3 className="text-2xl sm:text-3xl font-bold text-white line-clamp-2">
                 {song.title}
               </h3>
-            </div>
-            
-            {/* Stats - Right */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {song.rating && (
-                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                  <span className="text-yellow-300">⭐</span>
-                  <span className="font-semibold text-white text-sm">{song.rating.toFixed(1)}</span>
-                </div>
-              )}
-              {song.viewCount && song.viewCount > 0 && (
-                <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                  <span className="text-blue-300">👁️</span>
-                  <span className="font-medium text-white text-sm">{song.viewCount}</span>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -97,7 +97,10 @@
     "spotifyDisconnectConfirm": "לנתק את Spotify מהחשבון שלך?",
     "spotifyDisconnectError": "לא ניתן לנתק את Spotify",
     "spotifyConnect": "חבר Spotify",
-    "spotifyImportPlaylists": "ייבוא פלייליסטים"
+    "spotifyImportPlaylists": "ייבוא פלייליסטים",
+    "timeSpent": "זמן שהושקע",
+    "songsAddedChart": "שירים שנוספו לאורך זמן",
+    "activityByDay": "פעילות לפי יום בשבוע"
   },
   "leaderboard": {
     "title": "לוח תוצאות",
@@ -282,6 +285,7 @@
     "emptyDescNoSongs": "התחל בהוספת השיר הראשון שלך",
     "viewAllSongs": "הצג את כל השירים",
     "confirmDeleteSong": "האם אתה בטוח שברצונך למחוק את השיר הזה?",
+    "confirmDeleteSongMessage": "פעולה זו תסיר את השיר לצמיתות מהספרייה שלך. לא ניתן לבטל.",
     "addFromArtistPrompt": "רוצה להוסיף עוד שירים של {artist}?",
     "addSongs": "הוסף שירים",
     "searchMoreFromArtist": "חפש עוד שירים של {artist}"
@@ -372,6 +376,7 @@
     "addedToLibrary": "נוסף לספרייה שלך",
     "removedFromLibrary": "הוסר מהספרייה שלך",
     "confirmRemoveFromLibrary": "להסיר את השיר הזה מהספרייה שלך?",
+    "confirmRemoveFromLibraryMessage": "השיר יוסר מהספרייה שלך. תוכל להוסיף אותו שוב מהקטלוג.",
     "editYourCopy": "ערוך את העותק שלך",
     "addToFavorites": "הוסף למועדפים",
     "removeFromFavorites": "הסר מהמועדפים",
@@ -423,7 +428,10 @@
       "already_linked": "חשבון Spotify זה כבר מקושר למשתמש אחר.",
       "failed": "לא ניתן לחבר את Spotify. נסה שוב."
     },
-    "spotifyImportPlaylists": "ייבוא פלייליסטים"
+    "spotifyImportPlaylists": "ייבוא פלייליסטים",
+    "timeSpent": "זמן שהושקע",
+    "songsAddedChart": "שירים שנוספו לאורך זמן",
+    "activityByDay": "פעילות לפי יום בשבוע"
   },
   "spotifyImport": {
     "title": "ייבוא מ-Spotify",
@@ -490,6 +498,8 @@
     "createFolderDescription": "ארגן את השירים שלך בפלייליסט חדש",
     "importUltimateGuitar": "ייבא מ-Ultimate Guitar",
     "importUltimateGuitarDescription": "ייבא את פלייליסט MyTabs שלך מ-Ultimate Guitar",
+    "manualEntryShort": "הזנה ידנית",
+    "importShort": "ייבוא UG",
     "back": "חזור",
     "playlistName": "שם סשן הג׳אם",
     "folderName": "שם הפלייליסט",
@@ -852,6 +862,7 @@
     "seeThisFolder": "ראה פלייליסט זה",
     "showDetails": "הצג פרטי שיר",
     "hideDetails": "הסתר פרטי שיר",
+    "shareThisSong": "שתף שיר זה",
     "practiceMode": "שורה אחר שורה",
     "practiceModeHint": "עקוב שורה אחר שורה עם המוזיקה",
     "practicePlay": "נגן יחד",

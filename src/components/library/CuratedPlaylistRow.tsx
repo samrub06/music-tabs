@@ -4,6 +4,7 @@ import { ClockIcon, HeartIcon, SparklesIcon } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
+import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import {
   CURATED_PLAYLISTS,
   curatedPlaylistSectionBySlug,
@@ -39,6 +40,8 @@ const curatedGradientBySlug: Record<string, string> = {
   reggae: 'bg-gradient-to-br from-green-600 to-emerald-800',
   blues: 'bg-gradient-to-br from-blue-800 to-indigo-950',
   disco: 'bg-gradient-to-br from-pink-600 to-rose-700',
+  'rap-fr': 'bg-gradient-to-br from-zinc-800 to-neutral-950',
+  'variete-francaise': 'bg-gradient-to-br from-blue-600 to-indigo-800',
   '60s': 'bg-gradient-to-br from-orange-700 to-red-900',
   '70s': 'bg-gradient-to-br from-rose-700 to-orange-900',
   '80s': 'bg-gradient-to-br from-fuchsia-700 to-purple-900',
@@ -69,9 +72,13 @@ const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
   difficulty: 'library.curatedDifficulty',
 }
 
+const mobileCarouselClass =
+  'flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory lg:hidden'
+
 interface GridCardProps {
   href: string
   layout?: 'scroll' | 'landscape' | 'grid'
+  compact?: boolean
   title: ReactNode
   children: ReactNode
 }
@@ -86,6 +93,7 @@ interface PlaylistCardData {
 function GridCard({
   href,
   layout = 'scroll',
+  compact = false,
   title,
   children,
 }: GridCardProps) {
@@ -93,7 +101,11 @@ function GridCard({
     <div
       className={cn(
         'group relative flex flex-col transition-colors',
-        layout === 'scroll' && 'w-28 flex-shrink-0 snap-start gap-1',
+        layout === 'scroll' &&
+          cn(
+            'w-28 flex-shrink-0 snap-start gap-1',
+            compact && 'w-24 gap-0.5'
+          ),
         layout === 'landscape' && 'w-full gap-2',
         layout === 'grid' && 'w-full gap-1'
       )}
@@ -102,14 +114,18 @@ function GridCard({
         href={href}
         className={cn(
           'relative aspect-square w-full overflow-hidden bg-muted',
-          layout === 'scroll' ? 'rounded-lg' : 'rounded-xl'
+          layout === 'scroll' ? 'rounded-lg' : 'rounded-xl',
+          compact && 'max-h-24'
         )}
       >
         {children}
       </Link>
       <Link
         href={href}
-        className="min-w-0 truncate text-xs font-medium leading-tight text-foreground transition-colors group-hover:text-primary sm:text-sm"
+        className={cn(
+          'min-w-0 truncate font-medium leading-tight text-foreground transition-colors group-hover:text-primary',
+          compact ? 'text-[10px]' : 'text-xs sm:text-sm'
+        )}
       >
         {title}
       </Link>
@@ -198,6 +214,7 @@ export default function CuratedPlaylistRow({
   showSectionTitle = true,
 }: CuratedPlaylistRowProps) {
   const { t } = useLanguage()
+  const isLandscapeMobile = useLandscapeMobile()
 
   if (!section && !hubZone) {
     throw new Error('CuratedPlaylistRow requires section or hubZone')
@@ -253,7 +270,7 @@ export default function CuratedPlaylistRow({
     filteredPlaylists.map((item) => buildPlaylistCard(item, options))
 
   const cards = buildCards()
-  const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: 56 }) : cards
+  const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: isLandscapeMobile ? 48 : 56 }) : cards
 
   if (cards.length === 0 && userShortcutCards.length === 0) return null
 
@@ -261,24 +278,39 @@ export default function CuratedPlaylistRow({
 
   const renderCards = (
     layout: CardLayout,
-    playlistCards: PlaylistCardData[] = layout === 'grid' ? mobileGridCards : cards
+    playlistCards: PlaylistCardData[] = layout === 'grid' ? mobileGridCards : cards,
+    compact = false
   ) => {
     return (
       <>
         {layout === 'scroll' &&
           userShortcutCards.map((item) => (
-            <GridCard key={item.id} href={item.href} layout={layout} title={item.title}>
+            <GridCard
+              key={item.id}
+              href={item.href}
+              layout={layout}
+              compact={compact}
+              title={item.title}
+            >
               {item.content}
             </GridCard>
           ))}
         {playlistCards.map((item) => (
-          <GridCard key={item.id} href={item.href} layout={layout} title={item.title}>
+          <GridCard
+            key={item.id}
+            href={item.href}
+            layout={layout}
+            compact={compact}
+            title={item.title}
+          >
             {item.content}
           </GridCard>
         ))}
       </>
     )
   }
+
+  const useMobileCarousel = !isDifficultySection || isLandscapeMobile
 
   return (
     <section className="mb-6">
@@ -287,28 +319,28 @@ export default function CuratedPlaylistRow({
           {t(sectionTitleKey[section])}
         </h3>
       )}
-      {isDifficultySection ? (
-        <div className="grid grid-cols-4 gap-2 md:hidden">
-          {renderCards('grid')}
-        </div>
-      ) : (
+      {useMobileCarousel ? (
         <div
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory md:hidden"
+          className={mobileCarouselClass}
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {renderCards('scroll')}
+          {renderCards('scroll', cards, isLandscapeMobile)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-2 lg:hidden">
+          {renderCards('grid')}
         </div>
       )}
       <div
         className={cn(
-          'hidden gap-4 md:grid',
+          'hidden gap-4 lg:grid',
           isDifficultySection
-            ? 'md:grid-cols-4'
-            : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+            ? 'lg:grid-cols-4'
+            : 'lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6'
         )}
       >
         {renderCards('landscape', cards)}

@@ -97,7 +97,10 @@
     "spotifyDisconnectConfirm": "Déconnecter Spotify de votre compte ?",
     "spotifyDisconnectError": "Impossible de déconnecter Spotify",
     "spotifyConnect": "Connecter Spotify",
-    "spotifyImportPlaylists": "Importer des playlists"
+    "spotifyImportPlaylists": "Importer des playlists",
+    "timeSpent": "Temps passé",
+    "songsAddedChart": "Chansons ajoutées",
+    "activityByDay": "Activité par jour"
   },
   "leaderboard": {
     "title": "Classement",
@@ -282,6 +285,7 @@
     "emptyDescNoSongs": "Commencez par ajouter votre première chanson",
     "viewAllSongs": "Voir toutes les chansons",
     "confirmDeleteSong": "Êtes-vous sûr de vouloir supprimer cette chanson ?",
+    "confirmDeleteSongMessage": "Cette action supprimera définitivement la chanson de votre bibliothèque. Elle est irréversible.",
     "addFromArtistPrompt": "Voulez-vous ajouter d'autres chansons de {artist} ?",
     "addSongs": "Ajouter des chansons",
     "searchMoreFromArtist": "Chercher plus de chansons de {artist}"
@@ -372,6 +376,7 @@
     "addedToLibrary": "Ajouté à votre bibliothèque",
     "removedFromLibrary": "Retiré de votre bibliothèque",
     "confirmRemoveFromLibrary": "Retirer cette chanson de votre bibliothèque ?",
+    "confirmRemoveFromLibraryMessage": "La chanson sera retirée de votre bibliothèque. Vous pourrez la rajouter depuis le catalogue.",
     "editYourCopy": "Modifier votre copie",
     "addToFavorites": "Ajouter aux favoris",
     "removeFromFavorites": "Retirer des favoris",
@@ -423,7 +428,10 @@
       "already_linked": "Ce compte Spotify est déjà lié à un autre utilisateur.",
       "failed": "Impossible de connecter Spotify. Réessayez."
     },
-    "spotifyImportPlaylists": "Importer des playlists"
+    "spotifyImportPlaylists": "Importer des playlists",
+    "timeSpent": "Temps passé",
+    "songsAddedChart": "Chansons ajoutées",
+    "activityByDay": "Activité par jour"
   },
   "spotifyImport": {
     "title": "Import Spotify",
@@ -490,6 +498,8 @@
     "createFolderDescription": "Organiser vos chansons dans une nouvelle playlist",
     "importUltimateGuitar": "Importer Ultimate Guitar",
     "importUltimateGuitarDescription": "Importer votre playlist MyTabs depuis Ultimate Guitar",
+    "manualEntryShort": "Saisie manuelle",
+    "importShort": "Import UG",
     "back": "Retour",
     "playlistName": "Nom de la session jam",
     "folderName": "Nom de la playlist",
@@ -852,6 +862,7 @@
     "seeThisFolder": "Voir cette playlist",
     "showDetails": "Afficher les détails",
     "hideDetails": "Masquer les détails",
+    "shareThisSong": "Partager cette chanson",
     "practiceMode": "Ligne par ligne",
     "practiceModeHint": "Suivez une ligne à la fois avec la musique",
     "practicePlay": "Jouer avec",
