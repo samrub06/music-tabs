@@ -79,7 +79,7 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
           </div>
         )}
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-          <FolderCover imageUrl={folder.imageUrl} songCount={songCount} />
+          <FolderCover imageUrl={folder.imageUrl} name={folder.name} songCount={songCount} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">{folder.name}</p>
@@ -121,6 +121,7 @@ function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: So
       <div className="relative aspect-square w-full overflow-hidden rounded-xl">
         <FolderCover
           imageUrl={folder.imageUrl}
+          name={folder.name}
           songCount={songCount}
           shapeClassName="transition-transform duration-200 group-hover:scale-105"
           className="transition-transform duration-200 group-hover:scale-105"
@@ -536,6 +537,7 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               <div className="w-12 shrink-0">
                 <FolderCover
                   imageUrl={draggedFolder.imageUrl}
+                  name={draggedFolder.name}
                   songCount={getSongCount(draggedFolder.id)}
                 />
               </div>

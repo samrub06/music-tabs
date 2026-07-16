@@ -1,10 +1,13 @@
 'use client'
 
 import { FolderShape } from '@/components/presentational/FolderShape'
+import { usePlaylistCover } from '@/lib/hooks/usePlaylistCover'
 import { cn } from '@/lib/utils'
 
 interface FolderCoverProps {
   imageUrl?: string | null
+  /** Helps resolve curated covers by name when imageUrl is absent. */
+  name?: string
   songCount?: number
   className?: string
   shapeClassName?: string
@@ -13,11 +16,14 @@ interface FolderCoverProps {
 /** Cover image for a playlist (folder), with FolderShape fallback. */
 export function FolderCover({
   imageUrl,
+  name,
   songCount,
   className,
   shapeClassName,
 }: FolderCoverProps) {
-  if (imageUrl) {
+  const coverUrl = usePlaylistCover({ imageUrl, name })
+
+  if (coverUrl) {
     return (
       <div
         className={cn(
@@ -27,7 +33,7 @@ export function FolderCover({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={imageUrl}
+          src={coverUrl}
           alt=""
           className="h-full w-full object-cover"
         />

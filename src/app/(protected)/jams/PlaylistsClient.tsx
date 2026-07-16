@@ -17,7 +17,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll';
 import { cn } from '@/lib/utils';
 import { Playlist } from '@/types';
-import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover';
+import { usePlaylistCover } from '@/lib/hooks/usePlaylistCover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,7 +42,7 @@ function PlaylistCard({
   onOpen: () => void;
 }) {
   const { t } = useLanguage();
-  const coverUrl = getPlaylistDisplayCoverUrl(playlist);
+  const coverUrl = usePlaylistCover(playlist);
 
   return (
     <div
@@ -85,7 +85,7 @@ function PlaylistListRow({
   onOpen: () => void;
 }) {
   const { t } = useLanguage();
-  const coverUrl = getPlaylistDisplayCoverUrl(playlist);
+  const coverUrl = usePlaylistCover(playlist);
 
   return (
     <li>

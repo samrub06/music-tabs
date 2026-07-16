@@ -108,7 +108,7 @@ export default function FolderTableRow({
       <td className="px-2 sm:px-4 py-2">
         <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="h-8 w-8 shrink-0">
-            <FolderCover imageUrl={folder.imageUrl} songCount={songCount} />
+            <FolderCover imageUrl={folder.imageUrl} name={folder.name} songCount={songCount} />
           </div>
           {isEditing ? (
             <input

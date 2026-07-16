@@ -13,13 +13,14 @@ import {
   type HubZone,
 } from '@/data/curatedPlaylists'
 import {
-  getCuratedPlaylistCoverUrl,
   getLikedSongsCoverUrl,
   getRecentSongsCoverUrl,
 } from '@/data/curatedPlaylistCoverImages'
 import { DifficultyGauge } from '@/components/library/DifficultyGauge'
 import { getDifficultyThemeBySlug } from '@/lib/constants/difficultyTheme'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
+import { useAuthContext } from '@/context/AuthContext'
+import { resolvePlaylistCoverUrl } from '@/utils/playlistCover'
 import type { ReactNode } from 'react'
 
 /** Full class strings so Tailwind includes gradient utilities (no dynamic concat). */
@@ -133,7 +134,10 @@ function GridCard({
   )
 }
 
-function buildPlaylistCard(item: PublicPlaylistItem, options?: { gaugeSize?: number }): PlaylistCardData {
+function buildPlaylistCard(
+  item: PublicPlaylistItem,
+  options?: { gaugeSize?: number; tsnioutFilterEnabled?: boolean }
+): PlaylistCardData {
   const title = item.name
 
   const difficultyTheme = item.curatedSlug ? getDifficultyThemeBySlug(item.curatedSlug) : undefined
@@ -146,9 +150,12 @@ function buildPlaylistCard(item: PublicPlaylistItem, options?: { gaugeSize?: num
   const isDifficultyBanner =
     !!item.curatedSlug && curatedPlaylistSectionBySlug[item.curatedSlug] === 'difficulty'
 
-  const coverUrl = item.curatedSlug
-    ? item.imageUrl ?? getCuratedPlaylistCoverUrl(item.curatedSlug) ?? null
-    : item.imageUrl ?? null
+  const coverUrl = resolvePlaylistCoverUrl({
+    name: item.name,
+    imageUrl: item.imageUrl,
+    curatedSlug: item.curatedSlug,
+    tsnioutFilterEnabled: options?.tsnioutFilterEnabled ?? false,
+  })
 
   const content =
     !isDifficultyBanner && coverUrl ? (
@@ -215,6 +222,8 @@ export default function CuratedPlaylistRow({
 }: CuratedPlaylistRowProps) {
   const { t } = useLanguage()
   const isLandscapeMobile = useLandscapeMobile()
+  const { profile } = useAuthContext()
+  const tsnioutFilterEnabled = profile?.tsniout_filter_enabled ?? false
 
   if (!section && !hubZone) {
     throw new Error('CuratedPlaylistRow requires section or hubZone')
@@ -225,27 +234,29 @@ export default function CuratedPlaylistRow({
         {
           id: 'liked-songs',
           href: '/songs?filter=liked',
-          content: buildCoverCardContent(getLikedSongsCoverUrl(), (
+          content: buildCoverCardContent(
+            tsnioutFilterEnabled ? null : getLikedSongsCoverUrl(),
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <HeartIcon className="h-10 w-10 text-white sm:h-12 sm:w-12" />
               </div>
             </>
-          )),
+          ),
           title: t('library.likedSongs'),
         },
         {
           id: 'recent-songs',
           href: '/songs?tab=recent',
-          content: buildCoverCardContent(getRecentSongsCoverUrl(), (
+          content: buildCoverCardContent(
+            tsnioutFilterEnabled ? null : getRecentSongsCoverUrl(),
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-blue-700" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <ClockIcon className="h-10 w-10 text-white sm:h-12 sm:w-12" />
               </div>
             </>
-          )),
+          ),
           title: t('library.myRecentSongs'),
         },
       ]
@@ -267,7 +278,9 @@ export default function CuratedPlaylistRow({
     })
 
   const buildCards = (options?: { gaugeSize?: number }) =>
-    filteredPlaylists.map((item) => buildPlaylistCard(item, options))
+    filteredPlaylists.map((item) =>
+      buildPlaylistCard(item, { ...options, tsnioutFilterEnabled })
+    )
 
   const cards = buildCards()
   const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: isLandscapeMobile ? 48 : 56 }) : cards

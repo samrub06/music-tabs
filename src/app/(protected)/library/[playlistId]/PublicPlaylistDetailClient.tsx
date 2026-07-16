@@ -17,7 +17,7 @@ import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/acti
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
-import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
+import { usePlaylistCover } from '@/lib/hooks/usePlaylistCover'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import Snackbar from '@/components/Snackbar'
 import {
@@ -419,7 +419,7 @@ export function PublicPlaylistDetailShell({
   songCount,
   canSaveToFolders = false,
 }: PublicPlaylistDetailShellProps) {
-  const coverUrl = getPlaylistDisplayCoverUrl(playlist) ?? null
+  const coverUrl = usePlaylistCover(playlist)
 
   return (
     <PublicPlaylistHeader

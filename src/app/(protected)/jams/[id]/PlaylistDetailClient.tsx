@@ -33,6 +33,8 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { usePlaylistCover } from '@/lib/hooks/usePlaylistCover'
+import { useSongCover } from '@/lib/hooks/useSongCover'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
@@ -244,11 +246,15 @@ export default function PlaylistDetailClient({
     }
   }, [isSearchOpen, closeSearch, openSearch])
 
-  const coverUrl =
-    getPlaylistDisplayCoverUrl(playlist) ??
-    songs[0]?.songImageUrl ??
-    songs[0]?.artistImageUrl ??
-    null
+  const coverUrl = usePlaylistCover(playlist)
+  const firstSong = songs[0]
+  const songFallbackCover = useSongCover({
+    songImageUrl: firstSong?.songImageUrl,
+    artistImageUrl: firstSong?.artistImageUrl,
+    genre: firstSong?.genre,
+  })
+  const hasOwnPlaylistCover = Boolean(getPlaylistDisplayCoverUrl(playlist))
+  const displayCoverUrl = hasOwnPlaylistCover ? coverUrl : (songFallbackCover ?? null)
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
@@ -351,9 +357,9 @@ export default function PlaylistDetailClient({
         <div className="space-y-3 rounded-xl border border-black/[0.06] bg-card px-3 py-3 dark:border-white/[0.08] sm:px-4 sm:py-3.5">
           <div className="flex w-full items-start gap-2.5 sm:gap-3">
             <div className="relative h-14 w-14 shrink-0 self-start overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16">
-              {coverUrl ? (
+              {displayCoverUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+                <img src={displayCoverUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
                   <MusicalNoteIcon className="h-7 w-7 text-primary-foreground/90" />
