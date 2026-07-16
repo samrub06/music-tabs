@@ -713,6 +713,8 @@
     "createError": "Could not create jam session"
   },
   "chords": {
+    "pageTitle": "Chords",
+    "pageHint": "Browse diagrams, mark what you know, and switch guitar or piano.",
     "markAsKnown": "Mark as unknown",
     "markAsUnknown": "Mark as known",
     "iKnowIt": "I know it",

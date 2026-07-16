@@ -69,7 +69,7 @@ export default function ChordProgressionsClient() {
           </div>
 
           {filteredPresets.length === 0 ? (
-            <div className="rounded-2xl border border-black/[0.06] bg-card px-4 py-12 text-center dark:border-white/[0.08]">
+            <div className="rounded-2xl border border-border bg-card px-4 py-12 text-center">
               <MusicalNoteIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
               <p className="mt-2 text-sm text-muted-foreground">
                 {t('chords.progressionsFilterEmpty')}
@@ -82,7 +82,7 @@ export default function ChordProgressionsClient() {
                   key={preset.id}
                   type="button"
                   onClick={() => setSelected(preset)}
-                  className="rounded-2xl border border-black/[0.06] bg-card px-4 py-4 text-left transition-colors hover:bg-muted/50 dark:border-white/[0.08]"
+                  className="rounded-2xl border border-border bg-card px-4 py-4 text-left transition-colors hover:bg-muted/50"
                 >
                   <p className="text-base font-semibold tabular-nums text-foreground">
                     {preset.label}

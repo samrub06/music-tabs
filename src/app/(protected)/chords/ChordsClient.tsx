@@ -8,13 +8,6 @@ import { MagnifyingGlassIcon, CheckCircleIcon, XMarkIcon, MusicalNoteIcon, Arrow
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
 import type { Chord } from '@/types';
 import { markChordKnownAction, unmarkChordKnownAction } from './actions';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import chordVariantsFr from '@/data/chordVariants';
 import { ChordPreviewCard } from '@/components/chords/ChordPreviewCard';
@@ -27,12 +20,20 @@ import { VariantChordCard } from '@/components/chords/VariantChordCard';
 import { CHORD_PREVIEW_DIAGRAM_OPTS } from '@/components/chords/chordCardDimensions';
 import { hasPianoChordDiagram } from '@/utils/pianoChordAssets';
 import type { ChordVariantGroup } from '@/types/chordVariants';
+import { FilterChip, FilterChipRow } from '@/components/ui/filter-chip';
+
 const CHORDS_INSTRUMENT_STORAGE_KEY = 'chords-instrument';
 
-const CHORDS_GRID_CLASS = 'grid grid-cols-2 gap-4';
+const CHORDS_GRID_CLASS = 'grid grid-cols-2 gap-3 sm:gap-4';
 
 /** One wide landscape card per row on mobile; two per row from sm up. */
 const CHORDS_PIANO_GRID_CLASS = 'grid grid-cols-1 gap-3 sm:grid-cols-2';
+
+const knownChordShellClass =
+  'rounded-xl border border-emerald-300/80 bg-emerald-50/80 dark:border-emerald-700/50 dark:bg-emerald-950/30';
+
+const knownToggleButtonClass =
+  'absolute top-2 left-2 z-10 rounded-full p-1.5 transition-colors hover:bg-muted disabled:opacity-50';
 
 /** Static variant carousel groups shown as grid cards (replaces duplicate DB open shapes). */
 const VARIANT_GROUP_UI: Array<{
@@ -190,7 +191,7 @@ export default function ChordsClient({
   initialKnownChordIds
 }: ChordsClientProps) {
   const { t } = useLanguage();
-  const [chords, setChords] = useState<Chord[]>(initialChords);
+  const [chords] = useState<Chord[]>(initialChords);
   const [knownChordIds, setKnownChordIds] = useState<Set<string>>(new Set(initialKnownChordIds));
   const [searchQuery, setSearchQuery] = useState('');
   const [localSearchValue, setLocalSearchValue] = useState('');
@@ -406,13 +407,13 @@ export default function ChordsClient({
   const getDifficultyBadgeColor = (difficulty: string | null | undefined) => {
     switch (difficulty) {
       case 'beginner':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
       case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300';
       case 'advanced':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -466,254 +467,275 @@ export default function ChordsClient({
   const showVariantCards = visibleVariantGroups.length > 0;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <div
         data-main-scroll
         className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-      <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:px-8">
-        <div className="mb-6 space-y-3">
-          {/* Search with chord name autocomplete */}
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
-              <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-            </div>
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={localSearchValue}
-              onChange={(e) => setLocalSearchValue(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 150)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && chordNameSuggestions[0]) {
-                  e.preventDefault();
-                  applyChordSearch(chordNameSuggestions[0]);
-                }
-                if (e.key === 'Escape') {
-                  setIsSearchFocused(false);
-                  searchInputRef.current?.blur();
-                }
-              }}
-              placeholder={t('chords.searchPlaceholder')}
-              className="block min-h-[44px] w-full rounded-none border-0 border-b border-border/70 bg-transparent py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-sm placeholder:text-muted-foreground shadow-none focus:border-primary focus:outline-none focus:ring-0 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
-              autoComplete="off"
-              role="combobox"
-              aria-controls={chordSuggestionsListId}
-              aria-expanded={showSuggestions}
-              aria-autocomplete="list"
-            />
-            {localSearchValue && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-3 text-muted-foreground hover:text-foreground sm:pr-4"
-                aria-label={t('common.clear')}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            )}
-            {showSuggestions && (
-              <ul
-                id={chordSuggestionsListId}
-                className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-md"
-                role="listbox"
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                {chordNameSuggestions.map((name) => (
-                  <li key={name} role="option" aria-selected={false}>
-                    <button
-                      type="button"
-                      className={cn(
-                        'flex w-full min-h-[44px] items-center px-4 py-2.5 text-left text-sm',
-                        'hover:bg-muted focus:bg-muted focus:outline-none'
-                      )}
-                      onClick={() => applyChordSearch(name)}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div className="mb-6 space-y-1">
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+              {t('chords.pageTitle')}
+            </h1>
+            <p className="text-sm text-muted-foreground">{t('chords.pageHint')}</p>
           </div>
 
-          {/* Status + difficulty + instrument — one row */}
-          <div className="flex gap-2 sm:gap-3">
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
-            >
-              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-none border-0 border-b border-border/70 bg-transparent px-0 text-sm shadow-none focus:ring-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('chords.statusAll')}</SelectItem>
-                <SelectItem value="to-learn">{t('chords.statusToLearn')}</SelectItem>
-                <SelectItem value="known">{t('chords.statusKnown')}</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={difficultyFilter}
-              onValueChange={(v) => setDifficultyFilter(v as DifficultyFilter)}
-            >
-              <SelectTrigger className="h-11 min-w-0 flex-1 rounded-none border-0 border-b border-border/70 bg-transparent px-0 text-sm shadow-none focus:ring-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('chords.difficultyAll')}</SelectItem>
-                <SelectItem value="beginner">{t('chords.difficultyBeginner')}</SelectItem>
-                <SelectItem value="intermediate">{t('chords.difficultyIntermediate')}</SelectItem>
-                <SelectItem value="advanced">{t('chords.difficultyAdvanced')}</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <InstrumentToggle
-              value={instrument}
-              onChange={handleInstrumentChange}
-              compact
-            />
-          </div>
-
-          <Link
-            href="/chords/progressions"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-none border-0 border-b border-border/70 bg-transparent text-sm font-medium text-foreground transition-colors hover:text-primary"
-          >
-            <MusicalNoteIcon className="h-4 w-4 shrink-0" aria-hidden />
-            {t('chords.showProgressions')}
-            <ArrowRightIcon className="h-4 w-4 shrink-0" aria-hidden />
-          </Link>
-        </div>
-
-        {filteredSections.length === 0 && !showVariantCards ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">{t('chords.noResults')}</p>
-          </div>
-        ) : (
-          <>
-            {showVariantCards && (
-              <div className="mb-12">
-                <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
-                  {visibleVariantGroups.map((group) => {
-                    const dbChord = resolveDbChordForGroup(group, chords);
-                    const chordId = dbChord?.id;
-                    const isKnown = chordId ? knownChordIds.has(chordId) : false;
-
-                    return (
-                      <div
-                        key={group.id}
-                        className={cn(
-                          'relative flex w-full flex-col',
-                          isKnown && 'rounded-lg border border-green-300 bg-green-50'
-                        )}
-                      >
-                        {chordId && (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleKnown(chordId)}
-                            disabled={isPending}
-                            className="absolute top-2 left-2 z-10 rounded-full p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50"
-                            aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
-                            title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
-                          >
-                            {isKnown ? (
-                              <CheckCircleIconSolid className="h-5 w-5 text-green-600" />
-                            ) : (
-                              <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-600" />
-                            )}
-                          </button>
-                        )}
-                        <VariantChordCard
-                          group={group}
-                          instrument={instrument}
-                          onClick={() => setOpenVariantGroupId(group.id)}
-                          className={isKnown ? 'border-green-300 bg-green-50' : undefined}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+          <div className="mb-6 space-y-4">
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+                <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
               </div>
-            )}
-          {filteredSections.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-12">
-              <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
-                {section.chords
-                  .filter((chord) => !HIDDEN_DB_CHORD_NAMES.has(chord.name))
-                  .map((chord) => {
-                  const isKnown = isChordKnown(chord);
-                  return (
-                    <div
-                      key={chord.id}
-                      className={cn(
-                        'relative flex w-full flex-col',
-                        isKnown
-                          ? 'rounded-lg border border-green-300 bg-green-50'
-                          : ''
-                      )}
-                    >
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={localSearchValue}
+                onChange={(e) => setLocalSearchValue(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 150)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && chordNameSuggestions[0]) {
+                    e.preventDefault();
+                    applyChordSearch(chordNameSuggestions[0]);
+                  }
+                  if (e.key === 'Escape') {
+                    setIsSearchFocused(false);
+                    searchInputRef.current?.blur();
+                  }
+                }}
+                placeholder={t('chords.searchPlaceholder')}
+                className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4 sm:pl-12 sm:pr-12 sm:text-base sm:placeholder:text-base"
+                autoComplete="off"
+                role="combobox"
+                aria-controls={chordSuggestionsListId}
+                aria-expanded={showSuggestions}
+                aria-autocomplete="list"
+              />
+              {localSearchValue && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-3 text-muted-foreground hover:text-foreground sm:pr-4"
+                  aria-label={t('common.clear')}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              )}
+              {showSuggestions && (
+                <ul
+                  id={chordSuggestionsListId}
+                  className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-md"
+                  role="listbox"
+                  onMouseDown={(e) => e.preventDefault()}
+                >
+                  {chordNameSuggestions.map((name) => (
+                    <li key={name} role="option" aria-selected={false}>
                       <button
                         type="button"
-                        onClick={() => handleToggleKnown(chord.id)}
-                        disabled={isPending}
-                        className="absolute top-2 left-2 z-10 rounded-full p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50"
-                        aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
-                        title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
+                        className="flex min-h-[44px] w-full items-center px-4 py-2.5 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                        onClick={() => applyChordSearch(name)}
                       >
-                        {isKnown ? (
-                          <CheckCircleIconSolid className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <CheckCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-600" />
-                        )}
+                        {name}
                       </button>
-
-                      <ChordPreviewCard
-                        chordLabel={chord.name}
-                        instrument={instrument}
-                        diagramContainerRef={
-                          instrument === 'guitar'
-                            ? (el) => {
-                                if (el) chordRefs.current.set(chord.id, el);
-                              }
-                            : undefined
-                        }
-                        className={cn(
-                          isKnown && 'border-green-300 bg-green-50'
-                        )}
-                        footer={
-                          chord.difficulty ? (
-                            <span
-                              className={cn(
-                                'mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
-                                getDifficultyBadgeColor(chord.difficulty)
-                              )}
-                            >
-                              {getDifficultyLabel(chord.difficulty)}
-                            </span>
-                          ) : undefined
-                        }
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          ))}
-          </>
-        )}
 
-        {openVariantGroup && (
-          <ChordVariantsModal
-            group={openVariantGroup}
-            instrument={instrument}
-            open
-            onOpenChange={(open) => {
-              if (!open) setOpenVariantGroupId(null);
-            }}
-          />
-        )}
-      </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0 flex-1 space-y-3">
+                <FilterChipRow>
+                  <FilterChip
+                    active={statusFilter === 'all'}
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    {t('chords.statusAll')}
+                  </FilterChip>
+                  <FilterChip
+                    active={statusFilter === 'to-learn'}
+                    onClick={() => setStatusFilter('to-learn')}
+                  >
+                    {t('chords.statusToLearn')}
+                  </FilterChip>
+                  <FilterChip
+                    active={statusFilter === 'known'}
+                    onClick={() => setStatusFilter('known')}
+                  >
+                    {t('chords.statusKnown')}
+                  </FilterChip>
+                </FilterChipRow>
+                <FilterChipRow>
+                  <FilterChip
+                    active={difficultyFilter === 'all'}
+                    onClick={() => setDifficultyFilter('all')}
+                  >
+                    {t('chords.difficultyAll')}
+                  </FilterChip>
+                  <FilterChip
+                    active={difficultyFilter === 'beginner'}
+                    onClick={() => setDifficultyFilter('beginner')}
+                  >
+                    {t('chords.difficultyBeginner')}
+                  </FilterChip>
+                  <FilterChip
+                    active={difficultyFilter === 'intermediate'}
+                    onClick={() => setDifficultyFilter('intermediate')}
+                  >
+                    {t('chords.difficultyIntermediate')}
+                  </FilterChip>
+                  <FilterChip
+                    active={difficultyFilter === 'advanced'}
+                    onClick={() => setDifficultyFilter('advanced')}
+                  >
+                    {t('chords.difficultyAdvanced')}
+                  </FilterChip>
+                </FilterChipRow>
+              </div>
+              <InstrumentToggle
+                value={instrument}
+                onChange={handleInstrumentChange}
+                compact
+                className="self-end sm:self-auto"
+              />
+            </div>
+
+            <Link
+              href="/chords/progressions"
+              className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted/50"
+            >
+              <span className="inline-flex items-center gap-2">
+                <MusicalNoteIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                {t('chords.showProgressions')}
+              </span>
+              <ArrowRightIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
+          </div>
+
+          {filteredSections.length === 0 && !showVariantCards ? (
+            <div className="rounded-2xl border border-border bg-card px-4 py-12 text-center">
+              <MusicalNoteIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
+              <p className="mt-2 text-sm text-muted-foreground">{t('chords.noResults')}</p>
+            </div>
+          ) : (
+            <>
+              {showVariantCards && (
+                <div className="mb-10">
+                  <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
+                    {visibleVariantGroups.map((group) => {
+                      const dbChord = resolveDbChordForGroup(group, chords);
+                      const chordId = dbChord?.id;
+                      const isKnown = chordId ? knownChordIds.has(chordId) : false;
+
+                      return (
+                        <div
+                          key={group.id}
+                          className={cn(
+                            'relative flex w-full flex-col',
+                            isKnown && knownChordShellClass
+                          )}
+                        >
+                          {chordId && (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleKnown(chordId)}
+                              disabled={isPending}
+                              className={knownToggleButtonClass}
+                              aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
+                              title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
+                            >
+                              {isKnown ? (
+                                <CheckCircleIconSolid className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <CheckCircleIcon className="h-5 w-5 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400" />
+                              )}
+                            </button>
+                          )}
+                          <VariantChordCard
+                            group={group}
+                            instrument={instrument}
+                            onClick={() => setOpenVariantGroupId(group.id)}
+                            className={isKnown ? 'border-transparent bg-transparent shadow-none' : undefined}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {filteredSections.map((section, sectionIndex) => (
+                <div key={sectionIndex} className="mb-10">
+                  <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
+                    {section.chords
+                      .filter((chord) => !HIDDEN_DB_CHORD_NAMES.has(chord.name))
+                      .map((chord) => {
+                        const isKnown = isChordKnown(chord);
+                        return (
+                          <div
+                            key={chord.id}
+                            className={cn(
+                              'relative flex w-full flex-col',
+                              isKnown && knownChordShellClass
+                            )}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleToggleKnown(chord.id)}
+                              disabled={isPending}
+                              className={knownToggleButtonClass}
+                              aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
+                              title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
+                            >
+                              {isKnown ? (
+                                <CheckCircleIconSolid className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <CheckCircleIcon className="h-5 w-5 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400" />
+                              )}
+                            </button>
+
+                            <ChordPreviewCard
+                              chordLabel={chord.name}
+                              instrument={instrument}
+                              diagramContainerRef={
+                                instrument === 'guitar'
+                                  ? (el) => {
+                                      if (el) chordRefs.current.set(chord.id, el);
+                                    }
+                                  : undefined
+                              }
+                              className={cn(isKnown && 'border-transparent bg-transparent shadow-none')}
+                              footer={
+                                chord.difficulty ? (
+                                  <span
+                                    className={cn(
+                                      'mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium',
+                                      getDifficultyBadgeColor(chord.difficulty)
+                                    )}
+                                  >
+                                    {getDifficultyLabel(chord.difficulty)}
+                                  </span>
+                                ) : undefined
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {openVariantGroup && (
+            <ChordVariantsModal
+              group={openVariantGroup}
+              instrument={instrument}
+              open
+              onOpenChange={(open) => {
+                if (!open) setOpenVariantGroupId(null);
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

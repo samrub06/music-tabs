@@ -22,13 +22,11 @@ export function InstrumentToggle({
 }: InstrumentToggleProps) {
   const { t } = useLanguage();
 
-  const segmentClass =
-    'inline-flex h-11 shrink-0 items-center gap-0.5 bg-transparent p-0';
   const optionClass = (active: boolean) =>
     cn(
-      'inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
+      'inline-flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200',
       active
-        ? 'bg-transparent text-foreground ring-1 ring-border'
+        ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
         : 'text-muted-foreground hover:text-foreground'
     );
 
@@ -45,7 +43,11 @@ export function InstrumentToggle({
           {t('chords.instrument')}
         </span>
       )}
-      <div className={segmentClass} role="group" aria-label={t('chords.instrument')}>
+      <div
+        className="inline-flex h-11 shrink-0 items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800"
+        role="group"
+        aria-label={t('chords.instrument')}
+      >
         <button
           type="button"
           onClick={() => onChange('piano')}

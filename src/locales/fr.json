@@ -713,6 +713,8 @@
     "createError": "Impossible de créer la jam"
   },
   "chords": {
+    "pageTitle": "Accords",
+    "pageHint": "Parcourez les diagrammes, indiquez ce que vous savez, et basculez guitare ou piano.",
     "markAsKnown": "Marquer comme inconnu",
     "markAsUnknown": "Marquer comme connu",
     "iKnowIt": "Je le connais",
