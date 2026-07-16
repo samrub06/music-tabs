@@ -10,10 +10,10 @@ interface AppLogoProps {
   priority?: boolean
 }
 
-/** Both variants use the chili mark until a dedicated wordmark is provided. */
+/** Chili mark + wordmark (transparent PNGs — no white plate). */
 const LOGO_CONFIG = {
-  portrait: { src: '/logo_tabasco.png', width: 40, height: 40 },
-  text: { src: '/logo_tabasco.png', width: 40, height: 40 },
+  portrait: { src: '/logo_tabasco.png', width: 2000, height: 2000 },
+  text: { src: '/logo_tabasco_text.png', width: 1000, height: 400 },
 } as const
 
 export function AppLogo({
@@ -31,7 +31,7 @@ export function AppLogo({
       width={config.width}
       height={config.height}
       priority={priority}
-      className={cn('object-contain', className)}
+      className={cn('bg-transparent object-contain', className)}
     />
   )
 }

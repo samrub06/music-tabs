@@ -21,7 +21,8 @@ import { getDifficultyThemeBySlug } from '@/lib/constants/difficultyTheme'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 import { useAuthContext } from '@/context/AuthContext'
 import { resolvePlaylistCoverUrl } from '@/utils/playlistCover'
-import type { ReactNode } from 'react'
+import { SwipeRowHint } from '@/components/library/SwipeRowHint'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 /** Full class strings so Tailwind includes gradient utilities (no dynamic concat). */
 const curatedGradientBySlug: Record<string, string> = {
@@ -73,9 +74,6 @@ const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
   difficulty: 'library.curatedDifficulty',
 }
 
-const mobileCarouselClass =
-  'flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory lg:hidden'
-
 interface GridCardProps {
   href: string
   layout?: 'scroll' | 'landscape' | 'grid'
@@ -104,10 +102,10 @@ function GridCard({
         'group relative flex flex-col transition-colors',
         layout === 'scroll' &&
           cn(
-            'w-28 flex-shrink-0 snap-start gap-1',
-            compact && 'w-24 gap-0.5'
+            'w-28 flex-shrink-0 snap-start gap-1 sm:w-32',
+            compact && 'w-24 gap-0.5 sm:w-24'
           ),
-        layout === 'landscape' && 'w-full gap-2',
+        layout === 'landscape' && 'w-full gap-1.5',
         layout === 'grid' && 'w-full gap-1'
       )}
     >
@@ -211,6 +209,8 @@ interface CuratedPlaylistRowProps {
   showUserShortcutCards?: boolean
   /** When false, only the card row is rendered (parent supplies HubZoneHeader). */
   showSectionTitle?: boolean
+  /** Mobile-only finger swipe overlay teaching horizontal scroll (first row). */
+  showSwipeHint?: boolean
 }
 
 export default function CuratedPlaylistRow({
@@ -219,11 +219,56 @@ export default function CuratedPlaylistRow({
   publicPlaylists,
   showUserShortcutCards = false,
   showSectionTitle = true,
+  showSwipeHint = false,
 }: CuratedPlaylistRowProps) {
-  const { t } = useLanguage()
+  const { t, isRtl } = useLanguage()
   const isLandscapeMobile = useLandscapeMobile()
   const { profile } = useAuthContext()
   const tsnioutFilterEnabled = profile?.tsniout_filter_enabled ?? false
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const peekingRef = useRef(false)
+  const [hintActive, setHintActive] = useState(false)
+
+  // Show hint shortly after mount. Dismisses on user scroll or after a few seconds.
+  useEffect(() => {
+    if (!showSwipeHint) return
+    const start = window.setTimeout(() => setHintActive(true), 300)
+    const autoHide = window.setTimeout(() => setHintActive(false), 6500)
+    return () => {
+      window.clearTimeout(start)
+      window.clearTimeout(autoHide)
+    }
+  }, [showSwipeHint])
+
+  useEffect(() => {
+    if (!showSwipeHint || !hintActive) return
+    const el = scrollRef.current
+    if (!el) return
+
+    const onScroll = () => {
+      if (peekingRef.current) return
+      setHintActive(false)
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+
+    const peekStart = window.setTimeout(() => {
+      peekingRef.current = true
+      const amount = isRtl ? -72 : 72
+      el.scrollBy({ left: amount, behavior: 'smooth' })
+      window.setTimeout(() => {
+        el.scrollBy({ left: -amount, behavior: 'smooth' })
+        window.setTimeout(() => {
+          peekingRef.current = false
+        }, 850)
+      }, 750)
+    }, 500)
+
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      window.clearTimeout(peekStart)
+      peekingRef.current = false
+    }
+  }, [showSwipeHint, hintActive, isRtl])
 
   if (!section && !hubZone) {
     throw new Error('CuratedPlaylistRow requires section or hubZone')
@@ -333,29 +378,26 @@ export default function CuratedPlaylistRow({
         </h3>
       )}
       {useMobileCarousel ? (
-        <div
-          className={mobileCarouselClass}
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {renderCards('scroll', cards, isLandscapeMobile)}
+        <div className="relative lg:hidden">
+          <div
+            ref={scrollRef}
+            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {renderCards('scroll', cards, isLandscapeMobile)}
+          </div>
+          {hintActive && <SwipeRowHint />}
         </div>
       ) : (
         <div className="grid grid-cols-4 gap-2 lg:hidden">
           {renderCards('grid')}
         </div>
       )}
-      <div
-        className={cn(
-          'hidden gap-4 lg:grid',
-          isDifficultySection
-            ? 'lg:grid-cols-4'
-            : 'lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6'
-        )}
-      >
+      <div className="hidden gap-3 lg:grid lg:grid-cols-[repeat(auto-fill,minmax(7.5rem,8.5rem))]">
         {renderCards('landscape', cards)}
       </div>
     </section>

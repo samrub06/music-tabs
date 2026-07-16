@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  Contrast,
   Globe,
-  LogOut,
   Menu,
   Moon,
   Search,
   Sun,
-  User,
+  Trophy,
+  Users,
 } from 'lucide-react'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useAuthContext } from '@/context/AuthContext'
@@ -18,8 +19,8 @@ import { useScrollChromeOptional } from '@/context/ScrollChromeContext'
 import { usePageHeaderOptional } from '@/context/PageHeaderContext'
 import { useTheme } from '@/context/ThemeContext'
 import { AppLogo } from '@/components/AppLogo'
-import CompactStatsDisplay from './gamification/CompactStatsDisplay'
 import HeaderLevelProgress from './gamification/HeaderLevelProgress'
+import type { ThemePreference } from '@/context/ThemeContext'
 import NotificationBell from './social/NotificationBell'
 import { Button } from '@/components/ui/button'
 import {
@@ -37,7 +38,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { GeistSans } from 'geist/font/sans'
 
 interface HeaderProps {
   onMenuClick?: () => void
@@ -119,8 +119,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { language, setLanguage, t } = useLanguage()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { user, profile, loading, signInWithGoogle, signOut } = useAuthContext()
+  const profileReady = Boolean(profile?.full_name?.trim())
+  const displayName = profile?.full_name?.trim() || t('common.user')
   const scrollChrome = useScrollChromeOptional()
   const pageHeaderOverride = usePageHeaderOptional()?.override ?? null
   const headerHidden = scrollChrome?.headerHidden ?? false
@@ -204,28 +206,24 @@ export default function Header({ onMenuClick }: HeaderProps) {
   )
 
   const brandMark = (
-    <Link
-      href="/"
+    <div
       className={cn(
-        'flex min-w-0 items-center gap-1 rounded-md pe-1 text-foreground transition-opacity hover:opacity-80',
+        'pointer-events-none flex min-w-0 select-none items-center gap-0 pe-1',
         usesAppSidebar && 'lg:hidden'
       )}
-      aria-label={t('common.backToHome')}
+      aria-hidden
     >
       <AppLogo
         variant="portrait"
         priority={isLandingPage}
-        className="h-6 w-6 shrink-0 object-contain sm:h-7 sm:w-7"
+        className="h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8"
       />
-      <span
-        className={cn(
-          GeistSans.className,
-          'truncate text-[13px] font-semibold tracking-[0.04em] text-foreground sm:text-sm'
-        )}
-      >
-        TABASCO
-      </span>
-    </Link>
+      <AppLogo
+        variant="text"
+        priority={isLandingPage}
+        className="-ms-1 h-8 w-auto max-w-[min(13.5rem,58vw)] shrink-0 object-contain object-left sm:-ms-1.5 sm:h-7 sm:max-w-[14rem]"
+      />
+    </div>
   )
 
   return (
@@ -256,7 +254,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           )
         )}
 
-        {!user && (
+        {!user && !isLandingPage && (
           <Button variant="ghost" size="icon" className="md:hidden" asChild>
             <Link href="/" aria-label={t('navigation.home')}>
               <Search className="h-5 w-5" />
@@ -281,7 +279,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {brandMark}
       </div>
 
-      <div className="flex flex-1 items-center justify-end gap-0 sm:gap-2">
+      <div className="flex flex-1 items-center justify-end gap-1.5 sm:gap-2">
         {user && <HeaderLevelProgress />}
 
         {user && <NotificationBell />}
@@ -306,53 +304,123 @@ export default function Header({ onMenuClick }: HeaderProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-[min(14rem,calc(100vw-1.5rem))]"
+                sideOffset={8}
+                className={cn(
+                  'w-[min(17.5rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl p-0',
+                  'border border-black/[0.08] bg-white text-foreground shadow-xl',
+                  'dark:border-white/[0.1] dark:bg-[#1c1c1c]'
+                )}
               >
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex min-w-0 flex-col space-y-1">
-                    <p className="truncate text-sm font-medium leading-none">
-                      {profile?.full_name || t('common.user')}
+                <div className="space-y-3 px-3.5 pb-3 pt-3.5">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="truncate text-sm font-semibold leading-tight">
+                      {displayName}
                     </p>
-                    <p className="truncate text-xs leading-none text-muted-foreground">
-                      {profile?.email}
-                    </p>
+                    {profile?.email ? (
+                      <p className="truncate text-xs leading-tight text-muted-foreground">
+                        {profile.email}
+                      </p>
+                    ) : null}
                   </div>
-                  <div className="mt-2 min-w-0 border-t border-border pt-2">
-                    <CompactStatsDisplay />
+                  <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                    <Link
+                      href="/profile"
+                      className={cn(
+                        'flex h-9 w-full cursor-pointer items-center justify-center rounded-full',
+                        'bg-neutral-100 text-sm font-medium text-foreground',
+                        'transition-colors hover:bg-neutral-200/90',
+                        'dark:bg-white/[0.1] dark:hover:bg-white/[0.14]',
+                        'focus:bg-neutral-200/90 dark:focus:bg-white/[0.14]'
+                      )}
+                    >
+                      {profileReady
+                        ? t('common.viewProfile')
+                        : t('common.setUpProfile')}
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+
+                <DropdownMenuSeparator className="mx-0 my-0 bg-black/[0.08] dark:bg-white/[0.1]" />
+
+                <div className="py-1">
+                  <DropdownMenuItem asChild className="mx-1 cursor-pointer gap-2.5 rounded-lg px-2.5 py-2.5">
+                    <Link href="/friends">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      {t('navigation.friends')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="mx-1 cursor-pointer gap-2.5 rounded-lg px-2.5 py-2.5">
+                    <Link href="/leaderboard">
+                      <Trophy className="h-4 w-4 text-muted-foreground" />
+                      {t('navigation.leaderboard')}
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+
+                <DropdownMenuSeparator className="mx-0 my-0 bg-black/[0.08] dark:bg-white/[0.1]" />
+
+                <div
+                  className="flex items-center justify-between gap-3 px-3.5 py-2.5"
+                  onPointerDown={(event) => event.preventDefault()}
+                >
+                  <span className="text-sm text-foreground">{t('common.theme')}</span>
+                  <div className="flex rounded-full bg-neutral-100 p-0.5 dark:bg-white/[0.08]">
+                    {(
+                      [
+                        { value: 'light', icon: Sun, label: t('common.lightMode') },
+                        { value: 'dark', icon: Moon, label: t('common.darkMode') },
+                        { value: 'system', icon: Contrast, label: t('common.systemMode') },
+                      ] as const
+                    ).map(({ value, icon: Icon, label }) => {
+                      const active = theme === value
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-label={label}
+                          aria-pressed={active}
+                          onClick={() => setTheme(value as ThemePreference)}
+                          className={cn(
+                            'inline-flex h-7 w-7 items-center justify-center rounded-full transition-colors',
+                            active
+                              ? 'bg-white text-foreground shadow-sm dark:bg-white/[0.16]'
+                              : 'text-muted-foreground hover:text-foreground'
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                        </button>
+                      )
+                    })}
                   </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">
-                    <User className="h-4 w-4" />
-                    {t('navigation.profile')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={toggleTheme}>
-                  {theme === 'dark' ? (
-                    <Sun className="h-4 w-4" />
-                  ) : (
-                    <Moon className="h-4 w-4" />
-                  )}
-                  {theme === 'dark' ? t('common.lightMode') : t('common.darkMode')}
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Globe className="h-4 w-4" />
-                    {t('common.selectLanguage')}
-                    <span className="ms-auto text-xs text-muted-foreground">
-                      {currentLanguage.flag}
-                    </span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-48">
-                    {languageMenuItems}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="h-4 w-4" />
-                  {t('auth.signOut')}
-                </DropdownMenuItem>
+                </div>
+
+                <DropdownMenuSeparator className="mx-0 my-0 bg-black/[0.08] dark:bg-white/[0.1]" />
+
+                <div className="py-1">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="mx-1 cursor-pointer gap-2.5 rounded-lg px-2.5 py-2.5">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <span className="flex-1 text-start">{t('common.language')}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {currentLanguage.flag}
+                      </span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent
+                      className={cn(
+                        'w-48 rounded-xl border border-black/[0.08] bg-white p-1 shadow-lg',
+                        'dark:border-white/[0.1] dark:bg-[#1c1c1c]'
+                      )}
+                    >
+                      {languageMenuItems}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuItem
+                    onClick={signOut}
+                    className="mx-1 cursor-pointer rounded-lg px-2.5 py-2.5"
+                  >
+                    {t('auth.signOut')}
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

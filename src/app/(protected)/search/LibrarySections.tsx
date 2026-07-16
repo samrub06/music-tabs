@@ -58,19 +58,24 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
   return (
     <>
-      <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
-        <HubZoneHeader zone="songbook" />
-        <CuratedPlaylistRow
-          hubZone="songbook"
-          publicPlaylists={publicPlaylists}
-          showSectionTitle={false}
-        />
-      </div>
-
       <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="israeli" />
         <CuratedPlaylistRow
           hubZone="israeli"
+          publicPlaylists={publicPlaylists}
+          showSectionTitle={false}
+          showSwipeHint
+        />
+      </div>
+
+      <Suspense fallback={null}>
+        <SpotifyComingSoonSection spotifyId={spotifyId} />
+      </Suspense>
+
+      <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
+        <HubZoneHeader zone="songbook" />
+        <CuratedPlaylistRow
+          hubZone="songbook"
           publicPlaylists={publicPlaylists}
           showSectionTitle={false}
         />
@@ -99,9 +104,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
       )}
       <PopularSongsSection songs={popularSongs} userId={userId} />
-      <Suspense fallback={null}>
-        <SpotifyComingSoonSection spotifyId={spotifyId} />
-      </Suspense>
     </>
   )
 }

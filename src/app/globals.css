@@ -140,6 +140,66 @@
   .overflow-scrollbar::-webkit-scrollbar-track {
     background-color: transparent;
   }
+
+  /* Library row: minimal swipe hint */
+  @keyframes swipe-hint-finger {
+    0%,
+    15% {
+      transform: translateX(8px);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateX(-10px);
+      opacity: 1;
+    }
+    85%,
+    100% {
+      transform: translateX(-16px);
+      opacity: 0.15;
+    }
+  }
+
+  @keyframes swipe-hint-finger-rtl {
+    0%,
+    15% {
+      transform: translateX(-8px);
+      opacity: 0.4;
+    }
+    50% {
+      transform: translateX(10px);
+      opacity: 1;
+    }
+    85%,
+    100% {
+      transform: translateX(16px);
+      opacity: 0.15;
+    }
+  }
+
+  @keyframes swipe-hint-fade {
+    0% {
+      opacity: 0;
+    }
+    12%,
+    78% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .animate-swipe-hint-finger {
+    animation: swipe-hint-finger 1.4s ease-in-out infinite;
+  }
+
+  .animate-swipe-hint-finger-rtl {
+    animation: swipe-hint-finger-rtl 1.4s ease-in-out infinite;
+  }
+
+  .animate-swipe-hint-fade {
+    animation: swipe-hint-fade 6s ease-in-out both;
+  }
 }
 
 @layer base {

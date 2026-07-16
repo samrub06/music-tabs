@@ -23,7 +23,8 @@ export default function RootLayout({
               (function() {
                 try {
                   const theme = localStorage.getItem('theme');
-                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (theme === 'dark' || ((theme === 'system' || !theme) && prefersDark)) {
                     document.documentElement.classList.add('dark');
                   }
                   const storedLanguage = localStorage.getItem('language');

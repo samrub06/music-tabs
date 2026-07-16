@@ -17,18 +17,18 @@ export function absoluteUrl(path: string): string {
   return `${getSiteUrl()}${normalizedPath}`
 }
 
-/** Static brand assets in `public/` — keep in sync with logo_tabasco sources. */
+/** Static brand assets in `public/` — keep in sync with media/logo_tabasco* sources. */
 export const BRAND_ASSETS = {
   logo: '/logo_tabasco.png',
   logoSvg: '/logo_tabasco.svg',
+  logoText: '/logo_tabasco_text.png',
   icon: '/brand/icon.png',
   appleTouchIcon: '/brand/apple-touch-icon.png',
   /**
-   * Opaque full-bleed OG (no transparency). Cache-bust query so messengers
-   * that cached the old bordered preview pick up the new file.
+   * Opaque dark full-bleed OG (no white plate). Cache-bust when logo changes.
    */
-  openGraph: '/brand/og-1200x630.png?v=3',
-  openGraphSquare: '/brand/og.png?v=3',
+  openGraph: '/brand/og-1200x630.png?v=4',
+  openGraphSquare: '/brand/og.png?v=4',
 } as const
 
 export const defaultMetadata: Metadata = {
@@ -41,10 +41,10 @@ export const defaultMetadata: Metadata = {
   applicationName: SITE_NAME,
   icons: {
     icon: [
-      { url: `${BRAND_ASSETS.icon}?v=3`, type: 'image/png', sizes: '512x512' },
-      { url: '/brand/favicon-32.png?v=3', type: 'image/png', sizes: '32x32' },
+      { url: `${BRAND_ASSETS.icon}?v=4`, type: 'image/png', sizes: '512x512' },
+      { url: '/brand/favicon-32.png?v=4', type: 'image/png', sizes: '32x32' },
     ],
-    apple: [{ url: `${BRAND_ASSETS.appleTouchIcon}?v=3`, type: 'image/png', sizes: '180x180' }],
+    apple: [{ url: `${BRAND_ASSETS.appleTouchIcon}?v=4`, type: 'image/png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',

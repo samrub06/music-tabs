@@ -12,7 +12,7 @@ export const HUB_ZONE_SECTION_IDS: Record<HubZone, string> = {
   international: 'hub-zone-international',
 }
 
-const HUB_ZONES: HubZone[] = ['songbook', 'israeli', 'international']
+const HUB_ZONES: HubZone[] = ['israeli', 'songbook', 'international']
 
 const zoneTitleKey: Record<HubZone, string> = {
   songbook: 'library.hubSongbookTab',
@@ -27,7 +27,7 @@ interface HubZoneNavProps {
 
 export function HubZoneNav({ scrollContainerRef, className }: HubZoneNavProps) {
   const { t } = useLanguage()
-  const [activeZone, setActiveZone] = useState<HubZone>('songbook')
+  const [activeZone, setActiveZone] = useState<HubZone>('israeli')
 
   useEffect(() => {
     const root = scrollContainerRef.current
