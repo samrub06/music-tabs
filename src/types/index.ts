@@ -354,7 +354,8 @@ export type ActivityPeriod = '7d' | '30d' | '90d' | '12m' | 'all'
 export interface UserActivityCharts {
   timeSpentMinutes: number;
   songsAddedByMonth: Array<{ label: string; count: number }>;
-  activityByWeekday: Array<{ label: string; count: number }>;
+  activityOverTime: Array<{ label: string; count: number }>;
+  songsByGenre: Array<{ label: string; count: number }>;
   period: ActivityPeriod;
 }
 

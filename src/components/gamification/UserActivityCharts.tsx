@@ -112,6 +112,113 @@ function BarChart({ bars }: { bars: Array<{ label: string; count: number }> }) {
   )
 }
 
+const GENRE_COLORS = [
+  'hsl(var(--primary))',
+  '#e07a5f',
+  '#3d8b7a',
+  '#f2cc8f',
+  '#81b29a',
+  '#c17c74',
+  '#6d6875',
+]
+
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+}
+
+function describeSlice(
+  cx: number,
+  cy: number,
+  r: number,
+  startAngle: number,
+  endAngle: number
+): string {
+  const start = polarToCartesian(cx, cy, r, endAngle)
+  const end = polarToCartesian(cx, cy, r, startAngle)
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0
+  return [
+    `M ${cx} ${cy}`,
+    `L ${start.x} ${start.y}`,
+    `A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`,
+    'Z',
+  ].join(' ')
+}
+
+function PieChart({
+  slices,
+  localizeLabel,
+}: {
+  slices: Array<{ label: string; count: number }>
+  localizeLabel: (label: string) => string
+}) {
+  const total = slices.reduce((sum, s) => sum + s.count, 0)
+
+  if (total === 0 || slices.length === 0) {
+    return (
+      <div className="flex h-36 items-center justify-center text-xs text-muted-foreground">
+        —
+      </div>
+    )
+  }
+
+  const size = 140
+  const cx = size / 2
+  const cy = size / 2
+  const r = 58
+  let angle = 0
+
+  const arcs = slices.map((slice, index) => {
+    const sweep = (slice.count / total) * 360
+    const startAngle = angle
+    const endAngle = angle + sweep
+    angle = endAngle
+    const isFullCircle = sweep >= 359.99
+    return {
+      ...slice,
+      color: GENRE_COLORS[index % GENRE_COLORS.length],
+      path: isFullCircle
+        ? undefined
+        : describeSlice(cx, cy, r, startAngle, endAngle),
+      isFullCircle,
+    }
+  })
+
+  return (
+    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-4">
+      <svg viewBox={`0 0 ${size} ${size}`} className="h-36 w-36 shrink-0" aria-hidden>
+        {arcs.map((arc) =>
+          arc.isFullCircle ? (
+            <circle key={arc.label} cx={cx} cy={cy} r={r} fill={arc.color} />
+          ) : (
+            <path key={arc.label} d={arc.path} fill={arc.color} />
+          )
+        )}
+      </svg>
+      <ul className="w-full space-y-1.5 text-xs">
+        {arcs.map((arc) => {
+          const pct = Math.round((arc.count / total) * 100)
+          return (
+            <li key={arc.label} className="flex items-center gap-2">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                style={{ backgroundColor: arc.color }}
+                aria-hidden
+              />
+              <span className="min-w-0 flex-1 truncate text-foreground">
+                {localizeLabel(arc.label)}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">
+                {pct}% · {arc.count}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 export default function UserActivityCharts({ data, className }: UserActivityChartsProps) {
   const { t } = useLanguage()
   const [period, setPeriod] = useState<ActivityPeriod>('12m')
@@ -177,9 +284,29 @@ export default function UserActivityCharts({ data, className }: UserActivityChar
 
         <div>
           <p className="mb-2 text-xs font-medium text-muted-foreground">
-            {t('profile.activityByDay')}
+            {period === '7d' || period === '30d'
+              ? t('profile.activityOverTimeDaily')
+              : t('profile.activityOverTimeMonthly')}
           </p>
-          <BarChart bars={chartData.activityByWeekday} />
+          {period === '7d' ? (
+            <BarChart bars={chartData.activityOverTime ?? []} />
+          ) : (
+            <LineChart points={chartData.activityOverTime ?? []} />
+          )}
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
+            {t('profile.songsByGenre')}
+          </p>
+          <PieChart
+            slices={chartData.songsByGenre ?? []}
+            localizeLabel={(label) => {
+              if (label === 'Unknown') return t('profile.genreUnknown')
+              if (label === 'Other') return t('profile.genreOther')
+              return label
+            }}
+          />
         </div>
       </div>
     </div>

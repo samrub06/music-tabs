@@ -105,7 +105,12 @@
     "spotifyImportPlaylists": "ייבוא פלייליסטים",
     "timeSpent": "זמן שהושקע",
     "songsAddedChart": "שירים שנוספו לאורך זמן",
-    "activityByDay": "פעילות לפי יום בשבוע",
+    "activityByDay": "פעילות שירים לפי יום בשבוע",
+    "activityOverTimeDaily": "פעילות שירים לפי יום",
+    "activityOverTimeMonthly": "פעילות שירים לפי חודש",
+    "songsByGenre": "שירים לפי ז'אנר",
+    "genreUnknown": "לא ידוע",
+    "genreOther": "אחר",
     "activityPeriod": {
       "7d": "7 הימים האחרונים",
       "30d": "30 הימים האחרונים",
@@ -453,7 +458,12 @@
     "spotifyImportPlaylists": "ייבוא פלייליסטים",
     "timeSpent": "זמן שהושקע",
     "songsAddedChart": "שירים שנוספו לאורך זמן",
-    "activityByDay": "פעילות לפי יום בשבוע"
+    "activityByDay": "פעילות שירים לפי יום בשבוע",
+    "activityOverTimeDaily": "פעילות שירים לפי יום",
+    "activityOverTimeMonthly": "פעילות שירים לפי חודש",
+    "songsByGenre": "שירים לפי ז'אנר",
+    "genreUnknown": "לא ידוע",
+    "genreOther": "אחר"
   },
   "jamLab": {
     "title": "חדר ג׳אם סודי",

@@ -91,7 +91,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
         <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
         <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
-        <ExploreHubCta />
       </div>
 
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
@@ -102,6 +101,8 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           userId={userId}
         />
       )}
+
+      <ExploreHubCta />
 
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />
       <PopularSongsSection songs={popularSongs} userId={userId} />

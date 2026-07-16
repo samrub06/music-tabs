@@ -105,7 +105,12 @@
     "spotifyImportPlaylists": "Importer des playlists",
     "timeSpent": "Temps passé",
     "songsAddedChart": "Chansons ajoutées",
-    "activityByDay": "Activité par jour",
+    "activityByDay": "Activité chansons par jour",
+    "activityOverTimeDaily": "Activité chansons par jour",
+    "activityOverTimeMonthly": "Activité chansons par mois",
+    "songsByGenre": "Chansons par genre",
+    "genreUnknown": "Inconnu",
+    "genreOther": "Autre",
     "activityPeriod": {
       "7d": "7 derniers jours",
       "30d": "30 derniers jours",
@@ -453,7 +458,12 @@
     "spotifyImportPlaylists": "Importer des playlists",
     "timeSpent": "Temps passé",
     "songsAddedChart": "Chansons ajoutées",
-    "activityByDay": "Activité par jour"
+    "activityByDay": "Activité chansons par jour",
+    "activityOverTimeDaily": "Activité chansons par jour",
+    "activityOverTimeMonthly": "Activité chansons par mois",
+    "songsByGenre": "Chansons par genre",
+    "genreUnknown": "Inconnu",
+    "genreOther": "Autre"
   },
   "jamLab": {
     "title": "Salle de jam secrète",

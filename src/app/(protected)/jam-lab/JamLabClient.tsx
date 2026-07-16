@@ -15,6 +15,13 @@ import { cn } from '@/lib/utils'
 import type { Song } from '@/types'
 import { triggerXpConfetti } from '@/utils/triggerXpConfetti'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   playBass,
   playBell,
   playDrums,
@@ -310,7 +317,7 @@ function InstrumentPad({
   }, [])
 
   return (
-    <div className="relative">
+    <div className="relative aspect-square min-h-0">
       {notes.map((note) => (
         <span
           key={note.id}
@@ -336,7 +343,7 @@ function InstrumentPad({
       ))}
       {shockwave ? (
         <span
-          className="pointer-events-none absolute inset-0 z-[5] rounded-xl border-2 border-white/80 animate-explorer-shockwave"
+          className="pointer-events-none absolute inset-0 z-[5] border-2 border-white/80 animate-explorer-shockwave"
           aria-hidden
         />
       ) : null}
@@ -346,16 +353,18 @@ function InstrumentPad({
         disabled={disabled}
         aria-label={label}
         className={cn(
-          'relative z-0 flex min-h-[4.5rem] w-full items-center justify-center rounded-xl px-1.5 py-3 text-center transition-transform duration-150',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2',
+          'relative z-0 flex h-full w-full items-center justify-center px-1.5 py-2 text-center transition-[filter,transform] duration-150',
+          'focus-visible:z-[1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/50',
           'disabled:cursor-not-allowed disabled:opacity-45',
           color,
-          pulse && 'scale-105',
-          !disabled && 'hover:brightness-110 active:scale-95'
+          pulse && 'brightness-125',
+          !disabled && 'hover:brightness-110 active:brightness-90'
         )}
         data-instrument={id}
       >
-        <span className="text-xs font-bold leading-tight sm:text-sm">{label}</span>
+        <span className="text-[11px] font-bold uppercase tracking-wide leading-tight sm:text-xs">
+          {label}
+        </span>
       </button>
     </div>
   )
@@ -506,8 +515,8 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
             />
           ) : null}
 
-          <div className="relative z-10 flex items-center gap-2 p-4 sm:gap-3 sm:p-5">
-            <div className="min-w-0 flex-1 space-y-1">
+          <div className="relative z-10 flex min-h-[7.5rem] items-center justify-between gap-2 p-4 sm:min-h-[8.5rem] sm:gap-3 sm:p-5">
+            <div className="relative z-10 min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
                   <MusicalNoteIcon className="h-4 w-4" />
@@ -527,18 +536,21 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
               </p>
             </div>
 
-            <div className="flex shrink-0 items-center justify-center" aria-hidden>
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
+              aria-hidden
+            >
               <Image
                 src="/game.png"
                 alt=""
-                width={96}
-                height={96}
-                className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+                width={160}
+                height={160}
+                className="h-28 w-28 object-contain sm:h-32 sm:w-32"
                 priority={false}
               />
             </div>
 
-            <div className="flex shrink-0 justify-end">
+            <div className="relative z-10 flex shrink-0 justify-end">
               <JamRoundTimer
                 secondsLeft={secondsLeft}
                 totalSeconds={ROUND_SECONDS}
@@ -557,26 +569,33 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
           </p>
         ) : null}
 
-        {roundState === 'ended' && (
-          <div
+        <Dialog
+          open={roundState === 'ended'}
+          onOpenChange={(open) => {
+            if (!open) playAgain()
+          }}
+        >
+          <DialogContent
+            showCloseButton={false}
             className={cn(
-              'space-y-2 rounded-2xl border p-4 text-center',
+              'max-w-sm rounded-2xl border p-5 text-center sm:rounded-2xl',
               isNewRecord
                 ? 'border-amber-500/40 bg-amber-500/10'
-                : 'border-black/[0.06] bg-muted/40 dark:border-white/[0.08] dark:bg-white/[0.04]'
+                : 'border-black/[0.06] bg-background dark:border-white/[0.08]'
             )}
-            role="status"
           >
-            <p className="text-sm font-semibold text-foreground">
-              {isNewRecord
-                ? t('jamLab.newRecordTitle')
-                : t('jamLab.roundOverTitle')}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isNewRecord
-                ? t('jamLab.newRecordBody').replace('{count}', String(score))
-                : t('jamLab.roundOverBody').replace('{count}', String(score))}
-            </p>
+            <DialogHeader className="space-y-2 text-center sm:text-center">
+              <DialogTitle className="text-base font-semibold text-foreground sm:text-lg">
+                {isNewRecord
+                  ? t('jamLab.newRecordTitle')
+                  : t('jamLab.roundOverTitle')}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {isNewRecord
+                  ? t('jamLab.newRecordBody').replace('{count}', String(score))
+                  : t('jamLab.roundOverBody').replace('{count}', String(score))}
+              </DialogDescription>
+            </DialogHeader>
             {isNewRecord && (
               <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
                 {t('jamLab.guinnessBadge')}
@@ -585,30 +604,46 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
             <button
               type="button"
               onClick={playAgain}
-              className="mt-1 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             >
               {t('jamLab.playAgain')}
             </button>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         <section className="space-y-3">
           <h2 className="text-base font-semibold text-foreground sm:text-lg">
             {t('jamLab.instrumentsTitle')}
           </h2>
 
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-2.5">
-            {INSTRUMENTS.map((instrument) => (
-              <InstrumentPad
-                key={instrument.id}
-                id={instrument.id}
-                label={t(`jamLab.instruments.${instrument.id}`)}
-                color={instrument.color}
-                play={instrument.play}
-                disabled={roundState === 'ended'}
-                onHit={handleHit}
-              />
-            ))}
+          {/* Synth-style pad matrix: 1px gutters act as fine grid lines */}
+          <div
+            className={cn(
+              'overflow-hidden rounded-lg border border-neutral-700/80 bg-neutral-700/80',
+              'dark:border-neutral-600 dark:bg-neutral-600'
+            )}
+          >
+            <div className="grid grid-cols-4 gap-px">
+              {INSTRUMENTS.map((instrument) => (
+                <InstrumentPad
+                  key={instrument.id}
+                  id={instrument.id}
+                  label={t(`jamLab.instruments.${instrument.id}`)}
+                  color={instrument.color}
+                  play={instrument.play}
+                  disabled={roundState === 'ended'}
+                  onHit={handleHit}
+                />
+              ))}
+              {/* Fill last row so the matrix stays rectangular (13 → 16) */}
+              {Array.from({ length: (4 - (INSTRUMENTS.length % 4)) % 4 }, (_, i) => (
+                <div
+                  key={`empty-${i}`}
+                  className="aspect-square bg-neutral-900/90 dark:bg-neutral-950"
+                  aria-hidden
+                />
+              ))}
+            </div>
           </div>
         </section>
 

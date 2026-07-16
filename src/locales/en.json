@@ -105,7 +105,12 @@
     "spotifyImportPlaylists": "Import playlists",
     "timeSpent": "Time spent",
     "songsAddedChart": "Songs added over time",
-    "activityByDay": "Activity by day of week",
+    "activityByDay": "Song activity by day of week",
+    "activityOverTimeDaily": "Song activity by day",
+    "activityOverTimeMonthly": "Song activity by month",
+    "songsByGenre": "Songs by genre",
+    "genreUnknown": "Unknown",
+    "genreOther": "Other",
     "activityPeriod": {
       "7d": "Last 7 days",
       "30d": "Last 30 days",

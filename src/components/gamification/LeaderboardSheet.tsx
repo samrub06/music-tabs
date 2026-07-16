@@ -9,10 +9,12 @@ import LeaderboardUserDialog from './LeaderboardUserDialog'
 import { BottomSheetDippedTop } from '@/components/ui/BottomSheetDippedTop'
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface LeaderboardSheetProps {
@@ -73,10 +75,10 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
           overlayClassName="backdrop-blur-sm"
           className="!bottom-0 z-[60] flex max-h-[85vh] flex-col gap-0 overflow-visible rounded-t-[1.75rem] border-0 border-t-0 bg-transparent p-0 shadow-none"
         >
-          <BottomSheetDippedTop onClose={handleClose} hideBorder />
+          <BottomSheetDippedTop hideBorder showClose={false} />
 
           <div className="flex max-h-[calc(85vh-2rem)] min-h-0 flex-1 flex-col overflow-hidden bg-background">
-            <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 sm:px-6">
+            <div className="flex min-h-0 flex-1 flex-col px-4 pb-3 sm:px-6">
               <SheetHeader className="pb-3 pt-1">
                 <SheetTitle className="text-center text-lg">
                   {t('leaderboard.title')}
@@ -210,6 +212,19 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
                   {t('gamification.EMPTY_LEADERBOARD')}
                 </div>
               )}
+
+              <div className="shrink-0 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full rounded-xl"
+                    onClick={handleClose}
+                  >
+                    {t('common.close')}
+                  </Button>
+                </SheetClose>
+              </div>
             </div>
           </div>
         </SheetContent>

@@ -445,9 +445,8 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     userId: string,
     period: ActivityPeriod = '12m'
   ): Promise<UserActivityCharts> {
-    const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
-    const activityByWeekday = weekdayLabels.map((label) => ({ label, count: 0 }))
     const songsByBucket = new Map<string, number>()
+    const activityByBucket = new Map<string, number>()
 
     const now = new Date()
     const since = (() => {
@@ -468,7 +467,9 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
 
     const useDailyBuckets = period === '7d' || period === '30d'
 
-    let songsQuery = (client.from('songs') as any).select('created_at').eq('user_id', userId)
+    let songsQuery = (client.from('songs') as any)
+      .select('created_at, genre')
+      .eq('user_id', userId)
     let xpQuery = (client.from('xp_transactions') as any)
       .select('created_at, action_type')
       .eq('user_id', userId)
@@ -485,46 +486,80 @@ export const gamificationRepo = (client: SupabaseClient<Database>) => ({
     if (songsResult.error) throw songsResult.error
     if (xpResult.error) throw xpResult.error
 
-    for (const row of (songsResult.data || []) as Array<{ created_at: string }>) {
-      const date = new Date(row.created_at)
-      const key = useDailyBuckets
+    const genreCounts = new Map<string, number>()
+
+    const toBucketKey = (date: Date) =>
+      useDailyBuckets
         ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
         : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
+    for (const row of (songsResult.data || []) as Array<{
+      created_at: string
+      genre: string | null
+    }>) {
+      const date = new Date(row.created_at)
+      const key = toBucketKey(date)
       songsByBucket.set(key, (songsByBucket.get(key) ?? 0) + 1)
+
+      const genreLabel = row.genre?.trim() || 'Unknown'
+      genreCounts.set(genreLabel, (genreCounts.get(genreLabel) ?? 0) + 1)
     }
 
     let viewCount = 0
     for (const row of (xpResult.data || []) as Array<{ created_at: string; action_type: string }>) {
       const date = new Date(row.created_at)
-      activityByWeekday[date.getDay()].count += 1
+      const key = toBucketKey(date)
+      activityByBucket.set(key, (activityByBucket.get(key) ?? 0) + 1)
       if (row.action_type === 'view_song') viewCount += 1
     }
 
     const maxPoints = useDailyBuckets ? (period === '7d' ? 7 : 30) : 12
-    const sortedBuckets = Array.from(songsByBucket.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-maxPoints)
-      .map(([key, count]) => {
-        if (useDailyBuckets) {
-          const [year, month, day] = key.split('-')
-          const label = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString(
-            undefined,
-            { month: 'short', day: 'numeric' }
-          )
+
+    const mapBuckets = (bucketMap: Map<string, number>) =>
+      Array.from(bucketMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-maxPoints)
+        .map(([key, count]) => {
+          if (useDailyBuckets) {
+            const [year, month, day] = key.split('-')
+            const label = new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString(
+              undefined,
+              { month: 'short', day: 'numeric' }
+            )
+            return { label, count }
+          }
+          const [year, month] = key.split('-')
+          const label = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString(undefined, {
+            month: 'short',
+            year: '2-digit',
+          })
           return { label, count }
-        }
-        const [year, month] = key.split('-')
-        const label = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString(undefined, {
-          month: 'short',
-          year: '2-digit',
         })
-        return { label, count }
-      })
+
+    const MAX_GENRES = 6
+    const sortedGenres = Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1])
+    const songsByGenre: Array<{ label: string; count: number }> = []
+    if (sortedGenres.length <= MAX_GENRES) {
+      for (const [label, count] of sortedGenres) {
+        songsByGenre.push({ label, count })
+      }
+    } else {
+      for (const [label, count] of sortedGenres.slice(0, MAX_GENRES - 1)) {
+        songsByGenre.push({ label, count })
+      }
+      const otherCount = sortedGenres
+        .slice(MAX_GENRES - 1)
+        .reduce((sum, [, count]) => sum + count, 0)
+      if (otherCount > 0) {
+        songsByGenre.push({ label: 'Other', count: otherCount })
+      }
+    }
 
     return {
       timeSpentMinutes: viewCount * 4,
-      songsAddedByMonth: sortedBuckets,
-      activityByWeekday: [...activityByWeekday],
+      songsAddedByMonth: mapBuckets(songsByBucket),
+      activityOverTime: mapBuckets(activityByBucket),
+      songsByGenre,
       period,
     }
   },

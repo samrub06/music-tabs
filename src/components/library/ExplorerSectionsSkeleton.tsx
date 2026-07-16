@@ -51,11 +51,13 @@ function VerticalListSkeleton() {
   )
 }
 
+/** Mirrors LibrarySections order: hubs → Selected for you → lists */
 export default function ExplorerSectionsSkeleton() {
   return (
     <div className="w-full">
       <LibraryGridSkeleton />
-      <VerticalListSkeleton />
+      <LibraryGridSkeleton />
+      <LibraryGridSkeleton />
       <FeaturedSongSkeleton />
       <VerticalListSkeleton />
       <HorizontalSliderSkeleton />
