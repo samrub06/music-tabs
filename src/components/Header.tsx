@@ -221,12 +221,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <AppLogo
         variant="portrait"
         priority={isLandingPage}
-        className="h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8"
+        className="h-9 w-9 shrink-0 object-contain sm:h-8 sm:w-8"
       />
       <AppLogo
         variant="text"
         priority={isLandingPage}
-        className="-ms-1 h-8 w-auto max-w-[min(13.5rem,58vw)] shrink-0 object-contain object-left sm:-ms-1.5 sm:h-7 sm:max-w-[14rem]"
+        className="-ms-1 h-9 w-auto max-w-[min(17rem,68vw)] shrink-0 object-contain object-left sm:-ms-1.5 sm:h-7 sm:max-w-[14rem]"
       />
     </div>
   )
@@ -234,11 +234,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-20 flex h-11 shrink-0 items-center gap-0.5 overflow-visible bg-background px-2 sm:gap-2 sm:px-3',
+        'sticky top-0 z-20 flex h-12 shrink-0 items-center gap-0.5 overflow-visible bg-background px-2 sm:h-11 sm:gap-2 sm:px-3',
         hideHeaderOnScroll && 'max-lg:transition-[transform,margin,height] max-lg:duration-300 max-lg:ease-out',
         hideHeaderOnScroll &&
           headerHidden &&
-          'max-lg:-translate-y-full max-lg:-mb-11 max-lg:h-0 max-lg:min-h-0 max-lg:overflow-hidden max-lg:pointer-events-none'
+          'max-lg:-translate-y-full max-lg:-mb-12 max-lg:h-0 max-lg:min-h-0 max-lg:overflow-hidden max-lg:pointer-events-none'
       )}
     >
       <div className="flex min-w-0 flex-1 items-center gap-0.5 sm:gap-1">

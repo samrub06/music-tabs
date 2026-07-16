@@ -58,6 +58,7 @@ import {
   useRecordSongPromo,
 } from '@/components/practice/RecordSongPromoBanner';
 import { SignInPromoBanner } from '@/components/auth/SignInPromoBanner';
+import { SONG_RECORDING_ENABLED } from '@/lib/featureFlags';
 import { usePracticeAudio } from '@/lib/hooks/usePracticeAudio';
 import { SongStoryCard } from './SongStoryCard';
 import { StarRatingDisplay } from './StarRatingDisplay';
@@ -991,9 +992,12 @@ export default function SongContent({
                 phase={recordPromoPhase}
                 onSnakeFilled={markRecordPromoReady}
                 onDismiss={collapseRecordPromo}
-                onStartRecording={() => recordStartRef.current?.()}
-                isRecording={recordIsActive}
-                disabled={!recordReady}
+                onStartRecording={() => {
+                  if (!SONG_RECORDING_ENABLED) return
+                  recordStartRef.current?.()
+                }}
+                isRecording={SONG_RECORDING_ENABLED && recordIsActive}
+                disabled={!SONG_RECORDING_ENABLED || !recordReady}
               />
             ) : null}
             {(practicePromoPhase === 'chip' ||
@@ -1146,12 +1150,12 @@ export default function SongContent({
                 ) : null}
                 </div>
 
-                {isAuthenticated ? (
+                {isAuthenticated && SONG_RECORDING_ENABLED ? (
                   <SongRecordingPanel
                     songId={transposedSong.id}
                     lineCount={practiceLineCount}
                     hidePromoBanner
-                    showFallbackStart={recordPromoPhase === 'gone'}
+                    showFallbackStart={false}
                     onControlsReady={handleRecordControlsReady}
                     onRecordingReady={(recording, playbackUrl) => {
                       setSelectedRecording(recording);

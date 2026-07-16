@@ -227,7 +227,7 @@ export function RecordSongBanner({
               <button
                 type="button"
                 disabled
-                className="inline-flex cursor-default items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
+                className="inline-flex cursor-default items-center gap-1.5 rounded-full bg-red-600/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
               >
                 {t('common.comingSoon')}
               </button>

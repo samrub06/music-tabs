@@ -89,8 +89,6 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           showUserShortcutCards={!!userId}
           showSectionTitle={false}
         />
-        <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
-        <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
       </div>
 
       <FeaturedSongSection featuredSong={featuredSong} userId={userId} />
@@ -102,6 +100,8 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
         />
       )}
 
+      <CuratedPlaylistRow section="decade" publicPlaylists={publicPlaylists} />
+      <CuratedPlaylistRow section="difficulty" publicPlaylists={publicPlaylists} />
       <ExploreHubCta />
 
       <RecentSongsSection songs={recentSongsWithLibraryStatus} userId={userId} />

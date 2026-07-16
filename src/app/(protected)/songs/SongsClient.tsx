@@ -563,7 +563,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         <div
           className={cn(
             'flex flex-1 flex-col min-h-0 overflow-hidden min-w-0',
-            isLandscapeMobile ? 'p-1.5' : 'p-3 sm:p-6'
+            isLandscapeMobile ? 'px-1.5 pt-1.5' : 'px-3 pt-3 sm:px-6 sm:pt-1'
           )}
         >
         <div

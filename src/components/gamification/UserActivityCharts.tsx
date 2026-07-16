@@ -152,6 +152,7 @@ function PieChart({
   slices: Array<{ label: string; count: number }>
   localizeLabel: (label: string) => string
 }) {
+  const [hoveredLabel, setHoveredLabel] = useState<string | null>(null)
   const total = slices.reduce((sum, s) => sum + s.count, 0)
 
   if (total === 0 || slices.length === 0) {
@@ -181,25 +182,91 @@ function PieChart({
         ? undefined
         : describeSlice(cx, cy, r, startAngle, endAngle),
       isFullCircle,
+      midAngle: startAngle + sweep / 2,
     }
   })
 
+  const hovered = arcs.find((a) => a.label === hoveredLabel) ?? null
+  const hoveredPct = hovered ? Math.round((hovered.count / total) * 100) : 0
+
   return (
     <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:gap-4">
-      <svg viewBox={`0 0 ${size} ${size}`} className="h-36 w-36 shrink-0" aria-hidden>
-        {arcs.map((arc) =>
-          arc.isFullCircle ? (
-            <circle key={arc.label} cx={cx} cy={cy} r={r} fill={arc.color} />
-          ) : (
-            <path key={arc.label} d={arc.path} fill={arc.color} />
-          )
-        )}
-      </svg>
+      <div className="relative shrink-0">
+        <svg
+          viewBox={`0 0 ${size} ${size}`}
+          className="h-36 w-36"
+          role="img"
+          aria-label="Songs by genre"
+          onMouseLeave={() => setHoveredLabel(null)}
+        >
+          {arcs.map((arc) => {
+            const isHovered = hoveredLabel === arc.label
+            const dimmed = hoveredLabel != null && !isHovered
+            return arc.isFullCircle ? (
+              <circle
+                key={arc.label}
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill={arc.color}
+                opacity={dimmed ? 0.35 : 1}
+                className="cursor-pointer transition-opacity"
+                onMouseEnter={() => setHoveredLabel(arc.label)}
+                onFocus={() => setHoveredLabel(arc.label)}
+                tabIndex={0}
+              >
+                <title>
+                  {localizeLabel(arc.label)} — {Math.round((arc.count / total) * 100)}% · {arc.count}
+                </title>
+              </circle>
+            ) : (
+              <path
+                key={arc.label}
+                d={arc.path}
+                fill={arc.color}
+                opacity={dimmed ? 0.35 : 1}
+                stroke={isHovered ? 'hsl(var(--background))' : 'transparent'}
+                strokeWidth={isHovered ? 2 : 0}
+                className="cursor-pointer transition-opacity"
+                onMouseEnter={() => setHoveredLabel(arc.label)}
+                onFocus={() => setHoveredLabel(arc.label)}
+                tabIndex={0}
+              >
+                <title>
+                  {localizeLabel(arc.label)} — {Math.round((arc.count / total) * 100)}% · {arc.count}
+                </title>
+              </path>
+            )
+          })}
+        </svg>
+        {hovered ? (
+          <div
+            className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-max max-w-[9rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-popover px-2.5 py-1.5 text-center shadow-md"
+            role="tooltip"
+          >
+            <p className="truncate text-xs font-semibold text-foreground">
+              {localizeLabel(hovered.label)}
+            </p>
+            <p className="text-[10px] tabular-nums text-muted-foreground">
+              {hoveredPct}% · {hovered.count}
+            </p>
+          </div>
+        ) : null}
+      </div>
       <ul className="w-full space-y-1.5 text-xs">
         {arcs.map((arc) => {
           const pct = Math.round((arc.count / total) * 100)
+          const isHovered = hoveredLabel === arc.label
           return (
-            <li key={arc.label} className="flex items-center gap-2">
+            <li
+              key={arc.label}
+              className={cn(
+                'flex cursor-default items-center gap-2 rounded-md px-1 py-0.5 transition-colors',
+                isHovered && 'bg-muted'
+              )}
+              onMouseEnter={() => setHoveredLabel(arc.label)}
+              onMouseLeave={() => setHoveredLabel(null)}
+            >
               <span
                 className="h-2.5 w-2.5 shrink-0 rounded-sm"
                 style={{ backgroundColor: arc.color }}

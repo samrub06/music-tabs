@@ -18,6 +18,7 @@ import {
 import type { SongLineMarker, SongRecording } from '@/types'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { SONG_RECORDING_ENABLED } from '@/lib/featureFlags'
 
 type RecordingWithUrl = SongRecording & { playbackUrl: string | null }
 
@@ -301,6 +302,10 @@ export function SongRecordingPanel({
         setError(t('songContent.recordingDeleteError'))
       }
     })
+  }
+
+  if (!SONG_RECORDING_ENABLED) {
+    return null
   }
 
   return (
