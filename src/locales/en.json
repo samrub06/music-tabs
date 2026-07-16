@@ -435,6 +435,31 @@
     },
     "spotifyImportPlaylists": "Import playlists"
   },
+  "jamLab": {
+    "title": "Secret jam room",
+    "subtitle": "You poked the guitar too many times. Fine — make some noise.",
+    "hitCount": "{count} hits · still going?",
+    "stopNonsense": "Alright, enough silliness.",
+    "stopNonsenseHint": "Go back to the explorer and stop messing around.",
+    "backToExplorer": "Back to explorer",
+    "tryRealSong": "Or try a real song instead",
+    "openSong": "Open",
+    "instruments": {
+      "guitar": "Guitar",
+      "piano": "Piano",
+      "drums": "Drums",
+      "bass": "Bass",
+      "trumpet": "Trumpet",
+      "violin": "Violin",
+      "sax": "Sax",
+      "flute": "Flute",
+      "ukulele": "Ukulele",
+      "synth": "Synth",
+      "marimba": "Marimba",
+      "bell": "Bell",
+      "harp": "Harp"
+    }
+  },
   "spotifyImport": {
     "title": "Spotify import",
     "description": "Pick a Spotify playlist and import matching guitar tabs into your library.",

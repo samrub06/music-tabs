@@ -553,33 +553,26 @@ export default function ChordsClient({
                     className="shrink-0"
                   />
                 </div>
-                <div
-                  className="flex rounded-full bg-muted/80 p-0.5 dark:bg-gray-800"
-                  role="group"
-                >
-                  {(
-                    [
-                      { value: 'all', label: t('chords.statusAll') },
-                      { value: 'to-learn', label: t('chords.statusToLearn') },
-                      { value: 'known', label: t('chords.statusKnown') },
-                    ] as const
-                  ).map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setStatusFilter(option.value)}
-                      aria-pressed={statusFilter === option.value}
-                      className={cn(
-                        'min-h-11 flex-1 rounded-full px-2 py-2 text-sm font-medium transition-all duration-200 sm:px-3',
-                        statusFilter === option.value
-                          ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                          : 'text-muted-foreground hover:text-foreground'
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
+                <FilterChipRow>
+                  <FilterChip
+                    active={statusFilter === 'all'}
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    {t('chords.statusAll')}
+                  </FilterChip>
+                  <FilterChip
+                    active={statusFilter === 'to-learn'}
+                    onClick={() => setStatusFilter('to-learn')}
+                  >
+                    {t('chords.statusToLearn')}
+                  </FilterChip>
+                  <FilterChip
+                    active={statusFilter === 'known'}
+                    onClick={() => setStatusFilter('known')}
+                  >
+                    {t('chords.statusKnown')}
+                  </FilterChip>
+                </FilterChipRow>
                 <FilterChipRow>
                   <FilterChip
                     active={difficultyFilter === 'all'}

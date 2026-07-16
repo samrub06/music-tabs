@@ -8,22 +8,49 @@ interface FilterChipProps {
   onClick?: () => void
   children: ReactNode
   className?: string
+  /** Smaller padding for dense toolbars (e.g. landscape songs). */
+  compact?: boolean
+  title?: string
+  'aria-label'?: string
 }
 
-export function FilterChip({ active, onClick, children, className }: FilterChipProps) {
+export function FilterChip({
+  active,
+  onClick,
+  children,
+  className,
+  compact = false,
+  title,
+  'aria-label': ariaLabel,
+}: FilterChipProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
+      title={title}
+      aria-label={ariaLabel}
       className={cn(
-        'shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200 min-h-[36px] whitespace-nowrap',
+        'relative inline-flex shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full font-medium transition-colors duration-200 whitespace-nowrap',
+        compact
+          ? 'min-h-[28px] px-2 py-0.5 text-xs'
+          : 'min-h-[36px] px-3.5 py-2 text-sm',
         active
-          ? 'bg-primary text-primary-foreground shadow-sm'
+          ? 'bg-muted/80 text-primary dark:bg-white/[0.08]'
           : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-white/[0.06] dark:hover:bg-white/10',
         className
       )}
     >
-      {children}
+      {active ? (
+        <span
+          key="chip-border-active"
+          aria-hidden
+          className="chip-snake-border pointer-events-none absolute inset-0 rounded-full"
+        />
+      ) : null}
+      <span className="relative z-10 inline-flex items-center justify-center gap-1.5">
+        {children}
+      </span>
     </button>
   )
 }

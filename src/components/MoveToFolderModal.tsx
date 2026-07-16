@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { FilterChip } from '@/components/ui/filter-chip'
 
 interface MoveToFolderModalProps {
   isOpen: boolean
@@ -104,31 +105,21 @@ export default function MoveToFolderModal({
         </div>
 
         {onCreateFolderAndMove && (
-          <div className="flex gap-1 border-b border-border p-2">
-            <button
-              type="button"
+          <div className="flex gap-2 border-b border-border p-2">
+            <FilterChip
+              active={tab === 'existing'}
               onClick={() => setTab('existing')}
-              className={cn(
-                'flex-1 rounded-lg py-2 text-sm font-medium transition-colors',
-                tab === 'existing'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted'
-              )}
+              className="flex-1"
             >
               {t('songs.existingFolder')}
-            </button>
-            <button
-              type="button"
+            </FilterChip>
+            <FilterChip
+              active={tab === 'new'}
               onClick={() => setTab('new')}
-              className={cn(
-                'flex-1 rounded-lg py-2 text-sm font-medium transition-colors',
-                tab === 'new'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted'
-              )}
+              className="flex-1"
             >
               {t('songs.newFolder')}
-            </button>
+            </FilterChip>
           </div>
         )}
 

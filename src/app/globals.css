@@ -200,6 +200,145 @@
   .animate-swipe-hint-fade {
     animation: swipe-hint-fade 6s ease-in-out both;
   }
+
+  /* Selected filter chip: red border fills over 2s, then stays filled */
+  @property --chip-border-fill {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  @keyframes chip-border-fill {
+    from {
+      --chip-border-fill: 0deg;
+    }
+    to {
+      --chip-border-fill: 360deg;
+    }
+  }
+
+  .chip-snake-border {
+    overflow: hidden;
+    padding: 1.5px;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .chip-snake-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(
+      from -90deg,
+      hsl(var(--primary)) 0deg,
+      hsl(var(--primary)) var(--chip-border-fill),
+      transparent var(--chip-border-fill)
+    );
+    animation: chip-border-fill 2s linear forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip-snake-border::before {
+      animation: none;
+      --chip-border-fill: 360deg;
+      background: hsl(var(--primary));
+    }
+  }
+
+  /* Explorer floating guitar easter egg */
+  @keyframes explorer-guitar-float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-7px) rotate(3deg);
+    }
+  }
+
+  @keyframes explorer-guitar-strum {
+    0% {
+      transform: rotate(-4deg) scale(1);
+    }
+    25% {
+      transform: rotate(14deg) scale(1.18);
+    }
+    55% {
+      transform: rotate(-12deg) scale(1.1);
+    }
+    100% {
+      transform: rotate(-4deg) scale(1);
+    }
+  }
+
+  @keyframes explorer-note-fly {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.25) rotate(0deg);
+    }
+    8% {
+      opacity: 1;
+      transform: translate(calc(var(--note-dx, 0) * 0.12), calc(var(--note-dy, -80px) * 0.12))
+        scale(1.35) rotate(calc(var(--note-spin, 20deg) * 0.2));
+    }
+    55% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--note-dx, 0), var(--note-dy, -80px)) scale(0.85)
+        rotate(var(--note-spin, 20deg));
+    }
+  }
+
+  @keyframes explorer-shockwave {
+    0% {
+      transform: scale(0.4);
+      opacity: 0.75;
+    }
+    100% {
+      transform: scale(3.2);
+      opacity: 0;
+    }
+  }
+
+  .animate-explorer-guitar-float {
+    animation: explorer-guitar-float 3.2s ease-in-out infinite;
+  }
+
+  .animate-explorer-guitar-strum {
+    animation: explorer-guitar-strum 0.48s ease-out;
+  }
+
+  .animate-explorer-note {
+    animation: explorer-note-fly 1.2s cubic-bezier(0.15, 0.85, 0.25, 1) forwards;
+  }
+
+  .animate-explorer-shockwave {
+    animation: explorer-shockwave 0.65s ease-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-explorer-guitar-float,
+    .animate-explorer-guitar-strum {
+      animation: none;
+    }
+
+    .animate-explorer-note {
+      animation-duration: 0.7s;
+    }
+
+    .animate-explorer-shockwave {
+      animation-duration: 0.4s;
+    }
+  }
 }
 
 @layer base {

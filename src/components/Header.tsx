@@ -31,9 +31,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarTrigger } from '@/components/ui/sidebar'
@@ -91,11 +88,13 @@ function UserAvatar({
   name,
   email,
   alt,
+  className,
 }: {
   avatarUrl?: string | null
   name?: string | null
   email?: string | null
   alt: string
+  className?: string
 }) {
   if (avatarUrl) {
     return (
@@ -103,13 +102,21 @@ function UserAvatar({
       <img
         src={avatarUrl}
         alt={alt}
-        className="h-8 w-8 rounded-full object-cover border-2 border-border"
+        className={cn(
+          'h-8 w-8 shrink-0 rounded-full border-2 border-border object-cover',
+          className
+        )}
       />
     )
   }
 
   return (
-    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold text-xs border-2 border-border">
+    <div
+      className={cn(
+        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-border bg-gradient-to-br from-primary to-primary/80 text-xs font-semibold text-primary-foreground',
+        className
+      )}
+    >
       {getInitials(name, email)}
     </div>
   )
@@ -159,7 +166,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const showMenuButton = !isSongPage
   const usesAppSidebar = !!user && !onMenuClick
   const isLandingPage = pathname === '/'
-  const currentLanguage = LANGUAGES.find((lang) => lang.code === language) ?? LANGUAGES[0]
 
   const handleBack = () => {
     if (pageHeaderOverride) {
@@ -312,15 +318,24 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 )}
               >
                 <div className="space-y-3 px-3.5 pb-3 pt-3.5">
-                  <div className="min-w-0 space-y-0.5">
-                    <p className="truncate text-sm font-semibold leading-tight">
-                      {displayName}
-                    </p>
-                    {profile?.email ? (
-                      <p className="truncate text-xs leading-tight text-muted-foreground">
-                        {profile.email}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <UserAvatar
+                      avatarUrl={profile?.avatar_url}
+                      name={profile?.full_name}
+                      email={profile?.email}
+                      alt={profile?.full_name || t('common.user')}
+                      className="h-10 w-10 text-sm"
+                    />
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <p className="truncate text-sm font-semibold leading-tight">
+                        {displayName}
                       </p>
-                    ) : null}
+                      {profile?.email ? (
+                        <p className="truncate text-xs leading-tight text-muted-foreground">
+                          {profile.email}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
                     <Link
@@ -394,26 +409,38 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   </div>
                 </div>
 
+                <div
+                  className="flex items-center justify-between gap-3 px-3.5 pb-2.5"
+                  onPointerDown={(event) => event.preventDefault()}
+                >
+                  <span className="text-sm text-foreground">{t('common.language')}</span>
+                  <div className="flex rounded-full bg-neutral-100 p-0.5 dark:bg-white/[0.08]">
+                    {LANGUAGES.map((lang) => {
+                      const active = language === lang.code
+                      return (
+                        <button
+                          key={lang.code}
+                          type="button"
+                          aria-label={lang.name}
+                          aria-pressed={active}
+                          onClick={() => setLanguage(lang.code)}
+                          className={cn(
+                            'inline-flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 text-sm transition-colors',
+                            active
+                              ? 'bg-white shadow-sm dark:bg-white/[0.16]'
+                              : 'opacity-60 hover:opacity-100'
+                          )}
+                        >
+                          <span aria-hidden>{lang.flag}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
                 <DropdownMenuSeparator className="mx-0 my-0 bg-black/[0.08] dark:bg-white/[0.1]" />
 
                 <div className="py-1">
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="mx-1 cursor-pointer gap-2.5 rounded-lg px-2.5 py-2.5">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="flex-1 text-start">{t('common.language')}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {currentLanguage.flag}
-                      </span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                      className={cn(
-                        'w-48 rounded-xl border border-black/[0.08] bg-white p-1 shadow-lg',
-                        'dark:border-white/[0.1] dark:bg-[#1c1c1c]'
-                      )}
-                    >
-                      {languageMenuItems}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
                   <DropdownMenuItem
                     onClick={signOut}
                     className="mx-1 cursor-pointer rounded-lg px-2.5 py-2.5"

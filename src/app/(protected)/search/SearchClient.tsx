@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { RecentSearchList } from '@/components/search/RecentSearchList'
 import { HubZoneNav } from '@/components/library/HubZoneNav'
+import { FloatingGuitar } from '@/components/library/FloatingGuitar'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import {
   loadRecentSearches,
@@ -854,6 +855,7 @@ export default function SearchClient({
         <div className={cn(!showLibrarySections && 'hidden')}>
           {showLibrarySections && <HubZoneNav scrollContainerRef={scrollContainerRef} />}
           {children}
+          {showLibrarySections && <FloatingGuitar />}
         </div>
     </div>
   )

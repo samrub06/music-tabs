@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { FilterChip } from '@/components/ui/filter-chip'
 
 export type FolderSongCounts = Record<string, number>
 
@@ -265,19 +266,11 @@ function FolderChip({
   compact?: boolean
 }) {
   return (
-    <button
-      type="button"
+    <FilterChip
+      active={isActive}
       onClick={onClick}
-      className={cn(
-        'inline-flex min-w-0 items-center justify-center gap-1 rounded-full font-medium transition-all duration-200',
-        compact
-          ? 'min-h-[28px] px-2 py-0.5 text-xs'
-          : 'min-h-[40px] px-2.5 py-2 text-sm',
-        isActive
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'bg-muted/80 text-foreground hover:bg-muted',
-        className
-      )}
+      compact={compact}
+      className={className}
     >
       <span className="min-w-0 truncate">{label}</span>
       {count !== undefined && (
@@ -285,13 +278,15 @@ function FolderChip({
           className={cn(
             'shrink-0 rounded-full font-semibold tabular-nums',
             compact ? 'px-1 py-0 text-[9px]' : 'px-1.5 py-0.5 text-[10px]',
-            isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background/80 text-muted-foreground'
+            isActive
+              ? 'bg-primary/15 text-primary'
+              : 'bg-background/80 text-muted-foreground'
           )}
         >
           {count}
         </span>
       )}
-    </button>
+    </FilterChip>
   )
 }
 
@@ -381,16 +376,23 @@ function FolderChipOverflowMenu({
           type="button"
           aria-label={t('common.more')}
           className={cn(
-            'inline-flex shrink-0 items-center justify-center rounded-full font-medium transition-all duration-200',
+            'relative overflow-hidden',
             compact
-              ? 'min-h-[28px] min-w-[28px] px-2 py-0.5'
-              : 'min-h-[40px] min-w-[40px] px-3 py-2 text-sm',
+              ? 'inline-flex min-h-[28px] min-w-[28px] shrink-0 items-center justify-center rounded-full px-2 py-0.5'
+              : 'inline-flex min-h-[36px] min-w-[36px] shrink-0 items-center justify-center rounded-full px-3 py-2 text-sm',
             isActive
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-muted/80 text-foreground hover:bg-muted'
+              ? 'bg-muted/80 text-primary dark:bg-white/[0.08]'
+              : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
           )}
         >
-          <EllipsisHorizontalIcon className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
+          {isActive ? (
+            <span
+              key="chip-border-active"
+              aria-hidden
+              className="chip-snake-border pointer-events-none absolute inset-0 rounded-full"
+            />
+          ) : null}
+          <EllipsisHorizontalIcon className={cn('relative z-10', compact ? 'h-4 w-4' : 'h-5 w-5')} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="max-h-[min(60vh,320px)] overflow-y-auto">

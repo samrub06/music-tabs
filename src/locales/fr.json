@@ -438,6 +438,31 @@
     "songsAddedChart": "Chansons ajoutées",
     "activityByDay": "Activité par jour"
   },
+  "jamLab": {
+    "title": "Salle de jam secrète",
+    "subtitle": "Tu as trop tapoté la guitare. Bon — fais du bruit.",
+    "hitCount": "{count} coups · encore ?",
+    "stopNonsense": "Bon, assez de bêtises.",
+    "stopNonsenseHint": "Retourne à l’explorer et arrête les conneries.",
+    "backToExplorer": "Retour à l’explorer",
+    "tryRealSong": "Ou plutôt une vraie chanson",
+    "openSong": "Ouvrir",
+    "instruments": {
+      "guitar": "Guitare",
+      "piano": "Piano",
+      "drums": "Batterie",
+      "bass": "Basse",
+      "trumpet": "Trompette",
+      "violin": "Violon",
+      "sax": "Saxo",
+      "flute": "Flûte",
+      "ukulele": "Ukulélé",
+      "synth": "Synthé",
+      "marimba": "Marimba",
+      "bell": "Cloche",
+      "harp": "Harpe"
+    }
+  },
   "spotifyImport": {
     "title": "Import Spotify",
     "description": "Choisissez une playlist Spotify et importez les partitions correspondantes dans votre bibliothèque.",

@@ -24,6 +24,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/search/') ||
     pathname === '/explore' ||
     pathname.startsWith('/explore/') ||
+    pathname === '/jam-lab' ||
     pathname.startsWith('/library/') ||
     isInviteRoute
 

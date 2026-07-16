@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
 import { SongsFolderChips, SongsFolderSidebar, type FolderSongCounts } from '@/components/songs/SongsFolderNav'
 import { SelectModeToggleButton } from '@/components/song-table/SongTableHeader'
+import { FilterChip, FilterChipRow } from '@/components/ui/filter-chip'
 
 const toolbarSegmentContainer =
   'flex items-center gap-0.5 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800'
@@ -661,35 +662,35 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               onFolderSelect={handleFolderChange}
               compact
             />
-            <div className={cn(toolbarSegmentContainer, 'shrink-0')}>
-              <button
-                type="button"
+            <FilterChipRow className="min-w-0 flex-1">
+              <FilterChip
+                compact
+                active={activeTab === 'all'}
                 onClick={() => applyQuery({ tab: 'all', page: 1 })}
-                className={toolbarSegmentButton(activeTab === 'all', undefined, true)}
                 title={t('songs.all')}
                 aria-label={t('songs.all')}
               >
                 <MusicalNoteIcon className="h-3.5 w-3.5 flex-shrink-0" />
-              </button>
-              <button
-                type="button"
+              </FilterChip>
+              <FilterChip
+                compact
+                active={activeTab === 'recent'}
                 onClick={() => applyQuery({ tab: 'recent', page: 1 })}
-                className={toolbarSegmentButton(activeTab === 'recent', undefined, true)}
                 title={t('songs.recent')}
                 aria-label={t('songs.recent')}
               >
                 <ClockIcon className="h-3.5 w-3.5 flex-shrink-0" />
-              </button>
-              <button
-                type="button"
+              </FilterChip>
+              <FilterChip
+                compact
+                active={activeTab === 'popular'}
                 onClick={() => applyQuery({ tab: 'popular', page: 1 })}
-                className={toolbarSegmentButton(activeTab === 'popular', undefined, true)}
                 title={t('songs.popular')}
                 aria-label={t('songs.popular')}
               >
                 <FireIcon className="h-3.5 w-3.5 flex-shrink-0" />
-              </button>
-            </div>
+              </FilterChip>
+            </FilterChipRow>
             <div className={cn(toolbarSegmentContainer, 'shrink-0')}>
               {(view === 'table' || isSelectMode) && (
                 <SelectModeToggleButton
@@ -731,33 +732,30 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               onFolderSelect={handleFolderChange}
             />
             <div className="flex items-center gap-2">
-              <div className="flex-1 min-w-0 lg:hidden">
-                <div className={cn(toolbarSegmentContainer, 'w-full')}>
-                  <button
-                    type="button"
+              <div className="min-w-0 flex-1 lg:hidden">
+                <FilterChipRow>
+                  <FilterChip
+                    active={activeTab === 'all'}
                     onClick={() => applyQuery({ tab: 'all', page: 1 })}
-                    className={toolbarSegmentButton(activeTab === 'all', 'flex-1')}
                   >
                     <MusicalNoteIcon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('songs.all')}</span>
-                  </button>
-                  <button
-                    type="button"
+                  </FilterChip>
+                  <FilterChip
+                    active={activeTab === 'recent'}
                     onClick={() => applyQuery({ tab: 'recent', page: 1 })}
-                    className={toolbarSegmentButton(activeTab === 'recent', 'flex-1')}
                   >
                     <ClockIcon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('songs.recent')}</span>
-                  </button>
-                  <button
-                    type="button"
+                  </FilterChip>
+                  <FilterChip
+                    active={activeTab === 'popular'}
                     onClick={() => applyQuery({ tab: 'popular', page: 1 })}
-                    className={toolbarSegmentButton(activeTab === 'popular', 'flex-1')}
                   >
                     <FireIcon className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('songs.popular')}</span>
-                  </button>
-                </div>
+                  </FilterChip>
+                </FilterChipRow>
               </div>
               <div className={cn(toolbarSegmentContainer, 'shrink-0 lg:ml-auto')}>
                 {(view === 'table' || isSelectMode) && (

@@ -438,6 +438,31 @@
     "songsAddedChart": "שירים שנוספו לאורך זמן",
     "activityByDay": "פעילות לפי יום בשבוע"
   },
+  "jamLab": {
+    "title": "חדר ג׳אם סודי",
+    "subtitle": "נגעת בגיטרה יותר מדי. בסדר — תעשו רעש.",
+    "hitCount": "{count} נגיעות · עוד?",
+    "stopNonsense": "טוב, מספיק שטויות.",
+    "stopNonsenseHint": "חזרו לאקספלורר ותפסיקו לשחק.",
+    "backToExplorer": "חזרה לאקספלורר",
+    "tryRealSong": "או נסו שיר אמיתי",
+    "openSong": "פתח",
+    "instruments": {
+      "guitar": "גיטרה",
+      "piano": "פסנתר",
+      "drums": "תופים",
+      "bass": "בס",
+      "trumpet": "חצוצרה",
+      "violin": "כינור",
+      "sax": "סקסופון",
+      "flute": "חליל",
+      "ukulele": "יוקללי",
+      "synth": "סינתי",
+      "marimba": "מרימבה",
+      "bell": "פעמון",
+      "harp": "נבל"
+    }
+  },
   "spotifyImport": {
     "title": "ייבוא מ-Spotify",
     "description": "בחר פלייליסט מ-Spotify וייבא את הטאבים המתאימים לספרייה שלך.",
