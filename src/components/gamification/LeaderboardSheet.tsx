@@ -124,87 +124,72 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
                     />
                   </div>
 
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl border border-black/[0.06] dark:border-white/[0.08]">
-                    <table className="w-full text-sm">
-                      <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                        <tr className="border-b border-border text-left text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                          <th className="px-3 py-2.5">{t('leaderboard.rankColumn')}</th>
-                          <th className="px-3 py-2.5">{t('leaderboard.playerColumn')}</th>
-                          <th className="hidden px-3 py-2.5 sm:table-cell">{t('leaderboard.levelColumn')}</th>
-                          <th className="px-3 py-2.5 text-right">{t('leaderboard.xpColumn')}</th>
-                          <th className="px-3 py-2.5 text-right">{t('leaderboard.songsColumn')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.entries.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">
-                              {t('gamification.EMPTY_LEADERBOARD')}
-                            </td>
-                          </tr>
-                        ) : (
-                          data.entries.map((entry) => {
-                            const isCurrentUser = entry.userId === currentUserId
+                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain">
+                    {data.entries.length === 0 ? (
+                      <p className="px-3 py-8 text-center text-sm text-muted-foreground">
+                        {t('gamification.EMPTY_LEADERBOARD')}
+                      </p>
+                    ) : (
+                      data.entries.map((entry) => {
+                        const isCurrentUser = entry.userId === currentUserId
 
-                            return (
-                              <tr
-                                key={entry.userId}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => setSelectedEntry(entry)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault()
-                                    setSelectedEntry(entry)
-                                  }
-                                }}
-                                className={cn(
-                                  'cursor-pointer border-b border-border/60 last:border-0 transition-colors hover:bg-muted/50',
-                                  isCurrentUser && 'bg-primary/10'
+                        return (
+                          <button
+                            key={entry.userId}
+                            type="button"
+                            onClick={() => setSelectedEntry(entry)}
+                            className={cn(
+                              'flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors',
+                              isCurrentUser
+                                ? 'border-primary bg-primary/10'
+                                : 'border-black/[0.06] bg-card hover:bg-muted/40 dark:border-white/[0.08]'
+                            )}
+                          >
+                            <div className="w-8 shrink-0 text-center text-sm font-bold tabular-nums text-muted-foreground">
+                              {getRankLabel(entry.rank)}
+                            </div>
+
+                            {entry.avatarUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={entry.avatarUrl}
+                                alt=""
+                                className="h-9 w-9 shrink-0 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                                {((entry.fullName || entry.email || 'U')[0] || 'U').toUpperCase()}
+                              </div>
+                            )}
+
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                {entry.fullName || entry.email || t('gamification.UNKNOWN_USER')}
+                                {isCurrentUser && (
+                                  <span className="ms-1.5 text-[11px] font-medium text-primary">
+                                    {t('gamification.YOU_BADGE')}
+                                  </span>
                                 )}
-                              >
-                                <td className="px-3 py-2.5 font-semibold tabular-nums text-foreground">
-                                  {getRankLabel(entry.rank)}
-                                </td>
-                                <td className="px-3 py-2.5">
-                                  <div className="flex min-w-0 items-center gap-2">
-                                    {entry.avatarUrl ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        src={entry.avatarUrl}
-                                        alt=""
-                                        className="h-7 w-7 shrink-0 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                                        {((entry.fullName || entry.email || 'U')[0] || 'U').toUpperCase()}
-                                      </div>
-                                    )}
-                                    <div className="min-w-0">
-                                      <p className="truncate font-medium text-foreground">
-                                        {entry.fullName || entry.email || t('gamification.UNKNOWN_USER')}
-                                      </p>
-                                      {isCurrentUser && (
-                                        <p className="text-[11px] text-primary">{t('gamification.YOU_BADGE')}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="hidden px-3 py-2.5 tabular-nums text-muted-foreground sm:table-cell">
-                                  {entry.currentLevel}
-                                </td>
-                                <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
-                                  {entry.totalXp.toLocaleString()}
-                                </td>
-                                <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
-                                  {entry.songCount}
-                                </td>
-                              </tr>
-                            )
-                          })
-                        )}
-                      </tbody>
-                    </table>
+                              </p>
+                              <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                                <span>
+                                  {t('gamification.LEVEL_WITH_NUMBER').replace(
+                                    '{level}',
+                                    String(entry.currentLevel)
+                                  )}
+                                </span>
+                                <span className="tabular-nums">
+                                  {entry.totalXp.toLocaleString()} {t('gamification.XP')}
+                                </span>
+                                <span className="tabular-nums">
+                                  🎵 {entry.songCount}
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })
+                    )}
                   </div>
                 </>
               ) : (

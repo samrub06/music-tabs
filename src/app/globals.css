@@ -306,7 +306,8 @@
   }
 
   .animate-add-library-invite {
-    animation: add-library-invite 1.6s ease-in-out infinite;
+    /* ~4.8s invite pulse, then settle — not infinite */
+    animation: add-library-invite 1.6s ease-in-out 3;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 import { Guitar, Piano } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -13,10 +13,12 @@ interface InstrumentToggleProps {
   className?: string
   /** Hide outer “Instrument” label when placed inline with filter selects */
   compact?: boolean
-  /** Show Piano / Guitar text next to icons */
+  /** Show Piano / Guitar text next to icons (until auto-collapse) */
   showLabels?: boolean
-  /** After this many ms, collapse to a compact current-instrument pill (default off) */
+  /** After this many ms, collapse to icons-only (default off) */
   autoHideMs?: number
+  /** Scroll container: any scroll collapses labels to icons-only */
+  scrollRootRef?: RefObject<HTMLElement | null>
 }
 
 export function InstrumentToggle({
@@ -26,9 +28,10 @@ export function InstrumentToggle({
   compact = false,
   showLabels = false,
   autoHideMs,
+  scrollRootRef,
 }: InstrumentToggleProps) {
   const { t } = useLanguage()
-  const [hidden, setHidden] = useState(false)
+  const [labelsVisible, setLabelsVisible] = useState(showLabels)
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearHideTimer = () => {
@@ -38,59 +41,51 @@ export function InstrumentToggle({
     }
   }
 
-  const scheduleHide = () => {
-    if (!autoHideMs || autoHideMs <= 0) return
+  const collapseLabels = () => {
+    if (!showLabels) return
+    setLabelsVisible(false)
     clearHideTimer()
-    hideTimerRef.current = setTimeout(() => setHidden(true), autoHideMs)
   }
 
+  // Reset when showLabels prop changes (e.g. remount / song change)
   useEffect(() => {
-    if (hidden) return
-    scheduleHide()
+    setLabelsVisible(showLabels)
+  }, [showLabels])
+
+  // Timer: after a few seconds → icons only
+  useEffect(() => {
+    if (!showLabels || !labelsVisible || !autoHideMs || autoHideMs <= 0) return
+    clearHideTimer()
+    hideTimerRef.current = setTimeout(() => {
+      setLabelsVisible(false)
+    }, autoHideMs)
     return clearHideTimer
-    // Restart timer when shown again or value changes while visible
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- scheduleHide reads autoHideMs
-  }, [hidden, value, autoHideMs])
+  }, [showLabels, labelsVisible, autoHideMs])
+
+  // Scroll on song section → icons only
+  useEffect(() => {
+    if (!showLabels || !labelsVisible) return
+    const root = scrollRootRef?.current
+    if (!root) return
+
+    const onScroll = () => collapseLabels()
+    root.addEventListener('scroll', onScroll, { passive: true })
+    return () => root.removeEventListener('scroll', onScroll)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- collapse once labels are visible
+  }, [showLabels, labelsVisible, scrollRootRef])
+
+  const displayLabels = showLabels && labelsVisible
 
   const optionClass = (active: boolean) =>
     cn(
       'inline-flex items-center justify-center gap-1.5 rounded-full transition-all duration-200',
-      showLabels
+      displayLabels
         ? 'h-9 min-w-[5.25rem] px-2.5 text-xs font-medium sm:px-3 sm:text-sm'
         : 'h-9 w-9',
       active
         ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
         : 'text-muted-foreground hover:text-foreground'
     )
-
-  if (autoHideMs && hidden) {
-    const isPiano = value === 'piano'
-    return (
-      <button
-        type="button"
-        onClick={() => {
-          setHidden(false)
-        }}
-        className={cn(
-          'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-muted/80 px-3 text-sm font-medium text-foreground',
-          'animate-in fade-in zoom-in-95 duration-200',
-          'transition-colors hover:bg-muted',
-          className
-        )}
-        aria-label={t('chords.instrument')}
-        aria-expanded={false}
-      >
-        {isPiano ? (
-          <Piano className="h-4 w-4 shrink-0" />
-        ) : (
-          <Guitar className="h-4 w-4 shrink-0" />
-        )}
-        {showLabels ? (
-          <span>{isPiano ? t('songHeader.piano') : t('songHeader.guitar')}</span>
-        ) : null}
-      </button>
-    )
-  }
 
   return (
     <div
@@ -112,29 +107,23 @@ export function InstrumentToggle({
       >
         <button
           type="button"
-          onClick={() => {
-            onChange('piano')
-            scheduleHide()
-          }}
+          onClick={() => onChange('piano')}
           className={optionClass(value === 'piano')}
           aria-label={t('songHeader.piano')}
           aria-pressed={value === 'piano'}
         >
           <Piano className="h-4 w-4 shrink-0" />
-          {showLabels ? <span>{t('songHeader.piano')}</span> : null}
+          {displayLabels ? <span>{t('songHeader.piano')}</span> : null}
         </button>
         <button
           type="button"
-          onClick={() => {
-            onChange('guitar')
-            scheduleHide()
-          }}
+          onClick={() => onChange('guitar')}
           className={optionClass(value === 'guitar')}
           aria-label={t('songHeader.guitar')}
           aria-pressed={value === 'guitar'}
         >
           <Guitar className="h-4 w-4 shrink-0" />
-          {showLabels ? <span>{t('songHeader.guitar')}</span> : null}
+          {displayLabels ? <span>{t('songHeader.guitar')}</span> : null}
         </button>
       </div>
     </div>

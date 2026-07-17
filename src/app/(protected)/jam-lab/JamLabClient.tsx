@@ -8,8 +8,8 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
 } from 'react'
-import { MusicalNoteIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import type { Song } from '@/types'
@@ -22,33 +22,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  playBass,
-  playBell,
-  playDrums,
-  playFlute,
-  playGuitar,
-  playMarimba,
-  playPiano,
-  playSax,
-  playSynth,
-  playTrumpet,
-  playUkulele,
-  playViolin,
+  JAM_INSTRUMENTS,
+  playInstrument,
+  preloadJamInstruments,
+  type JamInstrumentId,
 } from '@/lib/audio/instrumentSounds'
-
-type InstrumentId =
-  | 'guitar'
-  | 'piano'
-  | 'drums'
-  | 'bass'
-  | 'trumpet'
-  | 'violin'
-  | 'sax'
-  | 'flute'
-  | 'ukulele'
-  | 'synth'
-  | 'marimba'
-  | 'bell'
 
 type NoteParticle = {
   id: number
@@ -87,8 +65,8 @@ function JamRoundTimer({
   runningLabel: string
   doneLabel: string
 }) {
-  const size = 108
-  const stroke = 10
+  const size = 96
+  const stroke = 9
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const progress =
@@ -101,12 +79,12 @@ function JamRoundTimer({
   const urgent = roundState === 'playing' && secondsLeft <= 3
 
   return (
-    <div className="relative flex h-[108px] w-[108px] shrink-0 items-center justify-center">
+    <div className="relative flex h-[84px] w-[84px] shrink-0 items-center justify-center sm:h-[108px] sm:w-[108px]">
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="-rotate-90"
+        className="h-full w-full -rotate-90"
         aria-hidden
       >
         {/* Segment ticks like Wolt */}
@@ -152,14 +130,14 @@ function JamRoundTimer({
       <div className="absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
         <p
           className={cn(
-            'text-3xl font-bold tabular-nums leading-none text-white',
+            'text-2xl font-bold tabular-nums leading-none text-white sm:text-3xl',
             urgent && 'animate-pulse text-red-400'
           )}
           aria-live="polite"
         >
           {secondsLeft}
         </p>
-        <p className="mt-1 max-w-[4.5rem] text-[9px] font-medium leading-tight text-white/65">
+        <p className="mt-0.5 max-w-[4.5rem] text-[8px] font-medium leading-tight text-white/65 sm:mt-1 sm:text-[9px]">
           {roundState === 'idle'
             ? idleLabel
             : roundState === 'playing'
@@ -183,25 +161,6 @@ const NOTE_COLORS = [
   'text-yellow-500 dark:text-yellow-300',
   'text-red-500 dark:text-red-400',
 ] as const
-
-const INSTRUMENTS: {
-  id: InstrumentId
-  play: () => void
-  accent: string
-}[] = [
-  { id: 'guitar', play: playGuitar, accent: '#E8A54B' },
-  { id: 'piano', play: playPiano, accent: '#A8B0C0' },
-  { id: 'drums', play: playDrums, accent: '#F07178' },
-  { id: 'bass', play: playBass, accent: '#F0A060' },
-  { id: 'trumpet', play: playTrumpet, accent: '#F5D76E' },
-  { id: 'violin', play: playViolin, accent: '#E07070' },
-  { id: 'sax', play: playSax, accent: '#D4956A' },
-  { id: 'flute', play: playFlute, accent: '#7EB8D4' },
-  { id: 'ukulele', play: playUkulele, accent: '#B8D46A' },
-  { id: 'synth', play: playSynth, accent: '#FF5A1F' },
-  { id: 'marimba', play: playMarimba, accent: '#5CBCB0' },
-  { id: 'bell', play: playBell, accent: '#F0D78C' },
-]
 
 const PAD_BASE = '#14171F'
 const GRID_LINE = '#0A0C10'
@@ -276,14 +235,12 @@ function InstrumentPad({
   id,
   label,
   accent,
-  play,
   disabled,
   onHit,
 }: {
-  id: InstrumentId
+  id: JamInstrumentId
   label: string
   accent: string
-  play: () => void
   disabled: boolean
   onHit: () => void
 }) {
@@ -292,10 +249,12 @@ function InstrumentPad({
   const [shockwave, setShockwave] = useState(false)
   const noteIdRef = useRef(0)
   const clearRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Active finger/mouse ids on this pad — allows multi-touch across pads. */
+  const activePointersRef = useRef<Set<number>>(new Set())
 
-  const handleClick = () => {
+  const triggerHit = () => {
     if (disabled) return
-    play()
+    playInstrument(id)
     onHit()
     setPulse(true)
     setShockwave(true)
@@ -311,6 +270,27 @@ function InstrumentPad({
     clearRef.current = setTimeout(() => setNotes([]), 1100)
   }
 
+  const onPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (disabled) return
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    // Each finger is a separate pointer — do not require isPrimary
+    if (activePointersRef.current.has(e.pointerId)) return
+    activePointersRef.current.add(e.pointerId)
+    e.preventDefault()
+    triggerHit()
+  }
+
+  const onPointerEnd = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    activePointersRef.current.delete(e.pointerId)
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (disabled) return
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    triggerHit()
+  }
+
   useEffect(() => {
     return () => {
       if (clearRef.current) clearTimeout(clearRef.current)
@@ -318,7 +298,7 @@ function InstrumentPad({
   }, [])
 
   return (
-    <div className="relative aspect-square min-h-0">
+    <div className="relative aspect-square min-h-0 touch-none">
       {notes.map((note) => (
         <span
           key={note.id}
@@ -351,11 +331,15 @@ function InstrumentPad({
       ) : null}
       <button
         type="button"
-        onClick={handleClick}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        onPointerLeave={onPointerEnd}
+        onKeyDown={onKeyDown}
         disabled={disabled}
         aria-label={label}
         className={cn(
-          'group relative z-0 flex h-full w-full flex-col items-center justify-center gap-1.5 px-1.5 py-2 text-center',
+          'group relative z-0 flex h-full w-full touch-none select-none flex-col items-center justify-center gap-1 px-1 py-1.5 text-center sm:gap-1.5 sm:px-1.5 sm:py-2',
           'transition-[transform,box-shadow,filter] duration-150 ease-out',
           'focus-visible:z-[1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40',
           'disabled:cursor-not-allowed disabled:opacity-40',
@@ -364,6 +348,9 @@ function InstrumentPad({
         )}
         style={
           {
+            touchAction: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none',
             background: pulse
               ? `linear-gradient(160deg, ${accent}55 0%, ${PAD_BASE} 48%, #0E1118 100%)`
               : `linear-gradient(160deg, ${accent}28 0%, ${PAD_BASE} 42%, #0E1118 100%)`,
@@ -379,7 +366,16 @@ function InstrumentPad({
           style={{ backgroundColor: accent, boxShadow: `0 0 8px ${accent}88` }}
           aria-hidden
         />
-        <span className="text-[10px] font-semibold tracking-wide text-white/90 sm:text-[11px]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`/icons/jam-lab/${id}.svg`}
+          alt=""
+          width={28}
+          height={28}
+          className="pointer-events-none h-6 w-6 object-contain opacity-90 drop-shadow-sm transition-transform duration-150 group-hover:scale-110 sm:h-7 sm:w-7"
+          draggable={false}
+        />
+        <span className="pointer-events-none line-clamp-2 px-0.5 text-center text-[8px] font-semibold leading-tight tracking-wide text-white/90 sm:px-1 sm:text-[10px]">
           {label}
         </span>
       </button>
@@ -468,7 +464,7 @@ interface JamLabClientProps {
 }
 
 export function JamLabClient({ suggestedSong }: JamLabClientProps) {
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [score, setScore] = useState(0)
   const [bestScore, setBestScore] = useState(0)
   const [recordLog, setRecordLog] = useState<RecordLogEntry[]>([])
@@ -477,6 +473,7 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
   const [isNewRecord, setIsNewRecord] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [roundKey, setRoundKey] = useState(0)
+  const [bannerFlipped, setBannerFlipped] = useState(false)
 
   const scoreRef = useRef(0)
   const bestRef = useRef(0)
@@ -490,6 +487,7 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
     bestRef.current = best
     setRecordLog(loadRecordLog())
     setMounted(true)
+    preloadJamInstruments()
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
@@ -564,31 +562,43 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
     setIsNewRecord(false)
   }
 
-  const formatRecordDate = (iso: string) => {
-    try {
-      return new Intl.DateTimeFormat(language === 'he' ? 'he-IL' : language === 'fr' ? 'fr-FR' : 'en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(new Date(iso))
-    } catch {
-      return iso
-    }
-  }
+  const topRecords = [...recordLog]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+
+  const toggleBanner = () => setBannerFlipped((f) => !f)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-5 px-4 py-5 pb-8">
-        <header className="space-y-1.5 text-center">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 px-3 py-4 pb-8 sm:gap-5 sm:px-4 sm:py-5">
+        <header className="space-y-1 text-center sm:space-y-1.5">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-2xl">
             {t('jamLab.title')}
           </h1>
-          <p className="text-sm text-muted-foreground">{t('jamLab.subtitle')}</p>
+          <p className="text-xs text-muted-foreground sm:text-sm">{t('jamLab.subtitle')}</p>
         </header>
 
-        {/* Score board — game banner + Wolt-style circular timer */}
+        {/* Score board — flips to Guinness top 3 on click */}
         <section
+          role="button"
+          tabIndex={0}
+          aria-pressed={bannerFlipped}
+          aria-label={
+            bannerFlipped
+              ? t('jamLab.recordLogTitle')
+              : t('jamLab.scoreLabel')
+          }
+          onClick={toggleBanner}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              toggleBanner()
+            }
+          }}
           className={cn(
-            'relative overflow-hidden rounded-2xl border border-white/10 shadow-sm'
+            'relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 shadow-sm outline-none',
+            'focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            '[perspective:1000px]'
           )}
           style={
             {
@@ -608,50 +618,96 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
             />
           ) : null}
 
-          <div className="relative z-10 flex min-h-[7.5rem] items-center justify-between gap-2 p-4 sm:min-h-[8.5rem] sm:gap-3 sm:p-5">
-            <div className="relative z-10 min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
-                  <MusicalNoteIcon className="h-4 w-4" />
-                </div>
+          <div
+            className={cn(
+              'relative z-10 min-h-[6.5rem] transition-transform duration-500 ease-out sm:min-h-[8.5rem]',
+              '[transform-style:preserve-3d]',
+              bannerFlipped && '[transform:rotateY(180deg)]'
+            )}
+          >
+            {/* Recto — score */}
+            <div
+              className={cn(
+                'relative flex min-h-[6.5rem] items-center justify-between gap-1.5 p-3 sm:min-h-[8.5rem] sm:gap-3 sm:p-5',
+                '[backface-visibility:hidden]'
+              )}
+            >
+              <div className="relative z-10 min-w-0 flex-1 space-y-0.5 sm:space-y-1">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-white/80">
                   {t('jamLab.scoreLabel')}
                 </p>
+                <p
+                  className="text-4xl font-bold tabular-nums leading-none tracking-tight text-white sm:text-6xl"
+                  aria-live="polite"
+                >
+                  {mounted ? score : 0}
+                </p>
+                <p className="text-[11px] font-medium text-white/60 sm:text-xs">
+                  {t('jamLab.bestScore').replace(
+                    '{count}',
+                    String(mounted ? bestScore : 0)
+                  )}
+                </p>
               </div>
-              <p
-                className="text-5xl font-bold tabular-nums leading-none tracking-tight text-white sm:text-6xl"
-                aria-live="polite"
+
+              <div
+                className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
+                aria-hidden
               >
-                {mounted ? score : 0}
-              </p>
-              <p className="text-xs font-medium text-white/60">
-                {t('jamLab.bestScore').replace('{count}', String(mounted ? bestScore : 0))}
-              </p>
+                <Image
+                  src="/game.png"
+                  alt=""
+                  width={160}
+                  height={160}
+                  className="h-20 w-20 object-contain opacity-90 sm:h-32 sm:w-32"
+                  priority={false}
+                />
+              </div>
+
+              <div className="relative z-10 flex shrink-0 justify-end">
+                <JamRoundTimer
+                  secondsLeft={secondsLeft}
+                  totalSeconds={ROUND_SECONDS}
+                  roundState={roundState}
+                  idleLabel={t('jamLab.timerReady')}
+                  runningLabel={t('jamLab.timerRunning')}
+                  doneLabel={t('jamLab.timerDone')}
+                />
+              </div>
             </div>
 
+            {/* Verso — Guinness top 3 */}
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2"
-              aria-hidden
+              className={cn(
+                'absolute inset-0 flex flex-col justify-center gap-2.5 p-4 sm:p-5',
+                '[backface-visibility:hidden] [transform:rotateY(180deg)]'
+              )}
             >
-              <Image
-                src="/game.png"
-                alt=""
-                width={160}
-                height={160}
-                className="h-28 w-28 object-contain sm:h-32 sm:w-32"
-                priority={false}
-              />
-            </div>
-
-            <div className="relative z-10 flex shrink-0 justify-end">
-              <JamRoundTimer
-                secondsLeft={secondsLeft}
-                totalSeconds={ROUND_SECONDS}
-                roundState={roundState}
-                idleLabel={t('jamLab.timerReady')}
-                runningLabel={t('jamLab.timerRunning')}
-                doneLabel={t('jamLab.timerDone')}
-              />
+              <p className="text-[11px] font-bold uppercase tracking-wide text-amber-400/90">
+                🏆 {t('jamLab.guinnessBadge')}
+              </p>
+              {mounted && topRecords.length > 0 ? (
+                <ol className="space-y-1.5">
+                  {topRecords.map((entry, i) => (
+                    <li
+                      key={`${entry.at}-${entry.score}-${i}`}
+                      className="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <span className="shrink-0 text-base leading-none" aria-hidden>
+                        {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}
+                      </span>
+                      <span className="min-w-0 flex-1 font-semibold tabular-nums text-white">
+                        {t('jamLab.recordLogEntry').replace(
+                          '{count}',
+                          String(entry.score)
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-sm text-white/55">{t('jamLab.recordLogEmpty')}</p>
+              )}
             </div>
           </div>
         </section>
@@ -665,17 +721,15 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
           <DialogContent
             showCloseButton={false}
             className={cn(
-              'max-w-sm rounded-2xl border p-5 text-center sm:rounded-2xl',
-              isNewRecord
-                ? 'border-amber-500/40 bg-amber-500/10'
-                : 'border-black/[0.06] bg-background dark:border-white/[0.08]'
+              'w-[calc(100%-1.5rem)] max-w-sm gap-3 overflow-y-auto overscroll-contain p-4 text-center sm:gap-4 sm:rounded-2xl sm:p-5',
+              'max-h-[min(90dvh,calc(100svh-1.5rem))] rounded-2xl',
+              'border border-black/[0.06] bg-background dark:border-white/[0.08]',
+              'top-[50%] translate-y-[-50%] supports-[height:100dvh]:max-h-[min(90dvh,calc(100dvh-1.5rem))]'
             )}
           >
-            <DialogHeader className="space-y-2 text-center sm:text-center">
+            <DialogHeader className="space-y-1.5 text-center sm:space-y-2 sm:text-center">
               <DialogTitle className="text-base font-semibold text-foreground sm:text-lg">
-                {isNewRecord
-                  ? t('jamLab.newRecordTitle')
-                  : t('jamLab.roundOverTitle')}
+                {t('jamLab.roundOverTitle')}
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground">
                 {isNewRecord
@@ -683,26 +737,81 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
                   : t('jamLab.roundOverBody').replace('{count}', String(score))}
               </DialogDescription>
             </DialogHeader>
-            {isNewRecord && (
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                {t('jamLab.guinnessBadge')}
+
+            {isNewRecord ? (
+              <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400 sm:text-xs">
+                  🏆 {t('jamLab.guinnessBadge')}
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-foreground">
+                  {t('jamLab.newRecordTitle')}
+                </p>
+              </div>
+            ) : null}
+
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                {t('jamLab.stopNonsense')}
               </p>
-            )}
-            <div className="flex flex-col gap-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                {t('jamLab.stopNonsenseHint')}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
               <Link
                 href="/"
-                className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
               >
                 {t('jamLab.backToExplorer')}
               </Link>
               <button
                 type="button"
                 onClick={playAgain}
-                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-muted/50 px-4 text-sm font-semibold text-foreground hover:bg-muted"
+                className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-border bg-muted/50 px-4 text-sm font-semibold text-foreground hover:bg-muted sm:h-11"
               >
                 {t('jamLab.tryAgain')}
               </button>
             </div>
+
+            {suggestedSong ? (
+              <div className="min-w-0 space-y-2 text-start">
+                <p className="text-center text-xs font-medium text-muted-foreground">
+                  {t('jamLab.tryRealSong')}
+                </p>
+                <Link
+                  href={`/song/${suggestedSong.id}`}
+                  className={cn(
+                    'flex min-w-0 items-center gap-2.5 rounded-xl border border-black/[0.06] bg-muted/40 p-2 transition-colors sm:gap-3 sm:p-2.5',
+                    'hover:bg-muted/70 dark:border-white/[0.08]'
+                  )}
+                >
+                  {suggestedSong.songImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={suggestedSong.songImageUrl}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-lg object-cover sm:h-11 sm:w-11"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-lg sm:h-11 sm:w-11">
+                      🎵
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {suggestedSong.title}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {suggestedSong.author}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs font-medium text-primary">
+                    {t('jamLab.openSong')}
+                  </span>
+                </Link>
+              </div>
+            ) : null}
           </DialogContent>
         </Dialog>
 
@@ -713,135 +822,27 @@ export function JamLabClient({ suggestedSong }: JamLabClientProps) {
 
           {/* Modern synth pad matrix */}
           <div
-            className="relative overflow-hidden rounded-2xl p-1 shadow-lg ring-1 ring-black/20"
-            style={{ backgroundColor: GRID_FRAME }}
+            className="relative touch-none overflow-hidden rounded-2xl p-1 shadow-lg ring-1 ring-black/20"
+            style={{ backgroundColor: GRID_FRAME, touchAction: 'none' }}
           >
             <JamStartHint visible={roundState === 'idle'} />
             <div
-              className="grid grid-cols-4 gap-px overflow-hidden rounded-xl"
-              style={{ backgroundColor: GRID_LINE }}
+              className="grid grid-cols-4 gap-px overflow-hidden rounded-xl touch-none"
+              style={{ backgroundColor: GRID_LINE, touchAction: 'none' }}
             >
-              {INSTRUMENTS.map((instrument) => (
+              {JAM_INSTRUMENTS.map((instrument) => (
                 <InstrumentPad
                   key={instrument.id}
                   id={instrument.id}
-                  label={t(`jamLab.instruments.${instrument.id}`)}
+                  label={instrument.name}
                   accent={instrument.accent}
-                  play={instrument.play}
                   disabled={roundState === 'ended'}
                   onHit={handleHit}
-                />
-              ))}
-              {Array.from({ length: (4 - (INSTRUMENTS.length % 4)) % 4 }, (_, i) => (
-                <div
-                  key={`empty-${i}`}
-                  className="aspect-square"
-                  style={{
-                    background:
-                      'linear-gradient(160deg, #1A1E28 0%, #0E1118 100%)',
-                  }}
-                  aria-hidden
                 />
               ))}
             </div>
           </div>
         </section>
-
-        {/* Guinness record log */}
-        {mounted && recordLog.length > 0 && (
-          <section
-            className={cn(
-              'space-y-2.5 rounded-2xl border border-black/[0.06] bg-card/60 p-4',
-              'dark:border-white/[0.08] dark:bg-white/[0.03]'
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base" aria-hidden>
-                🏆
-              </span>
-              <h2 className="text-sm font-semibold text-foreground">
-                {t('jamLab.recordLogTitle')}
-              </h2>
-            </div>
-            <ul className="max-h-40 space-y-2 overflow-y-auto text-xs">
-              {recordLog.map((entry, i) => (
-                <li
-                  key={`${entry.at}-${entry.score}-${i}`}
-                  className="flex items-baseline justify-between gap-3 border-b border-border/60 pb-1.5 last:border-0 last:pb-0"
-                >
-                  <span className="font-semibold tabular-nums text-foreground">
-                    {t('jamLab.recordLogEntry').replace('{count}', String(entry.score))}
-                  </span>
-                  <span className="shrink-0 text-muted-foreground">
-                    {formatRecordDate(entry.at)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <section
-          className={cn(
-            'space-y-3 rounded-2xl border border-black/[0.06] bg-muted/40 p-4',
-            'dark:border-white/[0.08] dark:bg-white/[0.04]'
-          )}
-        >
-          <p className="text-center text-sm font-medium text-foreground">
-            {t('jamLab.stopNonsense')}
-          </p>
-          <p className="text-center text-xs text-muted-foreground">
-            {t('jamLab.stopNonsenseHint')}
-          </p>
-          <Link
-            href="/"
-            className={cn(
-              'flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold',
-              'bg-primary text-primary-foreground transition-colors hover:bg-primary/90'
-            )}
-          >
-            {t('jamLab.backToExplorer')}
-          </Link>
-        </section>
-
-        {suggestedSong ? (
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              {t('jamLab.tryRealSong')}
-            </h2>
-            <Link
-              href={`/song/${suggestedSong.id}`}
-              className={cn(
-                'flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-card p-3 transition-colors',
-                'hover:bg-muted/50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]'
-              )}
-            >
-              {suggestedSong.songImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={suggestedSong.songImageUrl}
-                  alt=""
-                  className="h-14 w-14 shrink-0 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-muted text-2xl">
-                  🎵
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {suggestedSong.title}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {suggestedSong.author}
-                </p>
-              </div>
-              <span className="shrink-0 text-xs font-medium text-primary">
-                {t('jamLab.openSong')}
-              </span>
-            </Link>
-          </section>
-        ) : null}
       </div>
     </div>
   )

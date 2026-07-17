@@ -35,7 +35,9 @@ const NOTE_COLORS = [
   'text-amber-600 dark:text-amber-200',
 ] as const
 
-const SIZE = 64
+const SIZE_MOBILE = 88
+const SIZE_DESKTOP = 64
+const MOBILE_BREAKPOINT = 640
 const DRAG_THRESHOLD_PX = 8
 const STORAGE_KEY = 'explorer-floating-guitar-pos'
 const TAP_COUNT_KEY = 'explorer-floating-guitar-taps'
@@ -45,40 +47,45 @@ const MAX_NOTE_COUNT = 48
 
 type Position = { x: number; y: number }
 
+function iconSize(): number {
+  if (typeof window === 'undefined') return SIZE_DESKTOP
+  return window.innerWidth < MOBILE_BREAKPOINT ? SIZE_MOBILE : SIZE_DESKTOP
+}
+
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function defaultPosition(): Position {
+function defaultPosition(size: number = iconSize()): Position {
   if (typeof window === 'undefined') return { x: 24, y: 24 }
   const bottomNav = window.innerWidth < 1024 ? 96 : 32
   return {
-    x: Math.max(12, window.innerWidth - SIZE - 20),
-    y: Math.max(12, window.innerHeight - SIZE - bottomNav),
+    x: Math.max(12, window.innerWidth - size - 20),
+    y: Math.max(12, window.innerHeight - size - bottomNav),
   }
 }
 
-function clampPosition(pos: Position): Position {
-  const maxX = Math.max(8, window.innerWidth - SIZE - 8)
-  const maxY = Math.max(8, window.innerHeight - SIZE - 8)
+function clampPosition(pos: Position, size: number = iconSize()): Position {
+  const maxX = Math.max(8, window.innerWidth - size - 8)
+  const maxY = Math.max(8, window.innerHeight - size - 8)
   return {
     x: Math.min(Math.max(8, pos.x), maxX),
     y: Math.min(Math.max(8, pos.y), maxY),
   }
 }
 
-function loadPosition(): Position {
+function loadPosition(size: number = iconSize()): Position {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (!raw) return defaultPosition()
+    if (!raw) return defaultPosition(size)
     const parsed = JSON.parse(raw) as Position
     if (typeof parsed.x !== 'number' || typeof parsed.y !== 'number') {
-      return defaultPosition()
+      return defaultPosition(size)
     }
-    return clampPosition(parsed)
+    return clampPosition(parsed, size)
   } catch {
-    return defaultPosition()
+    return defaultPosition(size)
   }
 }
 
@@ -134,53 +141,6 @@ function spawnExplosion(count: number): NoteParticle[] {
   })
 }
 
-function GuitarSvg({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden
-    >
-      <ellipse cx="26" cy="40" rx="16" ry="18" className="fill-amber-700 dark:fill-amber-600" />
-      <ellipse cx="26" cy="40" rx="12" ry="14" className="fill-amber-800/40 dark:fill-amber-900/50" />
-      <circle cx="26" cy="40" r="5.5" className="fill-amber-950 dark:fill-amber-950" />
-      <circle cx="26" cy="40" r="3.5" className="fill-amber-900/80" />
-      <rect x="21" y="48" width="10" height="2.5" rx="1" className="fill-amber-950/80" />
-      <rect
-        x="40"
-        y="20"
-        width="5"
-        height="22"
-        rx="1.5"
-        transform="rotate(-35 40 20)"
-        className="fill-amber-900 dark:fill-amber-800"
-      />
-      <path
-        d="M50.5 8.5c1.2-1.8 4.2-2.2 5.8-.4 1.2 1.4.8 3.4-.6 4.4l-4.2 3.1-3.2-4.4 2.2-2.7z"
-        className="fill-amber-900 dark:fill-amber-800"
-      />
-      <circle cx="52.2" cy="9.2" r="1.2" className="fill-amber-200 dark:fill-amber-300" />
-      <circle cx="54.8" cy="11.4" r="1.2" className="fill-amber-200 dark:fill-amber-300" />
-      <path
-        d="M28 36.5 L49 14.5 M27 40 L50 16.5 M26 43.5 L50.5 18.5"
-        className="stroke-amber-100/50 dark:stroke-amber-200/40"
-        strokeWidth="0.6"
-        strokeLinecap="round"
-      />
-      <ellipse
-        cx="21"
-        cy="33"
-        rx="4"
-        ry="6"
-        className="fill-white/20 dark:fill-white/10"
-        transform="rotate(-20 21 33)"
-      />
-    </svg>
-  )
-}
-
 interface FloatingGuitarProps {
   className?: string
 }
@@ -188,6 +148,7 @@ interface FloatingGuitarProps {
 export function FloatingGuitar({ className }: FloatingGuitarProps) {
   const router = useRouter()
   const [pos, setPos] = useState<Position>({ x: 24, y: 24 })
+  const [size, setSize] = useState(SIZE_DESKTOP)
   const [mounted, setMounted] = useState(false)
   const [notes, setNotes] = useState<NoteParticle[]>([])
   const [strumming, setStrumming] = useState(false)
@@ -210,9 +171,13 @@ export function FloatingGuitar({ className }: FloatingGuitarProps) {
   } | null>(null)
   const posRef = useRef(pos)
   posRef.current = pos
+  const sizeRef = useRef(size)
+  sizeRef.current = size
 
   useEffect(() => {
-    setPos(loadPosition())
+    const nextSize = iconSize()
+    setSize(nextSize)
+    setPos(loadPosition(nextSize))
     tapCountRef.current = loadTapCount()
     setMounted(true)
     setReduceMotion(prefersReducedMotion())
@@ -220,7 +185,11 @@ export function FloatingGuitar({ className }: FloatingGuitarProps) {
     const onChange = () => setReduceMotion(mq.matches)
     mq.addEventListener('change', onChange)
 
-    const onResize = () => setPos((p) => clampPosition(p))
+    const onResize = () => {
+      const s = iconSize()
+      setSize(s)
+      setPos((p) => clampPosition(p, s))
+    }
     window.addEventListener('resize', onResize)
 
     return () => {
@@ -291,7 +260,7 @@ export function FloatingGuitar({ className }: FloatingGuitarProps) {
 
     drag.moved = true
     setDragging(true)
-    setPos(clampPosition({ x: drag.originX + dx, y: drag.originY + dy }))
+    setPos(clampPosition({ x: drag.originX + dx, y: drag.originY + dy }, sizeRef.current))
   }
 
   const endPointer = (e: ReactPointerEvent<HTMLButtonElement>) => {
@@ -320,7 +289,7 @@ export function FloatingGuitar({ className }: FloatingGuitarProps) {
   return (
     <div
       className={cn('pointer-events-none fixed z-40', className)}
-      style={{ left: pos.x, top: pos.y, width: SIZE, height: SIZE }}
+      style={{ left: pos.x, top: pos.y, width: size, height: size }}
     >
       <div className="relative flex h-full w-full items-center justify-center">
         {shockwave && (
@@ -362,9 +331,8 @@ export function FloatingGuitar({ className }: FloatingGuitarProps) {
           onPointerCancel={endPointer}
           disabled={warping}
           className={cn(
-            'pointer-events-auto relative flex h-14 w-14 touch-none items-center justify-center rounded-full',
-            'cursor-grab border border-amber-700/25 bg-background/85 shadow-xl backdrop-blur-md',
-            'dark:border-amber-400/20 dark:bg-background/75',
+            'pointer-events-auto relative flex h-full w-full touch-none items-center justify-center overflow-hidden rounded-full p-1',
+            'cursor-grab border border-black/10 shadow-xl dark:border-white/15',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40',
             dragging && 'cursor-grabbing scale-110 shadow-2xl',
             warping && 'scale-125 opacity-40',
@@ -374,7 +342,15 @@ export function FloatingGuitar({ className }: FloatingGuitarProps) {
           aria-label="Drag the guitar, or tap to explode notes"
           title="Drag me · tap to play"
         >
-          <GuitarSvg className="h-9 w-9 pointer-events-none" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- static public asset */}
+          <img
+            src="/icongame.png"
+            alt=""
+            width={size}
+            height={size}
+            draggable={false}
+            className="pointer-events-none h-full w-full select-none rounded-full object-cover"
+          />
         </button>
       </div>
     </div>

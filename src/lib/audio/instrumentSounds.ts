@@ -1,6 +1,61 @@
-/** Shared Web Audio helpers for the jam-lab easter egg. */
+/** Sample-based instrument playback for jam-lab (and floating guitar). */
+
+export type JamInstrumentId =
+  | 'banjo'
+  | 'bass-clarinet'
+  | 'bassoon'
+  | 'cello'
+  | 'clarinet'
+  | 'contrabassoon'
+  | 'cor-anglais'
+  | 'double-bass'
+  | 'flute'
+  | 'french-horn'
+  | 'guitar'
+  | 'mandolin'
+  | 'oboe'
+  | 'percussion'
+  | 'saxophone'
+  | 'trombone'
+  | 'trumpet'
+  | 'tuba'
+  | 'viola'
+  | 'violin'
+
+/** Display names matching the Philharmonia sample folders. */
+export const JAM_INSTRUMENTS: {
+  id: JamInstrumentId
+  name: string
+  accent: string
+}[] = [
+  { id: 'banjo', name: 'Banjo', accent: '#E8A54B' },
+  { id: 'bass-clarinet', name: 'Bass clarinet', accent: '#7A9BB8' },
+  { id: 'bassoon', name: 'Bassoon', accent: '#C48A5A' },
+  { id: 'cello', name: 'Cello', accent: '#D4785A' },
+  { id: 'clarinet', name: 'Clarinet', accent: '#8BAFCF' },
+  { id: 'contrabassoon', name: 'Contrabassoon', accent: '#A07850' },
+  { id: 'cor-anglais', name: 'Cor anglais', accent: '#B8956A' },
+  { id: 'double-bass', name: 'Double bass', accent: '#F0A060' },
+  { id: 'flute', name: 'Flute', accent: '#7EB8D4' },
+  { id: 'french-horn', name: 'French horn', accent: '#D4A574' },
+  { id: 'guitar', name: 'Guitar', accent: '#E8A54B' },
+  { id: 'mandolin', name: 'Mandolin', accent: '#C9B86A' },
+  { id: 'oboe', name: 'Oboe', accent: '#C07060' },
+  { id: 'percussion', name: 'Percussion', accent: '#F07178' },
+  { id: 'saxophone', name: 'Saxophone', accent: '#D4956A' },
+  { id: 'trombone', name: 'Trombone', accent: '#E0B060' },
+  { id: 'trumpet', name: 'Trumpet', accent: '#F5D76E' },
+  { id: 'tuba', name: 'Tuba', accent: '#8B7A5E' },
+  { id: 'viola', name: 'Viola', accent: '#D08070' },
+  { id: 'violin', name: 'Violin', accent: '#E07070' },
+]
 
 let sharedAudioCtx: AudioContext | null = null
+const bufferCache = new Map<JamInstrumentId, AudioBuffer | 'loading' | 'failed'>()
+const loadWaiters = new Map<
+  JamInstrumentId,
+  Array<(buf: AudioBuffer | null) => void>
+>()
 
 export function getAudioCtx(): AudioContext | null {
   try {
@@ -17,318 +72,96 @@ export function getAudioCtx(): AudioContext | null {
   }
 }
 
-function withMaster(
-  ctx: AudioContext,
-  build: (dest: AudioNode, now: number) => void
-) {
+function sampleUrl(id: JamInstrumentId): string {
+  return `/sounds/jam-lab/${id}.mp3`
+}
+
+async function loadBuffer(id: JamInstrumentId): Promise<AudioBuffer | null> {
+  const cached = bufferCache.get(id)
+  if (cached && cached !== 'loading' && cached !== 'failed') return cached
+  if (cached === 'failed') return null
+
+  if (cached === 'loading') {
+    return new Promise((resolve) => {
+      const waiters = loadWaiters.get(id) ?? []
+      waiters.push(resolve)
+      loadWaiters.set(id, waiters)
+    })
+  }
+
+  const ctx = getAudioCtx()
+  if (!ctx) return null
+
+  bufferCache.set(id, 'loading')
+  try {
+    const res = await fetch(sampleUrl(id))
+    if (!res.ok) throw new Error(`Failed to load ${id}: ${res.status}`)
+    const arr = await res.arrayBuffer()
+    const buf = await ctx.decodeAudioData(arr.slice(0))
+    bufferCache.set(id, buf)
+    const waiters = loadWaiters.get(id) ?? []
+    loadWaiters.delete(id)
+    waiters.forEach((w) => w(buf))
+    return buf
+  } catch (err) {
+    console.error(err)
+    bufferCache.set(id, 'failed')
+    const waiters = loadWaiters.get(id) ?? []
+    loadWaiters.delete(id)
+    waiters.forEach((w) => w(null))
+    return null
+  }
+}
+
+/** Warm the AudioContext + decode all jam-lab samples in the background. */
+export function preloadJamInstruments() {
+  const ctx = getAudioCtx()
+  if (!ctx) return
+  void ctx.resume()
+  for (const { id } of JAM_INSTRUMENTS) {
+    void loadBuffer(id)
+  }
+}
+
+/** Each call starts a new voice — previous notes keep playing (polyphonic). */
+function playBuffer(ctx: AudioContext, buffer: AudioBuffer) {
   void ctx.resume()
   const now = ctx.currentTime
-  const master = ctx.createGain()
-  master.gain.setValueAtTime(0.7, now)
-  master.connect(ctx.destination)
-  build(master, now)
+  const source = ctx.createBufferSource()
+  source.buffer = buffer
+
+  const playFor = Math.max(0.08, buffer.duration)
+  const fadeIn = 0.012
+  const fadeOut = Math.min(0.12, playFor * 0.15)
+
+  const gain = ctx.createGain()
+  gain.gain.setValueAtTime(0.0001, now)
+  gain.gain.exponentialRampToValueAtTime(0.85, now + fadeIn)
+  gain.gain.setValueAtTime(0.85, now + Math.max(fadeIn, playFor - fadeOut))
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + playFor)
+
+  source.connect(gain)
+  gain.connect(ctx.destination)
+  source.start(now)
+  source.stop(now + playFor + 0.02)
 }
 
+export function playInstrument(id: JamInstrumentId) {
+  const ctx = getAudioCtx()
+  if (!ctx) return
+
+  const cached = bufferCache.get(id)
+  if (cached && cached !== 'loading' && cached !== 'failed') {
+    playBuffer(ctx, cached)
+    return
+  }
+
+  void loadBuffer(id).then((buf) => {
+    if (buf) playBuffer(ctx, buf)
+  })
+}
+
+/** Kept for FloatingGuitar easter egg. */
 export function playGuitar() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const freqs = [98, 123.47, 146.83, 196, 246.94, 392]
-  withMaster(ctx, (dest, now) => {
-    freqs.forEach((freq, i) => {
-      const start = now + i * 0.03
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      const filter = ctx.createBiquadFilter()
-      osc.type = 'sawtooth'
-      osc.frequency.value = freq
-      filter.type = 'lowpass'
-      filter.frequency.setValueAtTime(1600, start)
-      filter.frequency.exponentialRampToValueAtTime(500, start + 0.7)
-      const peak = 0.28 / Math.sqrt(i + 1)
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(peak, start + 0.01)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.9)
-      osc.connect(filter)
-      filter.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 1)
-    })
-  })
-}
-
-export function playPiano() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const freqs = [261.63, 329.63, 392.0, 523.25]
-  withMaster(ctx, (dest, now) => {
-    freqs.forEach((freq, i) => {
-      const start = now + i * 0.04
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'triangle'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.28, start + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.2)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 1.3)
-    })
-  })
-}
-
-export function playBass() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(55, now)
-    osc.frequency.exponentialRampToValueAtTime(41, now + 0.35)
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.55, now + 0.02)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55)
-    osc.connect(gain)
-    gain.connect(dest)
-    osc.start(now)
-    osc.stop(now + 0.6)
-  })
-}
-
-export function playDrums() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    // Kick
-    const kick = ctx.createOscillator()
-    const kickGain = ctx.createGain()
-    kick.type = 'sine'
-    kick.frequency.setValueAtTime(140, now)
-    kick.frequency.exponentialRampToValueAtTime(40, now + 0.12)
-    kickGain.gain.setValueAtTime(0.7, now)
-    kickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25)
-    kick.connect(kickGain)
-    kickGain.connect(dest)
-    kick.start(now)
-    kick.stop(now + 0.28)
-
-    // Snare-ish noise
-    const dur = 0.12
-    const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate)
-    const data = buffer.getChannelData(0)
-    for (let i = 0; i < data.length; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length)
-    }
-    const noise = ctx.createBufferSource()
-    noise.buffer = buffer
-    const noiseFilter = ctx.createBiquadFilter()
-    noiseFilter.type = 'highpass'
-    noiseFilter.frequency.value = 1200
-    const noiseGain = ctx.createGain()
-    noiseGain.gain.setValueAtTime(0.35, now + 0.08)
-    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08 + dur)
-    noise.connect(noiseFilter)
-    noiseFilter.connect(noiseGain)
-    noiseGain.connect(dest)
-    noise.start(now + 0.08)
-    noise.stop(now + 0.08 + dur)
-  })
-}
-
-export function playTrumpet() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    ;[392, 493.88, 587.33].forEach((freq, i) => {
-      const start = now + i * 0.08
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sawtooth'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.18, start + 0.04)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.45)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 0.5)
-    })
-  })
-}
-
-export function playViolin() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    const lfo = ctx.createOscillator()
-    const lfoGain = ctx.createGain()
-    osc.type = 'sawtooth'
-    osc.frequency.value = 440
-    lfo.frequency.value = 5.5
-    lfoGain.gain.value = 4
-    lfo.connect(lfoGain)
-    lfoGain.connect(osc.frequency)
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.15)
-    gain.gain.linearRampToValueAtTime(0.0001, now + 1.1)
-    osc.connect(gain)
-    gain.connect(dest)
-    osc.start(now)
-    lfo.start(now)
-    osc.stop(now + 1.15)
-    lfo.stop(now + 1.15)
-  })
-}
-
-export function playSax() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    const filter = ctx.createBiquadFilter()
-    osc.type = 'square'
-    osc.frequency.value = 277.18
-    filter.type = 'bandpass'
-    filter.frequency.value = 700
-    filter.Q.value = 4
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.05)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8)
-    osc.connect(filter)
-    filter.connect(gain)
-    gain.connect(dest)
-    osc.start(now)
-    osc.stop(now + 0.85)
-  })
-}
-
-export function playFlute() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.value = 784
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.04)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7)
-    osc.connect(gain)
-    gain.connect(dest)
-    osc.start(now)
-    osc.stop(now + 0.75)
-  })
-}
-
-export function playUkulele() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const freqs = [392, 261.63, 329.63, 440]
-  withMaster(ctx, (dest, now) => {
-    freqs.forEach((freq, i) => {
-      const start = now + i * 0.02
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'triangle'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.22, start + 0.01)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.55)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 0.6)
-    })
-  })
-}
-
-export function playSynth() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    ;[220, 277.18, 329.63, 440].forEach((freq, i) => {
-      const start = now + i * 0.06
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'square'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.16, start + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 0.4)
-    })
-  })
-}
-
-export function playMarimba() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    ;[523.25, 659.25, 783.99].forEach((freq, i) => {
-      const start = now + i * 0.07
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.3, start + 0.008)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.55)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 0.6)
-    })
-  })
-}
-
-export function playBell() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  withMaster(ctx, (dest, now) => {
-    ;[880, 1760, 2640].forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      const peak = 0.22 / (i + 1)
-      gain.gain.setValueAtTime(0.0001, now)
-      gain.gain.exponentialRampToValueAtTime(peak, now + 0.01)
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(now)
-      osc.stop(now + 1.45)
-    })
-  })
-}
-
-export function playHarp() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const freqs = [523.25, 587.33, 659.25, 698.46, 783.99, 880]
-  withMaster(ctx, (dest, now) => {
-    freqs.forEach((freq, i) => {
-      const start = now + i * 0.05
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.type = 'triangle'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(0.2, start + 0.01)
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.9)
-      osc.connect(gain)
-      gain.connect(dest)
-      osc.start(start)
-      osc.stop(start + 1)
-    })
-  })
+  playInstrument('guitar')
 }

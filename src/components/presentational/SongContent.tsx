@@ -552,52 +552,72 @@ export default function SongContent({
     metaRowActionSize
   );
 
+  const canShowLibraryToggle =
+    !isAuthenticated || onAddToLibrary || onRemoveFromLibrary;
+
+  const handleLibraryToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      void signInWithGoogle(pathname);
+      return;
+    }
+    if (isInLibrary) {
+      onRemoveFromLibrary?.();
+      return;
+    }
+    onAddToLibrary?.();
+  };
+
+  const libraryToggleDisabled =
+    isAuthenticated &&
+    (isAddingToLibrary ||
+      isRemovingFromLibrary ||
+      (isInLibrary ? !onRemoveFromLibrary : !onAddToLibrary));
+
+  /** Compact icon button — used inside collapsed meta when already in library. */
   const libraryToggleButton =
-    !isAuthenticated || onAddToLibrary || onRemoveFromLibrary ? (
+    canShowLibraryToggle && isAuthenticated && isInLibrary ? (
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isAuthenticated) {
-            void signInWithGoogle(pathname);
-            return;
-          }
-          if (isInLibrary) {
-            onRemoveFromLibrary?.();
-            return;
-          }
-          onAddToLibrary?.();
-        }}
-        disabled={
-          isAuthenticated &&
-          (isAddingToLibrary ||
-            isRemovingFromLibrary ||
-            (isInLibrary ? !onRemoveFromLibrary : !onAddToLibrary))
-        }
+        onClick={handleLibraryToggle}
+        disabled={libraryToggleDisabled}
         className={cn(
           metaRowActionTileClass,
           'disabled:opacity-70',
-          isAuthenticated && isInLibrary
-            ? 'border-green-600/25 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25'
-            : 'animate-add-library-invite border-primary/50 bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+          'border-green-600/25 bg-green-500/10 text-green-700 hover:bg-green-500/20 dark:border-green-400/30 dark:bg-green-500/15 dark:text-green-400 dark:hover:bg-green-500/25'
         )}
-        aria-label={
-          isAuthenticated && isInLibrary
-            ? t('library.removeFromLibrary')
-            : t('library.addToLibrary')
-        }
-        title={
-          isAuthenticated && isInLibrary
-            ? t('library.removeFromLibrary')
-            : t('library.addToLibrary')
-        }
+        aria-label={t('library.removeFromLibrary')}
+        title={t('library.removeFromLibrary')}
       >
-        {isAuthenticated && (isAddingToLibrary || isRemovingFromLibrary) ? (
+        {isRemovingFromLibrary ? (
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        ) : isAuthenticated && isInLibrary ? (
-          <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
         ) : (
-          <PlusIcon className="h-5 w-5 shrink-0" strokeWidth={2.5} aria-hidden />
+          <CheckIcon className="h-5 w-5 shrink-0" aria-hidden />
+        )}
+      </button>
+    ) : null;
+
+  /** Full-width CTA — outside collapsed, just above the expand bar. */
+  const addToLibraryFullWidth =
+    canShowLibraryToggle && !(isAuthenticated && isInLibrary) ? (
+      <button
+        type="button"
+        onClick={handleLibraryToggle}
+        disabled={libraryToggleDisabled}
+        className={cn(
+          'flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary/50 bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md transition-colors',
+          'animate-add-library-invite hover:bg-primary/90 disabled:opacity-70'
+        )}
+        aria-label={t('library.addToLibrary')}
+        title={t('library.addToLibrary')}
+      >
+        {isAuthenticated && isAddingToLibrary ? (
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <>
+            <PlusIcon className="h-5 w-5 shrink-0" strokeWidth={2.5} aria-hidden />
+            <span>{t('library.addToLibrary')}</span>
+          </>
         )}
       </button>
     ) : null;
@@ -768,9 +788,7 @@ export default function SongContent({
     ) : null;
 
   const hasCollapsibleDetails =
-    Boolean(actionButtonsRow) ||
-    Boolean(folderControl) ||
-    Boolean(libraryActionFeedback);
+    Boolean(actionButtonsRow) || Boolean(folderControl);
 
   if (isEditing) {
     return (
@@ -822,6 +840,23 @@ export default function SongContent({
             {/* Always-visible YouTube row — full width */}
             {youtubeActions}
 
+            {/* Add to library — full width, outside collapsed, just above expand bar */}
+            {addToLibraryFullWidth}
+            {libraryActionFeedback ? (
+              <p
+                role="status"
+                aria-live="polite"
+                className={cn(
+                  'text-xs font-medium',
+                  libraryActionFeedback.type === 'success'
+                    ? 'text-green-700 dark:text-green-400'
+                    : 'text-destructive'
+                )}
+              >
+                {libraryActionFeedback.message}
+              </p>
+            ) : null}
+
             {/* Slim full-width expand bar for extra actions */}
             {hasCollapsibleDetails ? (
               <button
@@ -847,29 +882,11 @@ export default function SongContent({
             {hasCollapsibleDetails && metaDetailsOpen ? (
               <div className="flex flex-col gap-2">
                 {actionButtonsRow}
-                {(folderControl || libraryActionFeedback) && (
-                  <div className="flex w-full flex-col gap-1.5">
-                    {folderControl ? (
-                      <div className="flex h-11 w-full items-center gap-1.5">
-                        {folderControl}
-                      </div>
-                    ) : null}
-                    {libraryActionFeedback ? (
-                      <p
-                        role="status"
-                        aria-live="polite"
-                        className={cn(
-                          'text-xs font-medium',
-                          libraryActionFeedback.type === 'success'
-                            ? 'text-green-700 dark:text-green-400'
-                            : 'text-destructive'
-                        )}
-                      >
-                        {libraryActionFeedback.message}
-                      </p>
-                    ) : null}
+                {folderControl ? (
+                  <div className="flex h-11 w-full items-center gap-1.5">
+                    {folderControl}
                   </div>
-                )}
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -980,7 +997,7 @@ export default function SongContent({
             chordProgression={transposedSong.chordProgression}
           />
 
-          {/* Promo banners — always visible (not inside the chords accordion) */}
+          {/* Promo banners — always visible (not inside the chords accordion). Chips sit with transpose tools. */}
           <div className="space-y-3">
             <PracticeComingSoonBanner
               phase={practicePromoPhase}
@@ -1000,21 +1017,6 @@ export default function SongContent({
                 disabled={!SONG_RECORDING_ENABLED || !recordReady}
               />
             ) : null}
-            {(practicePromoPhase === 'chip' ||
-              (isAuthenticated && recordPromoPhase === 'chip')) && (
-              <div className="flex flex-wrap items-center gap-2">
-                <PracticeComingSoonChip
-                  visible={practicePromoPhase === 'chip'}
-                  onReopen={reopenPracticePromo}
-                />
-                {isAuthenticated ? (
-                  <RecordSongChip
-                    visible={recordPromoPhase === 'chip'}
-                    onReopen={reopenRecordPromo}
-                  />
-                ) : null}
-              </div>
-            )}
           </div>
 
           {/* Chord Diagrams Section - accordion */}
@@ -1055,7 +1057,7 @@ export default function SongContent({
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-1.5 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:pb-0.5 sm:flex-wrap sm:gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {/* Fixed height so expand/collapse does not shift sibling controls */}
                 <div className="flex h-12 shrink-0 items-center sm:h-11">
                 <div
@@ -1140,12 +1142,25 @@ export default function SongContent({
 
                 {onSetSelectedInstrument ? (
                   <InstrumentToggle
+                    key={transposedSong.id}
                     value={selectedInstrument}
                     onChange={onSetSelectedInstrument}
                     compact
                     showLabels
-                    autoHideMs={10_000}
+                    autoHideMs={4_000}
+                    scrollRootRef={contentRef}
                     className="shrink-0"
+                  />
+                ) : null}
+
+                <PracticeComingSoonChip
+                  visible={practicePromoPhase === 'chip'}
+                  onReopen={reopenPracticePromo}
+                />
+                {isAuthenticated ? (
+                  <RecordSongChip
+                    visible={recordPromoPhase === 'chip'}
+                    onReopen={reopenRecordPromo}
                   />
                 ) : null}
                 </div>

@@ -1,0 +1,14 @@
+Instrument icons for jam-lab pads.
+
+Sources (Iconify CDN → local SVG):
+- Game Icons (CC BY 3.0): banjo, bassoon, clarinet, flute, french-horn,
+  guitar, reed (oboe / cor anglais), saxophone, trombone, trumpet, tuba,
+  viola, violin
+- Qlementine Icons (MIT): cello, double-bass (bass), mandolin, snare (percussion)
+
+Closest substitutes where no exact icon exists:
+- bass-clarinet → clarinet
+- contrabassoon → bassoon
+- cor-anglais / oboe → reed
+- double-bass → bass
+- percussion → snare
