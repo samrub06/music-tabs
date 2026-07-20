@@ -393,67 +393,6 @@ export function PublicPlaylistSongList({
     )
   }
 
-  const useCards = songs.length >= 10
-
-  if (useCards) {
-    return (
-      <div className="mt-4 grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5">
-        {songs.map((song) => {
-          const isAdding = addingId === song.id
-          const isInLibrary = libraryIdSet.has(song.id)
-
-          return (
-            <div key={song.id} className="group min-w-0">
-              <button
-                type="button"
-                onClick={() => navigateToSong(song.id)}
-                className={cn('block w-full', UI_TEXT_ALIGN)}
-              >
-                <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-muted shadow-md transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-lg">
-                  <SongThumbnail
-                    songImageUrl={song.songImageUrl}
-                    artistImageUrl={song.artistImageUrl}
-                    genre={song.genre}
-                    alt={song.title}
-                    size="lg"
-                    className="h-full w-full rounded-lg"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                      <PlayIcon className="ml-0.5 h-5 w-5 text-primary-foreground" />
-                    </div>
-                  </div>
-                </div>
-                <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
-                {song.author ? (
-                  <p className="truncate text-xs text-muted-foreground">{song.author}</p>
-                ) : null}
-              </button>
-              {!isInLibrary ? (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="mt-2 h-8 w-full text-xs"
-                  onClick={() => handleAddToLibrary(song)}
-                  disabled={isAdding || !userId}
-                >
-                  {isAdding ? (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  ) : (
-                    <>
-                      <PlusIcon className="mr-1 h-3.5 w-3.5" />
-                      {t('library.addToLibrary')}
-                    </>
-                  )}
-                </Button>
-              ) : null}
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
-
   return (
     <ul className="mt-4">
       {songs.map((song) => {
