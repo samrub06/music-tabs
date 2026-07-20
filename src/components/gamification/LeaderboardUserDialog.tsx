@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { UserPlusIcon } from '@heroicons/react/24/outline'
 import { TrophyIcon } from '@heroicons/react/24/solid'
+import { isMockUserId } from '@/data/mockSocialUsers'
 
 interface LeaderboardUserDialogProps {
   entry: LeaderboardEntry | null
@@ -53,7 +54,7 @@ export default function LeaderboardUserDialog({
   const [pending, startTransition] = useTransition()
 
   useEffect(() => {
-    if (!open || !entry || isCurrentUser) {
+    if (!open || !entry || isCurrentUser || isMockUserId(entry.userId)) {
       setRelationStatus('none')
       setFriendshipId(null)
       setLoadingRelation(false)
@@ -81,14 +82,14 @@ export default function LeaderboardUserDialog({
   }, [open, entry, isCurrentUser])
 
   const refreshRelation = async () => {
-    if (!entry || isCurrentUser) return
+    if (!entry || isCurrentUser || isMockUserId(entry.userId)) return
     const result = await getFriendRelationAction(entry.userId)
     setRelationStatus(result.relationStatus)
     setFriendshipId(result.friendshipId)
   }
 
   const handlePrimaryAction = () => {
-    if (!entry || isCurrentUser) return
+    if (!entry || isCurrentUser || isMockUserId(entry.userId)) return
 
     startTransition(async () => {
       try {
@@ -130,6 +131,15 @@ export default function LeaderboardUserDialog({
         <p className="rounded-xl bg-primary/10 px-4 py-3 text-center text-sm text-primary">
           {t('gamification.YOU_BADGE')}
         </p>
+      )
+    }
+
+    if (isMockUserId(entry.userId)) {
+      return (
+        <Button type="button" className="w-full rounded-xl" disabled>
+          <UserPlusIcon className="mr-1.5 h-4 w-4" />
+          {t('friends.addFriend')}
+        </Button>
       )
     }
 

@@ -100,7 +100,13 @@ export default function FolderSongsClient({
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+  const viewFromUrl = searchParams?.get('view')
+  const view: 'gallery' | 'table' =
+    viewFromUrl === 'gallery' || viewFromUrl === 'table'
+      ? viewFromUrl
+      : total < 10
+        ? 'table'
+        : 'gallery'
 
   usePageHeader(folder.name, '/playlists')
 

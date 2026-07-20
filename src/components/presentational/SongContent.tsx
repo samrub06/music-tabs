@@ -48,12 +48,10 @@ import {
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { SongRecordingPanel } from '@/components/practice/SongRecordingPanel';
 import {
-  PracticeComingSoonBanner,
   PracticeComingSoonChip,
   usePracticeComingSoonPromo,
 } from '@/components/practice/PracticeComingSoonBanner';
 import {
-  RecordSongBanner,
   RecordSongChip,
   useRecordSongPromo,
 } from '@/components/practice/RecordSongPromoBanner';
@@ -270,15 +268,11 @@ export default function SongContent({
   const practiceAudio = usePracticeAudio();
   const {
     phase: practicePromoPhase,
-    markBannerReady: markPracticePromoReady,
-    reopenBanner: reopenPracticePromo,
-    collapseToChip: collapsePracticePromo,
+    dismiss: dismissPracticePromo,
   } = usePracticeComingSoonPromo();
   const {
     phase: recordPromoPhase,
-    markBannerReady: markRecordPromoReady,
-    reopenBanner: reopenRecordPromo,
-    collapseToChip: collapseRecordPromo,
+    dismiss: dismissRecordPromo,
   } = useRecordSongPromo();
   const [recordIsActive, setRecordIsActive] = useState(false);
   const [recordReady, setRecordReady] = useState(false);
@@ -997,28 +991,6 @@ export default function SongContent({
             chordProgression={transposedSong.chordProgression}
           />
 
-          {/* Promo banners — always visible (not inside the chords accordion). Chips sit with transpose tools. */}
-          <div className="space-y-3">
-            <PracticeComingSoonBanner
-              phase={practicePromoPhase}
-              onSnakeFilled={markPracticePromoReady}
-              onDismiss={collapsePracticePromo}
-            />
-            {isAuthenticated ? (
-              <RecordSongBanner
-                phase={recordPromoPhase}
-                onSnakeFilled={markRecordPromoReady}
-                onDismiss={collapseRecordPromo}
-                onStartRecording={() => {
-                  if (!SONG_RECORDING_ENABLED) return
-                  recordStartRef.current?.()
-                }}
-                isRecording={SONG_RECORDING_ENABLED && recordIsActive}
-                disabled={!SONG_RECORDING_ENABLED || !recordReady}
-              />
-            ) : null}
-          </div>
-
           {/* Chord Diagrams Section - accordion */}
           <Collapsible
             open={chordSectionOpen}
@@ -1155,12 +1127,12 @@ export default function SongContent({
 
                 <PracticeComingSoonChip
                   visible={practicePromoPhase === 'chip'}
-                  onReopen={reopenPracticePromo}
+                  onDismiss={dismissPracticePromo}
                 />
                 {isAuthenticated ? (
                   <RecordSongChip
                     visible={recordPromoPhase === 'chip'}
-                    onReopen={reopenRecordPromo}
+                    onDismiss={dismissRecordPromo}
                   />
                 ) : null}
                 </div>

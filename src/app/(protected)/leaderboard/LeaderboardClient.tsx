@@ -5,6 +5,7 @@ import type { LeaderboardEntry } from '@/types'
 import Leaderboard from '@/components/gamification/Leaderboard'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { MOCK_LEADERBOARD_ENTRIES } from '@/data/mockSocialUsers'
 
 interface LeaderboardClientProps {
   initialLeaderboard: LeaderboardEntry[]
@@ -15,19 +16,23 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
   const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Filter leaderboard entries based on search query
+  const displayLeaderboard = useMemo(() => {
+    if (initialLeaderboard.length > 0) return initialLeaderboard
+    return MOCK_LEADERBOARD_ENTRIES
+  }, [initialLeaderboard])
+
   const filteredLeaderboard = useMemo(() => {
     if (!searchQuery.trim()) {
-      return initialLeaderboard
+      return displayLeaderboard
     }
 
     const query = searchQuery.toLowerCase().trim()
-    return initialLeaderboard.filter((entry) => {
+    return displayLeaderboard.filter((entry) => {
       const fullName = entry.fullName?.toLowerCase() || ''
       const email = entry.email.toLowerCase()
       return fullName.includes(query) || email.includes(query)
     })
-  }, [initialLeaderboard, searchQuery])
+  }, [displayLeaderboard, searchQuery])
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background">
@@ -45,7 +50,6 @@ export default function LeaderboardClient({ initialLeaderboard, currentUserId }:
         </p>
       </div>
 
-      {/* Search bar */}
       <div className="mb-4">
         <div className="relative">
           <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

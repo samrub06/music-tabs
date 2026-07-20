@@ -40,7 +40,10 @@ const knownToggleButtonClass =
 const VARIANT_GROUP_UI: Array<{
   id: string;
   searchKeys: string[];
+  /** DB chord names to hide from the regular section grid (also used for known-toggle resolve). */
   hideDbNames: string[];
+  /** Extra DB name aliases when symbol ≠ DB name (e.g. Fmaj7 → Fmaj7 (Barre)). */
+  dbAliases?: string[];
 }> = [
   { id: 'g-major', searchKeys: ['g', 'g major', 'sol', 'sol majeur'], hideDbNames: ['G Major'] },
   { id: 'c-major', searchKeys: ['c', 'c major', 'do', 'do majeur'], hideDbNames: ['C Major'] },
@@ -95,11 +98,13 @@ const VARIANT_GROUP_UI: Array<{
     id: 'fmaj7',
     searchKeys: ['fmaj7', 'f maj7', 'fa maj7', 'f major 7'],
     hideDbNames: [],
+    dbAliases: ['Fmaj7 (Barre)', 'Fmaj7'],
   },
   {
     id: 'fsharp7',
     searchKeys: ['f#7', 'f# 7', 'fa#7', 'fa dièse 7', 'f sharp 7'],
     hideDbNames: [],
+    dbAliases: ['F#7'],
   },
   { id: 'fm-minor', searchKeys: ['fm', 'f minor', 'f min', 'fa mineur'], hideDbNames: ['F Minor'] },
   { id: 'bdim', searchKeys: ['bdim', 'b dim', 'si dim'], hideDbNames: [] },
@@ -112,13 +117,14 @@ const VARIANT_GROUP_UI: Array<{
     id: 'cm-minor',
     searchKeys: ['cm', 'c minor', 'c min', 'do mineur', 'do min'],
     hideDbNames: [],
+    dbAliases: ['C Minor'],
   },
   {
     id: 'cadd9',
     searchKeys: ['cadd9', 'c add9', 'do add9', 'c add 9'],
     hideDbNames: [],
   },
-  { id: 'd4', searchKeys: ['d4', 'dsus4', 'ré 4', 're 4', 'd sus4'], hideDbNames: [] },
+  { id: 'd4', searchKeys: ['d4', 'dsus4', 'ré 4', 're 4', 'd sus4'], hideDbNames: [], dbAliases: ['Dsus4'] },
   {
     id: 'em7',
     searchKeys: ['em7', 'e minor 7', 'e min 7', 'mi mineur 7', 'mi min 7'],
@@ -133,6 +139,7 @@ const VARIANT_GROUP_UI: Array<{
     id: 'gm-minor',
     searchKeys: ['gm', 'g minor', 'g min', 'sol mineur', 'sol min'],
     hideDbNames: [],
+    dbAliases: ['G Minor', 'G Minor (A-Shape)'],
   },
 ];
 
@@ -153,38 +160,53 @@ interface ChordSection {
 type StatusFilter = 'all' | 'to-learn' | 'known';
 type DifficultyFilter = 'all' | 'beginner' | 'intermediate' | 'advanced';
 
-function resolveDbChordForGroup(group: ChordVariantGroup, chords: Chord[]): Chord | undefined {
-  const cfg = VARIANT_GROUP_UI.find((g) => g.id === group.id);
-  if (cfg) {
-    for (const name of cfg.hideDbNames) {
-      const found = chords.find((c) => c.name === name);
-      if (found) return found;
-    }
-  }
-
-  const symbolNorm = normalizeChordName(group.symbol);
-  return chords.find((c) => {
-    const nameNorm = normalizeChordName(c.name);
-    if (nameNorm === symbolNorm) return true;
-    const root = nameNorm.split(/\s+/)[0] ?? nameNorm;
-    return root === symbolNorm;
-  });
-}
-
-// Normalize chord name for comparison
-function normalizeChordName(chord: string): string {
+/** Compact key for comparing chord symbols to DB names (Am ↔ A Minor, Fmaj7 ↔ Fmaj7 (Barre)). */
+function toChordKey(chord: string): string {
   if (!chord) return '';
   let normalized = chord.trim().toUpperCase();
-  const enharmonicMap: { [key: string]: string } = {
-    'C#': 'DB', 'D#': 'EB', 'F#': 'GB', 'G#': 'AB', 'A#': 'BB'
+  // Strip parenthetical suffixes: (Barre), (A-Shape), etc.
+  normalized = normalized.replace(/\s*\([^)]*\)\s*/g, '');
+  const enharmonicMap: Record<string, string> = {
+    'C#': 'DB',
+    'D#': 'EB',
+    'F#': 'GB',
+    'G#': 'AB',
+    'A#': 'BB',
   };
   for (const [sharp, flat] of Object.entries(enharmonicMap)) {
-    if (normalized.startsWith(sharp)) {
-      normalized = normalized.replace(sharp, flat);
-      break;
-    }
+    normalized = normalized.split(sharp).join(flat);
   }
+  normalized = normalized.replace(/\s+/g, '');
+  normalized = normalized
+    .replace(/MINOR/g, 'M')
+    .replace(/MAJOR/g, '')
+    .replace(/MIN(?![A-Z])/g, 'M')
+    .replace(/SUS4/g, '4')
+    .replace(/SUS2/g, '2');
   return normalized;
+}
+
+function resolveDbChordForGroup(group: ChordVariantGroup, chords: Chord[]): Chord | undefined {
+  const cfg = VARIANT_GROUP_UI.find((g) => g.id === group.id);
+  const candidateNames = [
+    ...(cfg?.hideDbNames ?? []),
+    ...(cfg?.dbAliases ?? []),
+    group.symbol,
+  ];
+
+  for (const name of candidateNames) {
+    const found = chords.find((c) => c.name === name);
+    if (found) return found;
+  }
+
+  const symbolKey = toChordKey(group.symbol);
+  if (!symbolKey) return undefined;
+
+  // Prefer exact compact-key match; skip barre duplicates when an open shape exists.
+  const matches = chords.filter((c) => toChordKey(c.name) === symbolKey);
+  if (matches.length === 0) return undefined;
+  const open = matches.find((c) => !/\(/i.test(c.name));
+  return open ?? matches[0];
 }
 
 export default function ChordsClient({ 
@@ -457,10 +479,12 @@ export default function ChordsClient({
       .map((cfg) => chordVariantsFr.find((g) => g.id === cfg.id))
       .filter((g): g is ChordVariantGroup => g != null)
       .filter((g) => instrument !== 'piano' || hasPianoChordDiagram(g.symbol))
+      // Only show variant cards that map to a DB chord (required for known check ✅)
+      .filter((g) => resolveDbChordForGroup(g, chords) != null)
       .filter((g) => {
         if (statusFilter === 'all') return true;
         const dbChord = resolveDbChordForGroup(g, chords);
-        if (!dbChord) return statusFilter === 'to-learn';
+        if (!dbChord) return false;
         const known = knownChordIds.has(dbChord.id);
         return statusFilter === 'known' ? known : !known;
       });
@@ -626,8 +650,9 @@ export default function ChordsClient({
                   <div className={instrument === 'piano' ? CHORDS_PIANO_GRID_CLASS : CHORDS_GRID_CLASS}>
                     {visibleVariantGroups.map((group) => {
                       const dbChord = resolveDbChordForGroup(group, chords);
-                      const chordId = dbChord?.id;
-                      const isKnown = chordId ? knownChordIds.has(chordId) : false;
+                      if (!dbChord) return null;
+                      const chordId = dbChord.id;
+                      const isKnown = knownChordIds.has(chordId);
 
                       return (
                         <div
@@ -637,22 +662,20 @@ export default function ChordsClient({
                             isKnown && knownChordShellClass
                           )}
                         >
-                          {chordId && (
-                            <button
-                              type="button"
-                              onClick={() => handleToggleKnown(chordId)}
-                              disabled={isPending}
-                              className={knownToggleButtonClass}
-                              aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
-                              title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
-                            >
-                              {isKnown ? (
-                                <CheckCircleIconSolid className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                              ) : (
-                                <CheckCircleIcon className="h-5 w-5 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400" />
-                              )}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleKnown(chordId)}
+                            disabled={isPending}
+                            className={knownToggleButtonClass}
+                            aria-label={isKnown ? t('chords.markAsKnown') : t('chords.markAsUnknown')}
+                            title={isKnown ? t('chords.iKnowIt') : t('chords.iDontKnowIt')}
+                          >
+                            {isKnown ? (
+                              <CheckCircleIconSolid className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                              <CheckCircleIcon className="h-5 w-5 text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400" />
+                            )}
+                          </button>
                           <VariantChordCard
                             group={group}
                             instrument={instrument}

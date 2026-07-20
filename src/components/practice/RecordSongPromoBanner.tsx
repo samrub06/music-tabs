@@ -41,17 +41,9 @@ function writeStorageFlag(key: string): void {
   }
 }
 
-function clearStorageFlag(key: string): void {
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    // ignore
-  }
-}
-
 /**
- * Record-song promo: banner + 10s snake → close → chip (same flow as practice).
- * Chip click reopens the banner; feature CTA stays disabled for now.
+ * Record-song promo: chip in the toolbar until permanently dismissed.
+ * (Hero banner kept in file for reuse; song page uses chip-only.)
  */
 export function useRecordSongPromo() {
   const [phase, setPhase] = useState<RecordPromoPhase>('loading')
@@ -61,11 +53,8 @@ export function useRecordSongPromo() {
       setPhase('gone')
       return
     }
-    if (readStorageFlag(STORAGE_COLLAPSED)) {
-      setPhase('chip')
-      return
-    }
-    setPhase('banner')
+    writeStorageFlag(STORAGE_COLLAPSED)
+    setPhase('chip')
   }, [])
 
   const dismiss = useCallback(() => {
@@ -85,9 +74,9 @@ export function useRecordSongPromo() {
     )
   }, [])
 
+  /** @deprecated Chip no longer reopens the banner; kept for API compat. */
   const reopenBanner = useCallback(() => {
-    clearStorageFlag(STORAGE_COLLAPSED)
-    setPhase('banner')
+    // no-op: promos stay as chips only
   }, [])
 
   useEffect(() => {
@@ -241,13 +230,13 @@ export function RecordSongBanner({
 
 interface RecordSongChipProps {
   visible: boolean
-  onReopen?: () => void
+  onDismiss?: () => void
 }
 
-/** Compact chip — click label or X to reopen the banner. Feature stays disabled. */
+/** Compact chip — X permanently dismisses (hides chip, no banner). Feature stays disabled. */
 export function RecordSongChip({
   visible,
-  onReopen,
+  onDismiss,
 }: RecordSongChipProps) {
   const { t } = useLanguage()
 
@@ -261,20 +250,18 @@ export function RecordSongChip({
       )}
       role="status"
     >
-      <button
-        type="button"
-        onClick={onReopen}
-        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight text-red-700 transition-opacity hover:opacity-80 dark:text-red-400 sm:max-w-none sm:text-sm"
+      <span
+        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight text-red-700 dark:text-red-400 sm:max-w-none sm:text-sm"
         title={t('songContent.recordingBannerTitle')}
       >
         {t('songContent.recordingBannerTitle')}
-      </button>
+      </span>
       <button
         type="button"
-        onClick={onReopen}
+        onClick={onDismiss}
         className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-red-700/80 transition-colors hover:bg-red-500/15 dark:text-red-400 sm:h-8 sm:w-8"
-        aria-label={t('songContent.recordingBannerTitle')}
-        title={t('songContent.recordingBannerTitle')}
+        aria-label={t('common.close')}
+        title={t('common.close')}
       >
         <XMarkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       </button>

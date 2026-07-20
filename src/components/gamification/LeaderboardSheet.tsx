@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { MOCK_LEADERBOARD_ENTRIES } from '@/data/mockSocialUsers'
 
 interface LeaderboardSheetProps {
   open: boolean
@@ -65,6 +66,8 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
 
   const handleClose = () => onOpenChange(false)
   const currentUserId = data?.currentUser?.userId
+  const sheetEntries =
+    data && data.entries.length > 0 ? data.entries : MOCK_LEADERBOARD_ENTRIES
 
   return (
     <>
@@ -125,12 +128,7 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
                   </div>
 
                   <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain">
-                    {data.entries.length === 0 ? (
-                      <p className="px-3 py-8 text-center text-sm text-muted-foreground">
-                        {t('gamification.EMPTY_LEADERBOARD')}
-                      </p>
-                    ) : (
-                      data.entries.map((entry) => {
+                    {sheetEntries.map((entry) => {
                         const isCurrentUser = entry.userId === currentUserId
 
                         return (
@@ -188,8 +186,7 @@ export default function LeaderboardSheet({ open, onOpenChange }: LeaderboardShee
                             </div>
                           </button>
                         )
-                      })
-                    )}
+                      })}
                   </div>
                 </>
               ) : (

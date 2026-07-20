@@ -19,6 +19,11 @@ import { Input } from '@/components/ui/input'
 import { MagnifyingGlassIcon, UserPlusIcon } from '@heroicons/react/24/outline'
 import InviteFriendsSection from '@/components/social/InviteFriendsSection'
 import { cn } from '@/lib/utils'
+import {
+  filterMockFriendsByQuery,
+  isMockUserId,
+  MOCK_FRIEND_PROFILES,
+} from '@/data/mockSocialUsers'
 
 interface FriendsClientProps {
   initialFriends: FriendProfile[]
@@ -72,8 +77,18 @@ function FriendRow({
   pending: boolean
 }) {
   const { t } = useLanguage()
+  const isMock = isMockUserId(profile.id)
 
   const renderAction = () => {
+    if (isMock) {
+      return (
+        <Button type="button" size="sm" disabled className="rounded-xl">
+          <UserPlusIcon className="mr-1.5 h-4 w-4" />
+          {t('friends.addFriend')}
+        </Button>
+      )
+    }
+
     switch (profile.relationStatus) {
       case 'friends':
         return (
@@ -171,7 +186,9 @@ export default function FriendsClient({
   const { t } = useLanguage()
   const [friends, setFriends] = useState(initialFriends)
   const [pendingRequests, setPendingRequests] = useState(initialPendingRequests)
-  const [discoverableUsers, setDiscoverableUsers] = useState(initialDiscoverableUsers)
+  const [discoverableUsers, setDiscoverableUsers] = useState(
+    initialDiscoverableUsers.length > 0 ? initialDiscoverableUsers : MOCK_FRIEND_PROFILES
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<FriendProfile[]>([])
   const [activeTab, setActiveTab] = useState<'friends' | 'search'>('friends')
@@ -186,7 +203,11 @@ export default function FriendsClient({
   }, [])
 
   const refreshDiscoverableUsers = useCallback(() => {
-    getDiscoverableUsersAction().then(setDiscoverableUsers).catch(console.error)
+    getDiscoverableUsersAction()
+      .then((users) => {
+        setDiscoverableUsers(users.length > 0 ? users : MOCK_FRIEND_PROFILES)
+      })
+      .catch(console.error)
   }, [])
 
   const isSearching = searchQuery.trim().length >= 2
@@ -194,7 +215,7 @@ export default function FriendsClient({
   const refreshSearchTab = useCallback(async () => {
     if (isSearching) {
       const results = await searchUsersAction(searchQuery.trim())
-      setSearchResults(results)
+      setSearchResults(results.length > 0 ? results : filterMockFriendsByQuery(searchQuery))
       return
     }
     refreshDiscoverableUsers()
@@ -211,7 +232,9 @@ export default function FriendsClient({
 
     const timeout = window.setTimeout(() => {
       searchUsersAction(trimmed)
-        .then(setSearchResults)
+        .then((results) => {
+          setSearchResults(results.length > 0 ? results : filterMockFriendsByQuery(trimmed))
+        })
         .catch(console.error)
     }, 300)
 
@@ -227,6 +250,7 @@ export default function FriendsClient({
   }, [activeTab, refreshFriends, refreshPendingRequests, refreshSearchTab])
 
   const handleProfileAction = (profile: FriendProfile) => {
+    if (isMockUserId(profile.id)) return
     startTransition(async () => {
       try {
         if (profile.relationStatus === 'friends' && profile.friendshipId) {

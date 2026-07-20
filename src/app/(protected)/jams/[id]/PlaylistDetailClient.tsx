@@ -499,6 +499,35 @@ export default function PlaylistDetailClient({
           <MagnifyingGlassIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
           <h3 className="text-base font-medium text-foreground">{t('songs.noResults')}</h3>
         </div>
+      ) : songs.length >= 10 && !isFiltering ? (
+        <div className="mt-4 grid grid-cols-2 gap-3 px-4 sm:grid-cols-3 sm:gap-4 sm:px-6 md:grid-cols-4 lg:grid-cols-5">
+          {displayedSongs.map((song) => (
+            <button
+              key={song.id}
+              type="button"
+              onClick={() => navigateToSong(song.id)}
+              className={cn('group min-w-0 text-left', UI_TEXT_ALIGN)}
+            >
+              <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-muted shadow-md transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-lg">
+                <SongThumbnail
+                  songImageUrl={song.songImageUrl}
+                  artistImageUrl={song.artistImageUrl}
+                  genre={song.genre}
+                  alt={song.title}
+                  size="lg"
+                  className="h-full w-full rounded-lg"
+                />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/40">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                    <PlayIcon className="ml-0.5 h-5 w-5 text-primary-foreground" />
+                  </div>
+                </div>
+              </div>
+              <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+              <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+            </button>
+          ))}
+        </div>
       ) : isFiltering ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter}>
           <SortableContext

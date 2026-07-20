@@ -41,19 +41,9 @@ function writeStorageFlag(key: string): void {
   }
 }
 
-function clearStorageFlag(key: string): void {
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    // ignore
-  }
-}
-
 /**
- * Practice promo flow:
- * 1. Full banner + 10s snake border
- * 2. Snake filled → close icon appears
- * 3. Collapses to a chip (click chip → reopen banner; feature stays disabled)
+ * Practice promo flow: chip in the toolbar until permanently dismissed.
+ * (Hero banner kept in file for reuse; song page uses chip-only.)
  */
 export function usePracticeComingSoonPromo() {
   const [phase, setPhase] = useState<PracticePromoPhase>('loading')
@@ -63,12 +53,8 @@ export function usePracticeComingSoonPromo() {
       setPhase('gone')
       return
     }
-    // Already saw the banner once → stay as chip forever (until dismiss)
-    if (readStorageFlag(STORAGE_COLLAPSED)) {
-      setPhase('chip')
-      return
-    }
-    setPhase('banner')
+    writeStorageFlag(STORAGE_COLLAPSED)
+    setPhase('chip')
   }, [])
 
   const dismiss = useCallback(() => {
@@ -90,10 +76,9 @@ export function usePracticeComingSoonPromo() {
     )
   }, [])
 
-  /** Chip click → show the full banner again (does not enable practice). */
+  /** @deprecated Chip no longer reopens the banner; kept for API compat. */
   const reopenBanner = useCallback(() => {
-    clearStorageFlag(STORAGE_COLLAPSED)
-    setPhase('banner')
+    // no-op: promos stay as chips only
   }, [])
 
   // After close icon is shown, auto-collapse to chip
@@ -238,13 +223,13 @@ export function PracticeComingSoonBanner({
 
 interface PracticeComingSoonChipProps {
   visible: boolean
-  onReopen?: () => void
+  onDismiss?: () => void
 }
 
-/** Compact chip — click anywhere (label or X) to reopen the banner. Feature stays disabled. */
+/** Compact chip — X permanently dismisses (hides chip, no banner). Feature stays disabled. */
 export function PracticeComingSoonChip({
   visible,
-  onReopen,
+  onDismiss,
 }: PracticeComingSoonChipProps) {
   const { t } = useLanguage()
 
@@ -259,20 +244,18 @@ export function PracticeComingSoonChip({
       style={{ backgroundColor: BANNER_BG, color: BANNER_INK }}
       role="status"
     >
-      <button
-        type="button"
-        onClick={onReopen}
-        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight transition-opacity hover:opacity-80 sm:max-w-none sm:text-sm"
+      <span
+        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight sm:max-w-none sm:text-sm"
         title={t('songContent.practiceBannerTitle')}
       >
         {t('songContent.practiceBannerTitle')}
-      </button>
+      </span>
       <button
         type="button"
-        onClick={onReopen}
+        onClick={onDismiss}
         className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/10 sm:h-8 sm:w-8"
-        aria-label={t('songContent.practiceBannerTitle')}
-        title={t('songContent.practiceBannerTitle')}
+        aria-label={t('common.close')}
+        title={t('common.close')}
       >
         <XMarkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
       </button>
