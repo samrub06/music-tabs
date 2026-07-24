@@ -71,19 +71,22 @@ function playlistRowsFromNav(nav: SongNavigationData): SongQueueItem[] | null {
   const hasTitles = context.songs.some((song) => Boolean(song.title?.trim()))
   if (!hasTitles) return null
 
-  return nav.songList
-    .map((id) => {
-      const song = byId.get(id)
-      if (!song?.title?.trim()) return null
-      return {
-        id,
-        title: song.title.trim(),
-        author: song.author,
-        songImageUrl: song.songImageUrl,
-        artistImageUrl: song.artistImageUrl,
-      } satisfies SongQueueItem
+  const rows: SongQueueItem[] = []
+  for (const id of nav.songList) {
+    const song = byId.get(id)
+    if (!song) continue
+    const title = song.title?.trim()
+    if (!title) continue
+    rows.push({
+      id,
+      title,
+      author: song.author,
+      songImageUrl: song.songImageUrl,
+      artistImageUrl: song.artistImageUrl,
     })
-    .filter((song): song is SongQueueItem => song !== null)
+  }
+
+  return rows.length > 0 ? rows : null
 }
 
 export default function SongQueueSheet({
