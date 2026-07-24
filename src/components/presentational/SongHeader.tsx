@@ -7,6 +7,7 @@ import {
   PauseIcon,
   PlayIcon,
   AdjustmentsHorizontalIcon,
+  ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import {
   BackArrowIcon,
@@ -30,6 +31,7 @@ interface SongHeaderProps {
   canNextSong?: boolean;
   nextSongInfo?: { title: string; author?: string } | null;
   onToggleToolsBar?: () => void;
+  onOpenSongQueue?: () => void;
   isInLibrary?: boolean;
 }
 
@@ -43,15 +45,16 @@ export default function SongHeader({
   canPrevSong,
   canNextSong,
   onToggleToolsBar,
+  onOpenSongQueue,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
   const playing = autoScroll.isActive;
 
   return (
     <div className="flex-shrink-0 border-b border-border bg-background relative">
-      {/* Single row: back, auto-scroll + speed, tools, next */}
+      {/* Single row: back, auto-scroll + speed, tools, queue (mobile), next */}
       <div
-        className="flex items-center justify-between gap-2 p-2 w-full min-w-0"
+        className="flex items-center justify-between gap-2 p-2.5 sm:p-2 w-full min-w-0 min-h-14 sm:min-h-0"
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         <Button
@@ -59,7 +62,7 @@ export default function SongHeader({
           size="icon"
           onClick={onNavigateBack}
           className={cn(
-            'flex-shrink-0 h-10 w-10 transition-all duration-300 ease-out motion-reduce:transition-none',
+            'flex-shrink-0 h-11 w-11 sm:h-10 sm:w-10 transition-all duration-300 ease-out motion-reduce:transition-none',
             playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0 border-0'
           )}
           aria-label={t('songHeader.back')}
@@ -89,7 +92,7 @@ export default function SongHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="order-2 h-8 w-8 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none"
+                className="order-2 h-9 w-9 sm:h-8 sm:w-8 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none"
                 onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
               >
                 <MinusIcon className="h-3.5 w-3.5" />
@@ -99,7 +102,7 @@ export default function SongHeader({
                 size={playing ? 'default' : 'icon'}
                 className={cn(
                   'order-3 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none',
-                  playing ? 'h-11 min-w-[4.5rem] px-5' : 'h-9 w-9'
+                  playing ? 'h-11 min-w-[4.5rem] px-5' : 'h-10 w-10 sm:h-9 sm:w-9'
                 )}
                 onClick={onToggleAutoScroll}
                 title={
@@ -120,7 +123,7 @@ export default function SongHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="order-5 h-8 w-8 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none"
+                className="order-5 h-9 w-9 sm:h-8 sm:w-8 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none"
                 onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
               >
                 <PlusIcon className="h-3.5 w-3.5" />
@@ -140,7 +143,7 @@ export default function SongHeader({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    'h-10 w-10 shrink-0 rounded-none rounded-e-xl rtl:rounded-e-none rtl:rounded-s-xl transition-all duration-300 ease-out motion-reduce:transition-none',
+                    'h-11 w-11 sm:h-10 sm:w-10 shrink-0 rounded-none rounded-e-xl rtl:rounded-e-none rtl:rounded-s-xl transition-all duration-300 ease-out motion-reduce:transition-none',
                     playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0'
                   )}
                   onClick={() => onToggleToolsBar()}
@@ -156,34 +159,49 @@ export default function SongHeader({
           </div>
         </div>
 
-        {onNextSong && (
-          <div
-            className={cn(
-              'flex items-center gap-1 flex-shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none',
-              playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden'
-            )}
-            aria-hidden={playing}
-          >
-            {/* Previous song: desktop only — freed on mobile for speed controls */}
-            {onPrevSong && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onPrevSong}
-                disabled={!canPrevSong}
-                className="hidden sm:inline-flex h-10 w-10"
-                aria-label={t('common.previous')}
-                tabIndex={playing ? -1 : undefined}
-              >
-                <BackArrowIcon className="h-5 w-5" />
-              </Button>
-            )}
+        <div
+          className={cn(
+            'flex items-center gap-1 flex-shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none',
+            playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden'
+          )}
+          aria-hidden={playing}
+        >
+          {onOpenSongQueue && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onOpenSongQueue}
+              className="inline-flex sm:hidden h-11 w-11"
+              aria-label={t('songHeader.openSongQueue')}
+              title={t('songHeader.openSongQueue')}
+              tabIndex={playing ? -1 : undefined}
+            >
+              <ChevronUpIcon className="h-5 w-5" />
+            </Button>
+          )}
+
+          {/* Previous song: desktop only — freed on mobile for speed controls */}
+          {onPrevSong && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onPrevSong}
+              disabled={!canPrevSong}
+              className="hidden sm:inline-flex h-10 w-10"
+              aria-label={t('common.previous')}
+              tabIndex={playing ? -1 : undefined}
+            >
+              <BackArrowIcon className="h-5 w-5" />
+            </Button>
+          )}
+
+          {onNextSong && (
             <Button
               variant="default"
               onClick={onNextSong}
               disabled={!canNextSong}
               className={cn(
-                'h-10 min-w-[5.25rem] shrink-0 gap-1.5 px-4 shadow-sm',
+                'h-11 sm:h-10 min-w-[5.25rem] shrink-0 gap-1.5 px-4 shadow-sm',
                 isRtl && 'flex-row-reverse'
               )}
               aria-label={t('songHeader.nextSong')}
@@ -192,8 +210,8 @@ export default function SongHeader({
               <span className="text-sm font-medium">{t('songHeader.next')}</span>
               <ForwardArrowIcon className="h-5 w-5 shrink-0" />
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -915,7 +915,13 @@
     "STOP_AUTO_SCROLL": "Arrêter",
     "START_AUTO_SCROLL": "Démarrer",
     "TOOLS_LABEL": "Outils",
-    "CAPO_WITH_VALUE": "Capo {capo}"
+    "CAPO_WITH_VALUE": "Capo {capo}",
+    "openSongQueue": "Liste des chansons",
+    "songQueuePlaylistTitle": "Playlist",
+    "songQueueSongsTitle": "Chansons",
+    "songQueueLoading": "Chargement des chansons…",
+    "songQueueEmpty": "Aucune chanson dans cette liste",
+    "songQueueNowPlaying": "En cours"
   },
   "youtubeTutorial": {
     "title": "Tutoriel YouTube",

@@ -8,6 +8,7 @@ import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ToolsBottomBar from './ToolsBottomBar';
 import FloatingYoutubeTutorial from './FloatingYoutubeTutorial';
+import SongQueueSheet from './SongQueueSheet';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
 import type { YoutubeVideoMode } from '@/utils/youtubeTutorial';
@@ -171,10 +172,12 @@ export default function SongViewer({
 }: SongViewerProps) {
   const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
   const [youtubeVideoMode, setYoutubeVideoMode] = useState<YoutubeVideoMode>('tutorial');
+  const [songQueueOpen, setSongQueueOpen] = useState(false);
 
   useEffect(() => {
     setYoutubeTutorialOpen(false);
     setYoutubeVideoMode('tutorial');
+    setSongQueueOpen(false);
   }, [song?.id]);
 
   const handleSelectYoutubeMode = (mode: YoutubeVideoMode) => {
@@ -217,6 +220,7 @@ export default function SongViewer({
         canNextSong={!!canNextSong}
         nextSongInfo={nextSongInfo}
         onToggleToolsBar={onToggleToolsBar}
+        onOpenSongQueue={() => setSongQueueOpen(true)}
         isInLibrary={isInLibrary}
       />
 
@@ -319,6 +323,12 @@ export default function SongViewer({
         isOpen={youtubeTutorialOpen}
         videoMode={youtubeVideoMode}
         onClose={() => setYoutubeTutorialOpen(false)}
+      />
+
+      <SongQueueSheet
+        open={songQueueOpen}
+        onOpenChange={setSongQueueOpen}
+        currentSongId={song.id}
       />
     </div>
   );

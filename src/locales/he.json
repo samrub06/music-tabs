@@ -915,7 +915,13 @@
     "STOP_AUTO_SCROLL": "עצור",
     "START_AUTO_SCROLL": "התחל",
     "TOOLS_LABEL": "כלים",
-    "CAPO_WITH_VALUE": "קאפו {capo}"
+    "CAPO_WITH_VALUE": "קאפו {capo}",
+    "openSongQueue": "רשימת שירים",
+    "songQueuePlaylistTitle": "פלייליסט",
+    "songQueueSongsTitle": "שירים",
+    "songQueueLoading": "טוען שירים…",
+    "songQueueEmpty": "אין שירים ברשימה",
+    "songQueueNowPlaying": "מתנגן"
   },
   "youtubeTutorial": {
     "title": "מדריך YouTube",
