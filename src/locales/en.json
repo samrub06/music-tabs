@@ -915,7 +915,8 @@
     "songQueueSongsTitle": "Songs",
     "songQueueLoading": "Loading songs…",
     "songQueueEmpty": "No songs in this list",
-    "songQueueNowPlaying": "Playing"
+    "songQueueNowPlaying": "Playing",
+    "backToAllSongs": "Back to all songs"
   },
   "youtubeTutorial": {
     "title": "YouTube tutorial",

@@ -71,20 +71,20 @@ export default function SongHeader({
           <div
             className={cn(
               'flex min-w-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 transition-all duration-300 ease-out motion-reduce:transition-none',
-              playing ? 'max-w-[16rem] flex-none' : 'max-w-full flex-1'
+              playing ? 'max-w-[20rem] flex-none' : 'max-w-full flex-1'
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             {playing ? (
-              <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 px-1.5 py-0.5">
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-2.5 px-2.5 py-0.5 sm:gap-2">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 sm:h-8 sm:w-8 shrink-0"
+                  className="h-10 w-10 sm:h-9 sm:w-9 shrink-0"
                   onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
                   aria-label={t('songHeader.AUTO_SCROLL_LABEL')}
                 >
-                  <MinusIcon className="h-3.5 w-3.5" />
+                  <MinusIcon className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="default"
@@ -94,17 +94,17 @@ export default function SongHeader({
                 >
                   <PauseIcon className="h-5 w-5" />
                 </Button>
-                <span className="min-w-[2.25rem] shrink-0 text-center text-xs font-semibold tabular-nums">
+                <span className="min-w-[2.5rem] shrink-0 text-center text-xs font-semibold tabular-nums">
                   {autoScroll.speed.toFixed(1)}x
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 sm:h-8 sm:w-8 shrink-0"
+                  className="h-10 w-10 sm:h-9 sm:w-9 shrink-0"
                   onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
                   aria-label={t('songHeader.AUTO_SCROLL_LABEL')}
                 >
-                  <PlusIcon className="h-3.5 w-3.5" />
+                  <PlusIcon className="h-4 w-4" />
                 </Button>
               </div>
             ) : (

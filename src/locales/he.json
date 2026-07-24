@@ -923,7 +923,8 @@
     "songQueueSongsTitle": "שירים",
     "songQueueLoading": "טוען שירים…",
     "songQueueEmpty": "אין שירים ברשימה",
-    "songQueueNowPlaying": "מתנגן"
+    "songQueueNowPlaying": "מתנגן",
+    "backToAllSongs": "חזרה לכל השירים"
   },
   "youtubeTutorial": {
     "title": "מדריך YouTube",

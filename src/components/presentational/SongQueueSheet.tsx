@@ -266,7 +266,17 @@ export default function SongQueueSheet({
               </ul>
             )}
 
-            <div className="shrink-0 border-t border-border/70 bg-background pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+            <div className="shrink-0 space-y-2 border-t border-border/70 bg-background pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push('/songs')
+                }}
+                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:bg-primary/80"
+              >
+                {t('songHeader.backToAllSongs')}
+              </button>
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}

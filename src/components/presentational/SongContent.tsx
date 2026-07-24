@@ -1238,18 +1238,6 @@ export default function SongContent({
             />
           ) : null}
 
-          {onOpenSongQueue ? (
-            <button
-              type="button"
-              onClick={onOpenSongQueue}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border/80 bg-muted/40 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 active:bg-muted sm:hidden"
-              aria-label={t('songHeader.openSongQueue')}
-            >
-              <ChevronUpIcon className="h-5 w-5 shrink-0" />
-              <span>{t('songHeader.openSongQueue')}</span>
-            </button>
-          ) : null}
-
           {isAuthenticated ? (
             <div ref={endSuggestionsRef}>
               <SongEndSuggestions
@@ -1260,6 +1248,18 @@ export default function SongContent({
                 onPlayNext={onPlayNext}
               />
             </div>
+          ) : null}
+
+          {onOpenSongQueue ? (
+            <button
+              type="button"
+              onClick={onOpenSongQueue}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border/80 bg-muted/40 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 active:bg-muted sm:hidden"
+              aria-label={t('songHeader.openSongQueue')}
+            >
+              <ChevronUpIcon className="h-5 w-5 shrink-0" />
+              <span>{t('songHeader.openSongQueue')}</span>
+            </button>
           ) : null}
         </div>
       </div>
