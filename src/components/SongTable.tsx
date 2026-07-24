@@ -55,7 +55,7 @@ interface SongTableProps {
   showPlaylistBulkActions?: boolean;
   playlistsForMove?: Playlist[];
   onBulkMoveToPlaylist?: (
-    playlistId: string,
+    playlistIds: string[],
     songIds: string[],
     removeFromSource: boolean
   ) => Promise<void>;
@@ -420,14 +420,27 @@ export default function SongTable({
     }
   };
 
-  const handleBulkMoveToPlaylist = async (playlistId: string, removeFromSource: boolean) => {
-    if (!onBulkMoveToPlaylist) return;
+  const handleBulkMoveToPlaylist = async (playlistIds: string[], removeFromSource: boolean) => {
+    if (!onBulkMoveToPlaylist || playlistIds.length === 0) return;
     const songIds = Array.from(selectedSongs);
-    await onBulkMoveToPlaylist(playlistId, songIds, removeFromSource);
+    await onBulkMoveToPlaylist(playlistIds, songIds, removeFromSource);
     setSelectedSongs(new Set());
     setSuccessMessage(t('songs.songsMoved').replace('{count}', String(songIds.length)));
     router.refresh();
   };
+
+  // How many of the currently selected songs already belong to each playlist.
+  const selectedPlaylistMembership = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const songId of Array.from(selectedSongs)) {
+      const memberships = playlistsBySongId.get(songId);
+      if (!memberships) continue;
+      for (const playlist of memberships) {
+        counts.set(playlist.id, (counts.get(playlist.id) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [selectedSongs, playlistsBySongId]);
 
   // Clear selected songs when select mode is turned off
   useEffect(() => {
@@ -591,6 +604,7 @@ export default function SongTable({
           onMove={handleBulkMoveToPlaylist}
           songCount={selectedSongs.size}
           currentPlaylistId={currentPlaylistId}
+          membershipCounts={selectedPlaylistMembership}
         />
       )}
 

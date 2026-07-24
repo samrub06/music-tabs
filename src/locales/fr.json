@@ -1164,6 +1164,8 @@
     "moveSongsTitle": "Déplacer {count} chanson(s) vers une playlist",
     "selectDestinationPlaylist": "Sélectionner la playlist de destination",
     "removeFromCurrentPlaylist": "Retirer de la playlist actuelle après le déplacement",
+    "alreadyInAll": "Déjà toutes",
+    "alreadyInSome": "Déjà {count}/{total}",
     "importTab": "Importer",
     "manualTab": "Saisie manuelle",
     "searchCatalog": "Rechercher sur Tab4U / Ultimate Guitar",

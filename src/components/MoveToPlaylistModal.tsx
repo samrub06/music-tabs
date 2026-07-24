@@ -4,16 +4,18 @@ import { useEffect, useState } from 'react'
 import { useLanguage } from '@/context/LanguageContext'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import type { Playlist } from '@/types'
 
 interface MoveToPlaylistModalProps {
   isOpen: boolean
   onClose: () => void
   playlists: Playlist[]
-  onMove: (playlistId: string, removeFromSource: boolean) => Promise<void>
+  onMove: (playlistIds: string[], removeFromSource: boolean) => Promise<void>
   songCount: number
   currentPlaylistId?: string | null
+  /** How many of the selected songs already belong to each playlist (by playlist id). */
+  membershipCounts?: Map<string, number>
 }
 
 export default function MoveToPlaylistModal({
@@ -23,34 +25,65 @@ export default function MoveToPlaylistModal({
   onMove,
   songCount,
   currentPlaylistId,
+  membershipCounts,
 }: MoveToPlaylistModalProps) {
   const { t } = useLanguage()
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | undefined>(undefined)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [removeFromSource, setRemoveFromSource] = useState(false)
   const [isMoving, setIsMoving] = useState(false)
 
   useEffect(() => {
     if (!isOpen) {
-      setSelectedPlaylistId(undefined)
-      setRemoveFromSource(Boolean(currentPlaylistId))
-    } else {
-      setRemoveFromSource(Boolean(currentPlaylistId))
+      setSelectedIds(new Set())
     }
+    setRemoveFromSource(Boolean(currentPlaylistId))
   }, [isOpen, currentPlaylistId])
 
   if (!isOpen) return null
 
+  const toggle = (playlistId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(playlistId)) next.delete(playlistId)
+      else next.add(playlistId)
+      return next
+    })
+  }
+
   const handleMove = async () => {
-    if (!selectedPlaylistId || isMoving) return
+    if (selectedIds.size === 0 || isMoving) return
     setIsMoving(true)
     try {
-      await onMove(selectedPlaylistId, removeFromSource)
+      await onMove(Array.from(selectedIds), removeFromSource)
       onClose()
     } catch (error) {
       console.error('Error moving songs to playlist:', error)
     } finally {
       setIsMoving(false)
     }
+  }
+
+  const renderMembershipBadge = (playlistId: string) => {
+    const count = membershipCounts?.get(playlistId) ?? 0
+    if (count <= 0) return null
+    const allIn = songCount > 0 && count >= songCount
+    const label = allIn
+      ? t('admin.alreadyInAll')
+      : t('admin.alreadyInSome')
+          .replace('{count}', String(count))
+          .replace('{total}', String(songCount))
+    return (
+      <span
+        className={cn(
+          'ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium',
+          allIn
+            ? 'bg-primary/15 text-primary'
+            : 'bg-muted text-muted-foreground'
+        )}
+      >
+        {label}
+      </span>
+    )
   }
 
   return (
@@ -79,22 +112,37 @@ export default function MoveToPlaylistModal({
           <p className="mb-3 text-sm text-muted-foreground">
             {t('admin.selectDestinationPlaylist')}
           </p>
-          <div className="max-h-[220px] space-y-1 overflow-y-auto">
-            {playlists.map((playlist) => (
-              <button
-                key={playlist.id}
-                type="button"
-                onClick={() => setSelectedPlaylistId(playlist.id)}
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors',
-                  selectedPlaylistId === playlist.id
-                    ? 'bg-primary/10 text-primary ring-1 ring-primary/30'
-                    : 'hover:bg-muted'
-                )}
-              >
-                <span className="truncate">{playlist.name}</span>
-              </button>
-            ))}
+          <div className="max-h-[260px] space-y-1 overflow-y-auto">
+            {playlists.map((playlist) => {
+              const checked = selectedIds.has(playlist.id)
+              return (
+                <button
+                  key={playlist.id}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={checked}
+                  onClick={() => toggle(playlist.id)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-colors',
+                    checked ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors',
+                      checked
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border'
+                    )}
+                    aria-hidden
+                  >
+                    {checked && <CheckIcon className="h-3.5 w-3.5" strokeWidth={3} />}
+                  </span>
+                  <span className="truncate">{playlist.name}</span>
+                  {renderMembershipBadge(playlist.id)}
+                </button>
+              )
+            })}
           </div>
 
           {currentPlaylistId && (
@@ -117,7 +165,7 @@ export default function MoveToPlaylistModal({
           <Button
             type="button"
             onClick={() => void handleMove()}
-            disabled={isMoving || !selectedPlaylistId}
+            disabled={isMoving || selectedIds.size === 0}
             className="min-h-11"
           >
             {isMoving ? t('songs.moving') : t('songs.move')}

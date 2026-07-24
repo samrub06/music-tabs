@@ -5,7 +5,6 @@ import { createActionServerClient } from '@/lib/supabase/server'
 import { playlistRepo } from '@/lib/services/playlistRepo'
 import { songRepo } from '@/lib/services/songRepo'
 import {
-  adminBulkMovePlaylistSchema,
   adminBulkPlaylistMutationSchema,
   adminDeleteSongsSchema,
   createSongSchema,
@@ -86,35 +85,6 @@ export async function adminBulkRemoveSongsFromPlaylistAction(playlistId: string,
   const nextIds = playlist.songIds.filter((id) => !removeSet.has(id))
   await repo.updatePublicPlaylist(pid, { songIds: nextIds })
   revalidateAdminSongPaths(pid)
-}
-
-export async function adminBulkMoveSongsToPlaylistAction(
-  toPlaylistId: string,
-  songIds: string[],
-  fromPlaylistId?: string,
-  removeFromSource?: boolean
-) {
-  const parsed = adminBulkMovePlaylistSchema.parse({
-    toPlaylistId,
-    songIds,
-    fromPlaylistId,
-    removeFromSource,
-  })
-  const supabase = await createActionServerClient()
-  await assertIsAdmin(supabase)
-
-  await appendSongsToPlaylist(supabase, parsed.toPlaylistId, parsed.songIds)
-
-  if (parsed.removeFromSource && parsed.fromPlaylistId) {
-    const repo = playlistRepo(supabase)
-    const source = await repo.getPublicPlaylist(parsed.fromPlaylistId)
-    const removeSet = new Set(parsed.songIds)
-    const nextIds = source.songIds.filter((id) => !removeSet.has(id))
-    await repo.updatePublicPlaylist(parsed.fromPlaylistId, { songIds: nextIds })
-    revalidateAdminSongPaths(parsed.fromPlaylistId)
-  }
-
-  revalidateAdminSongPaths(parsed.toPlaylistId)
 }
 
 export async function adminCreateCatalogSongAction(payload: NewSongData, playlistId?: string) {

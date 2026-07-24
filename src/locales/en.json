@@ -1156,6 +1156,8 @@
     "moveSongsTitle": "Move {count} song(s) to playlist",
     "selectDestinationPlaylist": "Select destination playlist",
     "removeFromCurrentPlaylist": "Remove from current playlist after move",
+    "alreadyInAll": "All already in",
+    "alreadyInSome": "{count}/{total} already in",
     "importTab": "Import",
     "manualTab": "Manual entry",
     "searchCatalog": "Search Tab4U / Ultimate Guitar",

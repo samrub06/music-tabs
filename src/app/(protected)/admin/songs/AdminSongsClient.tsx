@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import type { Playlist, Song } from '@/types'
 import {
   adminBulkAddSongsToPlaylistAction,
-  adminBulkMoveSongsToPlaylistAction,
   adminBulkRemoveSongsFromPlaylistAction,
   adminDeleteSongsAction,
 } from '@/app/(protected)/admin/songs/actions'
@@ -92,16 +91,17 @@ export default function AdminSongsClient({
   }
 
   const handleBulkMoveToPlaylist = async (
-    toPlaylistId: string,
+    toPlaylistIds: string[],
     songIds: string[],
     removeFromSource: boolean
   ) => {
-    await adminBulkMoveSongsToPlaylistAction(
-      toPlaylistId,
-      songIds,
-      currentPlaylistId ?? undefined,
-      removeFromSource
-    )
+    for (const toPlaylistId of toPlaylistIds) {
+      await adminBulkAddSongsToPlaylistAction(toPlaylistId, songIds)
+    }
+    if (removeFromSource && currentPlaylistId) {
+      await adminBulkRemoveSongsFromPlaylistAction(currentPlaylistId, songIds)
+    }
+    router.refresh()
   }
 
   const handleBulkRemoveFromPlaylist = async (songIds: string[]) => {

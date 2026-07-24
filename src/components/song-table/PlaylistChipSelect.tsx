@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import type { Playlist } from '@/types'
 import {
   DropdownMenu,
@@ -32,7 +32,21 @@ export default function PlaylistChipSelect({
 }: PlaylistChipSelectProps) {
   const [pending, startTransition] = useTransition()
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
   const memberIds = new Set(songPlaylists.map((p) => p.id))
+
+  useEffect(() => {
+    if (!open) return
+    const id = setTimeout(() => inputRef.current?.focus(), 0)
+    return () => clearTimeout(id)
+  }, [open])
+
+  const filteredPlaylists = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return allPlaylists
+    return allPlaylists.filter((p) => p.name.toLowerCase().includes(q))
+  }, [allPlaylists, query])
 
   const handleToggle = (playlistId: string, checked: boolean) => {
     startTransition(async () => {
@@ -46,7 +60,13 @@ export default function PlaylistChipSelect({
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (!next) setQuery('')
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -81,20 +101,42 @@ export default function PlaylistChipSelect({
           <ChevronDownIcon className="h-3 w-3 shrink-0" aria-hidden />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-72 w-56">
+      <DropdownMenuContent align="end" className="w-56 overflow-hidden">
         <DropdownMenuLabel>{t('admin.managePlaylists')}</DropdownMenuLabel>
+        <div className="px-1 pb-1">
+          <div className="relative">
+            <MagnifyingGlassIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder={t('common.search')}
+              className="w-full rounded-md border border-border bg-background py-1.5 pl-7 pr-2 text-xs outline-none focus:border-primary"
+            />
+          </div>
+        </div>
         <DropdownMenuSeparator />
-        {allPlaylists.map((playlist) => (
-          <DropdownMenuCheckboxItem
-            key={playlist.id}
-            checked={memberIds.has(playlist.id)}
-            disabled={pending}
-            onSelect={(e) => e.preventDefault()}
-            onCheckedChange={(checked) => handleToggle(playlist.id, checked)}
-          >
-            <span className="block truncate">{playlist.name}</span>
-          </DropdownMenuCheckboxItem>
-        ))}
+        <div className="max-h-56 overflow-y-auto">
+          {filteredPlaylists.length > 0 ? (
+            filteredPlaylists.map((playlist) => (
+              <DropdownMenuCheckboxItem
+                key={playlist.id}
+                checked={memberIds.has(playlist.id)}
+                disabled={pending}
+                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={(checked) => handleToggle(playlist.id, checked)}
+              >
+                <span className="block truncate">{playlist.name}</span>
+              </DropdownMenuCheckboxItem>
+            ))
+          ) : (
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+              {t('folders.noResults')}
+            </p>
+          )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -150,13 +150,6 @@ export const adminBulkPlaylistMutationSchema = z.object({
   songIds: z.array(z.string().uuid()).min(1),
 })
 
-export const adminBulkMovePlaylistSchema = z.object({
-  toPlaylistId: z.string().uuid(),
-  songIds: z.array(z.string().uuid()).min(1),
-  fromPlaylistId: z.string().uuid().optional(),
-  removeFromSource: z.boolean().optional(),
-})
-
 export const adminUserListQuerySchema = z.object({
   search: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),

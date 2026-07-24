@@ -1164,6 +1164,8 @@
     "moveSongsTitle": "העבר {count} שירים לפלייליסט",
     "selectDestinationPlaylist": "בחר פלייליסט יעד",
     "removeFromCurrentPlaylist": "הסר מהפלייליסט הנוכחי לאחר ההעברה",
+    "alreadyInAll": "כולן כבר",
+    "alreadyInSome": "{count}/{total} כבר",
     "importTab": "ייבוא",
     "manualTab": "הזנה ידנית",
     "searchCatalog": "חפש ב-Tab4U / Ultimate Guitar",
