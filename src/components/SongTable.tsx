@@ -60,6 +60,8 @@ interface SongTableProps {
     removeFromSource: boolean
   ) => Promise<void>;
   onBulkRemoveFromPlaylistAction?: (songIds: string[]) => Promise<void>;
+  onAddSongToPlaylist?: (songId: string, playlistId: string) => Promise<void>;
+  onRemoveSongFromPlaylist?: (songId: string, playlistId: string) => Promise<void>;
 }
 
 export default function SongTable({
@@ -87,6 +89,8 @@ export default function SongTable({
   playlistsForMove = [],
   onBulkMoveToPlaylist,
   onBulkRemoveFromPlaylistAction,
+  onAddSongToPlaylist,
+  onRemoveSongFromPlaylist,
 }: SongTableProps) {
   const { t } = useLanguage();
   
@@ -115,6 +119,8 @@ export default function SongTable({
   
   // Use external select mode if provided, otherwise default to false
   const isSelectMode = externalIsSelectMode ?? false;
+
+  const allPlaylists = playlistsForMove.length > 0 ? playlistsForMove : playlists
 
   const playlistsBySongId = useMemo(() => {
     const map = new Map<string, Playlist[]>()
@@ -504,10 +510,13 @@ export default function SongTable({
               songs={sortedSongs}
               folders={folders}
               songPlaylists={playlistsBySongId.get(song.id) ?? []}
+              allPlaylists={allPlaylists}
               visibleColumns={visibleColumns}
               isSelected={selectedSongs.has(song.id)}
               onSelect={(checked) => handleSelectSong(song.id, checked)}
               onFolderChange={handleFolderChange}
+              onAddSongToPlaylist={onAddSongToPlaylist}
+              onRemoveSongFromPlaylist={onRemoveSongFromPlaylist}
               onDeleteSong={handleDeleteSong}
               hasUser={hasUser}
               isSelectMode={isSelectMode}

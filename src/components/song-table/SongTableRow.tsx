@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { Song, Folder, Playlist } from '@/types'
 import FolderDropdown from '@/components/FolderDropdown'
+import PlaylistChipSelect from '@/components/song-table/PlaylistChipSelect'
 import {
   Bars3Icon,
   EllipsisVerticalIcon,
@@ -42,10 +43,13 @@ interface SongTableRowProps {
   songs: Song[]
   folders: Folder[]
   songPlaylists?: Playlist[]
+  allPlaylists?: Playlist[]
   visibleColumns: string[]
   isSelected: boolean
   onSelect: (checked: boolean) => void
   onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>
+  onAddSongToPlaylist?: (songId: string, playlistId: string) => Promise<void>
+  onRemoveSongFromPlaylist?: (songId: string, playlistId: string) => Promise<void>
   onDeleteSong: (songId: string) => void
   hasUser: boolean
   isSelectMode: boolean
@@ -58,10 +62,13 @@ export default function SongTableRow({
   songs,
   folders,
   songPlaylists = [],
+  allPlaylists = [],
   visibleColumns,
   isSelected,
   onSelect,
   onFolderChange,
+  onAddSongToPlaylist,
+  onRemoveSongFromPlaylist,
   onDeleteSong,
   hasUser,
   isSelectMode,
@@ -289,7 +296,18 @@ export default function SongTableRow({
                 : t('admin.notInPlaylist')
             }
           >
-            {songPlaylists.length > 0 ? (
+            {onAddSongToPlaylist && onRemoveSongFromPlaylist ? (
+              <div className="flex justify-end">
+                <PlaylistChipSelect
+                  songId={song.id}
+                  songPlaylists={songPlaylists}
+                  allPlaylists={allPlaylists}
+                  onAdd={onAddSongToPlaylist}
+                  onRemove={onRemoveSongFromPlaylist}
+                  t={t}
+                />
+              </div>
+            ) : songPlaylists.length > 0 ? (
               <div className="flex flex-wrap justify-end gap-1">
                 {songPlaylists.slice(0, 2).map((playlist) => (
                   <span

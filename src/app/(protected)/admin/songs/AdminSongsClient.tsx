@@ -15,6 +15,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import type { Playlist, Song } from '@/types'
 import {
+  adminBulkAddSongsToPlaylistAction,
   adminBulkMoveSongsToPlaylistAction,
   adminBulkRemoveSongsFromPlaylistAction,
   adminDeleteSongsAction,
@@ -106,6 +107,16 @@ export default function AdminSongsClient({
   const handleBulkRemoveFromPlaylist = async (songIds: string[]) => {
     if (!currentPlaylistId) return
     await adminBulkRemoveSongsFromPlaylistAction(currentPlaylistId, songIds)
+  }
+
+  const handleAddSongToPlaylist = async (songId: string, playlistId: string) => {
+    await adminBulkAddSongsToPlaylistAction(playlistId, [songId])
+    router.refresh()
+  }
+
+  const handleRemoveSongFromPlaylist = async (songId: string, playlistId: string) => {
+    await adminBulkRemoveSongsFromPlaylistAction(playlistId, [songId])
+    router.refresh()
   }
 
   const noopFolderChange = async () => {}
@@ -256,6 +267,8 @@ export default function AdminSongsClient({
           onBulkRemoveFromPlaylistAction={
             currentPlaylistId ? handleBulkRemoveFromPlaylist : undefined
           }
+          onAddSongToPlaylist={handleAddSongToPlaylist}
+          onRemoveSongFromPlaylist={handleRemoveSongFromPlaylist}
         />
         <Pagination page={page} limit={limit} total={total} />
       </div>
