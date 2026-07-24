@@ -126,6 +126,7 @@ export interface NewSongData {
   artistUrl?: string;
   artistImageUrl?: string;
   songImageUrl?: string;
+  sheetImageUrl?: string;
   sourceUrl?: string;
   sourceSite?: string;
   tabId?: string;

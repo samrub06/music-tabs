@@ -24,6 +24,9 @@ export const ARBA_BAVOT_CATALOG_SONG: NewSongData & {
   decade: 2020,
   songImageUrl:
     'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/b6/57/74/b6577455-e038-5902-52fe-f0413ca5d8c5/7294276307861.png/600x600bb.jpg',
+  /** Chilik Frank chord sheet (section א) — uploaded to catalog-images/sheets/. */
+  sheetImageUrl:
+    'https://ulagoqlmeckwaxabvdof.supabase.co/storage/v1/object/public/catalog-images/sheets/arba-bavot.jpg',
   versionDescription: 'ניגון חב״ד · לחן אדמו״ר הזקן · עיבוד חיליק פרנק · A · Dm · Gm · Bb',
   sourceSite: 'Curated',
   tabId: `curated:${ARBA_BAVOT_CATALOG_SONG_SLUG}`,

@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronUpIcon,
+  DocumentTextIcon,
   MusicalNoteIcon,
   PauseIcon,
   PencilSquareIcon,
@@ -254,6 +255,11 @@ export default function SongContent({
   }, [canAwardOnEndReach, onReachSongEnd, isAuthenticated, transposedSong.id]);
 
   const [chordSectionOpen, setChordSectionOpen] = useState(true);
+  const [sheetSectionOpen, setSheetSectionOpen] = useState(true);
+  const sheetImageUrl =
+    typeof transposedSong?.sheetImageUrl === 'string' && transposedSong.sheetImageUrl.trim()
+      ? transposedSong.sheetImageUrl.trim()
+      : null;
   const [showTransposeControls, setShowTransposeControls] = useState(false);
   const [metaDetailsOpen, setMetaDetailsOpen] = useState(!isAuthenticated);
   const [practiceMode, setPracticeMode] = useState(false);
@@ -1200,6 +1206,53 @@ export default function SongContent({
               </div>
             </CollapsibleContent>
           </Collapsible>
+
+          {sheetImageUrl ? (
+            <Collapsible
+              open={sheetSectionOpen}
+              onOpenChange={setSheetSectionOpen}
+              className="mb-4"
+            >
+              <CollapsibleTrigger asChild>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="flex w-full min-h-[48px] cursor-pointer select-none items-center justify-between gap-3 rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground touch-manipulation hover:bg-muted/80"
+                >
+                  <div className="flex min-w-0 items-center">
+                    <DocumentTextIcon className="me-2 h-5 w-5 shrink-0" />
+                    <span className="truncate">{t('songContent.SHEET_MUSIC_TITLE')}</span>
+                  </div>
+                  {sheetSectionOpen ? (
+                    <ChevronUpIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ChevronDownIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  )}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="pt-3">
+                  <a
+                    href={sheetImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block overflow-hidden rounded-lg border border-border bg-card"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={sheetImageUrl}
+                      alt={t('songContent.SHEET_MUSIC_ALT').replace(
+                        '{title}',
+                        transposedSong.title ?? ''
+                      )}
+                      className="h-auto w-full object-contain"
+                      loading="lazy"
+                    />
+                  </a>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : null}
 
           {practiceMode && !landscapePracticeActive ? (
             <PracticeModeBar

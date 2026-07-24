@@ -954,6 +954,8 @@
     "saving": "שומר...",
     "save": "שמור",
     "CHORDS_USED_TITLE": "אקורדים",
+    "SHEET_MUSIC_TITLE": "תווים",
+    "SHEET_MUSIC_ALT": "תווים עבור {title}",
     "TRANSPOSE_LABEL": "העבר טון",
     "BPM_LABEL": "{bpm} BPM",
     "seeThisFolder": "ראה פלייליסט זה",

@@ -64,6 +64,7 @@ async function run() {
     version_description: payload.versionDescription ?? null,
     difficulty,
     song_image_url: payload.songImageUrl ?? null,
+    sheet_image_url: payload.sheetImageUrl ?? null,
     source_site: payload.sourceSite ?? 'Curated',
     tab_id: payload.tabId ?? null,
     is_trending: true,

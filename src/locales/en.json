@@ -946,6 +946,8 @@
     "saving": "Saving...",
     "save": "Save",
     "CHORDS_USED_TITLE": "Chords",
+    "SHEET_MUSIC_TITLE": "Sheet music",
+    "SHEET_MUSIC_ALT": "Sheet music for {title}",
     "TRANSPOSE_LABEL": "Transpose",
     "BPM_LABEL": "{bpm} BPM",
     "seeThisFolder": "See this playlist",
