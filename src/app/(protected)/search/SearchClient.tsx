@@ -3,7 +3,7 @@
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, SparklesIcon, MusicalNoteIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { collectAiSearchResults, fetchAiSongSearchBatches } from '@/lib/utils/aiSearchResults'
 import type { AiExcludeSong } from '@/lib/services/aiSearchService'
@@ -676,9 +676,11 @@ export default function SearchClient({
         {/* Message */}
         {message && (
           <div className={`mb-4 p-3 rounded-xl border ${
-            message.type === 'error' 
-              ? 'bg-destructive/10 border-destructive/30 text-destructive' 
-              : 'bg-primary/10 border-primary/30 text-primary'
+            message.type === 'error'
+              ? 'bg-destructive/10 border-destructive/30 text-destructive'
+              : message.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-muted border-border text-foreground'
           }`}>
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-medium">{message.text}</span>
@@ -701,10 +703,7 @@ export default function SearchClient({
               </div>
             ) : hasSearchResults ? (
           <>
-            <div className="flex items-center gap-2.5 px-3 py-2.5 sm:px-4 w-fit min-h-[2rem] overflow-visible">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary shrink-0">
-                <MusicalNoteIcon className="w-4 h-4" />
-              </div>
+            <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 w-fit min-h-[2rem] overflow-visible">
               <div className="flex flex-wrap items-center gap-2 gap-y-0 min-w-0 overflow-visible">
                 <h2 className="text-base sm:text-lg font-semibold text-foreground whitespace-nowrap leading-tight">
                   {t('search.songsFound')}

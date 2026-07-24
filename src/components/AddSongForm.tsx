@@ -594,12 +594,12 @@ export default function AddSongForm({
           {message && (
             <div
               className={cn(
-                'mb-4 rounded-xl p-3 text-sm',
+                'mb-4 rounded-xl border p-3 text-sm',
                 message.type === 'error'
-                  ? 'bg-destructive/10 text-destructive'
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
                   : message.type === 'success'
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-muted text-foreground'
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'border-border bg-muted text-foreground'
               )}
             >
               <div className="flex items-center justify-between gap-2">
