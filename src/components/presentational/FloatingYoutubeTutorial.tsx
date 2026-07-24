@@ -359,7 +359,9 @@ export default function FloatingYoutubeTutorial({
                 <p className="text-xs text-white/80">
                   {videoMode === 'original'
                     ? t('youtubeTutorial.loadingOriginal')
-                    : t('youtubeTutorial.loading')}
+                    : selectedInstrument === 'guitar'
+                      ? t('youtubeTutorial.loadingGuitar')
+                      : t('youtubeTutorial.loadingPiano')}
                 </p>
               </div>
             )}
@@ -368,7 +370,9 @@ export default function FloatingYoutubeTutorial({
                 <p className="text-xs text-white/80">
                   {videoMode === 'original'
                     ? t('youtubeTutorial.loadErrorOriginal')
-                    : t('youtubeTutorial.loadError')}
+                    : selectedInstrument === 'guitar'
+                      ? t('youtubeTutorial.loadErrorGuitar')
+                      : t('youtubeTutorial.loadErrorPiano')}
                 </p>
                 <a
                   href={youtubePageUrl}

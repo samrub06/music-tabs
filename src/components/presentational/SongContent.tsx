@@ -695,7 +695,11 @@ export default function SongContent({
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
         >
           <Youtube className="icon-hover-wiggle h-4 w-4 shrink-0" />
-          <span className="truncate">{t('youtubeTutorial.modeTutorial')}</span>
+          <span className="truncate">
+            {selectedInstrument === 'guitar'
+              ? t('youtubeTutorial.guitarMode')
+              : t('youtubeTutorial.pianoMode')}
+          </span>
         </button>
         <button
           type="button"
@@ -719,10 +723,17 @@ export default function SongContent({
       entityType="song"
       entityId={transposedSong.id}
       entityTitle={transposedSong.title}
-      className={cn(
-        metaRowActionTileClass,
-        'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground'
-      )}
+      className={
+        isInLibrary
+          ? cn(
+              metaRowActionTileClass,
+              'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground'
+            )
+          : cn(
+              'inline-flex h-11 w-full items-center justify-center rounded-xl border border-border/80 bg-muted/30 text-foreground transition-colors',
+              'hover:bg-muted/60 hover:text-foreground'
+            )
+      }
     />
   ) : null;
 
@@ -745,12 +756,13 @@ export default function SongContent({
   const showActionLabels = !isInLibrary;
 
   const actionButtonsRow =
-    ratingDisplay ||
-    viewsDisplay ||
-    shareButton ||
-    favoriteButton ||
-    libraryToggleButton ||
-    editButton ? (
+    isInLibrary &&
+    (ratingDisplay ||
+      viewsDisplay ||
+      shareButton ||
+      favoriteButton ||
+      libraryToggleButton ||
+      editButton) ? (
       <div className="flex w-full items-start gap-1.5 sm:gap-2">
         {viewsDisplay}
         {ratingDisplay}
@@ -782,7 +794,7 @@ export default function SongContent({
     ) : null;
 
   const hasCollapsibleDetails =
-    Boolean(actionButtonsRow) || Boolean(folderControl);
+    isInLibrary && (Boolean(actionButtonsRow) || Boolean(folderControl));
 
   if (isEditing) {
     return (
@@ -834,8 +846,24 @@ export default function SongContent({
             {/* Always-visible YouTube row — full width */}
             {youtubeActions}
 
-            {/* Add to library — full width, outside collapsed, just above expand bar */}
-            {addToLibraryFullWidth}
+            {/* Add to library (+ share when not in library) — outside collapsed */}
+            {addToLibraryFullWidth || (!isInLibrary && shareButton) ? (
+              <div className="flex w-full items-stretch gap-1.5">
+                {addToLibraryFullWidth ? (
+                  <div
+                    className={cn(
+                      'min-w-0',
+                      !isInLibrary && shareButton ? 'flex-[3]' : 'w-full'
+                    )}
+                  >
+                    {addToLibraryFullWidth}
+                  </div>
+                ) : null}
+                {!isInLibrary && shareButton ? (
+                  <div className="min-w-0 flex-1">{shareButton}</div>
+                ) : null}
+              </div>
+            ) : null}
             {libraryActionFeedback ? (
               <p
                 role="status"
@@ -851,7 +879,7 @@ export default function SongContent({
               </p>
             ) : null}
 
-            {/* Slim full-width expand bar for extra actions */}
+            {/* Slim full-width expand bar — only when already in library */}
             {hasCollapsibleDetails ? (
               <button
                 type="button"

@@ -196,9 +196,6 @@ export function SongStoryCard({
           ) : story ? (
             <>
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                  {t('songStory.anecdotes')}
-                </p>
                 <p className="text-foreground leading-relaxed whitespace-pre-line">{story.anecdotes}</p>
               </div>
               <div>

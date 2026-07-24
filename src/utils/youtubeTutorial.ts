@@ -11,14 +11,14 @@ export function buildYoutubeTutorialQuery(
 
   const instrumentTerms: Record<'piano' | 'guitar', Record<'en' | 'fr' | 'he', string>> = {
     guitar: {
-      en: 'tutorial guitar',
-      fr: 'tutoriel guitare',
-      he: 'מדריך גיטרה',
+      en: 'guitar tutorial',
+      fr: 'tuto guitare',
+      he: 'שיעור גיטרה',
     },
     piano: {
-      en: 'tutorial piano',
-      fr: 'tutoriel piano',
-      he: 'מדריך פסנתר',
+      en: 'piano tutorial',
+      fr: 'tuto piano',
+      he: 'שיעור פסנתר',
     },
   }
 
