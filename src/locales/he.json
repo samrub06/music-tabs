@@ -159,7 +159,9 @@
     "sharePlaylistDescription": "שלח את \"{title}\" לחבר.",
     "shareAction": "שלח",
     "shareSent": "נשלח! החבר יקבל התראה.",
-    "noFriendsToShare": "הוסף חברים כדי לשתף שירים ופלייליסטים."
+    "noFriendsToShare": "הוסף חברים כדי לשתף שירים ופלייליסטים.",
+    "copyLink": "העתק קישור",
+    "linkCopied": "הקישור הועתק!"
   },
   "notifications": {
     "title": "התראות",

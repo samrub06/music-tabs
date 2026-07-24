@@ -159,7 +159,9 @@
     "sharePlaylistDescription": "Send \"{title}\" to one of your friends.",
     "shareAction": "Send",
     "shareSent": "Shared! Your friend will get a notification.",
-    "noFriendsToShare": "Add friends first to share songs and playlists."
+    "noFriendsToShare": "Add friends first to share songs and playlists.",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied!"
   },
   "notifications": {
     "title": "Notifications",

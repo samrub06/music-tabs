@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
+import { CheckIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
 import type { FriendProfile, SharedEntityType } from '@/types'
 import { getFriendsAction, shareWithFriendAction } from '@/app/(protected)/friends/actions'
 import { useLanguage } from '@/context/LanguageContext'
@@ -33,6 +34,10 @@ function getInitials(name: string | null | undefined, email: string) {
   return email.substring(0, 2).toUpperCase()
 }
 
+function buildSharePath(entityType: SharedEntityType, entityId: string): string {
+  return entityType === 'song' ? `/song/${entityId}` : `/jams/${entityId}`
+}
+
 export default function ShareWithFriendDialog({
   open,
   onOpenChange,
@@ -44,17 +49,35 @@ export default function ShareWithFriendDialog({
   const [friends, setFriends] = useState<FriendProfile[]>([])
   const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [pending, startTransition] = useTransition()
+
+  const shareUrl = useMemo(() => {
+    const path = buildSharePath(entityType, entityId)
+    if (typeof window === 'undefined') return path
+    return `${window.location.origin}${path}`
+  }, [entityType, entityId])
 
   useEffect(() => {
     if (!open) {
       setSelectedFriendId(null)
       setSent(false)
+      setCopied(false)
       return
     }
 
     getFriendsAction().then(setFriends).catch(console.error)
   }, [open])
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy share link:', error)
+    }
+  }
 
   const handleShare = () => {
     if (!selectedFriendId) return
@@ -85,6 +108,25 @@ export default function ShareWithFriendDialog({
               : t('friends.sharePlaylistDescription').replace('{title}', entityTitle)}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+          <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground" title={shareUrl}>
+            {shareUrl}
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleCopyLink()}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+            aria-label={copied ? t('friends.linkCopied') : t('friends.copyLink')}
+            title={copied ? t('friends.linkCopied') : t('friends.copyLink')}
+          >
+            {copied ? (
+              <CheckIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <ClipboardDocumentIcon className="h-5 w-5" />
+            )}
+          </button>
+        </div>
 
         {sent ? (
           <div className="rounded-xl bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">

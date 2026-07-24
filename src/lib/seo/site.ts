@@ -7,8 +7,16 @@ export const SITE_DESCRIPTION =
 
 export function getSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  const vercelHost =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || null
+  const vercelUrl = vercelHost ? `https://${vercelHost.replace(/^https?:\/\//, '')}` : null
+
+  // Prefer a real public URL. Localhost in NEXT_PUBLIC_SITE_URL breaks OG on Vercel.
+  if (fromEnv && !/localhost|127\.0\.0\.1/i.test(fromEnv)) {
+    return fromEnv
+  }
+  if (vercelUrl) return vercelUrl
   if (fromEnv) return fromEnv
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
   return 'http://localhost:3005'
 }
 

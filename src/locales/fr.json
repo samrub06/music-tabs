@@ -159,7 +159,9 @@
     "sharePlaylistDescription": "Envoyer « {title} » à un ami.",
     "shareAction": "Envoyer",
     "shareSent": "Partagé ! Votre ami recevra une notification.",
-    "noFriendsToShare": "Ajoutez des amis pour partager des chansons et playlists."
+    "noFriendsToShare": "Ajoutez des amis pour partager des chansons et playlists.",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié !"
   },
   "notifications": {
     "title": "Notifications",
