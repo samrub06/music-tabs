@@ -20,7 +20,7 @@ function getCachedPublicCatalogSong(id: string): Promise<Song | null> {
 
   return unstable_cache(
     async () => fetchPublicCatalogSong(id),
-    [`public-song-${id}`],
+    [`public-song-v2-${id}`],
     { revalidate: 3600, tags: [`song-${id}`] }
   )()
 }
