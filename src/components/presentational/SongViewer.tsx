@@ -220,7 +220,6 @@ export default function SongViewer({
         canNextSong={!!canNextSong}
         nextSongInfo={nextSongInfo}
         onToggleToolsBar={onToggleToolsBar}
-        onOpenSongQueue={() => setSongQueueOpen(true)}
         isInLibrary={isInLibrary}
       />
 
@@ -278,6 +277,7 @@ export default function SongViewer({
               youtubeTutorialOpen={youtubeTutorialOpen}
               youtubeVideoMode={youtubeVideoMode}
               onSelectYoutubeMode={handleSelectYoutubeMode}
+              onOpenSongQueue={() => setSongQueueOpen(true)}
             />
           </div>
 

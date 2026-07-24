@@ -6,6 +6,7 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronUpIcon,
   MusicalNoteIcon,
   PauseIcon,
   PencilSquareIcon,
@@ -140,6 +141,7 @@ interface SongContentProps {
   youtubeTutorialOpen?: boolean;
   youtubeVideoMode?: 'tutorial' | 'original';
   onSelectYoutubeMode?: (mode: 'tutorial' | 'original') => void;
+  onOpenSongQueue?: () => void;
 }
 
 export default function SongContent({
@@ -193,6 +195,7 @@ export default function SongContent({
   youtubeTutorialOpen = false,
   youtubeVideoMode = 'tutorial',
   onSelectYoutubeMode,
+  onOpenSongQueue,
 }: SongContentProps) {
   const { t, isRtl } = useLanguage();
   const pathname = usePathname();
@@ -884,7 +887,7 @@ export default function SongContent({
               <button
                 type="button"
                 onClick={() => setMetaDetailsOpen((open) => !open)}
-                className="flex h-7 w-full items-center justify-center rounded-lg bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="flex h-11 w-full items-center justify-center rounded-xl bg-muted/50 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-9"
                 aria-expanded={metaDetailsOpen}
                 aria-label={
                   metaDetailsOpen
@@ -894,7 +897,7 @@ export default function SongContent({
               >
                 <ChevronDownIcon
                   className={cn(
-                    'h-4 w-4 transition-transform duration-200',
+                    'h-5 w-5 transition-transform duration-200 sm:h-4 sm:w-4',
                     metaDetailsOpen && 'rotate-180'
                   )}
                 />
@@ -1029,10 +1032,29 @@ export default function SongContent({
               <div
                 role="button"
                 tabIndex={0}
-                className="w-full font-semibold text-foreground py-3 px-4 rounded-md bg-muted hover:bg-muted/80 cursor-pointer select-none touch-manipulation flex items-center min-h-[48px] text-start"
+                className="flex w-full min-h-[48px] cursor-pointer select-none items-center justify-between gap-3 rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground touch-manipulation hover:bg-muted/80"
               >
-                <MusicalNoteIcon className="w-5 h-5 me-2 shrink-0" />
-                {t('songContent.CHORDS_USED_TITLE')}
+                <div className="flex min-w-0 items-center">
+                  <MusicalNoteIcon className="me-2 h-5 w-5 shrink-0" />
+                  <span className="truncate">{t('songContent.CHORDS_USED_TITLE')}</span>
+                </div>
+                {onSetSelectedInstrument ? (
+                  <div
+                    className="shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <InstrumentToggle
+                      key={transposedSong.id}
+                      value={selectedInstrument}
+                      onChange={onSetSelectedInstrument}
+                      compact
+                      showLabels
+                      className="shrink-0"
+                    />
+                  </div>
+                ) : null}
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -1140,19 +1162,6 @@ export default function SongContent({
                   </button>
                 )}
 
-                {onSetSelectedInstrument ? (
-                  <InstrumentToggle
-                    key={transposedSong.id}
-                    value={selectedInstrument}
-                    onChange={onSetSelectedInstrument}
-                    compact
-                    showLabels
-                    autoHideMs={4_000}
-                    scrollRootRef={contentRef}
-                    className="shrink-0"
-                  />
-                ) : null}
-
                 <PracticeComingSoonChip
                   visible={practicePromoPhase === 'chip'}
                   onDismiss={dismissPracticePromo}
@@ -1227,6 +1236,18 @@ export default function SongContent({
               onTogglePlay={togglePracticePlay}
               onExit={exitPracticeMode}
             />
+          ) : null}
+
+          {onOpenSongQueue ? (
+            <button
+              type="button"
+              onClick={onOpenSongQueue}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border/80 bg-muted/40 text-sm font-medium text-foreground transition-colors hover:bg-muted/70 active:bg-muted sm:hidden"
+              aria-label={t('songHeader.openSongQueue')}
+            >
+              <ChevronUpIcon className="h-5 w-5 shrink-0" />
+              <span>{t('songHeader.openSongQueue')}</span>
+            </button>
           ) : null}
 
           {isAuthenticated ? (

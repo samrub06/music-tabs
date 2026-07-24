@@ -7,7 +7,6 @@ import {
   PauseIcon,
   PlayIcon,
   AdjustmentsHorizontalIcon,
-  ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import {
   BackArrowIcon,
@@ -31,7 +30,6 @@ interface SongHeaderProps {
   canNextSong?: boolean;
   nextSongInfo?: { title: string; author?: string } | null;
   onToggleToolsBar?: () => void;
-  onOpenSongQueue?: () => void;
   isInLibrary?: boolean;
 }
 
@@ -45,14 +43,12 @@ export default function SongHeader({
   canPrevSong,
   canNextSong,
   onToggleToolsBar,
-  onOpenSongQueue,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
   const playing = autoScroll.isActive;
 
   return (
     <div className="flex-shrink-0 border-b border-border bg-background relative">
-      {/* Single row: back, auto-scroll + speed, tools, queue (mobile), next */}
       <div
         className="flex items-center justify-between gap-2 p-2.5 sm:p-2 w-full min-w-0 min-h-14 sm:min-h-0"
         dir={isRtl ? 'rtl' : 'ltr'}
@@ -71,7 +67,6 @@ export default function SongHeader({
           <BackArrowIcon className="h-5 w-5" />
         </Button>
 
-        {/* Auto-scroll + speed + song tools — grouped, minimal gap */}
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
           <div
             className={cn(
@@ -80,55 +75,52 @@ export default function SongHeader({
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 px-1.5 py-0.5">
-              <span
-                className={cn(
-                  'order-1 hidden min-w-0 truncate whitespace-nowrap px-0.5 text-xs text-muted-foreground md:inline transition-all duration-300 motion-reduce:transition-none',
-                  playing && 'md:hidden'
-                )}
-              >
-                {t('songHeader.AUTO_SCROLL_LABEL')}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="order-2 h-9 w-9 sm:h-8 sm:w-8 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none"
-                onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
-              >
-                <MinusIcon className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant={playing ? 'default' : 'ghost'}
-                size={playing ? 'default' : 'icon'}
-                className={cn(
-                  'order-3 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none',
-                  playing ? 'h-11 min-w-[4.5rem] px-5' : 'h-10 w-10 sm:h-9 sm:w-9'
-                )}
-                onClick={onToggleAutoScroll}
-                title={
-                  playing
-                    ? t('songHeader.STOP_AUTO_SCROLL')
-                    : t('songHeader.START_AUTO_SCROLL')
-                }
-              >
-                {playing ? (
+            {playing ? (
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 px-1.5 py-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 sm:h-8 sm:w-8 shrink-0"
+                  onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
+                  aria-label={t('songHeader.AUTO_SCROLL_LABEL')}
+                >
+                  <MinusIcon className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="default"
+                  className="h-11 min-w-[4.5rem] shrink-0 px-5"
+                  onClick={onToggleAutoScroll}
+                  title={t('songHeader.STOP_AUTO_SCROLL')}
+                >
                   <PauseIcon className="h-5 w-5" />
-                ) : (
-                  <PlayIcon className={cn('h-4 w-4', isRtl && '-scale-x-100')} />
+                </Button>
+                <span className="min-w-[2.25rem] shrink-0 text-center text-xs font-semibold tabular-nums">
+                  {autoScroll.speed.toFixed(1)}x
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 sm:h-8 sm:w-8 shrink-0"
+                  onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+                  aria-label={t('songHeader.AUTO_SCROLL_LABEL')}
+                >
+                  <PlusIcon className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onToggleAutoScroll}
+                className={cn(
+                  'flex h-11 sm:h-10 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-foreground transition-colors',
+                  'hover:bg-muted/50 active:bg-muted/70'
                 )}
-              </Button>
-              <span className="order-4 min-w-[2.25rem] shrink-0 text-center text-xs font-semibold tabular-nums transition-all duration-300 ease-out motion-reduce:transition-none">
-                {autoScroll.speed.toFixed(1)}x
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="order-5 h-9 w-9 sm:h-8 sm:w-8 shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none"
-                onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
+                title={t('songHeader.START_AUTO_SCROLL')}
               >
-                <PlusIcon className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+                <PlayIcon className={cn('h-4 w-4 shrink-0', isRtl && '-scale-x-100')} />
+                <span className="truncate">{t('songHeader.AUTO_SCROLL_LABEL')}</span>
+              </button>
+            )}
 
             {onToggleToolsBar && (
               <>
@@ -166,21 +158,6 @@ export default function SongHeader({
           )}
           aria-hidden={playing}
         >
-          {onOpenSongQueue && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onOpenSongQueue}
-              className="inline-flex sm:hidden h-11 w-11"
-              aria-label={t('songHeader.openSongQueue')}
-              title={t('songHeader.openSongQueue')}
-              tabIndex={playing ? -1 : undefined}
-            >
-              <ChevronUpIcon className="h-5 w-5" />
-            </Button>
-          )}
-
-          {/* Previous song: desktop only — freed on mobile for speed controls */}
           {onPrevSong && (
             <Button
               variant="ghost"

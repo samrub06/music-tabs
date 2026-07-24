@@ -201,8 +201,8 @@ export default function SongQueueSheet({
         <BottomSheetDippedTop hideBorder showClose={false} />
 
         <div className="flex max-h-[calc(70vh-2rem)] min-h-0 flex-1 flex-col overflow-hidden bg-background">
-          <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 sm:px-6">
-            <SheetHeader className="pb-3 pt-1">
+          <div className="flex min-h-0 flex-1 flex-col px-4 pt-1 sm:px-6">
+            <SheetHeader className="pb-3">
               <SheetTitle className="text-center text-lg">
                 {isPlaylist
                   ? t('songHeader.songQueuePlaylistTitle')
@@ -265,6 +265,16 @@ export default function SongQueueSheet({
                 })}
               </ul>
             )}
+
+            <div className="shrink-0 border-t border-border/70 bg-background pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="flex h-12 w-full items-center justify-center rounded-xl border border-border/80 bg-muted/50 text-sm font-semibold text-foreground transition-colors hover:bg-muted active:bg-muted/80"
+              >
+                {t('songHeader.close')}
+              </button>
+            </div>
           </div>
         </div>
       </SheetContent>

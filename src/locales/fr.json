@@ -948,7 +948,7 @@
   "songContent": {
     "saving": "Sauvegarde...",
     "save": "Sauvegarder",
-    "CHORDS_USED_TITLE": "Accords utilisés",
+    "CHORDS_USED_TITLE": "Accords",
     "TRANSPOSE_LABEL": "Transposer",
     "BPM_LABEL": "{bpm} BPM",
     "seeThisFolder": "Voir cette playlist",
