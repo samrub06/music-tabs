@@ -863,7 +863,7 @@ export default function SongContent({
                   </div>
                 ) : null}
                 {!isInLibrary && shareButton ? (
-                  <div className="min-w-0 flex-1">{shareButton}</div>
+                  <div className="min-w-11 flex-1 basis-1/4">{shareButton}</div>
                 ) : null}
               </div>
             ) : null}

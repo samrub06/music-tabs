@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 
 export const SITE_NAME = 'TABasco'
 
+/** Canonical production origin (www). Apex tabascomusic.com redirects here. */
+export const PRODUCTION_SITE_URL = 'https://www.tabascomusic.com'
+
 export const SITE_DESCRIPTION =
   'Find, read, transpose, and organize guitar chords and tabs. Israeli, Hebrew, and international songbook — mobile-first, ad-free.'
 
@@ -14,6 +17,13 @@ export function getSiteUrl(): string {
   // Prefer a real public URL. Localhost in NEXT_PUBLIC_SITE_URL breaks OG on Vercel.
   if (fromEnv && !/localhost|127\.0\.0\.1/i.test(fromEnv)) {
     return fromEnv
+  }
+  // Prefer the custom domain over *.vercel.app when available.
+  if (vercelUrl && /tabascomusic\.com/i.test(vercelUrl)) {
+    return vercelUrl.replace(/\/\/tabascomusic\.com/i, '//www.tabascomusic.com')
+  }
+  if (!fromEnv || /localhost|127\.0\.0\.1/i.test(fromEnv)) {
+    if (process.env.VERCEL) return PRODUCTION_SITE_URL
   }
   if (vercelUrl) return vercelUrl
   if (fromEnv) return fromEnv

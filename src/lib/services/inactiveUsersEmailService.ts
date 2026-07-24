@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendEmail } from '@/lib/email/resendClient'
 import { buildInactive14dEmail } from '@/lib/email/templates/inactive14d'
 import { emailSendsRepo } from '@/lib/services/emailSendsRepo'
+import { PRODUCTION_SITE_URL } from '@/lib/seo/site'
 import type { Database } from '@/types/db'
 
 const INACTIVE_DAYS = 14
@@ -17,7 +18,7 @@ export type InactiveUsersEmailStats = {
 }
 
 function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://tabasco.app'
+  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || PRODUCTION_SITE_URL
 }
 
 function getDisplayName(user: {

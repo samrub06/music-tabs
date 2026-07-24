@@ -99,24 +99,33 @@ export default function ShareWithFriendDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl">
-        <DialogHeader>
+      <DialogContent
+        className={cn(
+          'flex w-[min(100%-1.5rem,28rem)] max-h-[min(85dvh,36rem)] flex-col gap-3 overflow-hidden rounded-2xl p-4 sm:gap-4 sm:p-6',
+          'left-1/2 top-auto bottom-[max(1rem,env(safe-area-inset-bottom))] translate-x-[-50%] translate-y-0',
+          'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+          'sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%]',
+          'sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%]',
+          'sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]'
+        )}
+      >
+        <DialogHeader className="shrink-0 space-y-1.5 pr-6 text-left">
           <DialogTitle>{t('friends.shareTitle')}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-pretty">
             {entityType === 'song'
               ? t('friends.shareSongDescription').replace('{title}', entityTitle)
               : t('friends.sharePlaylistDescription').replace('{title}', entityTitle)}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
-          <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground" title={shareUrl}>
+        <div className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
+          <p className="min-w-0 flex-1 truncate text-xs sm:text-sm text-muted-foreground" title={shareUrl}>
             {shareUrl}
           </p>
           <button
             type="button"
             onClick={() => void handleCopyLink()}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted active:bg-muted/80"
             aria-label={copied ? t('friends.linkCopied') : t('friends.copyLink')}
             title={copied ? t('friends.linkCopied') : t('friends.copyLink')}
           >
@@ -128,50 +137,52 @@ export default function ShareWithFriendDialog({
           </button>
         </div>
 
-        {sent ? (
-          <div className="rounded-xl bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
-            {t('friends.shareSent')}
-          </div>
-        ) : friends.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-            {t('friends.noFriendsToShare')}
-          </div>
-        ) : (
-          <div className="max-h-64 space-y-2 overflow-y-auto">
-            {friends.map((friend) => (
-              <button
-                key={friend.id}
-                type="button"
-                onClick={() => setSelectedFriendId(friend.id)}
-                className={cn(
-                  'flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors',
-                  selectedFriendId === friend.id
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:bg-muted/50'
-                )}
-              >
-                {friend.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={friend.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-                ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-                    {getInitials(friend.fullName, friend.email)}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {sent ? (
+            <div className="rounded-xl bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+              {t('friends.shareSent')}
+            </div>
+          ) : friends.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+              {t('friends.noFriendsToShare')}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {friends.map((friend) => (
+                <button
+                  key={friend.id}
+                  type="button"
+                  onClick={() => setSelectedFriendId(friend.id)}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors',
+                    selectedFriendId === friend.id
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:bg-muted/50'
+                  )}
+                >
+                  {friend.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={friend.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                      {getInitials(friend.fullName, friend.email)}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {friend.fullName || friend.email}
+                    </p>
                   </div>
-                )}
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {friend.fullName || friend.email}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {!sent && friends.length > 0 && (
           <Button
             type="button"
-            className="w-full rounded-xl"
+            className="h-11 w-full shrink-0 rounded-xl"
             disabled={!selectedFriendId || pending}
             onClick={handleShare}
           >

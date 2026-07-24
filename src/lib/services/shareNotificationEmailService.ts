@@ -4,8 +4,10 @@ import { buildItemSharedEmail } from '@/lib/email/templates/itemShared'
 import { emailSendsRepo } from '@/lib/services/emailSendsRepo'
 import type { Database } from '@/types/db'
 
+import { PRODUCTION_SITE_URL } from '@/lib/seo/site'
+
 function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://tabasco.app'
+  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || PRODUCTION_SITE_URL
 }
 
 export async function sendItemSharedEmail(
