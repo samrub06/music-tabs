@@ -665,6 +665,8 @@
     "copyLink": "Copy link"
   },
   "search": {
+    "homeBrandTitle": "TABasco Music",
+    "homeBrandSubtitle": "Chords & tabs for guitar and piano",
     "searchPlaceholder": "Search for songs...",
     "searching": "Searching...",
     "checkingExisting": "Checking existing songs...",

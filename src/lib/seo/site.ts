@@ -6,7 +6,13 @@ export const SITE_NAME = 'TABasco'
 export const PRODUCTION_SITE_URL = 'https://www.tabascomusic.com'
 
 export const SITE_DESCRIPTION =
-  'Find, read, transpose, and organize guitar chords and tabs. Israeli, Hebrew, and international songbook — mobile-first, ad-free.'
+  'Tabasco music chords and tabs on TABasco Music. Find, read, and transpose guitar and piano songs — Israeli, Hebrew, and international songbook. Mobile-first, ad-free.'
+
+/** Home-specific copy for the “tabasco music” brand query. */
+export const HOME_TITLE = 'TABasco Music — Chords & Tabs'
+
+export const HOME_DESCRIPTION =
+  'Tabasco music — chords and tabs for guitar and piano. Search, transpose, and practice songs on TABasco Music. Israeli, Hebrew, and international songbook — mobile-first, ad-free.'
 
 export function getSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')

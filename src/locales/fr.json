@@ -673,6 +673,8 @@
     "copyLink": "Copier le lien"
   },
   "search": {
+    "homeBrandTitle": "TABasco Music",
+    "homeBrandSubtitle": "Accords & tablatures guitare et piano",
     "searchPlaceholder": "Rechercher des chansons...",
     "searching": "Recherche en cours...",
     "checkingExisting": "Vérification des chansons existantes...",

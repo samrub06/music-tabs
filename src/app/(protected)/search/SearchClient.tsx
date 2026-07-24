@@ -506,6 +506,15 @@ export default function SearchClient({
         'p-4 pt-4 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 lg:min-h-screen'
       )}
     >
+        <header className="mb-4">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            {t('search.homeBrandTitle')}
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {t('search.homeBrandSubtitle')}
+          </p>
+        </header>
+
         <div className="mb-6">
           <div
             className={cn(

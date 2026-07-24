@@ -1,5 +1,11 @@
 import type { Metadata } from 'next'
-import { absoluteUrl, BRAND_ASSETS, SITE_DESCRIPTION, SITE_NAME } from './site'
+import {
+  absoluteUrl,
+  BRAND_ASSETS,
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  SITE_NAME,
+} from './site'
 
 type SongSeoInput = {
   id?: string
@@ -40,26 +46,26 @@ export function toAbsoluteOgImageUrl(imageUrl: string): string {
 
 export const homeMetadata: Metadata = {
   title: {
-    absolute: `${SITE_NAME} — Chords, Tabs & Songbook`,
+    absolute: HOME_TITLE,
   },
-  description: SITE_DESCRIPTION,
+  description: HOME_DESCRIPTION,
   openGraph: {
-    title: `${SITE_NAME} — Chords, Tabs & Songbook`,
-    description: SITE_DESCRIPTION,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     type: 'website',
     images: [
       {
         url: BRAND_ASSETS.openGraph,
         width: 1200,
         height: 630,
-        alt: SITE_NAME,
+        alt: HOME_TITLE,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} — Chords, Tabs & Songbook`,
-    description: SITE_DESCRIPTION,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     images: [BRAND_ASSETS.openGraph],
   },
   robots: { index: true, follow: true },
