@@ -42,6 +42,7 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     artistUrl: dbSong.artist_url || undefined,
     artistImageUrl: dbSong.artist_image_url || undefined,
     songImageUrl: dbSong.song_image_url || undefined,
+    sheetImageUrl: dbSong.sheet_image_url || undefined,
     sourceUrl: dbSong.source_url || undefined,
     sourceSite: dbSong.source_site || undefined,
     tabId: dbSong.tab_id || undefined,

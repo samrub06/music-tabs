@@ -106,6 +106,7 @@ export interface Database {
           artist_url: string | null
           artist_image_url: string | null
           song_image_url: string | null
+          sheet_image_url: string | null
           source_url: string | null
           source_site: string | null
           view_count: number | null
@@ -143,6 +144,7 @@ export interface Database {
           artist_url?: string | null
           artist_image_url?: string | null
           song_image_url?: string | null
+          sheet_image_url?: string | null
           source_url?: string | null
           source_site?: string | null
           view_count?: number | null
@@ -180,6 +182,7 @@ export interface Database {
           artist_url?: string | null
           artist_image_url?: string | null
           song_image_url?: string | null
+          sheet_image_url?: string | null
           source_url?: string | null
           source_site?: string | null
           view_count?: number | null

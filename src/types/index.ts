@@ -73,6 +73,7 @@ export interface StructuredSong {
   artistUrl?: string;
   artistImageUrl?: string;
   songImageUrl?: string;
+  sheetImageUrl?: string;
   sourceUrl?: string;
   sourceSite?: string;
   viewCount?: number;
