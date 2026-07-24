@@ -15,6 +15,7 @@
     "seed:featured-catalog-song": "npx tsx scripts/seed-featured-catalog-song.ts",
     "seed:catalog-song": "npx tsx scripts/seed-catalog-song.ts",
     "seed:karduner-catalog": "npx tsx scripts/seed-karduner-catalog.ts",
+    "update:karduner-covers": "npx tsx scripts/update-karduner-covers.ts",
     "seed:hebrew-playlists": "npx tsx scripts/seed-hebrew-playlists.ts",
     "seed:tab4u-hassidic": "npx tsx scripts/seed-tab4u-hassidic.ts",
     "seed:negina-playlist": "npx tsx scripts/seed-negina-playlist.ts",
