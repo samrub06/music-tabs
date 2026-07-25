@@ -79,7 +79,7 @@ const sectionCardClass =
 | Feature | Accent |
 |---------|--------|
 | Spotify | `#1DB954` fill, hover `#1ed760`, text `text-black`; badge `bg-[#1DB954]/15 text-[#0d7a34] dark:text-[#1ed760]` |
-| Record song | Red / mic theme already in song UI: e.g. `bg-red-600 text-white hover:bg-red-500`, badge `bg-red-500/15 text-red-700 dark:text-red-400`, `MicrophoneIcon` |
+| Record song | Black / mic theme: e.g. `bg-neutral-950 text-white hover:bg-black`, chip `border-black/20 bg-black/[0.06]`, `MicrophoneIcon` |
 | Other | One thematic accent from the existing app (amber transpose, blue piano, etc.) — never invent a purple gradient theme |
 
 ## 4. Checklist for new banners

@@ -9,7 +9,9 @@ import { cn } from '@/lib/utils'
 /** Charcoal sampled from media/mic.png */
 const BANNER_BG = '#1A1A1A'
 const BANNER_INK = '#F5F5F5'
-const SNAKE_COLOR = '#DC2626'
+/** Black brand accent — light ink on charcoal so the snake stays visible */
+const SNAKE_COLOR = BANNER_INK
+const ACCENT_BLACK = '#0A0A0A'
 
 const STORAGE_DISMISSED = 'tabasco:record-promo-dismissed-v2'
 const STORAGE_COLLAPSED = 'tabasco:record-promo-collapsed-v2'
@@ -104,7 +106,7 @@ interface RecordSongBannerProps {
 }
 
 /**
- * Hero promo for recording — mic.png on the right (≤ half width), dark panel, red CTA.
+ * Hero promo for recording — mic.png on the right (≤ half width), dark panel, black CTA.
  */
 export function RecordSongBanner({
   phase,
@@ -167,7 +169,7 @@ export function RecordSongBanner({
           ) : isRecording ? (
             <span
               role="status"
-              className="absolute end-2.5 top-2.5 z-20 rounded-full border border-red-400/40 bg-red-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-300 backdrop-blur-sm sm:end-3 sm:top-3 sm:px-2.5 sm:text-[11px]"
+              className="absolute end-2.5 top-2.5 z-20 rounded-full border border-white/25 bg-black/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm sm:end-3 sm:top-3 sm:px-2.5 sm:text-[11px]"
             >
               {t('songContent.recordingBannerRecording')}
             </span>
@@ -216,7 +218,8 @@ export function RecordSongBanner({
               <button
                 type="button"
                 disabled
-                className="inline-flex cursor-default items-center gap-1.5 rounded-full bg-red-600/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
+                className="inline-flex cursor-default items-center gap-1.5 rounded-full border border-white/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
+                style={{ backgroundColor: ACCENT_BLACK }}
               >
                 {t('common.comingSoon')}
               </button>
@@ -245,13 +248,14 @@ export function RecordSongChip({
   return (
     <div
       className={cn(
-        'inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/25 bg-red-600/10 py-1.5 pe-1 ps-2.5 animate-in fade-in zoom-in-95 duration-300 sm:gap-1 sm:ps-3',
+        'inline-flex shrink-0 items-center gap-0.5 rounded-full border border-black/20 bg-black/[0.06] py-1.5 pe-1 ps-2.5 animate-in fade-in zoom-in-95 duration-300 sm:gap-1 sm:ps-3',
+        'dark:border-white/20 dark:bg-white/[0.08]',
         'min-h-9 sm:min-h-[40px]'
       )}
       role="status"
     >
       <span
-        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight text-red-700 dark:text-red-400 sm:max-w-none sm:text-sm"
+        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 sm:max-w-none sm:text-sm"
         title={t('songContent.recordingBannerTitle')}
       >
         {t('songContent.recordingBannerTitle')}
@@ -259,7 +263,7 @@ export function RecordSongChip({
       <button
         type="button"
         onClick={onDismiss}
-        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-red-700/80 transition-colors hover:bg-red-500/15 dark:text-red-400 sm:h-8 sm:w-8"
+        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-neutral-800/80 transition-colors hover:bg-black/10 dark:text-neutral-200 dark:hover:bg-white/10 sm:h-8 sm:w-8"
         aria-label={t('common.close')}
         title={t('common.close')}
       >

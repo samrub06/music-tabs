@@ -334,7 +334,7 @@ export function SongRecordingPanel({
                   type="button"
                   onClick={() => void startRecording()}
                   disabled={pending}
-                  className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-red-600 text-white hover:bg-red-500 sm:w-auto"
+                  className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-neutral-950 text-white hover:bg-black sm:w-auto"
                 >
                   <MicrophoneIcon className="h-4 w-4" aria-hidden />
                   {t('songContent.recordingBannerCta')}
@@ -373,7 +373,7 @@ export function SongRecordingPanel({
           type="button"
           onClick={() => void startRecording()}
           disabled={pending}
-          className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-red-600 text-white hover:bg-red-500"
+          className="h-10 min-h-[44px] w-full gap-1.5 rounded-xl bg-neutral-950 text-white hover:bg-black"
         >
           <MicrophoneIcon className="h-4 w-4" aria-hidden />
           {t('songContent.recordingBannerCta')}
