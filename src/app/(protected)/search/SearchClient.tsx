@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { RecentSearchList } from '@/components/search/RecentSearchList'
-import { AppLogo } from '@/components/AppLogo'
 import { HubZoneNav } from '@/components/library/HubZoneNav'
 import { FloatingGuitar } from '@/components/library/FloatingGuitar'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
@@ -524,18 +523,13 @@ export default function SearchClient({
         'p-4 pt-4 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 lg:min-h-screen'
       )}
     >
-        <header className="mb-4">
-          {isSearchTab ? (
+        {isSearchTab && (
+          <header className="mb-4">
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
               {t('navigation.search')}
             </h1>
-          ) : (
-            <AppLogo
-              variant="text"
-              className="h-9 w-auto max-w-[min(17rem,68vw)] object-contain object-left sm:h-8"
-            />
-          )}
-        </header>
+          </header>
+        )}
 
         <div className="mb-6">
           <div

@@ -170,10 +170,7 @@ export default function SongPreviewClient({
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Preview Banner */}
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            {t('songPreview.BANNER_MESSAGE')}
-          </p>
+        <div className="max-w-7xl mx-auto flex items-center justify-end">
           {userId && (
             <button
               onClick={handleAddToLibrary}
