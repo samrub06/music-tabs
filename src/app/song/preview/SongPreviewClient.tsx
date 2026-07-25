@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { PlusIcon } from '@heroicons/react/24/outline'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
 import { addSongAction } from '@/app/(protected)/dashboard/actions'
@@ -34,7 +33,6 @@ export default function SongPreviewClient({
   const [song, setSong] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isAdding, setIsAdding] = useState(false)
 
   useEffect(() => {
     const fetchSong = async () => {
@@ -108,7 +106,6 @@ export default function SongPreviewClient({
       return
     }
 
-    setIsAdding(true)
     try {
       const payload: NewSongData = {
         title: song.title.trim(),
@@ -133,8 +130,6 @@ export default function SongPreviewClient({
     } catch (err) {
       console.error('Error adding song:', err)
       setError(err instanceof Error ? err.message : t('songPreview.ADD_ERROR'))
-    } finally {
-      setIsAdding(false)
     }
   }
 
@@ -168,27 +163,6 @@ export default function SongPreviewClient({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Preview Banner */}
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center justify-end">
-          {userId && (
-            <button
-              onClick={handleAddToLibrary}
-              disabled={isAdding}
-              className="inline-flex h-9 w-9 items-center justify-center bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label={t('songPreview.ADD_TO_LIBRARY')}
-              title={t('songPreview.ADD_TO_LIBRARY')}
-            >
-              {isAdding ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-              ) : (
-                <PlusIcon className="h-5 w-5" aria-hidden />
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Song Viewer */}
       <SongViewerContainerSSR
         song={song}

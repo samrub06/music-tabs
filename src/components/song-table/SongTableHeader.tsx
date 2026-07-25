@@ -124,28 +124,42 @@ export function SongBulkActions({
         <Button
           type="button"
           variant="outline"
-          size="icon"
+          size="sm"
           onClick={onMoveToPlaylist}
-          className="h-8 w-8"
+          className="h-8 gap-1.5 px-2.5"
           aria-label={t('admin.moveToPlaylist')}
           title={t('admin.moveToPlaylist')}
         >
-          <QueueListIcon className="h-4 w-4" />
+          <QueueListIcon className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">{t('admin.moveToPlaylist')}</span>
         </Button>
       )}
       {onMoveToFolder && (
         <Button
           type="button"
           variant="outline"
-          size="icon"
+          size="sm"
           onClick={onMoveToFolder}
-          className="h-8 w-8"
+          className="h-8 gap-1.5 px-2.5"
           aria-label={t('songs.moveToFolder')}
           title={t('songs.moveToFolder')}
         >
-          <FolderIcon className="h-4 w-4" />
+          <FolderIcon className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline">{t('songs.moveToFolder')}</span>
         </Button>
       )}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onDeleteSelected}
+        className="h-8 gap-1.5 px-2.5 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        aria-label={t('songs.deleteSelected')}
+        title={t('songs.deleteSelected')}
+      >
+        <TrashIcon className="h-4 w-4 shrink-0" />
+        <span className="hidden sm:inline">{t('songs.deleteSelected')}</span>
+      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -171,13 +185,6 @@ export function SongBulkActions({
               {t('admin.removeFromPlaylist')}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem
-            onClick={onDeleteSelected}
-            className="text-destructive focus:text-destructive"
-          >
-            <TrashIcon className="h-4 w-4" />
-            {t('songs.deleteSelected')}
-          </DropdownMenuItem>
           {showDeleteAll && (
             <DropdownMenuItem
               onClick={onDeleteAll}
