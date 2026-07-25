@@ -117,6 +117,14 @@ export function resolveCuratedSlugFromCoverUrl(imageUrl: string): string | null 
   return null
 }
 
+/**
+ * Curated cover assets are pre-vetted modest images, so they stay visible even
+ * when the tsniout filter is on (unlike secular song thumbnails).
+ */
+export function isCuratedCoverSlug(slug?: string | null): boolean {
+  return !!slug && !!CURATED_PLAYLIST_COVER_FILES[slug]
+}
+
 export interface PlaylistCoverInput {
   name?: string
   imageUrl?: string | null
@@ -128,12 +136,14 @@ export interface ResolvePlaylistCoverOptions extends PlaylistCoverInput {
 }
 
 /**
- * Resolves a playlist/folder cover URL, masking secular covers when tsniout is enabled.
- * Matches song cover behavior: unknown / non-jewish → no cover (placeholder).
+ * Resolves a playlist/folder cover URL, masking only unknown/custom covers when
+ * tsniout is enabled. All curated cover assets (genre, decade, jewish, …) are
+ * pre-vetted modest images and stay visible; only user-uploaded custom covers of
+ * unknown provenance are masked (placeholder).
  *
- * Religious allowlist (filter on):
- * - explicit `curatedSlug` in jewish / songbook / israeli
- * - cover asset itself is a jewish curated file (e.g. folder cover picker)
+ * Allowlist (filter on):
+ * - explicit `curatedSlug` that has a curated cover asset
+ * - cover asset itself is a known curated file (e.g. folder cover picker)
  * - name-only curated match when there is no custom `imageUrl`
  */
 export function resolvePlaylistCoverUrl({
@@ -152,22 +162,22 @@ export function resolvePlaylistCoverUrl({
     return rawUrl
   }
 
-  if (isReligiousPlaylistSlug(curatedSlug)) {
+  if (isCuratedCoverSlug(curatedSlug)) {
     return rawUrl
   }
 
   if (imageUrl) {
     const fromUrl = resolveCuratedSlugFromCoverUrl(imageUrl)
-    if (isReligiousPlaylistSlug(fromUrl)) {
+    if (isCuratedCoverSlug(fromUrl)) {
       return rawUrl
     }
-    // Custom / secular picker cover on user folders → mask
+    // Custom user-uploaded cover of unknown provenance → mask
     return null
   }
 
-  // No imageUrl: allow auto-resolved curated covers only when the name maps to jewish
+  // No imageUrl: allow auto-resolved curated covers by name
   const fromName = resolveCoverSlugFromName(name)
-  if (isReligiousPlaylistSlug(fromName)) {
+  if (isCuratedCoverSlug(fromName)) {
     return rawUrl
   }
 
