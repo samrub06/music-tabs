@@ -22,6 +22,7 @@ import { HubZoneNav } from '@/components/library/HubZoneNav'
 import { FloatingGuitar } from '@/components/library/FloatingGuitar'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import {
+  clearRecentSearches,
   loadRecentSearches,
   RECENT_SEARCHES_PREVIEW,
   upsertRecentSearch,
@@ -34,6 +35,12 @@ import type { ReactNode } from 'react'
 interface SearchClientProps {
   userId?: string
   children?: ReactNode
+  /**
+   * 'home' (default): idle state shows the library/explorer sections.
+   * 'search': dedicated Search tab — idle state shows the full recent
+   * searches list, or an empty state when there is no history.
+   */
+  variant?: 'home' | 'search'
 }
 
 interface SearchResult {
@@ -63,8 +70,10 @@ const AI_SUGGESTION_KEYS = [
 
 export default function SearchClient({
   userId,
-  children
+  children,
+  variant = 'home',
 }: SearchClientProps) {
+  const isSearchTab = variant === 'search'
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLanguage()
@@ -367,6 +376,11 @@ export default function SearchClient({
     performSearch(item.query)
   }
 
+  const handleClearRecentSearches = () => {
+    clearRecentSearches()
+    setRecentSearches([])
+  }
+
   // Handle clear search - Reset all search state
   const handleClearSearch = () => {
     setSearchQuery('')
@@ -486,15 +500,18 @@ export default function SearchClient({
   const hasSearchResults = queryTrimmed.length > 0 && searchResults.length > 0
   const showSearchResultsPanel =
     isSearching || hasSearchResults || (hasSearched && queryTrimmed.length > 0)
-  const showLibrarySections =
+  const isIdle =
     !queryTrimmed && searchResults.length === 0 && !hasSearched && !isSearching
+  // Home variant shows the library/explorer sections when idle.
+  const showLibrarySections = !isSearchTab && isIdle
+  // Home variant shows a short recent-searches preview above the sections.
   const showRecentSearches =
-    !isAIMode &&
-    !queryTrimmed &&
-    searchResults.length === 0 &&
-    !isSearching &&
-    !hasSearched &&
-    recentSearches.length > 0
+    !isSearchTab && !isAIMode && isIdle && recentSearches.length > 0
+  // Search tab shows the full recent-searches list, or an empty state.
+  const showSearchTabRecents =
+    isSearchTab && !isAIMode && isIdle && recentSearches.length > 0
+  const showSearchTabEmpty =
+    isSearchTab && !isAIMode && isIdle && recentSearches.length === 0
   const showAISuggestions = isAIMode && !searchQuery.trim() && !isSearching && !hasSearchResults
 
   return (
@@ -508,11 +525,13 @@ export default function SearchClient({
     >
         <header className="mb-4">
           <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {t('search.homeBrandTitle')}
+            {isSearchTab ? t('navigation.search') : t('search.homeBrandTitle')}
           </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {t('search.homeBrandSubtitle')}
-          </p>
+          {!isSearchTab && (
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {t('search.homeBrandSubtitle')}
+            </p>
+          )}
         </header>
 
         <div className="mb-6">
@@ -679,6 +698,40 @@ export default function SearchClient({
               items={recentSearches.slice(0, RECENT_SEARCHES_PREVIEW)}
               onItemClick={handleRecentSearchClick}
             />
+          </div>
+        )}
+
+        {/* Search tab — full recent searches list */}
+        {showSearchTabRecents && (
+          <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('search.recentSearches')}
+              </h2>
+              <button
+                type="button"
+                onClick={handleClearRecentSearches}
+                className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive"
+              >
+                {t('search.clearRecent')}
+              </button>
+            </div>
+            <RecentSearchList
+              items={recentSearches}
+              onItemClick={handleRecentSearchClick}
+            />
+          </div>
+        )}
+
+        {/* Search tab — empty state (no history yet) */}
+        {showSearchTabEmpty && (
+          <div className="mt-10 flex flex-col items-center justify-center px-6 py-10 text-center animate-in fade-in duration-300">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+              <MagnifyingGlassIcon className="h-8 w-8" aria-hidden />
+            </div>
+            <p className="max-w-xs text-sm font-medium text-foreground">
+              {t('search.firstSearchTitle')}
+            </p>
           </div>
         )}
 

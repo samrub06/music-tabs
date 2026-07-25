@@ -13,6 +13,7 @@ import {
   TrophyIcon,
   PencilSquareIcon,
   UserGroupIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { useFoldersContext } from '@/context/FoldersContext'
@@ -105,6 +106,19 @@ export default function MoreMenu({ isOpen, onClose }: MoreMenuProps) {
           <div className="min-h-0 flex-1 overflow-y-auto">
             {currentView === 'menu' && (
               <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/jams')}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-black/[0.06] bg-card p-4 text-start transition-colors hover:bg-muted/50 dark:border-white/[0.08] dark:hover:bg-white/[0.04]"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-900/40">
+                    <QueueListIcon className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {t('navigation.playlists')}
+                  </span>
+                </button>
+
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"

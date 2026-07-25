@@ -8,23 +8,23 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   RectangleStackIcon, 
-  QueueListIcon,
   HomeIcon,
   EllipsisHorizontalIcon,
   FolderIcon,
   MusicalNoteIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { 
   RectangleStackIcon as RectangleStackIconSolid, 
-  QueueListIcon as QueueListIconSolid,
   HomeIcon as HomeIconSolid,
   EllipsisHorizontalIcon as EllipsisHorizontalIconSolid,
   FolderIcon as FolderIconSolid,
   MusicalNoteIcon as MusicalNoteIconSolid,
+  MagnifyingGlassIcon as MagnifyingGlassIconSolid,
 } from '@heroicons/react/24/solid';
 import MoreMenu from './MoreMenu';
 
-const MORE_PATHS = ['/leaderboard', '/profile', '/jams/ai', '/friends'];
+const MORE_PATHS = ['/leaderboard', '/profile', '/jams', '/friends'];
 
 export default function BottomNavigation() {
   const pathname = usePathname();
@@ -51,7 +51,14 @@ export default function BottomNavigation() {
       label: t('navigation.home'),
       icon: HomeIcon,
       iconSolid: HomeIconSolid,
-      isActive: pathname === '/' || pathname === '/search' || pathname.startsWith('/search/'),
+      isActive: pathname === '/',
+    },
+    {
+      href: '/search',
+      label: t('navigation.search'),
+      icon: MagnifyingGlassIcon,
+      iconSolid: MagnifyingGlassIconSolid,
+      isActive: pathname === '/search' || pathname.startsWith('/search/'),
     },
     {
       href: '/songs',
@@ -73,13 +80,6 @@ export default function BottomNavigation() {
       icon: MusicalNoteIcon,
       iconSolid: MusicalNoteIconSolid,
       isActive: pathname === '/chords' || pathname.startsWith('/chords/'),
-    },
-    {
-      href: '/jams',
-      label: t('navigation.playlists'),
-      icon: QueueListIcon,
-      iconSolid: QueueListIconSolid,
-      isActive: pathname === '/jams' || pathname.startsWith('/jams/'),
     },
   ];
 
