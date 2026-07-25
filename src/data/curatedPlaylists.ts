@@ -316,7 +316,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
   },
   {
     slug: 'negina-jewish-music',
-    name: 'Negina — מוסיקה יהודית',
+    name: 'Israel',
     description: 'מוסיקה יהודית — catalog scraped from Negina.co.il',
     section: 'jewish',
     displayOrder: 10,

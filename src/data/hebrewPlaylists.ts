@@ -252,7 +252,7 @@ export const HEBREW_PLAYLISTS: HebrewPlaylistDefinition[] = [
   },
   {
     slug: 'negina-jewish-music',
-    name: 'Negina — מוסיקה יהודית',
+    name: 'Israel',
     description: 'מוסיקה יהודית — catalog scraped from Negina.co.il',
     catalogGenre: HEBREW_CATALOG_GENRES.neginaJewish,
     displayOrder: 10,
