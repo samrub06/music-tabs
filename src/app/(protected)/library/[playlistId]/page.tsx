@@ -3,6 +3,7 @@ import { createSafeServerClient } from '@/lib/supabase/server'
 import PublicPlaylistSongsData from './PublicPlaylistSongsData'
 import {
   PublicPlaylistDetailShell,
+  PublicPlaylistPageFrame,
   PublicPlaylistSearchProvider,
   PublicPlaylistSongListSkeleton,
 } from './PublicPlaylistDetailClient'
@@ -45,7 +46,7 @@ export default async function PublicPlaylistDetailPage({
 
     return (
       <PublicPlaylistSearchProvider playlist={playlist}>
-        <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
+        <PublicPlaylistPageFrame>
           <PublicPlaylistDetailShell
             playlist={playlist}
             songCount={playlist.songIds.length}
@@ -54,7 +55,7 @@ export default async function PublicPlaylistDetailPage({
           <Suspense fallback={<PublicPlaylistSongListSkeleton />}>
             <PublicPlaylistSongsData playlist={playlist} userId={user?.id} />
           </Suspense>
-        </div>
+        </PublicPlaylistPageFrame>
       </PublicPlaylistSearchProvider>
     )
   } catch {

@@ -38,6 +38,10 @@ import { useSongCover } from '@/lib/hooks/useSongCover'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
+import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
+import SongGallery from '@/components/SongGallery'
+import { PlaylistGlassHeader } from '@/components/library/PlaylistGlassHeader'
+import { GlassActionTile } from '@/components/library/GlassActionTile'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import {
   DropdownMenu,
@@ -173,6 +177,7 @@ export default function PlaylistDetailClient({
 }: PlaylistDetailClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
+  const isLandscapeMobile = useLandscapeMobile()
   const [songs, setSongs] = useState(initialSongs)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
@@ -351,138 +356,112 @@ export default function PlaylistDetailClient({
       ? `1 ${t('playlistView.songs').slice(0, -1)}`
       : `${songs.length} ${t('playlistView.songs')}`
 
-  return (
-    <div className="flex-1 overflow-y-auto pb-20 lg:pb-6">
-      <div className="px-3 pt-3 sm:px-4 md:px-6">
-        <div className="space-y-3 rounded-xl border border-black/[0.06] bg-card px-3 py-3 dark:border-white/[0.08] sm:px-4 sm:py-3.5">
-          <div className="flex w-full items-start gap-2.5 sm:gap-3">
-            <div className="relative h-14 w-14 shrink-0 self-start overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16">
-              {displayCoverUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={displayCoverUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
-                  <MusicalNoteIcon className="h-7 w-7 text-primary-foreground/90" />
-                </div>
-              )}
-            </div>
+  const jamToolbar = (
+    <div
+      className={cn(
+        'flex min-w-0 flex-1 items-center justify-end',
+        isLandscapeMobile ? 'gap-1' : 'gap-1.5'
+      )}
+    >
+      {!isSearchOpen ? (
+        <GlassActionTile
+          onClick={openShareDialog}
+          compact={isLandscapeMobile}
+          aria-label={t('playlistView.sharePlaylist')}
+          className={isLandscapeMobile ? '!h-8 !w-8' : '!h-10 !w-10'}
+        >
+          <ShareIcon />
+        </GlassActionTile>
+      ) : null}
 
-            <div
-              className={cn(
-                'min-w-0 flex-1 self-center transition-all duration-200',
-                isSearchOpen && 'max-w-0 flex-[0_0_0] overflow-hidden opacity-0'
-              )}
-            >
-              <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-base">
-                {playlist.name}
-              </h1>
-              {playlist.description ? (
-                <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground sm:text-xs">
-                  {playlist.description}
-                </p>
-              ) : (
-                <p className="mt-0.5 text-sm text-muted-foreground sm:text-xs">
-                  {songCountLabel}
-                  {playlist.createdAt ? (
-                    <>
-                      {' · '}
-                      {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </>
-                  ) : null}
-                </p>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1.5 self-center">
-              {!isSearchOpen ? (
-                <button
-                  type="button"
-                  onClick={openShareDialog}
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  aria-label={t('playlistView.sharePlaylist')}
-                >
-                  <ShareIcon className="h-5 w-5" />
-                </button>
-              ) : null}
-
-              <div
-                className={cn(
-                  'flex min-w-0 items-center overflow-hidden rounded-xl border border-border bg-muted/40 transition-all duration-200',
-                  isSearchOpen ? 'min-w-0 flex-1' : 'w-10 shrink-0 border-transparent bg-transparent'
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={toggleSearch}
-                  className={cn(
-                    'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
-                    isSearchOpen && 'text-primary'
-                  )}
-                  aria-label={isSearchOpen ? t('common.close') : t('common.search')}
-                >
-                  <MagnifyingGlassIcon className="h-5 w-5" />
-                </button>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') closeSearch()
-                  }}
-                  placeholder={t('songs.search')}
-                  tabIndex={isSearchOpen ? 0 : -1}
-                  aria-hidden={!isSearchOpen}
-                  className={cn(
-                    'min-w-0 border-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none transition-all duration-200',
-                    isSearchOpen ? 'w-full pe-3 opacity-100' : 'w-0 pe-0 opacity-0'
-                  )}
-                />
-                {isSearchOpen && searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    aria-label={t('common.clear')}
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
-                ) : null}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleStartPlaylist}
-                disabled={songs.length === 0}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-12 sm:w-12"
-                aria-label={t('playlistView.startPlaylist')}
-              >
-                <PlayIcon className="h-5 w-5 animate-play-icon-rotate sm:h-6 sm:w-6" />
-              </button>
-            </div>
-          </div>
-
-          {playlist.description ? (
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              {songCountLabel}
-              {playlist.createdAt ? (
-                <>
-                  {' · '}
-                  {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </>
-              ) : null}
-            </p>
-          ) : null}
-        </div>
+      <div
+        className={cn(
+          'flex min-w-0 items-center overflow-hidden border border-white/25 bg-white/40 backdrop-blur-md transition-all duration-200 dark:bg-white/10',
+          isLandscapeMobile ? 'rounded-xl' : 'rounded-2xl',
+          isSearchOpen
+            ? 'min-w-0 flex-1'
+            : cn('shrink-0 border-transparent bg-transparent', isLandscapeMobile ? 'w-8' : 'w-10')
+        )}
+      >
+        <GlassActionTile
+          onClick={toggleSearch}
+          compact={isLandscapeMobile}
+          aria-label={isSearchOpen ? t('common.close') : t('common.search')}
+          className={cn(
+            isLandscapeMobile ? '!h-8 !w-8' : '!h-10 !w-10',
+            isSearchOpen && 'text-primary'
+          )}
+        >
+          <MagnifyingGlassIcon />
+        </GlassActionTile>
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') closeSearch()
+          }}
+          placeholder={t('songs.search')}
+          tabIndex={isSearchOpen ? 0 : -1}
+          aria-hidden={!isSearchOpen}
+          className={cn(
+            'min-w-0 border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none transition-all duration-200',
+            isLandscapeMobile ? 'text-xs' : 'text-sm',
+            isSearchOpen ? 'w-full pe-2 opacity-100' : 'w-0 pe-0 opacity-0'
+          )}
+        />
+        {isSearchOpen && searchQuery ? (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className={cn(
+              'inline-flex shrink-0 items-center justify-center text-muted-foreground',
+              isLandscapeMobile ? 'h-8 w-8' : 'h-10 w-10'
+            )}
+            aria-label={t('common.clear')}
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
+    </div>
+  )
+
+  return (
+    <div
+      className={cn(
+        'flex flex-1 flex-col lg:pb-6',
+        isLandscapeMobile
+          ? 'min-h-0 overflow-hidden pb-12'
+          : 'overflow-y-auto pb-20'
+      )}
+    >
+      <PlaylistGlassHeader
+        coverUrl={displayCoverUrl}
+        title={playlist.name}
+        songCount={songs.length}
+        songs={songs}
+        onPlay={handleStartPlaylist}
+        toolbar={jamToolbar}
+        subtitle={
+          playlist.description ? (
+            playlist.description
+          ) : playlist.createdAt ? (
+            <>
+              {songCountLabel}
+              {' · '}
+              {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
+            </>
+          ) : (
+            songCountLabel
+          )
+        }
+      />
 
       {songs.length === 0 ? (
         <div className="px-4 py-16 text-center sm:px-6">
@@ -498,6 +477,15 @@ export default function PlaylistDetailClient({
         <div className="px-4 py-16 text-center sm:px-6">
           <MagnifyingGlassIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
           <h3 className="text-base font-medium text-foreground">{t('songs.noResults')}</h3>
+        </div>
+      ) : isLandscapeMobile ? (
+        <div className="flex min-h-0 flex-1 flex-col px-1.5 pt-1">
+          <SongGallery
+            songs={displayedSongs}
+            variant="folder"
+            diskRackOnLandscape
+            onSongSelect={(song) => navigateToSong(song.id)}
+          />
         </div>
       ) : isFiltering ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter}>

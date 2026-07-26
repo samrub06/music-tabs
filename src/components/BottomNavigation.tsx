@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile';
+import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -30,6 +32,7 @@ export default function BottomNavigation() {
   const pathname = usePathname();
   const { user } = useAuthContext();
   const { t } = useLanguage();
+  const isLandscapeMobile = useLandscapeMobile();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -83,13 +86,23 @@ export default function BottomNavigation() {
     },
   ];
 
+  const iconClass = cn(
+    'flex-shrink-0',
+    isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
+  );
+
   const chrome = (
     <>
       <nav
         aria-label={t('navigation.MENU')}
         className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background lg:hidden safe-area-inset-bottom"
       >
-        <div className="flex items-stretch h-16 px-0.5">
+        <div
+          className={cn(
+            'flex items-stretch px-0.5',
+            isLandscapeMobile ? 'h-10' : 'h-16'
+          )}
+        >
           {navItems.map((item) => {
             const IconComponent = item.isActive ? item.iconSolid : item.icon;
             return (
@@ -97,41 +110,55 @@ export default function BottomNavigation() {
                 key={item.href}
                 href={item.href}
                 prefetch={true}
-                className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
+                className={cn(
+                  'flex flex-1 min-w-0 flex-col items-center justify-center rounded-lg px-0.5 transition-all duration-150 active:scale-95',
+                  isLandscapeMobile ? 'py-0' : 'py-1',
                   item.isActive
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                )}
               >
-                <IconComponent className="h-5 w-5 flex-shrink-0" />
-                <span className={`text-[10px] sm:text-xs mt-0.5 truncate w-full text-center ${
-                  item.isActive ? 'font-semibold' : 'font-medium'
-                }`}>
-                  {item.label}
-                </span>
+                <IconComponent className={iconClass} />
+                {!isLandscapeMobile ? (
+                  <span
+                    className={cn(
+                      'mt-0.5 w-full truncate text-center text-[10px] sm:text-xs',
+                      item.isActive ? 'font-semibold' : 'font-medium'
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                ) : null}
               </Link>
             );
           })}
           <button
             type="button"
             onClick={() => setIsMoreMenuOpen((open) => !open)}
-            className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 rounded-lg transition-all duration-150 active:scale-95 ${
+            className={cn(
+              'flex flex-1 min-w-0 flex-col items-center justify-center rounded-lg px-0.5 transition-all duration-150 active:scale-95',
+              isLandscapeMobile ? 'py-0' : 'py-1',
               isMoreActive || isMoreMenuOpen
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+            )}
             aria-label={t('navigation.more')}
           >
             {isMoreActive || isMoreMenuOpen ? (
-              <EllipsisHorizontalIconSolid className="h-5 w-5 flex-shrink-0" />
+              <EllipsisHorizontalIconSolid className={iconClass} />
             ) : (
-              <EllipsisHorizontalIcon className="h-5 w-5 flex-shrink-0" />
+              <EllipsisHorizontalIcon className={iconClass} />
             )}
-            <span className={`text-[10px] sm:text-xs mt-0.5 truncate w-full text-center ${
-              isMoreActive || isMoreMenuOpen ? 'font-semibold' : 'font-medium'
-            }`}>
-              {t('navigation.more')}
-            </span>
+            {!isLandscapeMobile ? (
+              <span
+                className={cn(
+                  'mt-0.5 w-full truncate text-center text-[10px] sm:text-xs',
+                  isMoreActive || isMoreMenuOpen ? 'font-semibold' : 'font-medium'
+                )}
+              >
+                {t('navigation.more')}
+              </span>
+            ) : null}
           </button>
         </div>
       </nav>

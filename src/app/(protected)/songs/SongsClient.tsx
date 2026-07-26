@@ -816,17 +816,23 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         <div
           ref={scrollContainerRef}
           data-main-scroll
-          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className={cn(
+            'relative z-0 min-h-0 flex-1 overscroll-contain',
+            isLandscapeMobile
+              ? 'flex flex-col overflow-hidden'
+              : 'overflow-y-auto'
+          )}
         >
         <div
           className={cn(
             'transition-opacity duration-300 ease-out',
+            isLandscapeMobile && 'flex min-h-0 flex-1 flex-col',
             isListLoading ? 'pointer-events-none opacity-45' : 'opacity-100'
           )}
           aria-busy={isListLoading}
         >
         {sortedSongs && sortedSongs.length > 0 ? (
-          view === 'table' ? (
+          view === 'table' && !isLandscapeMobile ? (
             <>
               <SongTable
                 songs={sortedSongs}
@@ -882,25 +888,32 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             </>
           ) : (
             <>
-              <SongGallery songs={sortedSongs} variant="folder" hasUser />
-              <Pagination
-                page={displayPage}
-                limit={limit}
-                total={displayTotal}
-                showAllLimit={10000}
-                onNavigate={isSearching ? handleSearchPaginationNavigate : undefined}
-                onShowAll={isSearching ? handleSearchPaginationShowAll : undefined}
-              />
-              {searchQuery.trim() && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-3 min-h-[44px] w-full"
-                  onClick={() => openAddSongPageForArtist(searchQuery.trim())}
-                >
-                  {t('songs.searchMoreFromArtist').replace('{artist}', searchQuery.trim())}
-                </Button>
-              )}
+              <SongGallery songs={sortedSongs} variant="folder" hasUser diskRackOnLandscape />
+              {!isLandscapeMobile ? (
+                <>
+                  <Pagination
+                    page={displayPage}
+                    limit={limit}
+                    total={displayTotal}
+                    showAllLimit={10000}
+                    onNavigate={isSearching ? handleSearchPaginationNavigate : undefined}
+                    onShowAll={isSearching ? handleSearchPaginationShowAll : undefined}
+                  />
+                  {searchQuery.trim() && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-3 min-h-[44px] w-full"
+                      onClick={() => openAddSongPageForArtist(searchQuery.trim())}
+                    >
+                      {t('songs.searchMoreFromArtist').replace(
+                        '{artist}',
+                        searchQuery.trim()
+                      )}
+                    </Button>
+                  )}
+                </>
+              ) : null}
             </>
           )
         ) : (
