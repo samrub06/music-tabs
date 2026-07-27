@@ -76,11 +76,11 @@ export default function SongHeader({
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             {playing ? (
-              <div className="flex min-w-0 flex-1 items-center justify-center gap-2.5 px-2.5 py-0.5 sm:gap-2">
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-2.5 px-2.5 py-1.5 sm:gap-2 sm:py-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 sm:h-9 sm:w-9 shrink-0"
+                  className="h-9 w-9 shrink-0 sm:h-8 sm:w-8"
                   onClick={() => onSetAutoScrollSpeed(Math.max(0.5, autoScroll.speed - 0.2))}
                   aria-label={t('songHeader.AUTO_SCROLL_LABEL')}
                 >
@@ -88,11 +88,11 @@ export default function SongHeader({
                 </Button>
                 <Button
                   variant="default"
-                  className="h-11 min-w-[4.5rem] shrink-0 px-5"
+                  className="h-9 min-w-[3.75rem] shrink-0 px-4 py-2 sm:h-8"
                   onClick={onToggleAutoScroll}
                   title={t('songHeader.STOP_AUTO_SCROLL')}
                 >
-                  <PauseIcon className="h-5 w-5" />
+                  <PauseIcon className="h-4 w-4" />
                 </Button>
                 <span className="min-w-[2.5rem] shrink-0 text-center text-xs font-semibold tabular-nums">
                   {autoScroll.speed.toFixed(1)}x
@@ -100,7 +100,7 @@ export default function SongHeader({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 sm:h-9 sm:w-9 shrink-0"
+                  className="h-9 w-9 shrink-0 sm:h-8 sm:w-8"
                   onClick={() => onSetAutoScrollSpeed(Math.min(4, autoScroll.speed + 0.2))}
                   aria-label={t('songHeader.AUTO_SCROLL_LABEL')}
                 >

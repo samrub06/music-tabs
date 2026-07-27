@@ -1,6 +1,7 @@
 'use client'
 
 import { useLanguage } from '@/context/LanguageContext'
+import { GlassActionTile } from '@/components/library/GlassActionTile'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -64,15 +65,21 @@ export function SignInPromoBanner({ onSignIn }: SignInPromoBannerProps) {
             />
           </div>
 
-          <button
-            type="button"
+          <GlassActionTile
             onClick={onSignIn}
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3 text-[10px] font-bold uppercase tracking-wide text-[#202124] transition-colors hover:bg-white/90 sm:h-10 sm:gap-2 sm:px-4 sm:text-xs"
+            compact
+            variant="clear"
+            aria-label={t('auth.signInWithGoogle')}
+            className="!h-9 !w-auto px-3 sm:!h-10 sm:px-4"
           >
-            <GoogleIcon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="max-sm:sr-only">{t('auth.signInWithGoogle')}</span>
-            <span className="sm:hidden">{t('auth.signIn')}</span>
-          </button>
+            <GoogleIcon className="shrink-0" />
+            <span className="hidden text-[10px] font-bold uppercase tracking-wide sm:inline sm:text-xs">
+              {t('auth.signInWithGoogle')}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-wide sm:hidden">
+              {t('auth.signIn')}
+            </span>
+          </GlassActionTile>
         </div>
       </div>
     </div>

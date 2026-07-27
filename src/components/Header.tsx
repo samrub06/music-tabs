@@ -22,6 +22,7 @@ import HeaderLevelProgress from './gamification/HeaderLevelProgress'
 import type { ThemePreference } from '@/context/ThemeContext'
 import NotificationBell from './social/NotificationBell'
 import { Button } from '@/components/ui/button'
+import { GlassActionTile } from '@/components/library/GlassActionTile'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -461,15 +462,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   {languageMenuItems}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                variant="outline"
-                onClick={() => signInWithGoogle(pathname)}
-                className="h-9 gap-1.5 px-3 text-xs font-medium sm:h-8 sm:gap-2 sm:px-3"
+              <GlassActionTile
+                onClick={() => void signInWithGoogle(pathname)}
+                compact
+                variant="clear"
+                aria-label={t('auth.signInWithGoogle')}
+                className="!h-9 !w-auto px-3 sm:!h-9"
               >
-                <GoogleIcon className="h-4 w-4 shrink-0" />
-                <span className="inline sm:hidden">{t('auth.signIn')}</span>
-                <span className="hidden sm:inline">{t('auth.signInWithGoogle')}</span>
-              </Button>
+                <GoogleIcon className="shrink-0" />
+                <span className="text-xs font-semibold sm:hidden">{t('auth.signIn')}</span>
+                <span className="hidden text-xs font-semibold sm:inline">
+                  {t('auth.signInWithGoogle')}
+                </span>
+              </GlassActionTile>
             </>
           )
         )}
