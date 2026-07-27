@@ -49,7 +49,7 @@ export function deriveRelatedArtists(songs: Song[], limit = 12): RelatedArtistCh
 }
 
 /** Soft gloss sweep that hints the vignette is tappable (no chevron). */
-function VignetteGlossHint({ active }: { active?: boolean }) {
+export function VignetteGlossHint({ active }: { active?: boolean }) {
   return (
     <span
       aria-hidden

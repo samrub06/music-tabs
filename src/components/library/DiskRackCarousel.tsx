@@ -18,6 +18,8 @@ export interface DiskRackItem {
 interface DiskRackCarouselProps {
   items: DiskRackItem[]
   className?: string
+  /** Replaces the default centered title strip (e.g. playlist landscape dock). */
+  renderFooter?: (active: DiskRackItem | undefined) => ReactNode
 }
 
 /** Visual card size (w-40 / 10rem = 160px). */
@@ -55,7 +57,11 @@ function signedUnit(value: number): number {
  * Layout slots stay untransformed (stable scroll math); visuals get the 3D fold.
  * Active title sits at the bottom; the rack fills and centers vertically.
  */
-export function DiskRackCarousel({ items, className }: DiskRackCarouselProps) {
+export function DiskRackCarousel({
+  items,
+  className,
+  renderFooter,
+}: DiskRackCarouselProps) {
   const { isRtl } = useLanguage()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const slotRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -208,12 +214,12 @@ export function DiskRackCarousel({ items, className }: DiskRackCarouselProps) {
   const active = items[clamp(activeIndex, 0, items.length - 1)]
 
   return (
-    <div className={cn('flex h-full min-h-[160px] w-full flex-col', className)}>
-      {/* Optical middle: rack fills leftover height between chrome and bottom title */}
-      <div className="relative flex min-h-[160px] flex-1 flex-col justify-center overflow-x-clip overflow-y-visible py-1">
+    <div className={cn('flex h-full min-h-0 w-full flex-1 flex-col', className)}>
+      {/* Rack fills all leftover height; cards stay optically centered */}
+      <div className="relative flex min-h-0 flex-1 flex-col justify-center overflow-x-clip overflow-y-visible py-0">
         <div
           ref={scrollerRef}
-          className="flex min-h-[160px] w-full snap-x snap-mandatory items-center overflow-x-auto overflow-y-visible scrollbar-hide"
+          className="flex h-full min-h-0 w-full snap-x snap-mandatory items-center overflow-x-auto overflow-y-visible scrollbar-hide"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -300,17 +306,20 @@ export function DiskRackCarousel({ items, className }: DiskRackCarouselProps) {
         </div>
       </div>
 
-      {/* Selected song — bottom of viewport, large and readable */}
-      <div className="shrink-0 px-4 pb-1 pt-2 text-center">
-        <p className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground sm:text-xl">
-          {active?.title}
-        </p>
-        {active?.subtitle ? (
-          <p className="mt-0.5 truncate text-sm leading-snug text-muted-foreground">
-            {active.subtitle}
+      {renderFooter ? (
+        renderFooter(active)
+      ) : (
+        <div className="shrink-0 px-4 pb-1 pt-2 text-center">
+          <p className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground sm:text-xl">
+            {active?.title}
           </p>
-        ) : null}
-      </div>
+          {active?.subtitle ? (
+            <p className="mt-0.5 truncate text-sm leading-snug text-muted-foreground">
+              {active.subtitle}
+            </p>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }

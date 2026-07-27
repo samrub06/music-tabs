@@ -14,6 +14,7 @@ import {
   PlayIcon,
   HeartIcon,
   PlusIcon,
+  ShareIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
@@ -285,6 +286,7 @@ export default function SongContent({
   } = useRecordSongPromo();
   const [recordIsActive, setRecordIsActive] = useState(false);
   const [recordReady, setRecordReady] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const recordStartRef = useRef<(() => void) | null>(null);
 
   const handleRecordControlsReady = useCallback(
@@ -727,6 +729,27 @@ export default function SongContent({
       </div>
     ) : null;
 
+  const guestShareClassName = cn(
+    'inline-flex h-11 w-full items-center justify-center rounded-xl border border-border/80 bg-muted/30 text-foreground transition-colors',
+    'hover:bg-muted/60 hover:text-foreground'
+  );
+
+  const handleCopySongLink = useCallback(async () => {
+    const url =
+      typeof window !== 'undefined'
+        ? window.location.href
+        : pathname
+          ? `${pathname}`
+          : '';
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2500);
+    } catch (error) {
+      console.error('Failed to copy song link:', error);
+    }
+  }, [pathname]);
+
   const shareButton = user ? (
     <ShareWithFriendIconButton
       entityType="song"
@@ -738,13 +761,28 @@ export default function SongContent({
               metaRowActionTileClass,
               'border-border/80 bg-muted/30 text-foreground hover:bg-muted/60 hover:text-foreground'
             )
-          : cn(
-              'inline-flex h-11 w-full items-center justify-center rounded-xl border border-border/80 bg-muted/30 text-foreground transition-colors',
-              'hover:bg-muted/60 hover:text-foreground'
-            )
+          : guestShareClassName
       }
     />
-  ) : null;
+  ) : (
+    <button
+      type="button"
+      onClick={() => void handleCopySongLink()}
+      className={guestShareClassName}
+      aria-label={
+        linkCopied ? t('songHeader.linkCopied') : t('songContent.shareThisSong')
+      }
+      title={
+        linkCopied ? t('songHeader.linkCopied') : t('songContent.shareThisSong')
+      }
+    >
+      {linkCopied ? (
+        <CheckIcon className="h-5 w-5 text-green-600 dark:text-green-400" aria-hidden />
+      ) : (
+        <ShareIcon className="h-5 w-5" aria-hidden />
+      )}
+    </button>
+  );
 
   const labeledActionButton = (
     label: string,
@@ -885,6 +923,15 @@ export default function SongContent({
                 )}
               >
                 {libraryActionFeedback.message}
+              </p>
+            ) : null}
+            {!user && linkCopied ? (
+              <p
+                role="status"
+                aria-live="polite"
+                className="text-xs font-medium text-green-700 dark:text-green-400"
+              >
+                {t('songHeader.linkCopied')}
               </p>
             ) : null}
 

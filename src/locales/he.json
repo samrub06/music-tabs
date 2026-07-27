@@ -420,6 +420,8 @@
     "relatedArtistsEmpty": "אין עדיין מידע על אמנים בפלייליסט הזה.",
     "relatedArtistsCount": "{count} אמנים",
     "relatedArtistsCountOne": "אמן אחד",
+    "showListView": "תצוגת רשימה",
+    "showCarouselView": "קרוסלה",
     "viewInLibrary": "פתח בספרייה",
     "seeSong": "צפה בשיר",
     "viewAll": "הצג הכל",

@@ -420,6 +420,8 @@
     "relatedArtistsEmpty": "No artist info for this playlist yet.",
     "relatedArtistsCount": "{count} artists",
     "relatedArtistsCountOne": "1 artist",
+    "showListView": "List view",
+    "showCarouselView": "Carousel",
     "viewInLibrary": "Open in library",
     "seeSong": "See song",
     "viewAll": "See all",

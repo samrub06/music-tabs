@@ -11,6 +11,10 @@ import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlace
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import { DiskRackCarousel, type DiskRackItem } from '@/components/library/DiskRackCarousel'
+import {
+  PlaylistCarouselDock,
+  type PlaylistCarouselDockProps,
+} from '@/components/library/PlaylistCarouselDock'
 import { useMemo, useCallback } from 'react'
 
 interface SongGalleryProps {
@@ -28,6 +32,11 @@ interface SongGalleryProps {
   /** Optional custom navigation (e.g. public playlist context). */
   onSongSelect?: (song: Song) => void
   className?: string
+  /**
+   * When set with disk-rack mode, replaces the bottom title strip with playlist chrome
+   * (list toggle + cover vignette with play / add).
+   */
+  playlistDock?: Omit<PlaylistCarouselDockProps, 'activeTitle' | 'activeSubtitle'>
 }
 
 const gridVariantClasses = {
@@ -195,6 +204,7 @@ export default function SongGallery({
   diskRackOnLandscape = false,
   onSongSelect,
   className,
+  playlistDock,
 }: SongGalleryProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -222,7 +232,21 @@ export default function SongGallery({
 
   if (diskRackOnLandscape && isLandscapeMobile) {
     return (
-      <DiskRackCarousel items={diskItems} className={cn('min-h-[160px] flex-1', className)} />
+      <DiskRackCarousel
+        items={diskItems}
+        className={cn('min-h-0 flex-1', className)}
+        renderFooter={
+          playlistDock
+            ? (active) => (
+                <PlaylistCarouselDock
+                  {...playlistDock}
+                  activeTitle={active?.title}
+                  activeSubtitle={active?.subtitle}
+                />
+              )
+            : undefined
+        }
+      />
     )
   }
 

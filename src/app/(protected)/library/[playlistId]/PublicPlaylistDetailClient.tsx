@@ -34,6 +34,14 @@ interface PublicPlaylistSearchContextValue {
   songs: Song[]
   setSongs: (songs: Song[]) => void
   handleStartPlaylist: () => void
+  preferListView: boolean
+  setPreferListView: (value: boolean) => void
+  isSavingPlaylist: boolean
+  handleSaveToFolders: () => Promise<void>
+  snackbarMessage: string | null
+  snackbarType: 'success' | 'error'
+  showSnackbar: boolean
+  setShowSnackbar: (value: boolean) => void
 }
 
 const PublicPlaylistSearchContext = createContext<PublicPlaylistSearchContextValue | null>(null)
@@ -92,6 +100,20 @@ export function PublicPlaylistSearchProvider({
 }) {
   const router = useRouter()
   const [songs, setSongs] = useState<Song[]>([])
+  const [preferListView, setPreferListView] = useState(false)
+  const isLandscapeMobile = useLandscapeMobile()
+  const {
+    isSaving,
+    snackbarMessage,
+    snackbarType,
+    showSnackbar,
+    setShowSnackbar,
+    handleSaveToFolders,
+  } = useSavePublicPlaylistToFolders(playlist)
+
+  useEffect(() => {
+    if (!isLandscapeMobile) setPreferListView(false)
+  }, [isLandscapeMobile])
 
   const handleStartPlaylist = useCallback(() => {
     if (songs.length === 0) return
@@ -104,8 +126,25 @@ export function PublicPlaylistSearchProvider({
       songs,
       setSongs,
       handleStartPlaylist,
+      preferListView,
+      setPreferListView,
+      isSavingPlaylist: isSaving,
+      handleSaveToFolders,
+      snackbarMessage,
+      snackbarType,
+      showSnackbar,
+      setShowSnackbar,
     }),
-    [songs, handleStartPlaylist]
+    [
+      songs,
+      handleStartPlaylist,
+      preferListView,
+      isSaving,
+      handleSaveToFolders,
+      snackbarMessage,
+      snackbarType,
+      showSnackbar,
+    ]
   )
 
   return (
@@ -174,15 +213,18 @@ function PublicPlaylistHeader({
 }) {
   const { t } = useLanguage()
   const { signInWithGoogle } = useAuthContext()
-  const { songs, handleStartPlaylist } = usePublicPlaylistSearch()
+  const isLandscapeMobile = useLandscapeMobile()
   const {
-    isSaving,
+    songs,
+    handleStartPlaylist,
+    preferListView,
+    isSavingPlaylist,
+    handleSaveToFolders,
     snackbarMessage,
     snackbarType,
     showSnackbar,
     setShowSnackbar,
-    handleSaveToFolders,
-  } = useSavePublicPlaylistToFolders(playlist)
+  } = usePublicPlaylistSearch()
 
   const handleAdd = () => {
     if (canSaveToFolders) {
@@ -192,30 +234,34 @@ function PublicPlaylistHeader({
     void signInWithGoogle(`/library/${playlist.id}`)
   }
 
+  const hideGlassHeader = isLandscapeMobile && !preferListView
+
   return (
     <>
-      <PlaylistGlassHeader
-        coverUrl={coverUrl}
-        title={playlist.name}
-        songCount={songCount}
-        songs={songs}
-        onPlay={handleStartPlaylist}
-        onAdd={handleAdd}
-        canAdd={!isSaving && (canSaveToFolders ? songCount > 0 : true)}
-        isAdding={isSaving}
-        addLabel={
-          canSaveToFolders
-            ? isSaving
-              ? t('library.addingPlaylist')
-              : t('library.addPlaylistToFolders')
-            : t('library.signInToAddPlaylist')
-        }
-        addAriaLabel={
-          canSaveToFolders
-            ? t('library.addPlaylistToFolders')
-            : t('library.signInToAddPlaylist')
-        }
-      />
+      {hideGlassHeader ? null : (
+        <PlaylistGlassHeader
+          coverUrl={coverUrl}
+          title={playlist.name}
+          songCount={songCount}
+          songs={songs}
+          onPlay={handleStartPlaylist}
+          onAdd={handleAdd}
+          canAdd={!isSavingPlaylist && (canSaveToFolders ? songCount > 0 : true)}
+          isAdding={isSavingPlaylist}
+          addLabel={
+            canSaveToFolders
+              ? isSavingPlaylist
+                ? t('library.addingPlaylist')
+                : t('library.addPlaylistToFolders')
+              : t('library.signInToAddPlaylist')
+          }
+          addAriaLabel={
+            canSaveToFolders
+              ? t('library.addPlaylistToFolders')
+              : t('library.signInToAddPlaylist')
+          }
+        />
+      )}
 
       <Snackbar
         message={snackbarMessage || ''}
@@ -259,7 +305,7 @@ export function PublicPlaylistPageFrame({ children }: { children: ReactNode }) {
       className={cn(
         'flex flex-1 flex-col lg:pb-6',
         isLandscapeMobile
-          ? 'min-h-0 overflow-hidden pb-12'
+          ? 'min-h-0 overflow-hidden pb-0'
           : 'overflow-y-auto pb-20'
       )}
     >
@@ -299,9 +345,18 @@ export function PublicPlaylistSongList({
 }: PublicPlaylistSongListProps) {
   const { t } = useLanguage()
   const router = useRouter()
+  const { signInWithGoogle } = useAuthContext()
   const isLandscapeMobile = useLandscapeMobile()
+  const coverUrl = usePlaylistCover(playlist)
   const [addingId, setAddingId] = useState<string | null>(null)
-  const { setSongs } = usePublicPlaylistSearch()
+  const {
+    setSongs,
+    handleStartPlaylist,
+    preferListView,
+    setPreferListView,
+    isSavingPlaylist,
+    handleSaveToFolders,
+  } = usePublicPlaylistSearch()
   const libraryIdSet = useMemo(() => new Set(libraryCatalogIds), [libraryCatalogIds])
 
   useEffect(() => {
@@ -337,6 +392,16 @@ export function PublicPlaylistSongList({
     [songs, playlist, router]
   )
 
+  const handleAddPlaylist = useCallback(() => {
+    if (userId) {
+      void handleSaveToFolders()
+      return
+    }
+    void signInWithGoogle(`/library/${playlist.id}`)
+  }, [userId, handleSaveToFolders, signInWithGoogle, playlist.id])
+
+  const showCarousel = isLandscapeMobile && !preferListView
+
   if (songs.length === 0) {
     return (
       <div className="px-4 py-16 text-center sm:px-6">
@@ -351,41 +416,69 @@ export function PublicPlaylistSongList({
     )
   }
 
-  if (isLandscapeMobile) {
+  if (showCarousel) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col px-1.5 pt-1">
+      <div className="flex min-h-0 flex-1 flex-col px-1.5 pt-0">
         <SongGallery
           songs={songs}
           variant="folder"
           diskRackOnLandscape
           onSongSelect={(song) => navigateToSong(song.id)}
+          className="min-h-0 flex-1"
+          playlistDock={{
+            coverUrl,
+            playlistTitle: playlist.name,
+            songCount: songs.length,
+            songs,
+            onPlay: handleStartPlaylist,
+            onShowList: () => setPreferListView(true),
+            onAdd: handleAddPlaylist,
+            canAdd: !isSavingPlaylist && (userId ? songs.length > 0 : true),
+            isAdding: isSavingPlaylist,
+            addAriaLabel: userId
+              ? t('library.addPlaylistToFolders')
+              : t('library.signInToAddPlaylist'),
+          }}
         />
       </div>
     )
   }
 
   return (
-    <ul className="mt-4">
-      {songs.map((song) => {
-        const isAdding = addingId === song.id
-        const isInLibrary = libraryIdSet.has(song.id)
+    <>
+      {isLandscapeMobile && preferListView ? (
+        <div className="flex justify-end px-3 pt-1">
+          <button
+            type="button"
+            onClick={() => setPreferListView(false)}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {t('library.showCarouselView')}
+          </button>
+        </div>
+      ) : null}
+      <ul className="mt-4">
+        {songs.map((song) => {
+          const isAdding = addingId === song.id
+          const isInLibrary = libraryIdSet.has(song.id)
 
-        return (
-          <li key={song.id}>
-            <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
-              <button
-                type="button"
-                onClick={() => navigateToSong(song.id)}
-                className="shrink-0"
-              >
-                <SongThumbnail
-                  songImageUrl={song.songImageUrl}
-                  artistImageUrl={song.artistImageUrl}
-                  genre={song.genre}
-                  alt={song.title}
-                  size="xs"
-                />
-              </button>
+          return (
+            <li key={song.id}>
+              <div className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:gap-4 sm:py-3">
+                <button
+                  type="button"
+                  onClick={() => navigateToSong(song.id)}
+                  className="shrink-0"
+                >
+                  <SongThumbnail
+                    songImageUrl={song.songImageUrl}
+                    artistImageUrl={song.artistImageUrl}
+                    genre={song.genre}
+                    alt={song.title}
+                    size="xs"
+                  />
+                </button>
+
 
               <button
                 type="button"
@@ -430,6 +523,7 @@ export function PublicPlaylistSongList({
         )
       })}
     </ul>
+    </>
   )
 }
 

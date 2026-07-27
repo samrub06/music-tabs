@@ -14,7 +14,7 @@ interface GlassActionTileProps {
   className?: string
   /**
    * `clear` — transparent glass, no shadow (sign-in / add).
-   * `primary` — glass with primary tint + soft shadow (play).
+   * `primary` — glass with primary tint (play).
    * `default` — same as clear.
    */
   variant?: 'default' | 'clear' | 'primary'
@@ -51,7 +51,7 @@ export function GlassActionTile({
         'disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100',
         compact ? 'h-9 w-9 rounded-xl' : 'h-12 w-12 sm:h-14 sm:w-14',
         isPrimary
-          ? 'border-primary/40 bg-transparent text-primary shadow-[0_8px_24px_-10px_rgba(0,0,0,0.28)] ring-primary/20 hover:bg-primary/10 dark:hover:bg-primary/15'
+          ? 'border-primary/40 bg-transparent text-primary shadow-none ring-primary/20 hover:bg-primary/10 dark:hover:bg-primary/15'
           : cn(
               'border-white/45 bg-zinc-200/55 text-foreground shadow-none backdrop-saturate-150',
               'ring-white/35 hover:bg-zinc-200/70',

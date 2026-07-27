@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   PlayIcon,
@@ -179,6 +179,7 @@ export default function PlaylistDetailClient({
   const router = useRouter()
   const isLandscapeMobile = useLandscapeMobile()
   const [songs, setSongs] = useState(initialSongs)
+  const [preferListView, setPreferListView] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
   const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false)
@@ -187,6 +188,10 @@ export default function PlaylistDetailClient({
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!isLandscapeMobile) setPreferListView(false)
+  }, [isLandscapeMobile])
 
   const openShareDialog = useCallback(() => {
     const url =
@@ -349,6 +354,8 @@ export default function PlaylistDetailClient({
     navigateToSong(songs[0].id)
   }
 
+  const showCarousel = isLandscapeMobile && !preferListView
+
   const activeSong = activeId ? songs.find((s) => s.id === activeId) : null
 
   const songCountLabel =
@@ -433,35 +440,37 @@ export default function PlaylistDetailClient({
       className={cn(
         'flex flex-1 flex-col lg:pb-6',
         isLandscapeMobile
-          ? 'min-h-0 overflow-hidden pb-12'
+          ? 'min-h-0 overflow-hidden pb-0'
           : 'overflow-y-auto pb-20'
       )}
     >
-      <PlaylistGlassHeader
-        coverUrl={displayCoverUrl}
-        title={playlist.name}
-        songCount={songs.length}
-        songs={songs}
-        onPlay={handleStartPlaylist}
-        toolbar={jamToolbar}
-        subtitle={
-          playlist.description ? (
-            playlist.description
-          ) : playlist.createdAt ? (
-            <>
-              {songCountLabel}
-              {' · '}
-              {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })}
-            </>
-          ) : (
-            songCountLabel
-          )
-        }
-      />
+      {showCarousel ? null : (
+        <PlaylistGlassHeader
+          coverUrl={displayCoverUrl}
+          title={playlist.name}
+          songCount={songs.length}
+          songs={songs}
+          onPlay={handleStartPlaylist}
+          toolbar={jamToolbar}
+          subtitle={
+            playlist.description ? (
+              playlist.description
+            ) : playlist.createdAt ? (
+              <>
+                {songCountLabel}
+                {' · '}
+                {new Date(playlist.createdAt).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </>
+            ) : (
+              songCountLabel
+            )
+          }
+        />
+      )}
 
       {songs.length === 0 ? (
         <div className="px-4 py-16 text-center sm:px-6">
@@ -478,65 +487,100 @@ export default function PlaylistDetailClient({
           <MagnifyingGlassIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
           <h3 className="text-base font-medium text-foreground">{t('songs.noResults')}</h3>
         </div>
-      ) : isLandscapeMobile ? (
-        <div className="flex min-h-0 flex-1 flex-col px-1.5 pt-1">
+      ) : showCarousel ? (
+        <div className="flex min-h-0 flex-1 flex-col px-1.5 pt-0">
           <SongGallery
             songs={displayedSongs}
             variant="folder"
             diskRackOnLandscape
             onSongSelect={(song) => navigateToSong(song.id)}
+            className="min-h-0 flex-1"
+            playlistDock={{
+              coverUrl: displayCoverUrl,
+              playlistTitle: playlist.name,
+              songCount: songs.length,
+              songs: displayedSongs,
+              onPlay: handleStartPlaylist,
+              onShowList: () => setPreferListView(true),
+            }}
           />
         </div>
       ) : isFiltering ? (
-        <DndContext sensors={sensors} collisionDetection={closestCenter}>
-          <SortableContext
-            items={displayedSongs.map((song) => song.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <ul className="mt-4">
-              {displayedSongs.map((song) => (
-                <SortableSongItem
-                  key={song.id}
-                  song={song}
-                  isDragging={false}
-                  onRemove={handleRemoveSong}
-                  onPlaySong={navigateToSong}
-                  t={t}
-                  dragDisabled
-                />
-              ))}
-            </ul>
-          </SortableContext>
-        </DndContext>
+        <>
+          {isLandscapeMobile && preferListView ? (
+            <div className="flex justify-end px-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setPreferListView(false)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {t('library.showCarouselView')}
+              </button>
+            </div>
+          ) : null}
+          <DndContext sensors={sensors} collisionDetection={closestCenter}>
+            <SortableContext
+              items={displayedSongs.map((song) => song.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="mt-4">
+                {displayedSongs.map((song) => (
+                  <SortableSongItem
+                    key={song.id}
+                    song={song}
+                    isDragging={false}
+                    onRemove={handleRemoveSong}
+                    onPlaySong={navigateToSong}
+                    t={t}
+                    dragDisabled
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
+        </>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={songIds} strategy={verticalListSortingStrategy}>
-            <ul className="mt-4">
-              {displayedSongs.map((song) => (
-                <SortableSongItem
-                  key={song.id}
-                  song={song}
-                  isDragging={activeId === song.id}
-                  onRemove={handleRemoveSong}
-                  onPlaySong={navigateToSong}
-                  t={t}
-                />
-              ))}
-            </ul>
-          </SortableContext>
-          <DragOverlay>
-            {activeSong ? (
-              <div className="rounded-lg bg-background/95 shadow-lg backdrop-blur-sm">
-                <PlaylistSongRow song={activeSong} />
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        <>
+          {isLandscapeMobile && preferListView ? (
+            <div className="flex justify-end px-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setPreferListView(false)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {t('library.showCarouselView')}
+              </button>
+            </div>
+          ) : null}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={songIds} strategy={verticalListSortingStrategy}>
+              <ul className="mt-4">
+                {displayedSongs.map((song) => (
+                  <SortableSongItem
+                    key={song.id}
+                    song={song}
+                    isDragging={activeId === song.id}
+                    onRemove={handleRemoveSong}
+                    onPlaySong={navigateToSong}
+                    t={t}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+            <DragOverlay>
+              {activeSong ? (
+                <div className="rounded-lg bg-background/95 shadow-lg backdrop-blur-sm">
+                  <PlaylistSongRow song={activeSong} />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </>
       )}
 
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
