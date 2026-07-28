@@ -3,6 +3,8 @@ import type { Database } from '@/types/db'
 import type { Folder } from '@/types'
 import type { CreateFolderInput, UpdateFolderInput } from '@/lib/validation/schemas'
 import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
+import { userLibraryRepo } from '@/lib/services/userLibraryRepo'
+import { mergeFolderSongCountRefs } from '@/lib/utils/mergeLibrarySongIds'
 
 function mapDbFolderToDomain(dbFolder: Database['public']['Tables']['folders']['Row']): Folder {
   return {
@@ -177,23 +179,41 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
   },
 
   async getSongCountsByFolderLegacy(userId: string): Promise<Map<string, number>> {
-    const { data, error } = await client
-      .from('songs')
-      .select('folder_id')
-      .eq('user_id', userId)
+    const [{ data: songsData, error: songsError }, libraryEntries] = await Promise.all([
+      client.from('songs').select('id, folder_id, cloned_from_id').eq('user_id', userId),
+      userLibraryRepo(client)
+        .listByUser(userId)
+        .catch(() => [] as Awaited<ReturnType<ReturnType<typeof userLibraryRepo>['listByUser']>>),
+    ])
 
-    if (error) throw error
+    if (songsError) throw songsError
 
-    const counts = new Map<string, number>()
-    ;((data as Array<{ folder_id: string | null }>) || []).forEach((song) => {
-      const folderId = song.folder_id || 'null'
-      counts.set(folderId, (counts.get(folderId) || 0) + 1)
+    const personalRows = (songsData as Array<{
+      id: string
+      folder_id: string | null
+      cloned_from_id: string | null
+    }>) || []
+
+    const personalClonedFromIds = new Map<string, string | undefined>()
+    for (const row of personalRows) {
+      personalClonedFromIds.set(row.id, row.cloned_from_id || undefined)
+    }
+
+    return mergeFolderSongCountRefs({
+      personal: personalRows.map((r) => ({
+        songId: r.id,
+        folderId: r.folder_id,
+      })),
+      linked: libraryEntries.map((e) => ({
+        songId: e.songId,
+        folderId: e.folderId ?? null,
+      })),
+      personalClonedFromIds,
     })
-
-    return counts
   },
 
   // Aggregate counts in DB (get_folder_song_counts RPC) — falls back to legacy scan.
+  // Always merges user_library links (RPC is personal-songs-only today).
   async getSongCountsByFolder(userId?: string): Promise<Map<string, number>> {
     let resolvedUserId = userId
     if (!resolvedUserId) {
@@ -202,17 +222,9 @@ export const folderRepo = (client: SupabaseClient<Database>) => ({
       resolvedUserId = user.id
     }
 
-    const { data, error } = await (client as any).rpc('get_folder_song_counts')
-
-    if (error) {
-      return this.getSongCountsByFolderLegacy(resolvedUserId)
-    }
-
-    const counts = new Map<string, number>()
-    for (const row of (data as Array<{ folder_key: string; song_count: number }>) || []) {
-      counts.set(row.folder_key, Number(row.song_count))
-    }
-    return counts
+    // Prefer dual-read legacy (personal + library links with clone dedup).
+    // RPC does not yet include user_library.
+    return this.getSongCountsByFolderLegacy(resolvedUserId)
   },
 
   // Lightweight version: only load id, name, display_order, and image for list views

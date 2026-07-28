@@ -61,6 +61,29 @@ export async function addSongFromSearchAction(payload: unknown): Promise<{
 
   const userRepo = songRepo(supabase)
   const userSongs = await userRepo.getAllSongsLightweight()
+
+  // Also treat user_library links as owned
+  try {
+    const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+    const links = await userLibraryRepo(supabase).listByUser(user.id)
+    for (const link of links) {
+      if (!userSongs.some((s) => s.id === link.songId)) {
+        const linked = await userRepo.getSong(link.songId)
+        if (linked) {
+          userSongs.push({
+            id: linked.id,
+            tabId: linked.tabId,
+            sourceUrl: linked.sourceUrl,
+            title: linked.title,
+            author: linked.author,
+          })
+        }
+      }
+    }
+  } catch {
+    /* user_library may be missing */
+  }
+
   const catalogClient = createServiceRoleClient()
   const deps = createDefaultResolveCatalogDeps(catalogClient)
 
@@ -76,6 +99,7 @@ export async function addSongFromSearchAction(payload: unknown): Promise<{
     return { song, scraped: false, alreadyOwned: true }
   }
 
+  // Prefer library link / clone via cloneSongAction (links catalog when table exists)
   const created = await cloneSongAction(plan.catalogSongId)
   revalidatePath('/songs')
   revalidatePath('/')

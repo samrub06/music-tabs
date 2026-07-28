@@ -28,6 +28,12 @@
     "validate:jcb-extract:b": "npx tsx scripts/validate-jcb-extract.ts --part=b",
     "validate:tab4u-extract": "npx tsx scripts/validate-tab4u-extract.ts",
     "clean:catalog-duplicates": "npx tsx scripts/clean-duplicate-catalog-songs.ts",
+    "dedupe:catalog-by-source": "npx tsx scripts/dedupe-catalog-by-source.ts",
+    "dedupe:catalog-by-source:apply": "APPLY=1 npx tsx scripts/dedupe-catalog-by-source.ts",
+    "migrate:clones-to-user-library": "npx tsx scripts/migrate-clones-to-user-library.ts",
+    "migrate:clones-to-user-library:apply": "APPLY=1 npx tsx scripts/migrate-clones-to-user-library.ts",
+    "migrate:user-songs-to-catalog": "npx tsx scripts/migrate-user-songs-to-catalog.ts",
+    "migrate:user-songs-to-catalog:apply": "APPLY=1 npx tsx scripts/migrate-user-songs-to-catalog.ts",
     "sync:explore-catalog": "NODE_ENV=development npx tsx scripts/sync-explore-catalog.ts",
     "lyrics-sync:precompute": "npx tsx scripts/lyrics-sync/precompute-playlist.ts",
     "lyrics-sync:precompute-all": "bash scripts/lyrics-sync/run-all-public.sh"

@@ -55,6 +55,8 @@ interface SearchResult {
   sourceUrl?: string
   sourceSite?: string
   tabId?: string
+  catalogSongId?: string
+  fromCatalog?: boolean
 }
 
 const AI_SUGGESTION_KEYS = [
@@ -389,9 +391,12 @@ export default function SearchClient({
   const handleViewSong = async (result: SearchResult) => {
     setViewingSongId(result.url)
     setMessage(null)
-    
+
     try {
-      // Navigate to preview page with URL
+      if (result.catalogSongId) {
+        router.push(`/song/${result.catalogSongId}`)
+        return
+      }
       const url = encodeURIComponent(result.url)
       const searchResultParam = encodeURIComponent(JSON.stringify(result))
       router.push(`/song/preview?url=${url}&searchResult=${searchResultParam}`)
@@ -719,12 +724,19 @@ export default function SearchClient({
                     {/* Titre, auteur, difficulté */}
                     <div className={cn('flex min-w-0 flex-1 flex-col justify-center gap-0', UI_TEXT_ALIGN)}>
                       <div className="min-w-0">
-                        <h3
-                          className="text-sm font-semibold text-foreground line-clamp-2 break-words"
-                          title={result.title}
-                        >
-                          {result.title}
-                        </h3>
+                        <div className="flex items-start gap-1.5 min-w-0">
+                          <h3
+                            className="text-sm font-semibold text-foreground line-clamp-2 break-words min-w-0"
+                            title={result.title}
+                          >
+                            {result.title}
+                          </h3>
+                          {result.fromCatalog || result.catalogSongId ? (
+                            <span className="shrink-0 mt-0.5 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                              Catalog
+                            </span>
+                          ) : null}
+                        </div>
                         <p
                           className="text-xs text-muted-foreground truncate mt-0.5"
                           title={result.author}

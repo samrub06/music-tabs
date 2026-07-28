@@ -1,18 +1,24 @@
 /**
- * One-shot backfill: set songs.cloned_from_id for user library copies
- * that match a catalog song (tabId / sourceUrl / title+author).
+ * Backfill songs.cloned_from_id for user library copies that match a catalog
+ * song by tab_id / source_url only (never title+author).
+ *
+ * For promote-on-miss as well, use:
+ *   npx tsx scripts/migrate-user-songs-to-catalog.ts
  *
  * Usage:
  *   DRY_RUN=1 npx tsx scripts/backfill-cloned-from.ts
- *   npx tsx scripts/backfill-cloned-from.ts
+ *   APPLY=1 npx tsx scripts/backfill-cloned-from.ts
  */
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
-import { findUserSongMatch } from '../src/lib/utils/songLibraryMatch'
+import {
+  buildCatalogSourceIndex,
+  matchCatalogBySourceIdentity,
+} from '../src/lib/utils/catalogSourceIndex'
 
 dotenv.config({ path: '.env.local' })
 
-const dryRun = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true'
+const dryRun = process.env.APPLY !== '1' && process.env.APPLY !== 'true'
 
 type SongRow = {
   id: string
@@ -20,9 +26,6 @@ type SongRow = {
   author: string | null
   tab_id: string | null
   source_url: string | null
-  cloned_from_id?: string | null
-  user_id?: string | null
-  is_public?: boolean | null
 }
 
 async function main() {
@@ -38,24 +41,25 @@ async function main() {
 
   const { data: catalogRows, error: catalogError } = await supabase
     .from('songs')
-    .select('id, title, author, tab_id, source_url, user_id, is_public')
-    .or('user_id.is.null,is_public.eq.true')
+    .select('id, title, author, tab_id, source_url')
+    .is('user_id', null)
 
   if (catalogError) throw catalogError
 
-  const catalog = ((catalogRows || []) as SongRow[]).map((row) => ({
-    id: row.id,
-    title: row.title,
-    author: row.author || '',
-    tabId: row.tab_id || undefined,
-    sourceUrl: row.source_url || undefined,
-  }))
+  const index = buildCatalogSourceIndex(
+    ((catalogRows || []) as SongRow[]).map((row) => ({
+      id: row.id,
+      tabId: row.tab_id,
+      sourceUrl: row.source_url,
+    }))
+  )
 
   const { data: userRows, error: userError } = await supabase
     .from('songs')
     .select('id, title, author, tab_id, source_url, cloned_from_id, user_id')
     .not('user_id', 'is', null)
     .is('cloned_from_id', null)
+    .or('tab_id.not.is.null,source_url.not.is.null')
 
   if (userError) throw userError
 
@@ -64,33 +68,21 @@ async function main() {
   const candidates = (userRows || []) as SongRow[]
 
   for (const row of candidates) {
-    const userSong = {
-      id: row.id,
-      title: row.title,
-      author: row.author || '',
-      tabId: row.tab_id || undefined,
-      sourceUrl: row.source_url || undefined,
-    }
-
-    let catalogMatch: (typeof catalog)[number] | undefined
-    for (const c of catalog) {
-      if (findUserSongMatch(c, [userSong])) {
-        catalogMatch = c
-        break
-      }
-    }
-
-    if (!catalogMatch || catalogMatch.id === row.id) continue
+    const catalogId = matchCatalogBySourceIdentity(
+      { id: row.id, tabId: row.tab_id, sourceUrl: row.source_url },
+      index
+    )
+    if (!catalogId) continue
     matched += 1
 
     if (dryRun) {
-      console.log(`[dry-run] ${row.id} → ${catalogMatch.id} (${row.title})`)
+      console.log(`[dry-run] ${row.id} → ${catalogId} (${row.title})`)
       continue
     }
 
     const { error } = await supabase
       .from('songs')
-      .update({ cloned_from_id: catalogMatch.id })
+      .update({ cloned_from_id: catalogId })
       .eq('id', row.id)
 
     if (error) {
@@ -102,7 +94,7 @@ async function main() {
 
   console.log(
     dryRun
-      ? `Dry run: ${matched} matches among ${candidates.length} user songs without cloned_from_id`
+      ? `Dry run: ${matched} matches among ${candidates.length} user songs without cloned_from_id (source identity only)`
       : `Updated ${updated}/${matched} matches (${candidates.length} candidates)`
   )
 }

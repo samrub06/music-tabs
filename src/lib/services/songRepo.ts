@@ -845,7 +845,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     }))
   },
 
-  /** Catalog song IDs the user already has in their library (owned or cloned). */
+  /** Catalog song IDs the user already has in their library (owned, cloned, or linked). */
   async getUserLibraryCatalogSongIds(): Promise<string[]> {
     const { data: { user } } = await client.auth.getUser()
     if (!user) return []
@@ -861,6 +861,19 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       if (row.id) ids.add(row.id)
       if (row.cloned_from_id) ids.add(row.cloned_from_id)
     }
+
+    try {
+      const { data: links } = await (client as any)
+        .from('user_library')
+        .select('song_id')
+        .eq('user_id', user.id)
+      for (const row of links || []) {
+        if (row.song_id) ids.add(row.song_id)
+      }
+    } catch {
+      /* user_library may not be migrated yet */
+    }
+
     return Array.from(ids)
   },
 

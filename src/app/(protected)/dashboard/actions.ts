@@ -94,25 +94,80 @@ export async function addSongAction(payload: NewSongData) {
 export async function updateSongAction(id: string, updates: SongEditData) {
   const validatedUpdates = updateSongSchema.parse(updates)
   const supabase = await createActionServerClient()
-  await assertCanEditSong(supabase, id)
   const repo = songRepo(supabase)
+  const existing = await repo.getSong(id)
+  if (!existing) throw new Error('Song not found')
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
+
+  // Catalog song edit → fork personal copy, retarget library link
+  if (!existing.userId) {
+    const forked = await repo.createSong({
+      title: existing.title,
+      author: existing.author,
+      content: existing.content || renderStructuredSong(existing),
+      folderId: existing.folderId,
+      reviews: existing.reviews,
+      capo: existing.capo,
+      key: existing.key,
+      soundingKey: existing.soundingKey,
+      firstChord: existing.firstChord,
+      lastChord: existing.lastChord,
+      chordProgression: existing.chordProgression,
+      version: existing.version,
+      versionDescription: existing.versionDescription,
+      rating: existing.rating,
+      difficulty: existing.difficulty,
+      artistUrl: existing.artistUrl,
+      artistImageUrl: existing.artistImageUrl,
+      songImageUrl: existing.songImageUrl,
+      sourceUrl: existing.sourceUrl,
+      sourceSite: existing.sourceSite,
+      tabId: existing.tabId,
+      genre: existing.genre,
+      bpm: existing.bpm,
+      clonedFromId: existing.id,
+    })
+
+    try {
+      const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+      const lib = userLibraryRepo(supabase)
+      const entry = await lib.getByUserAndSong(user.id, id)
+      if (entry) {
+        await lib.retargetSong(entry.id, forked.id)
+      } else {
+        await lib.add({ userId: user.id, songId: forked.id, folderId: existing.folderId })
+      }
+    } catch (error) {
+      console.warn('user_library retarget after fork failed:', error)
+    }
+
+    const normalizedUpdates: SongEditData = {
+      ...validatedUpdates,
+      folderId: validatedUpdates.folderId ?? undefined,
+    }
+    const updated = await repo.updateSong(forked.id, normalizedUpdates)
+    revalidatePath('/songs')
+    revalidatePath('/')
+    revalidatePath(`/song/${forked.id}`)
+    return updated
+  }
+
+  await assertCanEditSong(supabase, id)
   const normalizedUpdates: SongEditData = {
     ...validatedUpdates,
     folderId: validatedUpdates.folderId ?? undefined
   }
   const updated = await repo.updateSong(id, normalizedUpdates)
-  
-  // Award XP for editing song
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const gamification = gamificationRepo(supabase)
-    try {
-      await gamification.awardXp(user.id, 10, 'edit_song', id)
-    } catch (error) {
-      console.error('Error awarding XP for song edit:', error)
-    }
+
+  const gamification = gamificationRepo(supabase)
+  try {
+    await gamification.awardXp(user.id, 10, 'edit_song', id)
+  } catch (error) {
+    console.error('Error awarding XP for song edit:', error)
   }
-  
+
   revalidatePath('/songs')
   revalidatePath('/')
   revalidatePath(`/song/${id}`)
@@ -310,16 +365,43 @@ export async function createPlaylistFromGeneratedPlaylistAction(
 export async function cloneSongAction(songId: string, targetFolderId?: string) {
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
-  
-  // 1. Fetch source song (assuming RLS allows reading public/trending songs)
+
   const sourceSong = await repo.getSong(songId)
-  
   if (!sourceSong) {
     throw new Error('Song not found')
   }
-  
-  // 2. Create new song for current user (link back to shared catalog when source is catalog)
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    throw new Error('Authentication required')
+  }
+
   const isCatalogSource = !sourceSong.userId || sourceSong.isPublic === true
+
+  // Prefer library link for catalog songs (no content clone)
+  if (isCatalogSource && !sourceSong.userId) {
+    const { addSongToUserLibrary } = await import('@/lib/services/userLibraryRepo')
+    try {
+      const { song } = await addSongToUserLibrary(supabase, {
+        userId: user.id,
+        songId: sourceSong.id,
+        folderId: targetFolderId,
+      })
+      const gamification = gamificationRepo(supabase)
+      try {
+        await gamification.awardXp(user.id, 15, 'clone_song', song.id)
+      } catch (error) {
+        console.error('Error awarding XP for library link:', error)
+      }
+      revalidatePath('/songs')
+      revalidatePath('/')
+      return song
+    } catch (error) {
+      // Table may not exist yet — fall through to legacy clone
+      console.warn('user_library link failed, falling back to clone:', error)
+    }
+  }
+
   const newSongData: NewSongData = {
     title: sourceSong.title,
     author: sourceSong.author,
@@ -346,20 +428,16 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
     bpm: sourceSong.bpm,
     clonedFromId: isCatalogSource ? sourceSong.id : sourceSong.clonedFromId,
   }
-  
+
   const created = await repo.createSong(newSongData)
-  
-  // Award XP for cloning song
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    const gamification = gamificationRepo(supabase)
-    try {
-      await gamification.awardXp(user.id, 15, 'clone_song', created.id)
-    } catch (error) {
-      console.error('Error awarding XP for song clone:', error)
-    }
+
+  const gamification = gamificationRepo(supabase)
+  try {
+    await gamification.awardXp(user.id, 15, 'clone_song', created.id)
+  } catch (error) {
+    console.error('Error awarding XP for song clone:', error)
   }
-  
+
   revalidatePath('/songs')
   revalidatePath('/')
   return created

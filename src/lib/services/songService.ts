@@ -4,11 +4,15 @@ import { extractAllChords } from '@/utils/structuredSong';
 import {
   applySongListFilters,
   applyUserSongsListFilters,
+  compareSongListRowsByOrder,
   fetchAllSongIdsFromQuery,
   orderByToTab,
+  songListRowMatchesFilters,
   USER_SONGS_LIST_COLUMNS,
   type SongListFilterParams,
-} from '@/lib/services/songListFilters';
+} from '@/lib/services/songListFilters'
+import { mergeLibrarySongIds } from '@/lib/utils/mergeLibrarySongIds'
+import { userLibraryRepo } from '@/lib/services/userLibraryRepo'
 
 function mapUserSongRowToList(song: Record<string, unknown>) {
   return {
@@ -32,13 +36,35 @@ function mapUserSongRowToList(song: Record<string, unknown>) {
     genre: song.genre,
     bpm: song.bpm,
     isLiked: (song.is_liked as boolean) ?? false,
+    clonedFromId: (song.cloned_from_id as string | null) || undefined,
+    sourceUrl: (song.source_url as string | null) || undefined,
   }
+}
+
+async function fetchAllMatchingSongRows(
+  baseQuery: any,
+  orderColumn: string
+): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = []
+  let offset = 0
+  const batchSize = 1000
+  while (true) {
+    const { data, error } = await baseQuery
+      .order(orderColumn, { ascending: false })
+      .range(offset, offset + batchSize - 1)
+    if (error) throw error
+    const batch = (data ?? []) as Record<string, unknown>[]
+    if (batch.length === 0) break
+    rows.push(...batch)
+    if (batch.length < batchSize) break
+    offset += batchSize
+  }
+  return rows
 }
 
 // Service pour les chansons
 export const songService = {
-  // Récupérer toutes les chansons (sans contenu) avec pagination
-  // Si connecté : uniquement les chansons de l'utilisateur
+  // Dual-read: personal songs + user_library links (no duplicate clones).
   // Si non connecté : uniquement les chansons publiques (user_id = null)
   async getAllSongs(
     clientSupabase?: any,
@@ -70,39 +96,140 @@ export const songService = {
       folderId,
     }
 
-    const { query: dataQuery, orderColumn } = applyUserSongsListFilters(
-      (client.from('songs') as any).select(USER_SONGS_LIST_COLUMNS),
-      user,
-      filterParams
-    )
-    const { query: countQuery } = applyUserSongsListFilters(
-      (client.from('songs') as any).select('id', { count: 'planned', head: true }),
-      user,
-      filterParams
-    )
+    // Anonymous / public catalog listing — keep DB pagination
+    if (!user) {
+      const { query: dataQuery, orderColumn } = applyUserSongsListFilters(
+        (client.from('songs') as any).select(USER_SONGS_LIST_COLUMNS),
+        user,
+        filterParams
+      )
+      const { query: countQuery } = applyUserSongsListFilters(
+        (client.from('songs') as any).select('id', { count: 'planned', head: true }),
+        user,
+        filterParams
+      )
 
+      const from = (page - 1) * limit
+      const to = page * limit - 1
+
+      const [{ data, error }, { count, error: countError }] = await Promise.all([
+        dataQuery.order(orderColumn, { ascending: false }).range(from, to),
+        countQuery,
+      ])
+
+      if (error) {
+        console.error('Error fetching songs:', error);
+        throw error;
+      }
+      if (countError) {
+        console.error('Error counting songs:', countError);
+        throw countError;
+      }
+
+      const mappedSongs: Song[] = ((data as Record<string, unknown>[]) ?? []).map(
+        (song) => mapUserSongRowToList(song) as Song
+      );
+
+      return { songs: mappedSongs, total: count ?? 0 };
+    }
+
+    const merged = await songService.getDualReadSongRows(client, user.id, filterParams)
+    const total = merged.length
     const from = (page - 1) * limit
-    const to = page * limit - 1
+    const pageRows = merged.slice(from, from + limit)
+    return {
+      songs: pageRows.map((song) => mapUserSongRowToList(song) as Song),
+      total,
+    }
+  },
 
-    const [{ data, error }, { count, error: countError }] = await Promise.all([
-      dataQuery.order(orderColumn, { ascending: false }).range(from, to),
-      countQuery,
+  /**
+   * Personal songs + uncovered user_library catalog links, filtered/sorted.
+   * Acceptable for current library sizes (hundreds–low thousands).
+   */
+  async getDualReadSongRows(
+    client: any,
+    userId: string,
+    filterParams: SongListFilterParams
+  ): Promise<Record<string, unknown>[]> {
+    const { query: personalQuery, orderColumn } = applyUserSongsListFilters(
+      (client.from('songs') as any).select(USER_SONGS_LIST_COLUMNS),
+      { id: userId },
+      filterParams
+    )
+
+    const [personalRows, libraryEntries] = await Promise.all([
+      fetchAllMatchingSongRows(personalQuery, orderColumn),
+      userLibraryRepo(client).listByUserWithFolderFilter(userId, filterParams.folderId),
     ])
 
-    if (error) {
-      console.error('Error fetching songs:', error);
-      throw error;
-    }
-    if (countError) {
-      console.error('Error counting songs:', countError);
-      throw countError;
+    const personalClonedFromIds = new Map<string, string | undefined>()
+    for (const row of personalRows) {
+      personalClonedFromIds.set(
+        String(row.id),
+        (row.cloned_from_id as string | null) || undefined
+      )
     }
 
-    const mappedSongs: Song[] = ((data as Record<string, unknown>[]) ?? []).map(
-      (song) => mapUserSongRowToList(song) as Song
-    );
+    const linkedSongIds = libraryEntries.map((e) => e.songId)
+    const mergedIds = mergeLibrarySongIds({
+      personalSongIds: personalRows.map((r) => String(r.id)),
+      linkedSongIds,
+      personalClonedFromIds,
+    })
 
-    return { songs: mappedSongs, total: count ?? 0 };
+    const personalById = new Map(personalRows.map((r) => [String(r.id), r]))
+    const folderByLinkedSongId = new Map(
+      libraryEntries.map((e) => [e.songId, e.folderId ?? null] as const)
+    )
+
+    const linkedOnlyIds = mergedIds.filter((id) => !personalById.has(id))
+
+    // likedOnly is personal-only; catalog links have no per-user is_liked
+    let linkedRows: Record<string, unknown>[] = []
+    if (linkedOnlyIds.length > 0 && filterParams.likedOnly !== true) {
+      const chunkSize = 50
+      for (let i = 0; i < linkedOnlyIds.length; i += chunkSize) {
+        const chunk = linkedOnlyIds.slice(i, i + chunkSize)
+        const { data, error } = await (client.from('songs') as any)
+          .select(USER_SONGS_LIST_COLUMNS)
+          .in('id', chunk)
+        if (error) throw error
+        for (const row of (data ?? []) as Record<string, unknown>[]) {
+          if (
+            !songListRowMatchesFilters(row, {
+              ...filterParams,
+              folderId: undefined,
+              likedOnly: false,
+            })
+          ) {
+            continue
+          }
+          const libraryFolder = folderByLinkedSongId.get(String(row.id))
+          linkedRows.push({
+            ...row,
+            folder_id: libraryFolder ?? null,
+            // Linked catalog songs are not "liked" in the personal sense
+            is_liked: false,
+          })
+        }
+      }
+    }
+
+    const linkedById = new Map(linkedRows.map((r) => [String(r.id), r]))
+    const mergedRows: Record<string, unknown>[] = []
+    for (const id of mergedIds) {
+      const personal = personalById.get(id)
+      if (personal) {
+        mergedRows.push(personal)
+        continue
+      }
+      const linked = linkedById.get(id)
+      if (linked) mergedRows.push(linked)
+    }
+
+    mergedRows.sort((a, b) => compareSongListRowsByOrder(a, b, orderColumn))
+    return mergedRows
   },
 
   async getAllSongIds(
@@ -116,8 +243,14 @@ export const songService = {
     const {
       data: { user },
     } = await client.auth.getUser();
-    const { baseQuery, orderColumn } = applySongListFilters(client, user, params);
-    return fetchAllSongIdsFromQuery(baseQuery, orderColumn);
+
+    if (!user) {
+      const { baseQuery, orderColumn } = applySongListFilters(client, user, params);
+      return fetchAllSongIdsFromQuery(baseQuery, orderColumn);
+    }
+
+    const rows = await songService.getDualReadSongRows(client, user.id, params)
+    return rows.map((r) => String(r.id))
   },
 
   // Récupérer une chanson par ID
