@@ -3,16 +3,13 @@
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, SparklesIcon } from '@heroicons/react/24/outline'
-import { PlayIcon } from '@heroicons/react/24/solid'
+import { MagnifyingGlassIcon, XMarkIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { collectAiSearchResults, fetchAiSongSearchBatches } from '@/lib/utils/aiSearchResults'
 import type { AiExcludeSong } from '@/lib/services/aiSearchService'
-import { addSongFromSearchAction, searchSongsByStyleAction } from './actions'
+import { searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import { RecentSearchList } from '@/components/search/RecentSearchList'
@@ -88,7 +85,6 @@ export default function SearchClient({
   const [isSearching, setIsSearching] = useState(false)
   const [isCheckingExisting, setIsCheckingExisting] = useState(false)
   const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([])
-  const [addingSongId, setAddingSongId] = useState<string | null>(null)
   const [viewingSongId, setViewingSongId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
@@ -386,7 +382,6 @@ export default function SearchClient({
     setExistingSongs(new Map())
     setMessage(null)
     setHasSearched(false)
-    setAddingSongId(null)
   }
 
   // Handle view song (without adding)
@@ -405,53 +400,6 @@ export default function SearchClient({
       setMessage({ type: 'error', text: errorMessage })
     } finally {
       setViewingSongId(null)
-    }
-  }
-
-  // Handle add song — resolve catalog by source identity (no rescrape on hit), then clone
-  const handleAddSong = async (result: SearchResult, index: number) => {
-    if (!userId) {
-      router.push('/login?next=/')
-      return
-    }
-
-    setAddingSongId(result.url)
-    setMessage(null)
-
-    try {
-      const { song: newSong } = await addSongFromSearchAction({
-        url: result.url,
-        title: result.title,
-        author: result.author,
-        source: result.source,
-        tabId: result.tabId,
-        reviews: result.reviews,
-        version: result.version,
-        rating: result.rating,
-        difficulty: result.difficulty,
-        versionDescription: result.versionDescription,
-        artistUrl: result.artistUrl,
-        artistImageUrl: result.artistImageUrl,
-        songImageUrl: result.songImageUrl,
-      })
-
-      setMessage({ type: 'success', text: t('search.addSuccess') })
-
-      setExistingSongs((prev) => {
-        const updated = new Map(prev)
-        updated.set(index, newSong.id)
-        return updated
-      })
-
-      setTimeout(() => {
-        router.refresh()
-      }, 1000)
-    } catch (error) {
-      console.error('Error adding song:', error)
-      const errorMessage = error instanceof Error ? error.message : t('search.addError')
-      setMessage({ type: 'error', text: errorMessage })
-    } finally {
-      setAddingSongId(null)
     }
   }
 
@@ -740,9 +688,9 @@ export default function SearchClient({
                 const existingSongId = existingSongs.get(index)
                 const isTab4U = result.source === 'Tab4U' || result.sourceSite === 'Tab4U'
                 const isViewing = viewingSongId === result.url
-                const isAdding = addingSongId === result.url
-
-                const hasMeta = (!isTab4U && (result.rating != null || result.reviews != null)) || result.difficulty
+                const hasRating = !isTab4U && result.rating != null
+                const hasReviews = !isTab4U && result.reviews != null
+                const hasSocialMeta = hasRating || hasReviews
 
                 return (
                   <div
@@ -767,7 +715,7 @@ export default function SearchClient({
                       />
                     </div>
 
-                    {/* Titre et auteur visibles sur 2 lignes max, étoiles en dessous */}
+                    {/* Titre, auteur, difficulté */}
                     <div className={cn('flex min-w-0 flex-1 flex-col justify-center gap-0', UI_TEXT_ALIGN)}>
                       <div className="min-w-0">
                         <h3
@@ -783,64 +731,33 @@ export default function SearchClient({
                           {result.author}
                         </p>
                       </div>
-                      {hasMeta && (
-                        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] sm:text-xs text-muted-foreground">
-                          {!isTab4U && result.rating != null && (
-                            <span>⭐ {Number(result.rating).toFixed(1)}</span>
-                          )}
-                          {!isTab4U && result.reviews != null && (
-                            <span>💬 {result.reviews}</span>
-                          )}
-                          {result.difficulty && (
-                            <span>🎸 {result.difficulty}</span>
-                          )}
+                      {result.difficulty && (
+                        <div className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground">
+                          <span>🎸 {result.difficulty}</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Actions — larger touch targets on mobile */}
-                    <div className="flex-shrink-0 flex items-center gap-1.5 sm:gap-1" onClick={(e) => e.stopPropagation()}>
-                      {existingSongId ? (
-                        <Link
-                          href={`/song/${existingSongId}`}
-                          className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:text-primary/80 sm:h-8 sm:w-8"
-                          aria-label={t('search.viewSong')}
-                        >
-                          <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
-                        </Link>
-                      ) : (
+                    {/* Rating + comments on the right */}
+                    <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 tabular-nums text-[11px] sm:text-xs text-muted-foreground">
+                      {isViewing ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      ) : hasSocialMeta ? (
                         <>
-                          <Button
-                            size="icon"
-                            variant="secondary"
-                            className="rounded-lg h-11 w-11 sm:h-8 sm:w-8"
-                            onClick={() => handleAddSong(result, index)}
-                            disabled={isAdding || !userId}
-                            aria-label={t('common.create')}
-                            title={t('common.create')}
-                          >
-                            {isAdding ? (
-                              <div className="animate-spin rounded-full h-4 w-4 sm:h-3.5 sm:w-3.5 border-2 border-current border-t-transparent" />
-                            ) : (
-                              <PlusIcon className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                            )}
-                          </Button>
-                          <button
-                            type="button"
-                            className="inline-flex h-11 w-12 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:text-primary/80 disabled:opacity-50 sm:h-8 sm:w-8"
-                            onClick={() => handleViewSong(result)}
-                            disabled={isViewing}
-                            aria-label={t('search.viewSong')}
-                            title={t('search.viewSong')}
-                          >
-                            {isViewing ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent sm:h-3.5 sm:w-3.5" />
-                            ) : (
-                              <PlayIcon className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
-                            )}
-                          </button>
+                          {hasRating && (
+                            <span className="inline-flex items-center gap-0.5">
+                              <span aria-hidden>⭐</span>
+                              {Number(result.rating).toFixed(1)}
+                            </span>
+                          )}
+                          {hasReviews && (
+                            <span className="inline-flex items-center gap-0.5">
+                              <span aria-hidden>💬</span>
+                              {result.reviews}
+                            </span>
+                          )}
                         </>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 )
