@@ -4,7 +4,6 @@ import type { Database } from '@/types/db'
 import { parseTextToStructuredSong } from '@/utils/songParser'
 import { structuredSongToText } from '@/utils/structuredToText'
 import { extractAllChords, extractChordMetadataFromSections } from '@/utils/structuredSong'
-import { fetchAllSongIdsFromQuery } from '@/lib/services/songListFilters'
 import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
 import { FEATURED_CATALOG_SONG_SLUG } from '@/data/featuredCatalogSong'
 
@@ -52,14 +51,18 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     decade: dbSong.decade || undefined,
     bpm: dbSong.bpm || undefined,
     allChords: dbSong.all_chords || undefined,
-    isLiked: dbSong.is_liked ?? false,
+    isLiked: false,
     isPublic: dbSong.is_public ?? false,
     clonedFromId: dbSong.cloned_from_id || undefined,
   } as Song
 }
 
 // Helper to map DB result to lightweight Song for lists (no sections/content)
-function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['Row']>): Song {
+function mapDbSongToList(
+  dbSong: Partial<Database['public']['Tables']['songs']['Row']> & {
+    is_liked?: boolean | null
+  }
+): Song {
   return {
     id: dbSong.id!,
     title: dbSong.title!,
@@ -80,7 +83,7 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
     tabId: dbSong.tab_id || undefined,
     sourceUrl: dbSong.source_url || undefined,
     sourceSite: dbSong.source_site || undefined,
-    isLiked: dbSong.is_liked ?? false,
+    isLiked: dbSong.is_liked === true,
     difficulty: dbSong.difficulty || undefined,
     decade: dbSong.decade || undefined,
     capo: dbSong.capo ?? undefined,
@@ -88,8 +91,12 @@ function mapDbSongToList(dbSong: Partial<Database['public']['Tables']['songs']['
   } as Song
 }
 
+/** Explicit columns for song detail pages (avoid select('*')). */
+export const SONG_DETAIL_COLUMNS =
+  'id, user_id, title, author, folder_id, created_at, updated_at, capo, first_chord, last_chord, key, reviews, tab_id, version, version_description, rating, difficulty, artist_url, artist_image_url, song_image_url, sheet_image_url, source_url, source_site, view_count, format, sections, is_public, is_trending, genre, decade, bpm, all_chords, cloned_from_id'
+
 const LIGHTWEIGHT_LIST_COLUMNS =
-  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, source_site, is_liked'
+  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, source_site'
 
 const PUBLIC_PLAYLIST_LIST_COLUMNS =
   'id, title, author, song_image_url, artist_image_url, genre, key, source_site'
@@ -98,7 +105,7 @@ const PUBLIC_PLAYLIST_LIST_COLUMNS =
 const PUBLIC_PLAYLIST_ID_CHUNK_SIZE = 100
 
 const LIBRARY_LIST_COLUMNS =
-  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, is_liked, key, capo, difficulty'
+  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, key, capo, difficulty'
 
 const SIDEBAR_SONG_COLUMNS =
   'id, title, author, folder_id, created_at, updated_at, view_count'
@@ -308,7 +315,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getSong(id: string): Promise<Song | null> {
     const { data, error } = await client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .eq('id', id)
       .single()
 
@@ -327,10 +334,12 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         const entry = await userLibraryRepo(client).getByUserAndSong(user.id, id)
         if (entry) {
           song.isLiked = entry.isLiked
+          // Membership folder lives on user_library, not catalog songs.folder_id
+          song.folderId = entry.folderId
         }
       }
-    } catch {
-      /* user_library.is_liked may be missing until migration */
+    } catch (err) {
+      console.warn('user_library overlay failed for getSong:', err)
     }
     return song
   },
@@ -344,7 +353,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
     const { data, error } = await client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .eq('tab_id', tabId)
       .eq('user_id', user.id)
       .single()
@@ -570,7 +579,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     
     let query = client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .order('created_at', { ascending: false })
 
     if (user) {
@@ -588,7 +597,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
   async getTrendingSongs(): Promise<Song[]> {
     const { data, error } = await client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .eq('is_trending', true)
       .is('user_id', null)
       .order('created_at', { ascending: false }) // Ou un autre critère de tri si dispo (ex: rating)
@@ -651,7 +660,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     
     let dbQuery = client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
       .order('created_at', { ascending: false })
 
@@ -671,7 +680,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
   async getRecentSongs(limit: number = 15): Promise<Song[]> {
     let builder = (client.from('songs') as any)
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .or('is_trending.eq.true,is_public.eq.true')
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -684,7 +693,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
   async getPopularSongs(limit: number = 15): Promise<Song[]> {
     let builder = (client.from('songs') as any)
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .or('is_trending.eq.true,is_public.eq.true')
       .not('view_count', 'is', null)
       .gt('view_count', 0)
@@ -981,17 +990,12 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const { data: { user } } = await client.auth.getUser()
     if (!user) return []
 
-    let baseQuery = (client.from('songs') as any)
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('folder_id', folderId)
-
-    if (q?.trim()) {
-      const query = q.trim()
-      baseQuery = baseQuery.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
-    }
-
-    return fetchAllSongIdsFromQuery(baseQuery, 'created_at')
+    const { songService } = await import('@/lib/services/songService')
+    return songService.getAllSongIds(client, {
+      folderId,
+      q,
+      tab: 'all',
+    })
   },
 
   // Lightweight method for playlist generation (no sections/content needed)

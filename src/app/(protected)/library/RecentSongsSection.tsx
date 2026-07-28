@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { PlayIcon } from '@heroicons/react/24/solid'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
@@ -33,7 +33,7 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
 
       try {
         setCloningId(song.id)
-        await cloneSongAction(song.id)
+        await addSongToLibraryAction(song.id)
         router.refresh()
       } catch (error) {
         console.error('Error cloning song:', error)

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import HorizontalSongSlider from '@/components/library/HorizontalSongSlider'
 import type { Song } from '@/types'
 
@@ -32,7 +32,7 @@ export default function HorizontalSliderWrapper({
 
     try {
       setCloningId(song.id)
-      await cloneSongAction(song.id)
+      await addSongToLibraryAction(song.id)
       router.refresh()
     } catch (error) {
       console.error('Error cloning song:', error)

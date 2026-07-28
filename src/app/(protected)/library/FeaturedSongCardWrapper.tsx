@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import FeaturedSongCard from '@/components/library/FeaturedSongCard'
 import { useLanguage } from '@/context/LanguageContext'
 import type { Song } from '@/types'
@@ -25,7 +25,7 @@ export default function FeaturedSongCardWrapper({ song, userId }: FeaturedSongCa
 
     try {
       setCloningId(song.id)
-      await cloneSongAction(song.id)
+      await addSongToLibraryAction(song.id)
       router.refresh()
     } catch (error) {
       console.error('Error cloning song:', error)

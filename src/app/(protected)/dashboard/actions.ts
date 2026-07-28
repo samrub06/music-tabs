@@ -468,7 +468,7 @@ export async function createPlaylistFromGeneratedPlaylistAction(
   return savedPlaylist
 }
 
-export async function cloneSongAction(songId: string, targetFolderId?: string) {
+export async function addSongToLibraryAction(songId: string, targetFolderId?: string) {
   const supabase = await createActionServerClient()
   const repo = songRepo(supabase)
 

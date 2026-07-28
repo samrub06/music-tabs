@@ -13,7 +13,7 @@ import {
   createServiceRoleClient,
 } from '@/lib/supabase/server'
 import { searchResultAddSchema } from '@/lib/validation/schemas'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import type { Song } from '@/types'
 
 export async function searchSongsByStyleAction(
@@ -99,8 +99,8 @@ export async function addSongFromSearchAction(payload: unknown): Promise<{
     return { song, scraped: false, alreadyOwned: true }
   }
 
-  // Prefer library link / clone via cloneSongAction (links catalog when table exists)
-  const created = await cloneSongAction(plan.catalogSongId)
+  // Prefer library link / clone via addSongToLibraryAction (links catalog when table exists)
+  const created = await addSongToLibraryAction(plan.catalogSongId)
   revalidatePath('/songs')
   revalidatePath('/')
   return {

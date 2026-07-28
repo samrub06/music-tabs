@@ -9,7 +9,7 @@ import {
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuthContext } from '@/context/AuthContext'
 import { Playlist, Song } from '@/types'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/actions'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -373,7 +373,7 @@ export function PublicPlaylistSongList({
 
       try {
         setAddingId(song.id)
-        await cloneSongAction(song.id)
+        await addSongToLibraryAction(song.id)
         router.refresh()
       } catch (error) {
         console.error('Error cloning song:', error)

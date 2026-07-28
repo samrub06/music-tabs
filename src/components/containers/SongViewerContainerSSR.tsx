@@ -26,7 +26,7 @@ import { xpLog } from '@/utils/xpLog';
 import { triggerXpConfetti } from '@/utils/triggerXpConfetti';
 import { mountXpCelebration } from '@/utils/mountXpCelebration';
 import type { SongProgressResult } from '@/types';
-import { updateSongFolderAction, cloneSongAction } from '@/app/(protected)/dashboard/actions';
+import { updateSongFolderAction, addSongToLibraryAction } from '@/app/(protected)/dashboard/actions';
 import { deleteSongAction } from '@/app/song/[id]/actions';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { useLanguage } from '@/context/LanguageContext';
@@ -159,7 +159,7 @@ export default function SongViewerContainerSSR({
     setIsAddingToLibrary(true);
     setLibraryActionFeedback(null);
     try {
-      const created = await cloneSongAction(song.id);
+      const created = await addSongToLibraryAction(song.id);
       setLocalIsInLibrary(true);
       setLocalLibrarySongId(created.id);
       setLibraryActionFeedback({

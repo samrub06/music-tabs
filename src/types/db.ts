@@ -116,7 +116,6 @@ export interface Database {
           decade: number | null
           bpm: number | null
           all_chords: string[] | null
-          is_liked: boolean
           cloned_from_id: string | null
         }
         Insert: {
@@ -152,7 +151,6 @@ export interface Database {
           decade?: number | null
           bpm?: number | null
           all_chords?: string[] | null
-          is_liked?: boolean
           cloned_from_id?: string | null
         }
         Update: {
@@ -183,13 +181,41 @@ export interface Database {
           format?: string | null
           sections?: Json | null
           is_public?: boolean
-          is_liked?: boolean
           is_trending?: boolean
           genre?: string | null
           decade?: number | null
           bpm?: number | null
           all_chords?: string[] | null
           cloned_from_id?: string | null
+        }
+      }
+      user_library: {
+        Row: {
+          id: string
+          user_id: string
+          song_id: string
+          folder_id: string | null
+          is_liked: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          song_id: string
+          folder_id?: string | null
+          is_liked?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          song_id?: string
+          folder_id?: string | null
+          is_liked?: boolean
+          created_at?: string
+          updated_at?: string
         }
       }
       song_lyric_syncs: {
@@ -711,6 +737,57 @@ export interface Database {
           song_id: string
         }
         Returns: void
+      }
+      get_user_library_songs: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_q?: string | null
+          p_folder_id?: string | null
+          p_liked_only?: boolean
+          p_order?: string
+          p_easy_chord?: boolean
+          p_capo_filter?: string
+        }
+        Returns: {
+          id: string
+          title: string
+          author: string | null
+          folder_id: string | null
+          created_at: string
+          updated_at: string
+          rating: number | null
+          difficulty: string | null
+          capo: number | null
+          artist_image_url: string | null
+          song_image_url: string | null
+          view_count: number | null
+          version: number | null
+          version_description: string | null
+          key: string | null
+          first_chord: string | null
+          last_chord: string | null
+          tab_id: string | null
+          genre: string | null
+          bpm: number | null
+          is_liked: boolean
+          cloned_from_id: string | null
+          source_url: string | null
+          total_count: number
+        }[]
+      }
+      get_user_library_song_ids: {
+        Args: {
+          p_q?: string | null
+          p_folder_id?: string | null
+          p_liked_only?: boolean
+          p_order?: string
+          p_easy_chord?: boolean
+          p_capo_filter?: string
+        }
+        Returns: {
+          id: string
+        }[]
       }
       award_xp: {
         Args: {

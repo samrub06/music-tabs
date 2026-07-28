@@ -14,7 +14,7 @@ export type SongListFilterParams = {
 }
 
 export const USER_SONGS_LIST_COLUMNS =
-  'id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre, bpm, is_liked, cloned_from_id, source_url'
+  'id, title, author, folder_id, created_at, updated_at, rating, difficulty, capo, artist_image_url, song_image_url, view_count, version, version_description, key, first_chord, last_chord, tab_id, genre, bpm, cloned_from_id, source_url'
 
 const BATCH_SIZE = 1000
 
@@ -40,9 +40,7 @@ export function applySongAttributeFilters(
     query = query.or('capo.is.null,capo.eq.0')
   }
 
-  if (params.likedOnly === true) {
-    query = query.eq('is_liked', true)
-  }
+  // likedOnly is applied via user_library / RPC — not songs.is_liked
 
   const orderBy = tabToOrderBy(params.tab)
   if (orderBy === 'view_count') {

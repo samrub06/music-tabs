@@ -3,9 +3,10 @@ import type { Database } from '@/types/db'
 import type { Song } from '@/types'
 import { songRepo } from '@/lib/services/songRepo'
 
-/** Reserved playlist name used only if user_library.is_liked column is missing. */
-export const LIKES_PLAYLIST_NAME = '__tabasco_likes__'
-
+/**
+ * Per-user membership for catalog (and personal) songs.
+ * Folder placement and likes live here — never on catalog `songs` rows.
+ */
 export type UserLibraryEntry = {
   id: string
   userId: string
@@ -21,7 +22,7 @@ function mapRow(row: {
   user_id: string
   song_id: string
   folder_id: string | null
-  is_liked?: boolean | null
+  is_liked: boolean
   created_at: string
   updated_at: string
 }): UserLibraryEntry {
@@ -36,61 +37,11 @@ function mapRow(row: {
   }
 }
 
-let likesColumnAvailable: boolean | null = null
-
-async function detectLikesColumn(client: SupabaseClient<any>): Promise<boolean> {
-  if (likesColumnAvailable != null) return likesColumnAvailable
-  const { error } = await client.from('user_library').select('is_liked').limit(1)
-  likesColumnAvailable = !error
-  return likesColumnAvailable
-}
+const LIBRARY_COLUMNS =
+  'id, user_id, song_id, folder_id, is_liked, created_at, updated_at'
 
 export const userLibraryRepo = (client: SupabaseClient<Database>) => {
   const table = () => (client as SupabaseClient<any>).from('user_library')
-  const playlists = () => (client as SupabaseClient<any>).from('playlists')
-
-  async function getOrCreateLikesPlaylist(userId: string): Promise<{
-    id: string
-    song_ids: string[]
-  }> {
-    const { data: existing, error } = await playlists()
-      .select('id, song_ids')
-      .eq('user_id', userId)
-      .eq('name', LIKES_PLAYLIST_NAME)
-      .maybeSingle()
-    if (error) throw error
-    if (existing) {
-      return {
-        id: existing.id,
-        song_ids: Array.isArray(existing.song_ids) ? existing.song_ids : [],
-      }
-    }
-    const { data: created, error: createError } = await playlists()
-      .insert({
-        user_id: userId,
-        name: LIKES_PLAYLIST_NAME,
-        song_ids: [],
-        description: 'System: liked songs (temporary until user_library.is_liked)',
-      })
-      .select('id, song_ids')
-      .single()
-    if (createError) throw createError
-    return {
-      id: created.id,
-      song_ids: Array.isArray(created.song_ids) ? created.song_ids : [],
-    }
-  }
-
-  async function listLikedSongIdsFallback(userId: string): Promise<Set<string>> {
-    const { data, error } = await playlists()
-      .select('song_ids')
-      .eq('user_id', userId)
-      .eq('name', LIKES_PLAYLIST_NAME)
-      .maybeSingle()
-    if (error) throw error
-    const ids = Array.isArray(data?.song_ids) ? (data.song_ids as string[]) : []
-    return new Set(ids)
-  }
 
   return {
     async getByUserAndSong(
@@ -98,51 +49,38 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
       songId: string
     ): Promise<UserLibraryEntry | null> {
       const { data, error } = await table()
-        .select('*')
+        .select(LIBRARY_COLUMNS)
         .eq('user_id', userId)
         .eq('song_id', songId)
         .maybeSingle()
       if (error) throw error
       if (!data) return null
-      const entry = mapRow(data)
-      if (!(await detectLikesColumn(client as SupabaseClient<any>))) {
-        const liked = await listLikedSongIdsFallback(userId)
-        entry.isLiked = liked.has(songId)
-      }
-      return entry
+      return mapRow(data)
     },
 
     async listByUser(userId: string): Promise<UserLibraryEntry[]> {
       const { data, error } = await table()
-        .select('*')
+        .select(LIBRARY_COLUMNS)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
       if (error) throw error
-      const entries = (data || []).map(mapRow)
-      if (!(await detectLikesColumn(client as SupabaseClient<any>))) {
-        const liked = await listLikedSongIdsFallback(userId)
-        for (const e of entries) e.isLiked = liked.has(e.songId)
-      }
-      return entries
+      return (data || []).map(mapRow)
     },
 
     async listLikedSongIds(userId: string): Promise<string[]> {
-      if (await detectLikesColumn(client as SupabaseClient<any>)) {
-        const { data, error } = await table()
-          .select('song_id')
-          .eq('user_id', userId)
-          .eq('is_liked', true)
-        if (error) throw error
-        return ((data || []) as Array<{ song_id: string }>).map((r) => r.song_id)
-      }
-      return Array.from(await listLikedSongIdsFallback(userId))
+      const { data, error } = await table()
+        .select('song_id')
+        .eq('user_id', userId)
+        .eq('is_liked', true)
+      if (error) throw error
+      return ((data || []) as Array<{ song_id: string }>).map((r) => r.song_id)
     },
 
     async listByUserWithFolderFilter(
       userId: string,
       folderId?: string
     ): Promise<UserLibraryEntry[]> {
-      let query = table().select('*').eq('user_id', userId)
+      let query = table().select(LIBRARY_COLUMNS).eq('user_id', userId)
       if (folderId === 'unorganized') {
         query = query.is('folder_id', null)
       } else if (folderId) {
@@ -155,12 +93,7 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
         }
         throw error
       }
-      const entries = (data || []).map(mapRow)
-      if (!(await detectLikesColumn(client as SupabaseClient<any>))) {
-        const liked = await listLikedSongIdsFallback(userId)
-        for (const e of entries) e.isLiked = liked.has(e.songId)
-      }
-      return entries
+      return (data || []).map(mapRow)
     },
 
     async add(input: {
@@ -175,29 +108,24 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
           return this.updateFolder(existing.id, input.folderId)
         }
         if (input.isLiked !== undefined && input.isLiked !== existing.isLiked) {
-          await this.toggleLike(input.userId, input.songId)
+          await this.setLiked(existing.id, input.isLiked)
           const refreshed = await this.getByUserAndSong(input.userId, input.songId)
           return refreshed ?? existing
         }
         return existing
       }
 
-      const hasCol = await detectLikesColumn(client as SupabaseClient<any>)
-      const insertPayload: Record<string, unknown> = {
-        user_id: input.userId,
-        song_id: input.songId,
-        folder_id: input.folderId ?? null,
-      }
-      if (hasCol) insertPayload.is_liked = input.isLiked ?? false
-
-      const { data, error } = await table().insert(insertPayload).select('*').single()
+      const { data, error } = await table()
+        .insert({
+          user_id: input.userId,
+          song_id: input.songId,
+          folder_id: input.folderId ?? null,
+          is_liked: input.isLiked ?? false,
+        })
+        .select(LIBRARY_COLUMNS)
+        .single()
       if (error) throw error
-      const entry = mapRow(data)
-      if (!hasCol && input.isLiked) {
-        await this.toggleLike(input.userId, input.songId)
-        entry.isLiked = true
-      }
-      return entry
+      return mapRow(data)
     },
 
     async updateFolder(
@@ -210,7 +138,7 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', entryId)
-        .select('*')
+        .select(LIBRARY_COLUMNS)
         .single()
       if (error) throw error
       return mapRow(data)
@@ -223,47 +151,21 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', entryId)
-        .select('*')
+        .select(LIBRARY_COLUMNS)
         .single()
       if (error) throw error
       return mapRow(data)
     },
 
     async toggleLike(userId: string, songId: string): Promise<boolean> {
-      const hasCol = await detectLikesColumn(client as SupabaseClient<any>)
-
-      if (hasCol) {
-        const existing = await this.getByUserAndSong(userId, songId)
-        if (existing) {
-          const next = !existing.isLiked
-          await this.setLiked(existing.id, next)
-          return next
-        }
-        await this.add({ userId, songId, isLiked: true })
-        return true
+      const existing = await this.getByUserAndSong(userId, songId)
+      if (existing) {
+        const next = !existing.isLiked
+        await this.setLiked(existing.id, next)
+        return next
       }
-
-      // Fallback until db/add-user-library-is-liked.sql is applied
-      const playlist = await getOrCreateLikesPlaylist(userId)
-      const set = new Set(playlist.song_ids)
-      const next = !set.has(songId)
-      if (next) set.add(songId)
-      else set.delete(songId)
-      const { error } = await playlists()
-        .update({
-          song_ids: Array.from(set),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', playlist.id)
-      if (error) throw error
-
-      if (next) {
-        const existing = await this.getByUserAndSong(userId, songId)
-        if (!existing) {
-          await this.add({ userId, songId })
-        }
-      }
-      return next
+      await this.add({ userId, songId, isLiked: true })
+      return true
     },
 
     async retargetSong(
@@ -276,7 +178,7 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', entryId)
-        .select('*')
+        .select(LIBRARY_COLUMNS)
         .single()
       if (error) throw error
       return mapRow(data)
@@ -357,8 +259,9 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
       const songs: Song[] = []
       for (let i = 0; i < songIds.length; i += 50) {
         const chunk = songIds.slice(i, i + 50)
-        const { data, error } = await (client.from('songs') as any)
-          .select('*')
+        const { data, error } = await (client as SupabaseClient<any>)
+          .from('songs')
+          .select('id')
           .in('id', chunk)
         if (error) throw error
         for (const row of data || []) {

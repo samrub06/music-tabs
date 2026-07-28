@@ -4,15 +4,12 @@ import { extractAllChords } from '@/utils/structuredSong';
 import {
   applySongListFilters,
   applyUserSongsListFilters,
-  compareSongListRowsByOrder,
   fetchAllSongIdsFromQuery,
   orderByToTab,
-  songListRowMatchesFilters,
   USER_SONGS_LIST_COLUMNS,
   type SongListFilterParams,
 } from '@/lib/services/songListFilters'
-import { mergeLibrarySongIds } from '@/lib/utils/mergeLibrarySongIds'
-import { userLibraryRepo } from '@/lib/services/userLibraryRepo'
+import { SONG_DETAIL_COLUMNS } from '@/lib/services/songRepo'
 
 function mapUserSongRowToList(song: Record<string, unknown>) {
   return {
@@ -41,31 +38,36 @@ function mapUserSongRowToList(song: Record<string, unknown>) {
   }
 }
 
-async function fetchAllMatchingSongRows(
-  baseQuery: any,
-  orderColumn: string
-): Promise<Record<string, unknown>[]> {
-  const rows: Record<string, unknown>[] = []
-  let offset = 0
-  const batchSize = 1000
-  while (true) {
-    const { data, error } = await baseQuery
-      .order(orderColumn, { ascending: false })
-      .range(offset, offset + batchSize - 1)
-    if (error) throw error
-    const batch = (data ?? []) as Record<string, unknown>[]
-    if (batch.length === 0) break
-    rows.push(...batch)
-    if (batch.length < batchSize) break
-    offset += batchSize
+function libraryListRpcArgs(params: SongListFilterParams, orderBy?: string) {
+  return {
+    p_q: params.q?.trim() || null,
+    p_folder_id: params.folderId ?? null,
+    p_liked_only: params.likedOnly === true,
+    p_order: orderBy ?? 'created_at',
+    p_easy_chord: params.easyChord === true,
+    p_capo_filter: params.capoFilter ?? 'any',
   }
-  return rows
+}
+
+function throwIfLibraryRpcMissing(error: { message?: string; code?: string } | null) {
+  if (!error) return
+  const message = String(error.message || '')
+  if (
+    message.includes('get_user_library_songs') ||
+    message.includes('get_user_library_song_ids') ||
+    message.includes('Could not find the function') ||
+    error.code === 'PGRST202'
+  ) {
+    throw new Error(
+      'Library list RPC missing. Apply db/library-likes-and-list-rpc.sql in the Supabase SQL editor.'
+    )
+  }
+  throw error
 }
 
 // Service pour les chansons
 export const songService = {
-  // Dual-read: personal songs + user_library links (no duplicate clones).
-  // Si non connecté : uniquement les chansons publiques (user_id = null)
+  // Dual-read via SQL RPC when authenticated; public catalog keeps DB pagination.
   async getAllSongs(
     clientSupabase?: any,
     page: number = 1,
@@ -133,120 +135,20 @@ export const songService = {
       return { songs: mappedSongs, total: count ?? 0 };
     }
 
-    const merged = await songService.getDualReadSongRows(client, user.id, filterParams)
-    const total = merged.length
     const from = (page - 1) * limit
-    const pageRows = merged.slice(from, from + limit)
+    const { data, error } = await client.rpc('get_user_library_songs', {
+      p_limit: limit,
+      p_offset: from,
+      ...libraryListRpcArgs(filterParams, orderBy ?? 'created_at'),
+    })
+    throwIfLibraryRpcMissing(error)
+
+    const rows = (data ?? []) as Array<Record<string, unknown>>
+    const total = rows.length > 0 ? Number(rows[0].total_count ?? rows.length) : 0
     return {
-      songs: pageRows.map((song) => mapUserSongRowToList(song) as Song),
+      songs: rows.map((song) => mapUserSongRowToList(song) as Song),
       total,
     }
-  },
-
-  /**
-   * Personal songs + uncovered user_library catalog links, filtered/sorted.
-   * Acceptable for current library sizes (hundreds–low thousands).
-   */
-  async getDualReadSongRows(
-    client: any,
-    userId: string,
-    filterParams: SongListFilterParams
-  ): Promise<Record<string, unknown>[]> {
-    // Likes live on user_library — do not filter songs.is_liked in the personal query
-    const listFilters: SongListFilterParams = {
-      ...filterParams,
-      likedOnly: false,
-    }
-
-    const { query: personalQuery, orderColumn } = applyUserSongsListFilters(
-      (client.from('songs') as any).select(USER_SONGS_LIST_COLUMNS),
-      { id: userId },
-      listFilters
-    )
-
-    const [personalRows, libraryEntries] = await Promise.all([
-      fetchAllMatchingSongRows(personalQuery, orderColumn),
-      userLibraryRepo(client).listByUserWithFolderFilter(userId, filterParams.folderId),
-    ])
-
-    const likedSongIds = new Set(
-      libraryEntries.filter((e) => e.isLiked).map((e) => e.songId)
-    )
-
-    const personalClonedFromIds = new Map<string, string | undefined>()
-    for (const row of personalRows) {
-      personalClonedFromIds.set(
-        String(row.id),
-        (row.cloned_from_id as string | null) || undefined
-      )
-    }
-
-    const linkedSongIds = libraryEntries.map((e) => e.songId)
-    const mergedIds = mergeLibrarySongIds({
-      personalSongIds: personalRows.map((r) => String(r.id)),
-      linkedSongIds,
-      personalClonedFromIds,
-    })
-
-    const personalById = new Map(personalRows.map((r) => [String(r.id), r]))
-    const folderByLinkedSongId = new Map(
-      libraryEntries.map((e) => [e.songId, e.folderId ?? null] as const)
-    )
-
-    const linkedOnlyIds = mergedIds.filter((id) => !personalById.has(id))
-
-    let linkedRows: Record<string, unknown>[] = []
-    if (linkedOnlyIds.length > 0) {
-      const chunkSize = 50
-      for (let i = 0; i < linkedOnlyIds.length; i += chunkSize) {
-        const chunk = linkedOnlyIds.slice(i, i + chunkSize)
-        const { data, error } = await (client.from('songs') as any)
-          .select(USER_SONGS_LIST_COLUMNS)
-          .in('id', chunk)
-        if (error) throw error
-        for (const row of (data ?? []) as Record<string, unknown>[]) {
-          if (
-            !songListRowMatchesFilters(row, {
-              ...filterParams,
-              folderId: undefined,
-              likedOnly: false,
-            })
-          ) {
-            continue
-          }
-          const id = String(row.id)
-          const libraryFolder = folderByLinkedSongId.get(id)
-          linkedRows.push({
-            ...row,
-            folder_id: libraryFolder ?? null,
-            is_liked: likedSongIds.has(id),
-          })
-        }
-      }
-    }
-
-    const linkedById = new Map(linkedRows.map((r) => [String(r.id), r]))
-    const mergedRows: Record<string, unknown>[] = []
-    for (const id of mergedIds) {
-      const personal = personalById.get(id)
-      if (personal) {
-        mergedRows.push({
-          ...personal,
-          is_liked: likedSongIds.has(id) || personal.is_liked === true,
-        })
-        continue
-      }
-      const linked = linkedById.get(id)
-      if (linked) mergedRows.push(linked)
-    }
-
-    const afterLiked =
-      filterParams.likedOnly === true
-        ? mergedRows.filter((r) => r.is_liked === true)
-        : mergedRows
-
-    afterLiked.sort((a, b) => compareSongListRowsByOrder(a, b, orderColumn))
-    return afterLiked
   },
 
   async getAllSongIds(
@@ -266,8 +168,18 @@ export const songService = {
       return fetchAllSongIdsFromQuery(baseQuery, orderColumn);
     }
 
-    const rows = await songService.getDualReadSongRows(client, user.id, params)
-    return rows.map((r) => String(r.id))
+    const orderBy =
+      params.tab === 'recent'
+        ? 'updated_at'
+        : params.tab === 'popular'
+          ? 'view_count'
+          : 'created_at'
+
+    const { data, error } = await client.rpc('get_user_library_song_ids', {
+      ...libraryListRpcArgs(params, orderBy),
+    })
+    throwIfLibraryRpcMissing(error)
+    return ((data ?? []) as Array<{ id: string }>).map((r) => String(r.id))
   },
 
   // Récupérer une chanson par ID
@@ -278,7 +190,7 @@ export const songService = {
     }
     const { data, error } = await client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -287,13 +199,30 @@ export const songService = {
       return null;
     }
 
+    let isLiked = false
+    let folderId = data.folder_id as string | null
+    try {
+      const {
+        data: { user },
+      } = await client.auth.getUser()
+      if (user) {
+        const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+        const entry = await userLibraryRepo(client).getByUserAndSong(user.id, id)
+        if (entry) {
+          isLiked = entry.isLiked
+          folderId = entry.folderId ?? null
+        }
+      }
+    } catch (err) {
+      console.warn('user_library overlay failed for getSongById:', err)
+    }
+
     return {
       ...data,
-      folderId: data.folder_id, // Map folder_id to folderId
+      folderId: folderId || undefined,
       allChords: data.all_chords || undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
-      // Mapper les nouveaux champs Ultimate Guitar
       version: data.version,
       versionDescription: data.version_description,
       rating: data.rating,
@@ -301,13 +230,19 @@ export const songService = {
       artistUrl: data.artist_url,
       artistImageUrl: data.artist_image_url,
       songImageUrl: data.song_image_url,
+      sheetImageUrl: data.sheet_image_url,
       sourceUrl: data.source_url,
       sourceSite: data.source_site,
       tabId: data.tab_id,
       genre: data.genre,
       bpm: data.bpm,
-      isLiked: data.is_liked ?? false,
-    };
+      isLiked,
+      format: 'structured' as const,
+      sections: (data.sections as Song['sections']) || [],
+      content: '',
+      userId: data.user_id || undefined,
+      clonedFromId: data.cloned_from_id || undefined,
+    } as Song;
   },
 
   // Créer une nouvelle chanson
@@ -627,7 +562,7 @@ export const songService = {
     }
     const { data, error } = await client
       .from('songs')
-      .select('*')
+      .select(SONG_DETAIL_COLUMNS)
       .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
       .order('created_at', { ascending: false });
 
@@ -638,10 +573,9 @@ export const songService = {
 
     return data?.map((song: any) => ({
       ...song,
-      folderId: song.folder_id, // Map folder_id to folderId
+      folderId: song.folder_id,
       createdAt: new Date(song.created_at),
       updatedAt: new Date(song.updated_at),
-      // Mapper les nouveaux champs Ultimate Guitar
       version: song.version,
       versionDescription: song.version_description,
       rating: song.rating,
@@ -653,7 +587,11 @@ export const songService = {
       sourceSite: song.source_site,
       tabId: song.tab_id,
       genre: song.genre,
-      bpm: song.bpm
+      bpm: song.bpm,
+      isLiked: false,
+      format: 'structured',
+      sections: song.sections || [],
+      content: '',
     })) || [];
   }
 };

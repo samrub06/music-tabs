@@ -11,7 +11,7 @@ import {
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { useLanguage } from '@/context/LanguageContext'
-import { cloneSongAction } from '@/app/(protected)/dashboard/actions'
+import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import { Button } from '@/components/ui/button'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
@@ -141,7 +141,7 @@ export default function RecentAddedSongsClient({ songs, userId }: RecentAddedSon
 
     try {
       setCloningId(song.id)
-      await cloneSongAction(song.id)
+      await addSongToLibraryAction(song.id)
       router.refresh()
     } catch (error) {
       console.error('Error cloning song:', error)
