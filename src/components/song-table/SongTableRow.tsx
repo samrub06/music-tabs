@@ -47,7 +47,7 @@ interface SongTableRowProps {
   visibleColumns: string[]
   isSelected: boolean
   onSelect: (checked: boolean) => void
-  onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>
+  onFolderChange: (songId: string, folderId: string | undefined) => Promise<unknown>
   onAddSongToPlaylist?: (songId: string, playlistId: string) => Promise<void>
   onRemoveSongFromPlaylist?: (songId: string, playlistId: string) => Promise<void>
   onDeleteSong: (songId: string) => void

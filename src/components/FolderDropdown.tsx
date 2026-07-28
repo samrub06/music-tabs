@@ -18,7 +18,7 @@ const UNORGANIZED_VALUE = '__unorganized__';
 interface FolderDropdownProps {
   currentFolderId?: string;
   folders: Folder[];
-  onFolderChange: (folderId: string | undefined) => Promise<void>;
+  onFolderChange: (folderId: string | undefined) => Promise<unknown>;
   disabled?: boolean;
   /** Larger tap target and text on mobile (song page, etc.) */
   size?: 'compact' | 'comfortable';

@@ -39,9 +39,9 @@ export function mergeFolderSongCountRefs(input: {
   personalClonedFromIds: Map<string, string | undefined>
 }): Map<string, number> {
   const coveredCatalogIds = new Set<string>()
-  for (const [personalId, clonedFrom] of input.personalClonedFromIds) {
+  input.personalClonedFromIds.forEach((clonedFrom) => {
     if (clonedFrom) coveredCatalogIds.add(clonedFrom)
-  }
+  })
 
   const counts = new Map<string, number>()
   const bump = (folderId: string | null) => {

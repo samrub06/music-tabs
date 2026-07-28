@@ -37,7 +37,7 @@ interface SongTableProps {
   currentPlaylistId?: string | null;
   searchQuery?: string;
   hasUser?: boolean;
-  onFolderChange: (songId: string, folderId: string | undefined) => Promise<void>;
+  onFolderChange: (songId: string, folderId: string | undefined) => Promise<unknown>;
   onDeleteSongs: (ids: string[]) => Promise<void>;
   onDeleteAllSongs: () => Promise<void>;
   onCurrentFolderChange?: (folderId: string | null) => void;
