@@ -1,0 +1,63 @@
+{
+  "videoId": "8yOuNrT0dOw",
+  "title": "Vianney - Beau Papa",
+  "model": "whisper-base",
+  "lines": [
+    {
+      "text": "J'avais pas prévu d'un jour adopter",
+      "startSec": 14.96,
+      "endSec": 18.2,
+      "score": 0.907,
+      "method": "words"
+    },
+    {
+      "text": "Mon enfant j'ai dû surtout m'adapter",
+      "startSec": 18.2,
+      "endSec": 23.1,
+      "score": 0.939,
+      "method": "words"
+    },
+    {
+      "text": "Il n'y a pas que le sang qui fait la famille",
+      "startSec": 23.1,
+      "endSec": 25.9,
+      "score": 0.717,
+      "method": "words"
+    },
+    {
+      "text": "Et si l'adversité nous touche toi et moi",
+      "startSec": 29.26,
+      "endSec": 34.5,
+      "score": 0.65,
+      "method": "words"
+    },
+    {
+      "text": "On la traverse à deux à trois",
+      "startSec": 34.5,
+      "endSec": 37.62,
+      "score": 0.973,
+      "method": "words"
+    },
+    {
+      "text": "Prends ma main de beau papa",
+      "startSec": 41.62,
+      "endSec": 45.76,
+      "score": 0.973,
+      "method": "words"
+    },
+    {
+      "text": "Je t'attendais pas je te laisserai pas",
+      "startSec": 49.82,
+      "endSec": 55.72,
+      "score": 0.983,
+      "method": "words"
+    },
+    {
+      "text": "Même sans le même sang on s'aimera",
+      "startSec": 55.72,
+      "endSec": 62.08,
+      "score": 0.874,
+      "method": "words"
+    }
+  ]
+}

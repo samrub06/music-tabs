@@ -198,6 +198,41 @@ export interface Database {
           cloned_from_id?: string | null
         }
       }
+      song_lyric_syncs: {
+        Row: {
+          id: string
+          song_id: string
+          youtube_video_id: string
+          status: string
+          lines: Json
+          model: string | null
+          error: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          song_id: string
+          youtube_video_id: string
+          status?: string
+          lines?: Json
+          model?: string | null
+          error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          song_id?: string
+          youtube_video_id?: string
+          status?: string
+          lines?: Json
+          model?: string | null
+          error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       song_recordings: {
         Row: {
           id: string

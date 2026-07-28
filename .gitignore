@@ -121,3 +121,14 @@ yaarat_dvash.png
 *.njsproj
 *.sln
 *.sw?
+
+# Beau Papa lyrics-sync experiment (local only)
+experiments/beau-papa/.venv/
+experiments/beau-papa/bin/
+experiments/beau-papa/audio.*
+experiments/beau-papa/*.mp3
+experiments/beau-papa/*.m4a
+experiments/beau-papa/*.webm
+experiments/beau-papa/whisper-cache/
+experiments/beau-papa/transcript.json
+experiments/lyric-sync/

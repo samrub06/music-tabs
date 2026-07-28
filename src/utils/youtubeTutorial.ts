@@ -1,4 +1,4 @@
-export type YoutubeVideoMode = 'tutorial' | 'original'
+export type YoutubeVideoMode = 'tutorial' | 'original' | 'audio'
 
 export function buildYoutubeTutorialQuery(
   title: string,
@@ -57,10 +57,16 @@ export function buildYoutubeSearchQuery(
   instrument: 'piano' | 'guitar',
   language: 'en' | 'fr' | 'he' = 'en'
 ): string {
-  if (mode === 'original') {
+  // Audio = same track as Original, but UI starts as listen-only bubble
+  if (mode === 'original' || mode === 'audio') {
     return buildYoutubeOriginalQuery(title, author, language)
   }
   return buildYoutubeTutorialQuery(title, author, instrument, language)
+}
+
+/** Modes that use lyric-line seek (Practice). */
+export function isLyricPracticeYoutubeMode(mode: YoutubeVideoMode): boolean {
+  return mode === 'original' || mode === 'audio'
 }
 
 export function buildYoutubeVideoEmbedUrl(videoId: string): string {

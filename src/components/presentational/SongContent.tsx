@@ -53,10 +53,12 @@ import {
   PracticeComingSoonChip,
   usePracticeComingSoonPromo,
 } from '@/components/practice/PracticeComingSoonBanner';
+import { LyricPracticeHint } from '@/components/practice/LyricPracticeHint';
 import {
   RecordSongChip,
   useRecordSongPromo,
 } from '@/components/practice/RecordSongPromoBanner';
+import type { YoutubeVideoMode } from '@/utils/youtubeTutorial';
 import { SignInPromoBanner } from '@/components/auth/SignInPromoBanner';
 import { SONG_RECORDING_ENABLED } from '@/lib/featureFlags';
 import { usePracticeAudio } from '@/lib/hooks/usePracticeAudio';
@@ -140,9 +142,13 @@ interface SongContentProps {
   currentFolderId?: string;
   onFolderChange?: (folderId: string | undefined) => Promise<void>;
   youtubeTutorialOpen?: boolean;
-  youtubeVideoMode?: 'tutorial' | 'original';
-  onSelectYoutubeMode?: (mode: 'tutorial' | 'original') => void;
+  youtubeVideoMode?: YoutubeVideoMode;
+  onSelectYoutubeMode?: (mode: YoutubeVideoMode) => void;
   onOpenSongQueue?: () => void;
+  youtubeLyricSeekEnabled?: boolean;
+  youtubeLyricSyncLookup?: Map<string, { startSec: number | null }>;
+  youtubeActiveLyricKey?: string | null;
+  onYoutubeLyricLineClick?: (sectionIndex: number, lineIndex: number) => void;
 }
 
 export default function SongContent({
@@ -197,6 +203,10 @@ export default function SongContent({
   youtubeVideoMode = 'tutorial',
   onSelectYoutubeMode,
   onOpenSongQueue,
+  youtubeLyricSeekEnabled = false,
+  youtubeLyricSyncLookup,
+  youtubeActiveLyricKey = null,
+  onYoutubeLyricLineClick,
 }: SongContentProps) {
   const { t, isRtl } = useLanguage();
   const pathname = usePathname();
@@ -696,33 +706,48 @@ export default function SongContent({
           type="button"
           onClick={() => onSelectYoutubeMode('tutorial')}
           className={cn(
-            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.65rem] px-1.5 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-2 sm:text-sm',
             youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
               ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
               : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
         >
-          <Youtube className="icon-hover-wiggle h-4 w-4 shrink-0" />
+          <Youtube className="icon-hover-wiggle h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
           <span className="truncate">
             {selectedInstrument === 'guitar'
-              ? t('youtubeTutorial.guitarMode')
-              : t('youtubeTutorial.pianoMode')}
+              ? t('youtubeTutorial.guitarModeShort')
+              : t('youtubeTutorial.pianoModeShort')}
           </span>
         </button>
         <button
           type="button"
           onClick={() => onSelectYoutubeMode('original')}
           className={cn(
-            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[0.65rem] px-2 text-sm font-medium transition-colors',
+            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.65rem] px-1.5 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-2 sm:text-sm',
             youtubeTutorialOpen && youtubeVideoMode === 'original'
               ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
               : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
         >
-          <Youtube className="icon-hover-wiggle h-4 w-4 shrink-0" />
+          <Youtube className="icon-hover-wiggle h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
           <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onSelectYoutubeMode('audio')}
+          className={cn(
+            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.65rem] px-1.5 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-2 sm:text-sm',
+            youtubeTutorialOpen && youtubeVideoMode === 'audio'
+              ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'audio'}
+          title={t('youtubeTutorial.modeAudioHint')}
+        >
+          <MusicalNoteIcon className="icon-hover-wiggle h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+          <span className="truncate">{t('youtubeTutorial.modeAudio')}</span>
         </button>
       </div>
     ) : null;
@@ -1266,6 +1291,11 @@ export default function SongContent({
             />
           ) : null}
 
+          <LyricPracticeHint
+            visible={youtubeLyricSeekEnabled}
+            className="mb-3"
+          />
+
           {/* Song Content — portrait practice chrome; landscape uses fullscreen overlay */}
           {!landscapePracticeActive ? (
             <StructuredSongContent
@@ -1274,6 +1304,10 @@ export default function SongContent({
               fontSize={fontSize}
               practiceMode={practiceMode}
               practiceLineIndex={practiceLineIndex}
+              youtubeLyricSeekEnabled={youtubeLyricSeekEnabled}
+              youtubeLyricSyncLookup={youtubeLyricSyncLookup}
+              youtubeActiveLyricKey={youtubeActiveLyricKey}
+              onYoutubeLyricLineClick={onYoutubeLyricLineClick}
             />
           ) : null}
 
@@ -1331,6 +1365,10 @@ interface StructuredSongContentProps {
   fontSize: number;
   practiceMode?: boolean;
   practiceLineIndex?: number;
+  youtubeLyricSeekEnabled?: boolean;
+  youtubeLyricSyncLookup?: Map<string, { startSec: number | null }>;
+  youtubeActiveLyricKey?: string | null;
+  onYoutubeLyricLineClick?: (sectionIndex: number, lineIndex: number) => void;
 }
 
 function PracticeModeBar({
@@ -1399,6 +1437,10 @@ function StructuredSongContent({
   fontSize,
   practiceMode = false,
   practiceLineIndex = 0,
+  youtubeLyricSeekEnabled = false,
+  youtubeLyricSyncLookup,
+  youtubeActiveLyricKey = null,
+  onYoutubeLyricLineClick,
 }: StructuredSongContentProps) {
   const { t } = useLanguage();
   const measurementRef = useRef<HTMLDivElement>(null);
@@ -1481,7 +1523,12 @@ function StructuredSongContent({
     return getResponsiveFontSize(baseFontSize, windowWidth);
   };
 
-  const renderSongLine = (line: any, lineIndex: number, globalLineIndex?: number) => {
+  const renderSongLine = (
+    line: any,
+    lineIndex: number,
+    globalLineIndex?: number,
+    sectionIndex?: number
+  ) => {
     const optimalFontSize = getOptimalFontSize(fontSize);
     const optimalLineHeight = getOptimalLineHeight(optimalFontSize);
     const isHebrewLine = containsHebrew(line.lyrics ?? line.chord_line ?? '');
@@ -1491,6 +1538,14 @@ function StructuredSongContent({
       practiceMode && typeof globalLineIndex === 'number' && globalLineIndex === practiceLineIndex;
     const isPracticeDimmed =
       practiceMode && typeof globalLineIndex === 'number' && globalLineIndex !== practiceLineIndex;
+
+    const lyricKey =
+      typeof sectionIndex === 'number' ? `${sectionIndex}:${lineIndex}` : null;
+    const syncTimed =
+      youtubeLyricSeekEnabled &&
+      lyricKey != null &&
+      youtubeLyricSyncLookup?.get(lyricKey)?.startSec != null;
+    const isYoutubeActive = youtubeLyricSeekEnabled && lyricKey != null && youtubeActiveLyricKey === lyricKey;
 
     let content: React.ReactNode = null;
     
@@ -1534,19 +1589,41 @@ function StructuredSongContent({
 
     if (!content) return null;
 
-    return (
+    const lineShell = (
       <div
         key={lineIndex}
         data-practice-line={globalLineIndex}
+        data-lyric-key={lyricKey ?? undefined}
         className={cn(
           'rounded-lg transition-all duration-200',
           isPracticeActive && 'bg-primary/10 ring-2 ring-primary/40 px-2 py-1.5 scale-[1.01]',
-          isPracticeDimmed && 'opacity-25'
+          isPracticeDimmed && 'opacity-25',
+          isYoutubeActive && 'bg-amber-500/15 ring-2 ring-amber-500/50 px-2 py-1',
+          syncTimed && 'cursor-pointer hover:bg-amber-500/10'
         )}
+        onClick={
+          syncTimed && typeof sectionIndex === 'number'
+            ? () => onYoutubeLyricLineClick?.(sectionIndex, lineIndex)
+            : undefined
+        }
+        role={syncTimed ? 'button' : undefined}
+        tabIndex={syncTimed ? 0 : undefined}
+        onKeyDown={
+          syncTimed && typeof sectionIndex === 'number'
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onYoutubeLyricLineClick?.(sectionIndex, lineIndex);
+                }
+              }
+            : undefined
+        }
       >
         {content}
       </div>
     );
+
+    return lineShell;
   };
   
   const renderClickableChordLine = (chordLine: string) => {
@@ -1580,7 +1657,7 @@ function StructuredSongContent({
     return parts;
   };
 
-  const renderSectionLines = (lines: any[], sectionStartIndex: number) => {
+  const renderSectionLines = (lines: any[], sectionStartIndex: number, sectionIndex: number) => {
     return groupLinesForDisplay(lines).map((group, groupIndex) => {
       if (group.kind === 'repeat') {
         return (
@@ -1610,8 +1687,9 @@ function StructuredSongContent({
               {group.lines.map((line, lineIndex) =>
                 renderSongLine(
                   line,
-                  group.startIndex + lineIndex + 1,
-                  sectionStartIndex + group.startIndex + lineIndex
+                  group.startIndex + lineIndex,
+                  sectionStartIndex + group.startIndex + lineIndex,
+                  sectionIndex
                 )
               )}
             </div>
@@ -1623,7 +1701,8 @@ function StructuredSongContent({
         renderSongLine(
           line,
           group.startIndex + lineIndex,
-          sectionStartIndex + group.startIndex + lineIndex
+          sectionStartIndex + group.startIndex + lineIndex,
+          sectionIndex
         )
       );
     });
@@ -1713,7 +1792,7 @@ function StructuredSongContent({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="space-y-1 w-full pt-2" style={{ maxWidth: '100%', overflow: 'hidden' }}>
-                {renderSectionLines(section.lines, sectionStartOffsets[sectionIndex] ?? 0)}
+                {renderSectionLines(section.lines, sectionStartOffsets[sectionIndex] ?? 0, sectionIndex)}
               </div>
             </CollapsibleContent>
           </Collapsible>

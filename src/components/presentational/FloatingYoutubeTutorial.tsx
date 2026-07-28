@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import {
-  ArrowsPointingOutIcon,
-  ArrowsPointingInIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import { Youtube } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -14,9 +10,13 @@ import type { YoutubeTutorialVideo } from '@/lib/services/youtubeService'
 import {
   buildYoutubeSearchPageUrl,
   buildYoutubeSearchQuery,
-  buildYoutubeVideoEmbedUrl,
   type YoutubeVideoMode,
 } from '@/utils/youtubeTutorial'
+import {
+  loadYoutubeIframeApi,
+  type YoutubePlayerHandle,
+  type YTPlayerInstance,
+} from '@/lib/youtube/iframeApi'
 
 interface FloatingYoutubeTutorialProps {
   songTitle: string
@@ -25,14 +25,18 @@ interface FloatingYoutubeTutorialProps {
   isOpen: boolean
   videoMode: YoutubeVideoMode
   onClose: () => void
+  playerApiRef?: React.MutableRefObject<YoutubePlayerHandle | null>
+  onVideoIdChange?: (videoId: string | null) => void
+  onPlayerReadyChange?: (ready: boolean) => void
+  syncBanner?: React.ReactNode
 }
 
-const MIN_WIDTH = 260
-const MIN_HEIGHT = 180
+const MIN_WIDTH = 200
+const MIN_HEIGHT = 140
 const DEFAULT_WIDTH = 340
-const DEFAULT_HEIGHT = 260
-const LARGE_WIDTH = 420
-const LARGE_HEIGHT = 320
+const DEFAULT_HEIGHT = 220
+const BUBBLE_SIZE = 56
+const HANDLE = 18
 
 type FetchState =
   | { status: 'idle' }
@@ -42,8 +46,9 @@ type FetchState =
 
 type CachedVideo = {
   video: YoutubeTutorialVideo
-  embedSrc: string
 }
+
+type ResizeCorner = 'nw' | 'ne' | 'sw' | 'se'
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
@@ -56,32 +61,44 @@ export default function FloatingYoutubeTutorial({
   isOpen,
   videoMode,
   onClose,
+  playerApiRef,
+  onVideoIdChange,
+  onPlayerReadyChange,
 }: FloatingYoutubeTutorialProps) {
   const { t, language } = useLanguage()
-  const panelRef = useRef<HTMLDivElement>(null)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const playerHostRef = useRef<HTMLDivElement>(null)
+  const ytPlayerRef = useRef<YTPlayerInstance | null>(null)
   const cacheRef = useRef<Map<string, CachedVideo>>(new Map())
+  const sizeRef = useRef({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
+  const positionRef = useRef({ x: 16, y: 72 })
   const [mounted, setMounted] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
-  const [isLarge, setIsLarge] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(videoMode === 'audio')
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
   const [position, setPosition] = useState({ x: 16, y: 72 })
   const [fetchState, setFetchState] = useState<FetchState>({ status: 'idle' })
-  const [activeEmbedSrc, setActiveEmbedSrc] = useState<string | null>(null)
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
+  const [playerReady, setPlayerReady] = useState(false)
   const dragStateRef = useRef<{
     pointerId: number
     startX: number
     startY: number
     originX: number
     originY: number
+    moved: boolean
   } | null>(null)
   const resizeStateRef = useRef<{
     pointerId: number
+    corner: ResizeCorner
     startX: number
     startY: number
     originW: number
     originH: number
+    originX: number
+    originY: number
   } | null>(null)
+
+  sizeRef.current = size
+  positionRef.current = position
 
   const searchQuery = useMemo(
     () =>
@@ -95,10 +112,7 @@ export default function FloatingYoutubeTutorial({
     [videoMode, songTitle, songAuthor, selectedInstrument, language]
   )
 
-  const cacheKey = useMemo(
-    () => `${videoMode}::${searchQuery}::${language}`,
-    [videoMode, searchQuery, language]
-  )
+  const cacheKey = useMemo(() => `${searchQuery}::${language}`, [searchQuery, language])
 
   const youtubePageUrl = useMemo(() => buildYoutubeSearchPageUrl(searchQuery), [searchQuery])
 
@@ -110,13 +124,18 @@ export default function FloatingYoutubeTutorial({
     if (typeof window === 'undefined') return
     const margin = 12
     const bottomInset = window.innerWidth < 1024 ? 88 : 24
-    const width = isLarge ? LARGE_WIDTH : size.width
-    const height = isLarge ? LARGE_HEIGHT : size.height
+    const width = isMinimized ? BUBBLE_SIZE : size.width
+    const height = isMinimized ? BUBBLE_SIZE : size.height
     setPosition({
       x: Math.max(margin, window.innerWidth - width - margin),
       y: Math.max(56, window.innerHeight - height - bottomInset),
     })
-  }, [isLarge, size.height, size.width])
+  }, [isMinimized, size.height, size.width])
+
+  useEffect(() => {
+    if (!isOpen) return
+    setIsMinimized(videoMode === 'audio')
+  }, [isOpen, videoMode])
 
   useEffect(() => {
     if (!isOpen) return
@@ -127,20 +146,26 @@ export default function FloatingYoutubeTutorial({
     if (isOpen) return
 
     setIsMinimized(false)
-    setIsLarge(false)
     setSize({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
     setFetchState({ status: 'idle' })
-    setActiveEmbedSrc(null)
+    setActiveVideoId(null)
+    setPlayerReady(false)
+    ytPlayerRef.current?.destroy()
+    ytPlayerRef.current = null
+    if (playerApiRef) playerApiRef.current = null
+    onVideoIdChange?.(null)
+    onPlayerReadyChange?.(false)
     cacheRef.current.clear()
-  }, [isOpen])
+  }, [isOpen, onPlayerReadyChange, onVideoIdChange, playerApiRef])
 
   useEffect(() => {
     if (!isOpen) return
 
     const cached = cacheRef.current.get(cacheKey)
     if (cached) {
-      setActiveEmbedSrc(cached.embedSrc)
+      setActiveVideoId(cached.video.videoId)
       setFetchState({ status: 'success', video: cached.video })
+      onVideoIdChange?.(cached.video.videoId)
       return
     }
 
@@ -148,7 +173,10 @@ export default function FloatingYoutubeTutorial({
 
     async function loadVideo() {
       setFetchState({ status: 'loading' })
-      setActiveEmbedSrc(null)
+      setActiveVideoId(null)
+      setPlayerReady(false)
+      onVideoIdChange?.(null)
+      onPlayerReadyChange?.(false)
 
       try {
         const params = new URLSearchParams({
@@ -166,10 +194,10 @@ export default function FloatingYoutubeTutorial({
 
         const payload = (await response.json()) as { video: YoutubeTutorialVideo }
         const nextVideo = payload.video
-        const nextEmbedSrc = buildYoutubeVideoEmbedUrl(nextVideo.videoId)
-        cacheRef.current.set(cacheKey, { video: nextVideo, embedSrc: nextEmbedSrc })
-        setActiveEmbedSrc(nextEmbedSrc)
+        cacheRef.current.set(cacheKey, { video: nextVideo })
+        setActiveVideoId(nextVideo.videoId)
         setFetchState({ status: 'success', video: nextVideo })
+        onVideoIdChange?.(nextVideo.videoId)
       } catch (error) {
         if (controller.signal.aborted) return
         const message = error instanceof Error ? error.message : 'Failed to load video'
@@ -180,7 +208,60 @@ export default function FloatingYoutubeTutorial({
     void loadVideo()
 
     return () => controller.abort()
-  }, [isOpen, cacheKey, searchQuery, language])
+  }, [isOpen, cacheKey, searchQuery, language, onVideoIdChange, onPlayerReadyChange])
+
+  useEffect(() => {
+    if (!isOpen || !activeVideoId || !playerHostRef.current) return
+
+    let destroyed = false
+
+    void (async () => {
+      await loadYoutubeIframeApi()
+      if (destroyed || !playerHostRef.current || !window.YT?.Player) return
+
+      ytPlayerRef.current?.destroy()
+      setPlayerReady(false)
+      onPlayerReadyChange?.(false)
+
+      ytPlayerRef.current = new window.YT.Player(playerHostRef.current, {
+        videoId: activeVideoId,
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          enablejsapi: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: () => {
+            if (destroyed) return
+            setPlayerReady(true)
+            onPlayerReadyChange?.(true)
+            const handle: YoutubePlayerHandle = {
+              seekTo: (seconds: number) => {
+                ytPlayerRef.current?.seekTo(seconds, true)
+                ytPlayerRef.current?.playVideo()
+              },
+              getCurrentTime: () => ytPlayerRef.current?.getCurrentTime() ?? 0,
+              play: () => ytPlayerRef.current?.playVideo(),
+              isReady: () => true,
+              getVideoId: () => activeVideoId,
+            }
+            if (playerApiRef) playerApiRef.current = handle
+          },
+        },
+      })
+    })()
+
+    return () => {
+      destroyed = true
+      ytPlayerRef.current?.destroy()
+      ytPlayerRef.current = null
+      if (playerApiRef) playerApiRef.current = null
+    }
+  }, [isOpen, activeVideoId, onPlayerReadyChange, playerApiRef])
 
   const clampPosition = useCallback(
     (next: { x: number; y: number }, panelWidth: number, panelHeight: number) => {
@@ -198,7 +279,7 @@ export default function FloatingYoutubeTutorial({
     event.stopPropagation()
   }
 
-  const onDragPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+  const onDragPointerDown = (event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return
     dragStateRef.current = {
       pointerId: event.pointerId,
@@ -206,48 +287,59 @@ export default function FloatingYoutubeTutorial({
       startY: event.clientY,
       originX: position.x,
       originY: position.y,
+      moved: false,
     }
     event.currentTarget.setPointerCapture(event.pointerId)
   }
 
-  const onDragPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+  const onDragPointerMove = (event: React.PointerEvent<HTMLElement>) => {
     const drag = dragStateRef.current
     if (!drag || drag.pointerId !== event.pointerId) return
     event.preventDefault()
-    const width = isLarge ? LARGE_WIDTH : size.width
-    const height = isMinimized ? 44 : isLarge ? LARGE_HEIGHT : size.height
-    const next = clampPosition(
-      {
-        x: drag.originX + (event.clientX - drag.startX),
-        y: drag.originY + (event.clientY - drag.startY),
-      },
-      width,
-      height
+    const dx = event.clientX - drag.startX
+    const dy = event.clientY - drag.startY
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true
+    const width = isMinimized ? BUBBLE_SIZE : size.width
+    const height = isMinimized ? BUBBLE_SIZE : size.height
+    setPosition(
+      clampPosition(
+        {
+          x: drag.originX + dx,
+          y: drag.originY + dy,
+        },
+        width,
+        height
+      )
     )
-    setPosition(next)
   }
 
-  const onDragPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+  const onDragPointerUp = (event: React.PointerEvent<HTMLElement>) => {
     if (dragStateRef.current?.pointerId === event.pointerId) {
+      const moved = dragStateRef.current.moved
       dragStateRef.current = null
       event.currentTarget.releasePointerCapture(event.pointerId)
+      return moved
     }
+    return false
   }
 
   const stopControlPointer = (event: React.PointerEvent) => {
     event.stopPropagation()
   }
 
-  const onResizePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (isMinimized || isLarge) return
+  const onResizePointerDown = (corner: ResizeCorner) => (event: React.PointerEvent<HTMLDivElement>) => {
+    if (isMinimized) return
     event.preventDefault()
     event.stopPropagation()
     resizeStateRef.current = {
       pointerId: event.pointerId,
+      corner,
       startX: event.clientX,
       startY: event.clientY,
-      originW: size.width,
-      originH: size.height,
+      originW: sizeRef.current.width,
+      originH: sizeRef.current.height,
+      originX: positionRef.current.x,
+      originY: positionRef.current.y,
     }
     event.currentTarget.setPointerCapture(event.pointerId)
   }
@@ -255,12 +347,36 @@ export default function FloatingYoutubeTutorial({
   const onResizePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const resize = resizeStateRef.current
     if (!resize || resize.pointerId !== event.pointerId) return
-    const maxW = typeof window !== 'undefined' ? Math.min(560, window.innerWidth - 24) : 560
-    const maxH = typeof window !== 'undefined' ? Math.min(480, window.innerHeight - 120) : 480
-    const nextW = clamp(resize.originW + (event.clientX - resize.startX), MIN_WIDTH, maxW)
-    const nextH = clamp(resize.originH + (event.clientY - resize.startY), MIN_HEIGHT, maxH)
+    event.preventDefault()
+
+    const maxW = typeof window !== 'undefined' ? Math.min(720, window.innerWidth - 24) : 720
+    const maxH = typeof window !== 'undefined' ? Math.min(520, window.innerHeight - 80) : 520
+    const dx = event.clientX - resize.startX
+    const dy = event.clientY - resize.startY
+
+    let nextW = resize.originW
+    let nextH = resize.originH
+    let nextX = resize.originX
+    let nextY = resize.originY
+
+    if (resize.corner.includes('e')) {
+      nextW = clamp(resize.originW + dx, MIN_WIDTH, maxW)
+    }
+    if (resize.corner.includes('w')) {
+      nextW = clamp(resize.originW - dx, MIN_WIDTH, maxW)
+      nextX = resize.originX + (resize.originW - nextW)
+    }
+    if (resize.corner.includes('s')) {
+      nextH = clamp(resize.originH + dy, MIN_HEIGHT, maxH)
+    }
+    if (resize.corner.includes('n')) {
+      nextH = clamp(resize.originH - dy, MIN_HEIGHT, maxH)
+      nextY = resize.originY + (resize.originH - nextH)
+    }
+
+    const clamped = clampPosition({ x: nextX, y: nextY }, nextW, nextH)
     setSize({ width: nextW, height: nextH })
-    setPosition((prev) => clampPosition(prev, nextW, nextH))
+    setPosition(clamped)
   }
 
   const onResizePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -270,151 +386,177 @@ export default function FloatingYoutubeTutorial({
     }
   }
 
+  const expandAndPlay = useCallback(() => {
+    setIsMinimized(false)
+    requestAnimationFrame(() => {
+      ytPlayerRef.current?.playVideo()
+    })
+  }, [])
+
   if (!isOpen || !mounted) return null
 
-  const panelWidth = isLarge ? LARGE_WIDTH : size.width
-  const panelHeight = isMinimized ? 44 : isLarge ? LARGE_HEIGHT : size.height
+  const panelWidth = isMinimized ? BUBBLE_SIZE : size.width
+  const panelHeight = isMinimized ? BUBBLE_SIZE : size.height
   const video = fetchState.status === 'success' ? fetchState.video : null
-  const embedSrc = activeEmbedSrc
   const panelTitle = video?.title ?? searchQuery
 
-  const panel = (
+  const cornerHandle = (corner: ResizeCorner, cursor: string, className: string) => (
     <div
-      ref={panelRef}
-      className={cn(
-        'fixed z-[70] flex flex-col overflow-hidden rounded-2xl border border-black/[0.08] bg-background/95 shadow-[0_12px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl dark:border-white/[0.1] dark:shadow-[0_12px_40px_rgba(0,0,0,0.45)]',
-        isMinimized && 'rounded-full'
-      )}
-      style={{
-        left: position.x,
-        top: position.y,
-        width: panelWidth,
-        height: panelHeight,
-      }}
-      onPointerDown={stopPanelEvent}
-      onPointerUp={stopPanelEvent}
-      onClick={stopPanelEvent}
-      onTouchStart={stopPanelEvent}
-    >
-      <div
-        className={cn(
-          'flex items-center gap-2 border-b border-border/70 bg-muted/40 px-2.5 py-2',
-          isMinimized && 'border-b-0 rounded-full px-3'
-        )}
-      >
-        <div
-          className="flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 active:cursor-grabbing"
-          onPointerDown={onDragPointerDown}
-          onPointerMove={onDragPointerMove}
-          onPointerUp={onDragPointerUp}
-          onPointerCancel={onDragPointerUp}
-        >
-          <Youtube className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-foreground">{panelTitle}</p>
-          </div>
-        </div>
-        <div
-          className="relative z-10 flex shrink-0 items-center gap-0.5 touch-manipulation"
-          onPointerDown={stopControlPointer}
-          onPointerUp={stopControlPointer}
-        >
-          {!isMinimized && (
-            <button
-              type="button"
-              onClick={() => setIsLarge((prev) => !prev)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted/80"
-              aria-label={isLarge ? t('youtubeTutorial.shrink') : t('youtubeTutorial.expand')}
-            >
-              {isLarge ? (
-                <ArrowsPointingInIcon className="h-4 w-4" />
-              ) : (
-                <ArrowsPointingOutIcon className="h-4 w-4" />
-              )}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsMinimized((prev) => !prev)}
-            className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-[10px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted/80"
-          >
-            {isMinimized ? t('youtubeTutorial.open') : t('youtubeTutorial.minimize')}
-          </button>
-          <button
-            type="button"
-            onClick={() => onClose()}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted/80"
-            aria-label={t('songHeader.close')}
-          >
-            <XMarkIcon className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {!isMinimized && (
-        <>
-          <div className="relative min-h-0 flex-1 bg-black touch-manipulation">
-            {fetchState.status === 'loading' && !embedSrc && (
-              <div className="flex h-full items-center justify-center px-4 text-center">
-                <p className="text-xs text-white/80">
-                  {videoMode === 'original'
-                    ? t('youtubeTutorial.loadingOriginal')
-                    : selectedInstrument === 'guitar'
-                      ? t('youtubeTutorial.loadingGuitar')
-                      : t('youtubeTutorial.loadingPiano')}
-                </p>
-              </div>
-            )}
-            {fetchState.status === 'error' && !embedSrc && (
-              <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-                <p className="text-xs text-white/80">
-                  {videoMode === 'original'
-                    ? t('youtubeTutorial.loadErrorOriginal')
-                    : selectedInstrument === 'guitar'
-                      ? t('youtubeTutorial.loadErrorGuitar')
-                      : t('youtubeTutorial.loadErrorPiano')}
-                </p>
-                <a
-                  href={youtubePageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] font-medium text-red-300 hover:underline"
-                >
-                  {t('youtubeTutorial.openYoutube')}
-                </a>
-              </div>
-            )}
-            {embedSrc && (
-              <iframe
-                ref={iframeRef}
-                key={embedSrc}
-                title={panelTitle}
-                src={embedSrc}
-                className="h-full w-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
-            )}
-          </div>
-          {!isLarge && (
-            <div
-              role="separator"
-              aria-label={t('songHeader.resize')}
-              onPointerDown={onResizePointerDown}
-              onPointerMove={onResizePointerMove}
-              onPointerUp={onResizePointerUp}
-              onPointerCancel={onResizePointerUp}
-              className="absolute bottom-0 right-0 h-8 w-8 cursor-nwse-resize touch-none"
-            >
-              <span className="absolute bottom-1 right-1 block h-2.5 w-2.5 rounded-br border-b-2 border-r-2 border-muted-foreground/50" />
-            </div>
-          )}
-        </>
-      )}
-    </div>
+      role="separator"
+      aria-label={t('songHeader.resize')}
+      onPointerDown={onResizePointerDown(corner)}
+      onPointerMove={onResizePointerMove}
+      onPointerUp={onResizePointerUp}
+      onPointerCancel={onResizePointerUp}
+      className={cn('absolute z-20 touch-none', cursor, className)}
+      style={{ width: HANDLE, height: HANDLE }}
+    />
   )
 
-  return createPortal(panel, document.body)
+  return createPortal(
+    <>
+      <div
+        className={cn(
+          'fixed z-[70] overflow-hidden',
+          isMinimized
+            ? 'pointer-events-none opacity-0'
+            : 'rounded-xl bg-black shadow-[0_12px_40px_rgba(0,0,0,0.28)] ring-1 ring-black/20 dark:ring-white/10'
+        )}
+        style={
+          isMinimized
+            ? {
+                left: -10000,
+                top: 0,
+                width: DEFAULT_WIDTH,
+                height: DEFAULT_HEIGHT,
+              }
+            : {
+                left: position.x,
+                top: position.y,
+                width: panelWidth,
+                height: panelHeight,
+              }
+        }
+        onPointerDown={stopPanelEvent}
+        onPointerUp={stopPanelEvent}
+        onClick={stopPanelEvent}
+        onTouchStart={stopPanelEvent}
+        aria-hidden={isMinimized}
+      >
+        {/* Drag strip — top edge only, keeps chrome minimal */}
+        {!isMinimized && (
+          <div
+            className="absolute inset-x-0 top-0 z-10 h-7 cursor-grab touch-none active:cursor-grabbing"
+            onPointerDown={onDragPointerDown}
+            onPointerMove={onDragPointerMove}
+            onPointerUp={onDragPointerUp}
+            onPointerCancel={onDragPointerUp}
+          />
+        )}
+
+        {/* Close only */}
+        {!isMinimized && (
+          <div
+            className="absolute end-1.5 top-1.5 z-30"
+            onPointerDown={stopControlPointer}
+            onPointerUp={stopControlPointer}
+          >
+            <button
+              type="button"
+              onClick={() => onClose()}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/75 hover:text-white"
+              aria-label={t('songHeader.close')}
+            >
+              <XMarkIcon className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        <div className="relative h-full w-full bg-black">
+          {fetchState.status === 'loading' && !activeVideoId && !isMinimized && (
+            <div className="flex h-full items-center justify-center px-4 text-center">
+              <p className="text-xs text-white/80">
+                {videoMode === 'original' || videoMode === 'audio'
+                  ? t('youtubeTutorial.loadingOriginal')
+                  : selectedInstrument === 'guitar'
+                    ? t('youtubeTutorial.loadingGuitar')
+                    : t('youtubeTutorial.loadingPiano')}
+              </p>
+            </div>
+          )}
+          {fetchState.status === 'error' && !activeVideoId && !isMinimized && (
+            <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
+              <p className="text-xs text-white/80">
+                {videoMode === 'original' || videoMode === 'audio'
+                  ? t('youtubeTutorial.loadErrorOriginal')
+                  : selectedInstrument === 'guitar'
+                    ? t('youtubeTutorial.loadErrorGuitar')
+                    : t('youtubeTutorial.loadErrorPiano')}
+              </p>
+              <a
+                href={youtubePageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-medium text-red-300 hover:underline"
+              >
+                {t('youtubeTutorial.openYoutube')}
+              </a>
+            </div>
+          )}
+          <div className={cn('h-full w-full', !activeVideoId && 'hidden')}>
+            <div ref={playerHostRef} className="h-full w-full" />
+          </div>
+        </div>
+
+        {!isMinimized && (
+          <>
+            {cornerHandle('nw', 'cursor-nwse-resize', 'left-0 top-0')}
+            {cornerHandle('ne', 'cursor-nesw-resize', 'right-0 top-0')}
+            {cornerHandle('sw', 'cursor-nesw-resize', 'bottom-0 left-0')}
+            {cornerHandle('se', 'cursor-nwse-resize', 'bottom-0 right-0')}
+          </>
+        )}
+      </div>
+
+      {isMinimized && (
+        <div
+          className="fixed z-[70]"
+          style={{ left: position.x, top: position.y, width: BUBBLE_SIZE, height: BUBBLE_SIZE }}
+          onPointerDown={stopPanelEvent}
+          onClick={stopPanelEvent}
+        >
+          <div className="relative flex h-full w-full items-center justify-center">
+            <button
+              type="button"
+              className="group relative flex h-14 w-14 cursor-grab items-center justify-center rounded-full bg-[#ff0000] text-white shadow-[0_8px_24px_rgba(0,0,0,0.28)] transition-transform active:scale-95 active:cursor-grabbing"
+              aria-label={t('youtubeTutorial.open')}
+              title={panelTitle}
+              onPointerDown={onDragPointerDown}
+              onPointerMove={onDragPointerMove}
+              onPointerUp={(e) => {
+                const moved = onDragPointerUp(e)
+                if (!moved) expandAndPlay()
+              }}
+              onPointerCancel={onDragPointerUp}
+            >
+              <Youtube className="h-7 w-7" strokeWidth={2.25} />
+              {playerReady && (
+                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-background" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => onClose()}
+              onPointerDown={stopControlPointer}
+              className="absolute -right-1 -top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-background/95 text-muted-foreground shadow-sm ring-1 ring-black/10 hover:text-foreground dark:ring-white/15"
+              aria-label={t('songHeader.close')}
+            >
+              <XMarkIcon className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+    </>,
+    document.body
+  )
 }

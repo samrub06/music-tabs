@@ -1,9 +1,9 @@
 'use client';
 
-import { Song, Chord, SongLine, SongSection } from '@/types';
+import { Song, Chord, SongLine, SongSection, type SongLyricSync } from '@/types';
 import { MusicalNoteIcon } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
-import React, { RefObject, useEffect, useState } from 'react';
+import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SongHeader from './SongHeader';
 import SongContent from './SongContent';
 import ToolsBottomBar from './ToolsBottomBar';
@@ -12,6 +12,11 @@ import SongQueueSheet from './SongQueueSheet';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
 import type { YoutubeVideoMode } from '@/utils/youtubeTutorial';
+import { isLyricPracticeYoutubeMode } from '@/utils/youtubeTutorial';
+import type { YoutubePlayerHandle } from '@/lib/youtube/iframeApi';
+import { getLyricSyncAction, ensureLyricSyncAction } from '@/app/song/[id]/lyricSyncActions';
+import { buildLyricSyncLookup } from '@/utils/lyricSync';
+import { useLanguage } from '@/context/LanguageContext';
 
 const ChordDiagramModal = dynamic(() => import('./ChordDiagramModal'), { ssr: false });
 
@@ -170,15 +175,129 @@ export default function SongViewer({
     currentFolderId,
     onFolderChange,
 }: SongViewerProps) {
+  const { t } = useLanguage();
   const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
   const [youtubeVideoMode, setYoutubeVideoMode] = useState<YoutubeVideoMode>('tutorial');
   const [songQueueOpen, setSongQueueOpen] = useState(false);
+  const youtubePlayerApiRef = useRef<YoutubePlayerHandle | null>(null);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [youtubePlayerReady, setYoutubePlayerReady] = useState(false);
+  const [lyricSync, setLyricSync] = useState<SongLyricSync | null>(null);
+  const [lyricSyncLoading, setLyricSyncLoading] = useState(false);
+  const [activeLyricKey, setActiveLyricKey] = useState<string | null>(null);
 
   useEffect(() => {
     setYoutubeTutorialOpen(false);
     setYoutubeVideoMode('tutorial');
     setSongQueueOpen(false);
+    setYoutubeVideoId(null);
+    setYoutubePlayerReady(false);
+    setLyricSync(null);
+    setActiveLyricKey(null);
   }, [song?.id]);
+
+  const practiceLyricSyncEnabled =
+    youtubeTutorialOpen && isLyricPracticeYoutubeMode(youtubeVideoMode) && !!youtubeVideoId;
+
+  useEffect(() => {
+    if (!practiceLyricSyncEnabled || !song?.id || !youtubeVideoId) {
+      setLyricSync(null);
+      setLyricSyncLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLyricSyncLoading(true);
+
+    void (async () => {
+      try {
+        const { sync } = await getLyricSyncAction({
+          songId: song.id,
+          youtubeVideoId,
+        });
+        if (cancelled) return;
+
+        if (sync?.status === 'ready') {
+          setLyricSync(sync);
+          setLyricSyncLoading(false);
+          return;
+        }
+
+        const ensured = await ensureLyricSyncAction({
+          songId: song.id,
+          youtubeVideoId,
+        });
+        if (cancelled) return;
+        setLyricSync(ensured.sync);
+        setLyricSyncLoading(ensured.sync?.status === 'pending');
+      } catch {
+        if (!cancelled) {
+          setLyricSync(null);
+          setLyricSyncLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [practiceLyricSyncEnabled, song?.id, youtubeVideoId]);
+
+  // Poll while pending
+  useEffect(() => {
+    if (!lyricSyncLoading || !song?.id || !youtubeVideoId) return;
+    const id = window.setInterval(() => {
+      void getLyricSyncAction({ songId: song.id, youtubeVideoId }).then(({ sync }) => {
+        if (!sync) return;
+        setLyricSync(sync);
+        if (sync.status === 'ready' || sync.status === 'failed') {
+          setLyricSyncLoading(false);
+        }
+      });
+    }, 2500);
+    return () => window.clearInterval(id);
+  }, [lyricSyncLoading, song?.id, youtubeVideoId]);
+
+  // Highlight current line from YouTube time
+  useEffect(() => {
+    if (!practiceLyricSyncEnabled || lyricSync?.status !== 'ready' || !youtubePlayerReady) {
+      setActiveLyricKey(null);
+      return;
+    }
+    const timed = lyricSync.lines.filter((l) => l.startSec != null);
+    if (timed.length === 0) return;
+
+    const id = window.setInterval(() => {
+      const t = youtubePlayerApiRef.current?.getCurrentTime() ?? 0;
+      let current: string | null = null;
+      for (let i = 0; i < timed.length; i++) {
+        const line = timed[i];
+        const next = timed[i + 1];
+        const start = line.startSec!;
+        const end = line.endSec ?? next?.startSec ?? start + 8;
+        if (t >= start && t < end) {
+          current = `${line.sectionIndex}:${line.lineIndex}`;
+          break;
+        }
+      }
+      setActiveLyricKey(current);
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [practiceLyricSyncEnabled, lyricSync, youtubePlayerReady]);
+
+  const lyricSyncLookup = useMemo(
+    () => buildLyricSyncLookup(lyricSync?.status === 'ready' ? lyricSync.lines : []),
+    [lyricSync]
+  );
+
+  const handleLyricLineSeek = useCallback(
+    (sectionIndex: number, lineIndex: number) => {
+      const line = lyricSyncLookup.get(`${sectionIndex}:${lineIndex}`);
+      if (line?.startSec == null) return;
+      youtubePlayerApiRef.current?.seekTo(line.startSec);
+    },
+    [lyricSyncLookup]
+  );
 
   const handleSelectYoutubeMode = (mode: YoutubeVideoMode) => {
     if (youtubeTutorialOpen && youtubeVideoMode === mode) {
@@ -188,6 +307,24 @@ export default function SongViewer({
     setYoutubeVideoMode(mode);
     setYoutubeTutorialOpen(true);
   };
+
+  const syncBanner = (() => {
+    if (!isLyricPracticeYoutubeMode(youtubeVideoMode)) return null;
+    if (lyricSyncLoading || lyricSync?.status === 'pending') {
+      return t('songContent.lyricSyncAligning');
+    }
+    if (lyricSync?.status === 'ready') {
+      const n = lyricSync.lines.filter((l) => l.startSec != null).length;
+      return t('songContent.lyricSyncReady').replace('{count}', String(n));
+    }
+    if (lyricSync?.status === 'failed') {
+      return t('songContent.lyricSyncFailed');
+    }
+    if (youtubeVideoId && !lyricSyncLoading) {
+      return t('songContent.lyricSyncMissing');
+    }
+    return null;
+  })();
 
   if (!song) {
     return (
@@ -278,6 +415,12 @@ export default function SongViewer({
               youtubeVideoMode={youtubeVideoMode}
               onSelectYoutubeMode={handleSelectYoutubeMode}
               onOpenSongQueue={() => setSongQueueOpen(true)}
+              youtubeLyricSeekEnabled={
+                practiceLyricSyncEnabled && lyricSync?.status === 'ready' && youtubePlayerReady
+              }
+              youtubeLyricSyncLookup={lyricSyncLookup}
+              youtubeActiveLyricKey={activeLyricKey}
+              onYoutubeLyricLineClick={handleLyricLineSeek}
             />
           </div>
 
@@ -323,6 +466,10 @@ export default function SongViewer({
         isOpen={youtubeTutorialOpen}
         videoMode={youtubeVideoMode}
         onClose={() => setYoutubeTutorialOpen(false)}
+        playerApiRef={youtubePlayerApiRef}
+        onVideoIdChange={setYoutubeVideoId}
+        onPlayerReadyChange={setYoutubePlayerReady}
+        syncBanner={syncBanner}
       />
 
       <SongQueueSheet

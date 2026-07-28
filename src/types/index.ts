@@ -47,6 +47,30 @@ export interface SongSection {
   lines: SongLine[];
 }
 
+/** Timed lyric line for YouTube Practice seek (stored in song_lyric_syncs.lines). */
+export interface LyricSyncLine {
+  sectionIndex: number;
+  lineIndex: number;
+  text: string;
+  startSec: number | null;
+  endSec: number | null;
+  score?: number;
+}
+
+export type LyricSyncStatus = 'pending' | 'ready' | 'failed';
+
+export interface SongLyricSync {
+  id: string;
+  songId: string;
+  youtubeVideoId: string;
+  status: LyricSyncStatus;
+  lines: LyricSyncLine[];
+  model?: string;
+  error?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface StructuredSong {
   id: string;
   title: string;
