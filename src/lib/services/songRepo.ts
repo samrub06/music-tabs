@@ -144,6 +144,46 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return byTitle?.id ? { id: byTitle.id } : null
   },
 
+  /**
+   * Catalog lookup by source identity only (tab_id / source_url).
+   * Never matches title+author — avoids mixing UG vs Negina same-title songs.
+   */
+  async findCatalogSongBySourceIdentity(match: {
+    tabId?: string | number | null
+    tabIdCandidates?: string[]
+    sourceUrl?: string | null
+  }): Promise<{ id: string } | null> {
+    const candidates =
+      match.tabIdCandidates && match.tabIdCandidates.length > 0
+        ? match.tabIdCandidates
+        : match.tabId != null && match.tabId !== ''
+          ? [String(match.tabId)]
+          : []
+
+    for (const tabId of candidates) {
+      const { data } = await (client.from('songs') as any)
+        .select('id')
+        .eq('tab_id', tabId)
+        .is('user_id', null)
+        .limit(1)
+        .maybeSingle()
+      if (data?.id) return { id: data.id }
+    }
+
+    const sourceUrl = match.sourceUrl?.trim()
+    if (sourceUrl) {
+      const { data } = await (client.from('songs') as any)
+        .select('id')
+        .eq('source_url', sourceUrl)
+        .is('user_id', null)
+        .limit(1)
+        .maybeSingle()
+      if (data?.id) return { id: data.id }
+    }
+
+    return null
+  },
+
   async createSong(songData: NewSongData): Promise<Song> {
     const { data: { user } } = await client.auth.getUser()
 

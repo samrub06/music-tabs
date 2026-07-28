@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { BackArrowIcon } from '@/components/icons/DirectionalIcons'
 import { useLanguage } from '@/context/LanguageContext'
-import { addSongAction } from '@/app/(protected)/dashboard/actions'
-import type { NewSongData, Song } from '@/types'
+import {
+  addSongFromSearchAction,
+  getSongForPreviewFromSearchAction,
+} from '@/app/(protected)/search/actions'
+import type { Song } from '@/types'
 import SongViewerContainerSSR from '@/components/containers/SongViewerContainerSSR'
-import { parseTextToStructuredSong } from '@/utils/songParser'
-// Mock actions for preview mode (song is not in database yet)
+
+// Mock actions for preview mode (catalog song may not be in user library yet)
 const mockUpdateAction = async () => {
   throw new Error('Cannot update song in preview mode. Add to library first.')
 }
@@ -26,11 +29,11 @@ interface SongPreviewClientProps {
 export default function SongPreviewClient({
   url,
   searchResult: searchResultParam,
-  userId
+  userId,
 }: SongPreviewClientProps) {
   const router = useRouter()
   const { t } = useLanguage()
-  const [song, setSong] = useState<any>(null)
+  const [song, setSong] = useState<Song | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,65 +43,39 @@ export default function SongPreviewClient({
         setIsLoading(true)
         setError(null)
 
-        const searchResult = searchResultParam ? JSON.parse(decodeURIComponent(searchResultParam)) : null
-        const response = await fetch(`/api/songs/search?url=${encodeURIComponent(url)}&searchResult=${encodeURIComponent(JSON.stringify(searchResult || {}))}`)
-        const data = await response.json()
+        const searchResult = searchResultParam
+          ? JSON.parse(decodeURIComponent(searchResultParam))
+          : null
 
-        if (response.ok && data.song) {
-          // Build song object from scraped data
-          const scraped = data.song
-          const searchResultData = searchResult || {}
+        const { song: catalogSong } = await getSongForPreviewFromSearchAction({
+          url,
+          title: searchResult?.title,
+          author: searchResult?.author,
+          source: searchResult?.sourceSite || searchResult?.source,
+          tabId: searchResult?.tabId,
+          reviews: searchResult?.reviews,
+          version: searchResult?.version,
+          rating: searchResult?.rating,
+          difficulty: searchResult?.difficulty,
+          versionDescription: searchResult?.versionDescription,
+          artistUrl: searchResult?.artistUrl,
+          artistImageUrl: searchResult?.artistImageUrl,
+          songImageUrl: searchResult?.songImageUrl,
+        })
 
-          const title = (scraped.title || searchResultData.title || t('songs.unknownTitle')).trim()
-          const author = (scraped.author || searchResultData.author || t('songs.unknownArtist')).trim()
-          const content = scraped.content || ''
-
-          // Parse content to structured format with sections
-          const structuredSong = parseTextToStructuredSong(
-            title,
-            author,
-            content,
-            undefined, // folderId
-            (searchResultData.reviews ?? scraped.reviews) || 0,
-            scraped.capo,
-            scraped.key
-          )
-
-          // Build complete song object
-          const songData: Song = {
-            ...structuredSong,
-            id: `preview-${Date.now()}`, // Temporary ID for preview
-            rating: scraped.rating || searchResultData.rating,
-            difficulty: scraped.difficulty || searchResultData.difficulty,
-            version: scraped.version || searchResultData.version,
-            versionDescription: scraped.versionDescription || searchResultData.versionDescription,
-            bpm: scraped.bpm,
-            sourceUrl: url,
-            sourceSite: searchResultData.sourceSite || searchResultData.source,
-            tabId: searchResultData.tabId,
-            genre: scraped.genre,
-            decade: scraped.decade,
-            allChords: scraped.allChords || [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            folderId: undefined,
-            userId: userId || undefined
-          }
-
-          setSong(songData)
-        } else {
-          setError(data.error || t('songPreview.FETCH_ERROR'))
-        }
+        setSong(catalogSong)
       } catch (err) {
         console.error('Error fetching song:', err)
-        setError(err instanceof Error ? err.message : t('songPreview.FETCH_ERROR_GENERIC'))
+        setError(
+          err instanceof Error ? err.message : t('songPreview.FETCH_ERROR_GENERIC')
+        )
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchSong()
-  }, [url, searchResultParam, userId, t])
+  }, [url, searchResultParam, t])
 
   const handleAddToLibrary = async () => {
     if (!userId || !song) {
@@ -107,25 +84,21 @@ export default function SongPreviewClient({
     }
 
     try {
-      const payload: NewSongData = {
-        title: song.title.trim(),
-        author: song.author.trim(),
-        content: song.content.trim(),
-        reviews: song.reviews || 0,
-        capo: song.capo,
-        key: song.key,
+      const { song: newSong } = await addSongFromSearchAction({
+        url: song.sourceUrl || url,
+        title: song.title,
+        author: song.author,
+        source: song.sourceSite,
+        tabId: song.tabId,
+        reviews: song.reviews,
+        version: song.version,
         rating: song.rating,
         difficulty: song.difficulty,
-        version: song.version,
         versionDescription: song.versionDescription,
-        bpm: song.bpm,
-        sourceUrl: song.sourceUrl,
-        sourceSite: song.sourceSite,
-        tabId: song.tabId,
-        genre: song.genre
-      }
-
-      const newSong = await addSongAction(payload)
+        artistUrl: song.artistUrl,
+        artistImageUrl: song.artistImageUrl,
+        songImageUrl: song.songImageUrl,
+      })
       router.push(`/song/${newSong.id}`)
     } catch (err) {
       console.error('Error adding song:', err)
@@ -148,7 +121,9 @@ export default function SongPreviewClient({
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <p className="text-red-600 dark:text-red-400 mb-4">{error || t('songPreview.NOT_FOUND')}</p>
+          <p className="text-red-600 dark:text-red-400 mb-4">
+            {error || t('songPreview.NOT_FOUND')}
+          </p>
           <button
             onClick={() => router.push('/')}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -163,7 +138,6 @@ export default function SongPreviewClient({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      {/* Song Viewer */}
       <SongViewerContainerSSR
         song={song}
         onUpdate={mockUpdateAction}

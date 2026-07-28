@@ -3,10 +3,12 @@
 import { z } from 'zod'
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { lyricSyncRepo } from '@/lib/services/lyricSyncRepo'
+import { songRepo } from '@/lib/services/songRepo'
 import {
   readLyricSyncFileCache,
   writeLyricSyncFileCache,
 } from '@/lib/services/lyricSyncFileCache'
+import { lyricSyncLookupSongIds } from '@/utils/lyricSyncLookup'
 import type { SongLyricSync } from '@/types'
 
 const getSchema = z.object({
@@ -23,65 +25,107 @@ function isMissingTableError(error: unknown): boolean {
   )
 }
 
+async function resolveLookupSongIds(songId: string): Promise<string[]> {
+  try {
+    const supabase = await createSafeServerClient()
+    const song = await songRepo(supabase).getSong(songId)
+    return lyricSyncLookupSongIds(songId, song?.clonedFromId)
+  } catch {
+    return [songId]
+  }
+}
+
+function readReadyFileCacheForSongIds(
+  songIds: string[],
+  youtubeVideoId: string
+): SongLyricSync | null {
+  for (const id of songIds) {
+    const exact = readLyricSyncFileCache(id, youtubeVideoId)
+    if (exact?.status === 'ready') return exact
+  }
+  return null
+}
+
+async function readAnyReadyFileCacheForSongIds(
+  songIds: string[]
+): Promise<SongLyricSync | null> {
+  const { readdirSync, existsSync } = await import('node:fs')
+  const { join } = await import('node:path')
+  const dir = join(process.cwd(), 'experiments/lyric-sync/cache')
+  if (!existsSync(dir)) return null
+
+  for (const songId of songIds) {
+    for (const name of readdirSync(dir)) {
+      if (!name.startsWith(`${songId}_`) || !name.endsWith('.json')) continue
+      const videoId = name.slice(songId.length + 1, -5)
+      const cached = readLyricSyncFileCache(songId, videoId)
+      if (cached?.status === 'ready') return cached
+    }
+  }
+  return null
+}
+
 export async function getLyricSyncAction(input: unknown): Promise<{
   sync: SongLyricSync | null
 }> {
   const { songId, youtubeVideoId } = getSchema.parse(input)
+  const lookupIds = await resolveLookupSongIds(songId)
 
-  const fileExact = readLyricSyncFileCache(songId, youtubeVideoId)
-  if (fileExact?.status === 'ready') return { sync: fileExact }
+  const fileExact = readReadyFileCacheForSongIds(lookupIds, youtubeVideoId)
+  if (fileExact) return { sync: fileExact }
 
   try {
     const supabase = await createSafeServerClient()
     const repo = lyricSyncRepo(supabase)
-    const sync = await repo.getBySongAndVideo(songId, youtubeVideoId)
-    if (sync) return { sync }
 
-    // Fallback: any ready sync for this song (video search may differ slightly)
-    const bySong = await repo.getReadyBySongId(songId)
-    if (bySong) return { sync: bySong }
+    for (const id of lookupIds) {
+      const sync = await repo.getBySongAndVideo(id, youtubeVideoId)
+      if (sync) return { sync }
+    }
+
+    for (const id of lookupIds) {
+      const bySong = await repo.getReadyBySongId(id)
+      if (bySong) return { sync: bySong }
+    }
   } catch (error) {
     if (!isMissingTableError(error)) throw error
   }
 
-  // File-cache fallback: any ready cache for this songId
-  const { readdirSync, existsSync } = await import('node:fs')
-  const { join } = await import('node:path')
-  const dir = join(process.cwd(), 'experiments/lyric-sync/cache')
-  if (existsSync(dir)) {
-    for (const name of readdirSync(dir)) {
-      if (!name.startsWith(`${songId}_`) || !name.endsWith('.json')) continue
-      const cached = readLyricSyncFileCache(songId, name.slice(songId.length + 1, -5))
-      if (cached?.status === 'ready') return { sync: cached }
-    }
-  }
+  const anyFile = await readAnyReadyFileCacheForSongIds(lookupIds)
+  if (anyFile) return { sync: anyFile }
 
-  return { sync: fileExact }
+  return { sync: readLyricSyncFileCache(songId, youtubeVideoId) }
 }
 
 /**
  * Ensure sync exists for Practice. MVP: returns DB or file-cache row.
  * Precompute via scripts/lyrics-sync/precompute-playlist.ts (writes file cache + DB when migrated).
+ * Reads follow clonedFromId so personal clones reuse catalog sync.
  */
 export async function ensureLyricSyncAction(input: unknown): Promise<{
   sync: SongLyricSync | null
   started: boolean
 }> {
   const { songId, youtubeVideoId } = getSchema.parse(input)
+  const lookupIds = await resolveLookupSongIds(songId)
 
-  const cached = readLyricSyncFileCache(songId, youtubeVideoId)
-  if (cached?.status === 'ready') {
-    return { sync: cached, started: false }
+  const cachedReady = readReadyFileCacheForSongIds(lookupIds, youtubeVideoId)
+  if (cachedReady) {
+    return { sync: cachedReady, started: false }
   }
 
   try {
     const supabase = await createSafeServerClient()
     const repo = lyricSyncRepo(supabase)
-    const existing = await repo.getBySongAndVideo(songId, youtubeVideoId)
-    if (existing?.status === 'ready' || existing?.status === 'pending') {
-      return { sync: existing, started: false }
+
+    for (const id of lookupIds) {
+      const existing = await repo.getBySongAndVideo(id, youtubeVideoId)
+      if (existing?.status === 'ready' || existing?.status === 'pending') {
+        return { sync: existing, started: false }
+      }
     }
 
+    // Only enqueue pending on the personal song id (or catalog if viewing catalog directly)
     if (process.env.LYRIC_SYNC_WORKER === '1' && process.env.NODE_ENV === 'development') {
       const pending = await repo.upsertPending(songId, youtubeVideoId)
       writeLyricSyncFileCache({
@@ -93,9 +137,15 @@ export async function ensureLyricSyncAction(input: unknown): Promise<{
       return { sync: pending, started: true }
     }
 
-    return { sync: existing ?? cached, started: false }
+    const fallback =
+      (await repo.getBySongAndVideo(songId, youtubeVideoId)) ??
+      readLyricSyncFileCache(songId, youtubeVideoId)
+    return { sync: fallback, started: false }
   } catch (error) {
     if (!isMissingTableError(error)) throw error
-    return { sync: cached, started: false }
+    return {
+      sync: readLyricSyncFileCache(songId, youtubeVideoId),
+      started: false,
+    }
   }
 }

@@ -69,6 +69,23 @@ export const createSongSchema = z.object({
   clonedFromId: z.string().uuid().optional().nullable(),
 })
 
+/** Payload from search UI to resolve-or-create catalog then clone. */
+export const searchResultAddSchema = z.object({
+  url: z.string().url(),
+  title: z.string().optional(),
+  author: z.string().optional(),
+  source: z.string().optional(),
+  tabId: z.union([z.string(), z.number().transform(String)]).optional().nullable(),
+  reviews: z.number().optional(),
+  version: z.number().int().optional(),
+  rating: z.number().optional(),
+  difficulty: z.string().optional(),
+  versionDescription: z.string().optional(),
+  artistUrl: z.string().optional(),
+  artistImageUrl: z.string().optional(),
+  songImageUrl: z.string().optional(),
+})
+
 export const requestChordSchema = z.object({
   chordName: z.string().min(1, 'Chord name is required').max(32),
   instrument: z.enum(['guitar', 'piano']),

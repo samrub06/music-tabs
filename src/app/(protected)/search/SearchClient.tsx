@@ -7,12 +7,10 @@ import { MagnifyingGlassIcon, XMarkIcon, PlusIcon, SparklesIcon } from '@heroico
 import { PlayIcon } from '@heroicons/react/24/solid'
 import { collectAiSearchResults, fetchAiSongSearchBatches } from '@/lib/utils/aiSearchResults'
 import type { AiExcludeSong } from '@/lib/services/aiSearchService'
-import { searchSongsByStyleAction } from './actions'
+import { addSongFromSearchAction, searchSongsByStyleAction } from './actions'
 import { useLanguage } from '@/context/LanguageContext'
-import { addSongAction } from '@/app/(protected)/dashboard/actions'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
-import type { NewSongData } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -391,33 +389,6 @@ export default function SearchClient({
     setAddingSongId(null)
   }
 
-  // Build NewSongData from scraped data
-  const buildNewSongDataFromScrape = (
-    scraped: any,
-    result?: SearchResult
-  ): NewSongData => {
-    return {
-      title: (scraped.title || result?.title || t('songs.unknownTitle')).trim(),
-      author: (scraped.author || result?.author || t('songs.unknownArtist')).trim(),
-      content: scraped.content || '',
-      reviews: (result?.reviews ?? scraped.reviews) || 0,
-      capo: scraped.capo,
-      key: scraped.key,
-      rating: scraped.rating || result?.rating,
-      difficulty: scraped.difficulty || result?.difficulty,
-      version: scraped.version || result?.version,
-      versionDescription: scraped.versionDescription || result?.versionDescription,
-      artistUrl: scraped.artistUrl || result?.artistUrl,
-      artistImageUrl: scraped.artistImageUrl || result?.artistImageUrl,
-      songImageUrl: scraped.songImageUrl || result?.songImageUrl,
-      sourceUrl: scraped.url || result?.url || result?.sourceUrl,
-      sourceSite: scraped.source || result?.source,
-      tabId: scraped.tabId || result?.tabId,
-      genre: scraped.genre || scraped.songGenre,
-      bpm: scraped.bpm
-    } as NewSongData
-  }
-
   // Handle view song (without adding)
   const handleViewSong = async (result: SearchResult) => {
     setViewingSongId(result.url)
@@ -437,7 +408,7 @@ export default function SearchClient({
     }
   }
 
-  // Handle add song
+  // Handle add song — resolve catalog by source identity (no rescrape on hit), then clone
   const handleAddSong = async (result: SearchResult, index: number) => {
     if (!userId) {
       router.push('/login?next=/')
@@ -446,46 +417,35 @@ export default function SearchClient({
 
     setAddingSongId(result.url)
     setMessage(null)
-    
+
     try {
-      // Fetch song from URL
-      const searchResultParam = encodeURIComponent(JSON.stringify(result))
-      const response = await fetch(`/api/songs/search?url=${encodeURIComponent(result.url)}&searchResult=${searchResultParam}`)
-      const data = await response.json()
+      const { song: newSong } = await addSongFromSearchAction({
+        url: result.url,
+        title: result.title,
+        author: result.author,
+        source: result.source,
+        tabId: result.tabId,
+        reviews: result.reviews,
+        version: result.version,
+        rating: result.rating,
+        difficulty: result.difficulty,
+        versionDescription: result.versionDescription,
+        artistUrl: result.artistUrl,
+        artistImageUrl: result.artistImageUrl,
+        songImageUrl: result.songImageUrl,
+      })
 
-      if (response.ok && data.song) {
-        // Build payload and add song
-        const payload = buildNewSongDataFromScrape(data.song, result)
-        
-        if (!payload.title.trim() || !payload.content.trim()) {
-          setMessage({ type: 'error', text: t('search.invalidData') })
-          return
-        }
+      setMessage({ type: 'success', text: t('search.addSuccess') })
 
-        const normalizedPayload: NewSongData = {
-          ...payload,
-          title: payload.title.trim(),
-          author: (payload.author || '').trim(),
-          content: payload.content.trim(),
-        }
+      setExistingSongs((prev) => {
+        const updated = new Map(prev)
+        updated.set(index, newSong.id)
+        return updated
+      })
 
-        const newSong = await addSongAction(normalizedPayload)
-        setMessage({ type: 'success', text: t('search.addSuccess') })
-        
-        // Update existing songs map
-        setExistingSongs(prev => {
-          const updated = new Map(prev)
-          updated.set(index, newSong.id)
-          return updated
-        })
-        
-        // Refresh after a short delay
-        setTimeout(() => {
-          router.refresh()
-        }, 1000)
-      } else {
-        setMessage({ type: 'error', text: data.error || t('search.addError') })
-      }
+      setTimeout(() => {
+        router.refresh()
+      }, 1000)
     } catch (error) {
       console.error('Error adding song:', error)
       const errorMessage = error instanceof Error ? error.message : t('search.addError')
