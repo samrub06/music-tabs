@@ -31,7 +31,7 @@ export function FilterChip({
       title={title}
       aria-label={ariaLabel}
       className={cn(
-        'relative inline-flex shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full font-medium whitespace-nowrap',
+        'relative inline-flex min-w-0 shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full font-medium',
         'transition-[color,background-color,transform,box-shadow] duration-300 ease-out',
         compact
           ? 'min-h-[28px] px-2 py-0.5 text-xs'
@@ -49,7 +49,7 @@ export function FilterChip({
           className="chip-snake-border pointer-events-none absolute inset-0 rounded-full"
         />
       ) : null}
-      <span className="relative z-10 inline-flex items-center justify-center gap-1.5">
+      <span className="relative z-10 inline-flex min-w-0 max-w-full items-center justify-center gap-1.5 overflow-hidden">
         {children}
       </span>
     </button>

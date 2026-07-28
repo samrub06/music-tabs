@@ -270,9 +270,10 @@ function FolderChip({
       active={isActive}
       onClick={onClick}
       compact={compact}
+      title={label}
       className={className}
     >
-      <span className="min-w-0 truncate">{label}</span>
+      <span className="min-w-0 truncate whitespace-nowrap">{label}</span>
       {count !== undefined && (
         <span
           className={cn(
@@ -485,7 +486,11 @@ export function SongsFolderChips({
             isActive={item.isActive}
             onClick={item.onSelect}
             compact={compact}
-            className={compact ? 'shrink-0 max-w-[7rem]' : 'flex-1 basis-0'}
+            className={
+              compact
+                ? 'max-w-[6.5rem] shrink'
+                : 'min-w-0 flex-1 basis-0 shrink'
+            }
           />
         ))}
         <FolderChipOverflowMenu items={overflow} isActive={overflowActive} compact={compact} />
