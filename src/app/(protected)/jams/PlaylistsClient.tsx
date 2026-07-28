@@ -138,7 +138,7 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
   useHideHeaderOnScroll(scrollContainerRef, true);
 
   const [localSearchValue, setLocalSearchValue] = useState('');
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
@@ -160,6 +160,11 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
     const timer = setTimeout(() => setSearchQuery(localSearchValue), 300);
     return () => clearTimeout(timer);
   }, [localSearchValue]);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    window.requestAnimationFrame(() => searchInputRef.current?.focus());
+  }, [isSearchOpen]);
 
   const filteredPlaylists = useMemo(() => {
     if (!searchQuery.trim()) return playlists;
@@ -197,9 +202,21 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
     });
   }, [filteredPlaylists, sortField, sortDirection]);
 
+  const openSearch = () => {
+    setIsSearchOpen(true);
+  };
+
+  const closeSearch = () => {
+    setIsSearchOpen(false);
+    setLocalSearchValue('');
+    setSearchQuery('');
+    searchInputRef.current?.blur();
+  };
+
   const handleClearSearch = () => {
     setLocalSearchValue('');
     setSearchQuery('');
+    searchInputRef.current?.focus();
   };
 
   const handleApplyFilters = () => setIsFilterSheetOpen(false);
@@ -239,15 +256,10 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background p-4 sm:p-6">
-      <div className={cn('relative shrink-0 pb-4', isInputFocused && 'z-30')}>
-        <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
-          <div
-            className={cn(
-              'relative min-w-0 transition-[flex] duration-200',
-              isInputFocused ? 'flex-1 max-lg:flex-[1_1_100%]' : 'flex-1'
-            )}
-          >
-            <div className="relative">
+      <div className={cn('relative shrink-0 pb-4', isSearchOpen && 'z-30')}>
+        <div className="flex items-stretch gap-2 transition-[gap] duration-200">
+          {isSearchOpen ? (
+            <div className="relative min-w-0 flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                 <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
               </div>
@@ -256,59 +268,74 @@ export default function PlaylistsClient({ playlists }: PlaylistsClientProps) {
                 type="text"
                 value={localSearchValue}
                 onChange={(e) => setLocalSearchValue(e.target.value)}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
+                onBlur={() => {
+                  if (!localSearchValue.trim()) {
+                    window.setTimeout(() => {
+                      if (!searchInputRef.current || document.activeElement !== searchInputRef.current) {
+                        closeSearch();
+                      }
+                    }, 150);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') closeSearch();
+                }}
                 placeholder={t('playlistsPage.searchPlaceholder')}
-                className="block w-full rounded-xl border border-border bg-card py-3 pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4"
+                className="block min-h-[44px] w-full rounded-xl border border-border bg-card py-3 pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4"
               />
-              {localSearchValue && (
+              <button
+                type="button"
+                onClick={localSearchValue ? handleClearSearch : closeSearch}
+                className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-4 text-muted-foreground hover:text-foreground"
+                aria-label={localSearchValue ? t('common.clear') : t('common.close')}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={openSearch}
+                className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
+                aria-label={t('common.search')}
+              >
+                <MagnifyingGlassIcon className="h-5 w-5" />
+              </button>
+              <div className="ml-auto flex items-stretch gap-2">
                 <button
                   type="button"
-                  onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-4 text-muted-foreground hover:text-foreground"
-                  aria-label={t('common.clear')}
+                  onClick={() => setIsFilterSheetOpen(true)}
+                  className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
+                  aria-label={t('playlistsPage.filters')}
                 >
-                  <XMarkIcon className="h-5 w-5" />
+                  <AdjustmentsHorizontalIcon className="h-5 w-5" />
                 </button>
-              )}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsFilterSheetOpen(true)}
-            className={cn(
-              'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
-              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
-            )}
-            aria-label={t('playlistsPage.filters')}
-          >
-            <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsCreateSheetOpen(true)}
-            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90"
-            aria-label={t('playlistsPage.newPlaylist')}
-          >
-            <PlusIcon className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setView((current) => (current === 'grid' ? 'list' : 'grid'))}
-            className={cn(
-              'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
-              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
-            )}
-            title={view === 'grid' ? t('playlistsPage.listView') : t('playlistsPage.gridView')}
-            aria-label={view === 'grid' ? t('playlistsPage.listView') : t('playlistsPage.gridView')}
-            aria-pressed={view === 'list'}
-          >
-            {view === 'grid' ? (
-              <ListBulletIcon className="h-5 w-5" />
-            ) : (
-              <Squares2X2Icon className="h-5 w-5" />
-            )}
-          </button>
+                <button
+                  type="button"
+                  onClick={() => setIsCreateSheetOpen(true)}
+                  className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90"
+                  aria-label={t('playlistsPage.newPlaylist')}
+                >
+                  <PlusIcon className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView((current) => (current === 'grid' ? 'list' : 'grid'))}
+                  className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
+                  title={view === 'grid' ? t('playlistsPage.listView') : t('playlistsPage.gridView')}
+                  aria-label={view === 'grid' ? t('playlistsPage.listView') : t('playlistsPage.gridView')}
+                  aria-pressed={view === 'list'}
+                >
+                  {view === 'grid' ? (
+                    <ListBulletIcon className="h-5 w-5" />
+                  ) : (
+                    <Squares2X2Icon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
