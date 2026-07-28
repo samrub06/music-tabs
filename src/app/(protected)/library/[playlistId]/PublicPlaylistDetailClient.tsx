@@ -144,6 +144,7 @@ export function PublicPlaylistSearchProvider({
       snackbarMessage,
       snackbarType,
       showSnackbar,
+      setShowSnackbar,
     ]
   )
 
