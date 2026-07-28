@@ -5,6 +5,7 @@ import SongGallery from '@/components/SongGallery'
 import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
+import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import { cn } from '@/lib/utils'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
 import { usePageHeader } from '@/context/PageHeaderContext'
@@ -46,6 +47,7 @@ export default function FolderSongsClient({
 }: FolderSongsClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
+  const isLandscapeMobile = useLandscapeMobile()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -273,9 +275,25 @@ export default function FolderSongsClient({
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background p-4 sm:p-6">
-        <div className={cn('relative shrink-0 pb-4', isInputFocused && 'z-30')}>
-          <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
+      <div
+        className={cn(
+          'flex min-h-0 flex-1 flex-col overflow-hidden bg-background',
+          isLandscapeMobile ? 'p-1.5' : 'p-4 sm:p-6'
+        )}
+      >
+        <div
+          className={cn(
+            'relative shrink-0',
+            isLandscapeMobile ? 'pb-1.5' : 'pb-4',
+            isInputFocused && 'z-30'
+          )}
+        >
+          <div
+            className={cn(
+              'flex items-stretch max-lg:transition-[gap] max-lg:duration-200',
+              isLandscapeMobile ? 'gap-1.5' : 'gap-2'
+            )}
+          >
             <div
               className={cn(
                 'relative min-w-0 transition-[flex] duration-200',
@@ -283,8 +301,18 @@ export default function FolderSongsClient({
               )}
             >
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-muted-foreground" />
+                <div
+                  className={cn(
+                    'pointer-events-none absolute inset-y-0 left-0 flex items-center',
+                    isLandscapeMobile ? 'pl-2.5' : 'pl-4'
+                  )}
+                >
+                  <MagnifyingGlassIcon
+                    className={cn(
+                      'text-muted-foreground',
+                      isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
+                    )}
+                  />
                 </div>
                 <input
                   ref={searchInputRef}
@@ -294,16 +322,26 @@ export default function FolderSongsClient({
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
                   placeholder={t('songs.search')}
-                  className="block w-full rounded-xl border border-border bg-card py-3 pl-12 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:py-4"
+                  className={cn(
+                    'block w-full border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30',
+                    isLandscapeMobile
+                      ? 'h-8 rounded-lg py-1 pl-8 pr-8 text-sm'
+                      : 'rounded-xl py-3 pl-12 pr-12 text-base sm:py-4'
+                  )}
                 />
                 {localSearchValue && (
                   <button
                     type="button"
                     onClick={handleClearSearch}
-                    className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-4 text-muted-foreground hover:text-foreground"
+                    className={cn(
+                      'absolute inset-y-0 right-0 flex items-center justify-center text-muted-foreground hover:text-foreground',
+                      isLandscapeMobile
+                        ? 'min-h-8 min-w-8 pr-1.5'
+                        : 'min-h-[44px] min-w-[44px] pr-4'
+                    )}
                     aria-label={t('common.clear')}
                   >
-                    <XMarkIcon className="h-5 w-5" />
+                    <XMarkIcon className={cn(isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')} />
                   </button>
                 )}
               </div>
@@ -312,42 +350,72 @@ export default function FolderSongsClient({
               type="button"
               onClick={openFilterSheet}
               className={cn(
-                'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                'relative flex shrink-0 items-center justify-center border border-border bg-background text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                isLandscapeMobile
+                  ? 'h-8 w-8 rounded-lg p-0'
+                  : 'min-h-[44px] min-w-[44px] rounded-xl p-3',
                 hasActiveFilters && 'border-primary/40 text-primary',
-                isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+                isInputFocused &&
+                  'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
               )}
               aria-label={t('songs.advancedFilters')}
             >
-              <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
+              <AdjustmentsHorizontalIcon
+                className={cn(
+                  'max-lg:shrink-0',
+                  isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
+                )}
+              />
               {hasActiveFilters && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
+                <span
+                  className={cn(
+                    'absolute rounded-full bg-primary',
+                    isLandscapeMobile
+                      ? 'right-1 top-1 h-1.5 w-1.5'
+                      : 'right-1.5 top-1.5 h-2 w-2'
+                  )}
+                />
               )}
             </button>
-            <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800">
+            <div
+              className={cn(
+                'flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800',
+                (isInputFocused || isLandscapeMobile) &&
+                  'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0'
+              )}
+            >
             <button
               type="button"
-              className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4 ${
+              className={cn(
+                'flex items-center justify-center gap-1.5 rounded-full font-medium transition-all duration-200',
+                isLandscapeMobile
+                  ? 'h-7 px-2 text-xs'
+                  : 'min-h-[44px] px-3 py-2 text-sm sm:px-4',
                 view === 'gallery'
                   ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+              )}
               onClick={() => applyQuery({ view: 'gallery', page: 1 })}
               title={t('songs.galleryView')}
             >
-              <Squares2X2Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Squares2X2Icon className={cn(isLandscapeMobile ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5')} />
               <span className="hidden sm:inline">{t('songs.galleryView')}</span>
             </button>
             <button
               type="button"
-              className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200 sm:px-4 ${
+              className={cn(
+                'flex items-center justify-center gap-1.5 rounded-full font-medium transition-all duration-200',
+                isLandscapeMobile
+                  ? 'h-7 px-2 text-xs'
+                  : 'min-h-[44px] px-3 py-2 text-sm sm:px-4',
                 view === 'table'
                   ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
-              }`}
+              )}
               onClick={() => applyQuery({ view: 'table', page: 1 })}
               title={t('songs.tableView')}
             >
-              <TableCellsIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <TableCellsIcon className={cn(isLandscapeMobile ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5')} />
               <span className="hidden sm:inline">{t('songs.tableView')}</span>
             </button>
           </div>
@@ -357,10 +425,15 @@ export default function FolderSongsClient({
         <div
           ref={scrollContainerRef}
           data-main-scroll
-          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className={cn(
+            'relative z-0 min-h-0 flex-1 overscroll-contain',
+            isLandscapeMobile
+              ? 'flex flex-col overflow-hidden'
+              : 'overflow-y-auto'
+          )}
         >
         {sortedSongs && sortedSongs.length > 0 ? (
-          view === 'table' ? (
+          view === 'table' && !isLandscapeMobile ? (
             <>
               <SongTable
                 songs={sortedSongs}
@@ -382,8 +455,10 @@ export default function FolderSongsClient({
             </>
           ) : (
             <>
-              <SongGallery songs={sortedSongs} variant="folder" hasUser />
-              <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              <SongGallery songs={sortedSongs} variant="folder" hasUser diskRackOnLandscape />
+              {!isLandscapeMobile ? (
+                <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              ) : null}
             </>
           )
         ) : (

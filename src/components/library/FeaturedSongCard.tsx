@@ -46,9 +46,14 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
             <div className="flex items-center gap-3">
               <Link
                 href={`/song/${song.id}`}
-                className="flex items-center justify-center w-14 h-14 bg-primary hover:bg-primary/90 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all duration-200 group"
+                className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/45 bg-zinc-200/55 text-foreground shadow-[0_14px_14px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-white/40 backdrop-blur-xl backdrop-saturate-150 transition-all duration-200 hover:scale-110 hover:bg-zinc-200/70 active:scale-95"
+                aria-label={t('search.viewSong')}
               >
-                <PlayIcon className="h-6 w-6 text-primary-foreground ml-1 group-hover:scale-110 transition-transform" />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-2 top-0 h-1/2 rounded-b-full bg-gradient-to-b from-white/50 to-transparent"
+                />
+                <PlayIcon className="relative z-[1] ml-0.5 h-6 w-6 transition-transform group-hover:scale-110" />
               </Link>
               {onAddClick && (
                 <button
