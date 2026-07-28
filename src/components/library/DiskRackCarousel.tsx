@@ -214,12 +214,17 @@ export function DiskRackCarousel({
   const active = items[clamp(activeIndex, 0, items.length - 1)]
 
   return (
-    <div className={cn('flex h-full min-h-0 w-full flex-1 flex-col', className)}>
-      {/* Rack fills all leftover height; cards stay optically centered */}
-      <div className="relative flex min-h-0 flex-1 flex-col justify-center overflow-x-clip overflow-y-visible py-0">
+    <div
+      className={cn(
+        'relative flex h-full min-h-0 w-full flex-1 flex-col bg-transparent',
+        className
+      )}
+    >
+      {/* z-20 + pb/-mb: shadow stays visible over the dock (overflow-x-clip also clips Y) */}
+      <div className="pointer-events-none relative z-20 -mb-8 flex min-h-0 flex-1 flex-col justify-center overflow-x-clip bg-transparent pb-8">
         <div
           ref={scrollerRef}
-          className="flex h-full min-h-0 w-full snap-x snap-mandatory items-center overflow-x-auto overflow-y-visible scrollbar-hide"
+          className="pointer-events-auto flex h-full min-h-0 w-full snap-x snap-mandatory items-center overflow-x-auto overflow-y-visible bg-transparent scrollbar-hide"
           style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -309,7 +314,7 @@ export function DiskRackCarousel({
       {renderFooter ? (
         renderFooter(active)
       ) : (
-        <div className="shrink-0 px-4 pb-1 pt-2 text-center">
+        <div className="relative z-10 shrink-0 bg-transparent px-4 pb-1 pt-2 text-center">
           <p className="truncate text-lg font-semibold leading-tight tracking-tight text-foreground sm:text-xl">
             {active?.title}
           </p>

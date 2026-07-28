@@ -96,8 +96,9 @@ export function PlaylistCarouselDock({
   return (
     <div
       className={cn(
-        'relative shrink-0 px-3 pb-0 pt-0.5',
-        expanded ? 'z-[90]' : 'z-30'
+        'relative shrink-0 bg-transparent px-3 pb-0 pt-0.5',
+        // Below the rack (z-20) so carousel shadows can fall over this row
+        expanded ? 'z-[90]' : 'z-10'
       )}
     >
       {expanded ? (
