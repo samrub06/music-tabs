@@ -172,9 +172,41 @@ export async function updateSongAction(id: string, updates: SongEditData) {
 
 export async function deleteSongAction(id: string) {
   const supabase = await createActionServerClient()
-  await assertCanDeleteSong(supabase, id)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
+
   const repo = songRepo(supabase)
-  await repo.deleteSong(id)
+  const song = await repo.getSong(id)
+  if (!song) throw new Error('Song not found')
+
+  const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+  const { classifyLibraryMembership } = await import('@/lib/utils/libraryMembership')
+  const lib = userLibraryRepo(supabase)
+
+  let hasLibraryLink = false
+  try {
+    hasLibraryLink = Boolean(await lib.getByUserAndSong(user.id, id))
+  } catch {
+    hasLibraryLink = false
+  }
+
+  const kind = classifyLibraryMembership({
+    songUserId: song.userId,
+    currentUserId: user.id,
+    hasLibraryLink,
+  })
+
+  if (kind === 'personal') {
+    await assertCanDeleteSong(supabase, id)
+    await repo.deleteSong(id)
+  } else if (kind === 'library_link') {
+    await lib.remove(user.id, id)
+  } else {
+    throw new Error('You do not have permission to delete this song')
+  }
+
   revalidatePath('/songs')
   revalidatePath('/')
   revalidatePath(`/song/${id}`)

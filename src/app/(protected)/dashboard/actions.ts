@@ -9,7 +9,7 @@ import { folderRepo } from '@/lib/services/folderRepo'
 import { playlistService } from '@/lib/services/playlistService'
 import { gamificationRepo } from '@/lib/services/gamificationRepo'
 import { revalidatePath } from 'next/cache'
-import type { NewSongData, SongEditData, Folder } from '@/types'
+import type { NewSongData, SongEditData, Folder, Song } from '@/types'
 import type { PlaylistResult } from '@/lib/services/playlistGeneratorService'
 import { createActionServerClient } from '@/lib/supabase/server'
 import { assertCanDeleteSong, assertCanEditSong } from '@/lib/services/songPermissions'
@@ -25,6 +25,8 @@ import {
   selectableSongIdsSchema,
 } from '@/lib/validation/schemas'
 import { resolvePlaylistImageUrl } from '@/utils/playlistCover'
+import { userLibraryRepo } from '@/lib/services/userLibraryRepo'
+import { classifyLibraryMembership } from '@/lib/utils/libraryMembership'
 
 export async function addSongAction(payload: NewSongData) {
   const validatedPayload = createSongSchema.parse(payload)
@@ -175,25 +177,59 @@ export async function updateSongAction(id: string, updates: SongEditData) {
 }
 
 export async function updateSongFolderAction(id: string, folderId?: string) {
-  // Simple ID validation could be added here, but folderId is optional/nullable
   const supabase = await createActionServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
+
   const repo = songRepo(supabase)
-  await repo.updateSongFolder(id, folderId)
+  const song = await repo.getSong(id)
+  if (!song) throw new Error('Song not found')
+
+  const lib = userLibraryRepo(supabase)
+  let hasLibraryLink = false
+  try {
+    hasLibraryLink = Boolean(await lib.getByUserAndSong(user.id, id))
+  } catch {
+    hasLibraryLink = false
+  }
+
+  const kind = classifyLibraryMembership({
+    songUserId: song.userId,
+    currentUserId: user.id,
+    hasLibraryLink,
+  })
+
+  let result: Song
+  if (kind === 'personal') {
+    result = await repo.updateSongFolder(id, folderId)
+  } else if (kind === 'library_link') {
+    const entry = await lib.getByUserAndSong(user.id, id)
+    if (!entry) throw new Error('Song not in library')
+    const updated = await lib.updateFolder(entry.id, folderId ?? null)
+    result = { ...song, folderId: updated.folderId }
+  } else {
+    throw new Error('Song not in library')
+  }
+
   revalidatePath('/songs')
   revalidatePath('/')
   revalidatePath(`/song/${id}`)
+  return result
 }
 
 export async function getSelectableSongIdsAction(payload: unknown): Promise<string[]> {
   const filters = selectableSongIdsSchema.parse(payload)
+  const supabase = await createActionServerClient()
 
   if (filters.scopeFolderId) {
-    const supabase = await createActionServerClient()
-    const repo = songRepo(supabase)
-    return repo.getAllSongIdsByFolder(filters.scopeFolderId, filters.q)
+    return songService.getAllSongIds(supabase, {
+      q: filters.q,
+      folderId: filters.scopeFolderId,
+    })
   }
 
-  const supabase = await createActionServerClient()
   return songService.getAllSongIds(supabase, {
     q: filters.q,
     tab: filters.tab,
@@ -205,28 +241,98 @@ export async function getSelectableSongIdsAction(payload: unknown): Promise<stri
 }
 
 export async function deleteSongsAction(ids: string[]) {
-  // Simple validation for array of strings
   if (!Array.isArray(ids)) throw new Error('Invalid input')
   const supabase = await createActionServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
+
+  const uniqueIds = Array.from(new Set(ids.filter((id) => typeof id === 'string')))
+  if (uniqueIds.length === 0) return
+
   const repo = songRepo(supabase)
-  await repo.deleteSongs(ids)
+  const { data: rows, error } = await (supabase.from('songs') as any)
+    .select('id, user_id')
+    .in('id', uniqueIds)
+  if (error) throw error
+
+  const ownedIds = new Set<string>()
+  for (const row of (rows as Array<{ id: string; user_id: string | null }>) || []) {
+    if (row.user_id === user.id) ownedIds.add(row.id)
+  }
+
+  const personalIds = uniqueIds.filter((id) => ownedIds.has(id))
+  const linkIds = uniqueIds.filter((id) => !ownedIds.has(id))
+
+  if (personalIds.length > 0) {
+    await repo.deleteSongs(personalIds)
+  }
+  if (linkIds.length > 0) {
+    try {
+      await userLibraryRepo(supabase).removeBySongIds(user.id, linkIds)
+    } catch (unlinkError) {
+      console.warn('user_library unlink failed:', unlinkError)
+      throw unlinkError
+    }
+  }
+
   revalidatePath('/songs')
   revalidatePath('/')
 }
 
 export async function deleteAllSongsAction() {
   const supabase = await createActionServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
+
   const repo = songRepo(supabase)
   await repo.deleteAllSongs()
+  try {
+    await userLibraryRepo(supabase).removeAllForUser(user.id)
+  } catch (error) {
+    console.warn('user_library removeAllForUser failed:', error)
+  }
   revalidatePath('/songs')
   revalidatePath('/')
 }
 
 export async function deleteSongAction(id: string) {
   const supabase = await createActionServerClient()
-  await assertCanDeleteSong(supabase, id)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
+
   const repo = songRepo(supabase)
-  await repo.deleteSong(id)
+  const song = await repo.getSong(id)
+  if (!song) throw new Error('Song not found')
+
+  const lib = userLibraryRepo(supabase)
+  let hasLibraryLink = false
+  try {
+    hasLibraryLink = Boolean(await lib.getByUserAndSong(user.id, id))
+  } catch {
+    hasLibraryLink = false
+  }
+
+  const kind = classifyLibraryMembership({
+    songUserId: song.userId,
+    currentUserId: user.id,
+    hasLibraryLink,
+  })
+
+  if (kind === 'personal') {
+    await assertCanDeleteSong(supabase, id)
+    await repo.deleteSong(id)
+  } else if (kind === 'library_link') {
+    await lib.remove(user.id, id)
+  } else {
+    throw new Error('You do not have permission to delete this song')
+  }
+
   revalidatePath('/songs')
   revalidatePath('/')
 }

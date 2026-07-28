@@ -466,6 +466,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         updated_at: new Date().toISOString()
       } as any)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -478,7 +479,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
   /**
    * Bulk-assign songs to a folder. Chunks IDs to stay within PostgREST URL/body limits.
-   * Only updates rows owned by the current user (RLS + explicit user_id filter).
+   * Updates personal rows (user_id = me) and matching user_library links.
    */
   async assignSongsToFolder(
     folderId: string,
@@ -496,6 +497,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const uniqueIds = Array.from(new Set(songIds))
     const updatedAt = new Date().toISOString()
     let updated = 0
+    const personallyUpdated = new Set<string>()
 
     for (let i = 0; i < uniqueIds.length; i += chunkSize) {
       const chunk = uniqueIds.slice(i, i + chunkSize)
@@ -511,7 +513,26 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       if (error) {
         throw error
       }
-      updated += Array.isArray(data) ? data.length : 0
+      for (const row of (data as Array<{ id: string }>) || []) {
+        personallyUpdated.add(row.id)
+        updated += 1
+      }
+    }
+
+    const linkIds = uniqueIds.filter((id) => !personallyUpdated.has(id))
+    if (linkIds.length > 0) {
+      try {
+        const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+        updated += await userLibraryRepo(client).assignFolderForSongIds(
+          user.id,
+          folderId,
+          linkIds,
+          chunkSize
+        )
+      } catch (error) {
+        // Table may not exist yet — personal updates already applied
+        console.warn('user_library assignFolderForSongIds failed:', error)
+      }
     }
 
     return updated

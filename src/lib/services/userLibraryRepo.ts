@@ -148,6 +148,63 @@ export const userLibraryRepo = (client: SupabaseClient<Database>) => {
       if (error) throw error
     },
 
+    async removeBySongIds(userId: string, songIds: string[]): Promise<number> {
+      const uniqueIds = Array.from(new Set(songIds))
+      if (uniqueIds.length === 0) return 0
+
+      let removed = 0
+      const chunkSize = 100
+      for (let i = 0; i < uniqueIds.length; i += chunkSize) {
+        const chunk = uniqueIds.slice(i, i + chunkSize)
+        const { data, error } = await table()
+          .delete()
+          .eq('user_id', userId)
+          .in('song_id', chunk)
+          .select('id')
+        if (error) throw error
+        removed += Array.isArray(data) ? data.length : 0
+      }
+      return removed
+    },
+
+    async removeAllForUser(userId: string): Promise<void> {
+      const { error } = await table().delete().eq('user_id', userId)
+      if (error) throw error
+    },
+
+    /**
+     * Set folder_id on library links for the given song ids.
+     * Returns how many link rows were updated.
+     */
+    async assignFolderForSongIds(
+      userId: string,
+      folderId: string | null,
+      songIds: string[],
+      chunkSize = 100
+    ): Promise<number> {
+      const uniqueIds = Array.from(new Set(songIds))
+      if (uniqueIds.length === 0) return 0
+
+      const updatedAt = new Date().toISOString()
+      let updated = 0
+
+      for (let i = 0; i < uniqueIds.length; i += chunkSize) {
+        const chunk = uniqueIds.slice(i, i + chunkSize)
+        const { data, error } = await table()
+          .update({
+            folder_id: folderId,
+            updated_at: updatedAt,
+          })
+          .eq('user_id', userId)
+          .in('song_id', chunk)
+          .select('id')
+        if (error) throw error
+        updated += Array.isArray(data) ? data.length : 0
+      }
+
+      return updated
+    },
+
     /**
      * Songs reachable via library links (catalog or forks), excluding song ids
      * already present in `excludeSongIds` (legacy personal copies).
