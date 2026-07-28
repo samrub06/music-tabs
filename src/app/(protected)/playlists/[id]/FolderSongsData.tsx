@@ -1,5 +1,5 @@
 import { createSafeServerClient } from '@/lib/supabase/server'
-import { songRepo } from '@/lib/services/songRepo'
+import { songService } from '@/lib/services/songService'
 import FolderSongsClient from './FolderSongsClient'
 import type { Folder } from '@/types'
 
@@ -23,11 +23,16 @@ export default async function FolderSongsData({
   userId,
 }: FolderSongsDataProps) {
   const supabase = await createSafeServerClient()
-  const { songs, total } = await songRepo(supabase).getSongsByFolder(
-    folder.id,
+  const { songs, total } = await songService.getAllSongs(
+    supabase,
     page,
     limit,
-    q,
+    q || undefined,
+    'created_at',
+    undefined,
+    undefined,
+    undefined,
+    folder.id,
     userId
   )
 

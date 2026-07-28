@@ -852,18 +852,75 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
     const { data, error } = await (client
       .from('songs') as any)
-      .select('id, tab_id, source_url, title, author')
+      .select('id, tab_id, source_url, title, author, cloned_from_id')
       .eq('user_id', user.id)
 
     if (error) throw error
 
-    return (data || []).map((dbSong: any) => ({
+    const personalRows = (data || []) as Array<{
+      id: string
+      tab_id: string | null
+      source_url: string | null
+      title: string
+      author: string | null
+      cloned_from_id: string | null
+    }>
+
+    const mapPersonal = (dbSong: (typeof personalRows)[number]) => ({
       id: dbSong.id,
       tabId: dbSong.tab_id || undefined,
       sourceUrl: dbSong.source_url || undefined,
       title: dbSong.title,
       author: dbSong.author || '',
-    }))
+    })
+
+    let libraryEntries: Array<{ songId: string }> = []
+    try {
+      const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+      libraryEntries = await userLibraryRepo(client).listByUser(user.id)
+    } catch {
+      return personalRows.map(mapPersonal)
+    }
+
+    const { mergeLibrarySongIds } = await import('@/lib/utils/mergeLibrarySongIds')
+    const personalClonedFromIds = new Map<string, string | undefined>()
+    for (const row of personalRows) {
+      personalClonedFromIds.set(row.id, row.cloned_from_id || undefined)
+    }
+
+    const mergedIds = mergeLibrarySongIds({
+      personalSongIds: personalRows.map((r) => r.id),
+      linkedSongIds: libraryEntries.map((e) => e.songId),
+      personalClonedFromIds,
+    })
+
+    const personalById = new Map(personalRows.map((r) => [r.id, r]))
+    const linkedOnlyIds = mergedIds.filter((id) => !personalById.has(id))
+
+    const linkedById = new Map<string, (typeof personalRows)[number]>()
+    const chunkSize = 50
+    for (let i = 0; i < linkedOnlyIds.length; i += chunkSize) {
+      const chunk = linkedOnlyIds.slice(i, i + chunkSize)
+      const { data: linkedData, error: linkedError } = await (client.from('songs') as any)
+        .select('id, tab_id, source_url, title, author, cloned_from_id')
+        .in('id', chunk)
+      if (linkedError) throw linkedError
+      for (const row of (linkedData || []) as typeof personalRows) {
+        linkedById.set(row.id, row)
+      }
+    }
+
+    const out: Pick<Song, 'id' | 'tabId' | 'sourceUrl' | 'title' | 'author'>[] = []
+    for (const id of mergedIds) {
+      const personal = personalById.get(id)
+      if (personal) {
+        out.push(mapPersonal(personal))
+        continue
+      }
+      const linked = linkedById.get(id)
+      if (linked) out.push(mapPersonal(linked))
+    }
+    return out
   },
 
   /** Catalog song IDs the user already has in their library (owned, cloned, or linked). */
@@ -898,7 +955,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     return Array.from(ids)
   },
 
-  // Get songs by folder with pagination and search
+  // Get songs by folder with pagination and search (dual-read via songService).
   async getSongsByFolder(
     folderId: string,
     page: number = 1,
@@ -913,32 +970,19 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       resolvedUserId = user.id
     }
 
-    const from = (page - 1) * limit
-    const to = page * limit - 1
-
-    const applyFilters = (builder: any) => {
-      let filtered = builder.eq('user_id', resolvedUserId).eq('folder_id', folderId)
-      if (q?.trim()) {
-        const query = q.trim()
-        filtered = filtered.or(`title.ilike.%${query}%,author.ilike.%${query}%`)
-      }
-      return filtered
-    }
-
-    const [{ data, error }, { count, error: countError }] = await Promise.all([
-      applyFilters((client.from('songs') as any).select(LIBRARY_LIST_COLUMNS))
-        .order('created_at', { ascending: false })
-        .range(from, to),
-      applyFilters((client.from('songs') as any).select('id', { count: 'planned', head: true })),
-    ])
-
-    if (error) throw error
-    if (countError) throw countError
-
-    return {
-      songs: (data || []).map(mapDbSongToList),
-      total: count ?? 0,
-    }
+    const { songService } = await import('@/lib/services/songService')
+    return songService.getAllSongs(
+      client,
+      page,
+      limit,
+      q,
+      'created_at',
+      undefined,
+      undefined,
+      undefined,
+      folderId,
+      resolvedUserId
+    )
   },
 
   async getAllSongIdsByFolder(folderId: string, q?: string): Promise<string[]> {
@@ -966,30 +1010,113 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       return []
     }
 
+    const playlistColumns =
+      'id, title, author, folder_id, genre, key, first_chord, last_chord, song_image_url, artist_image_url, cloned_from_id'
+
+    const mapPlaylistRow = (dbSong: {
+      id: string
+      title: string
+      author: string | null
+      folder_id: string | null
+      genre: string | null
+      key: string | null
+      first_chord: string | null
+      last_chord: string | null
+      song_image_url: string | null
+      artist_image_url: string | null
+    }): Song =>
+      ({
+        id: dbSong.id,
+        title: dbSong.title,
+        author: dbSong.author || '',
+        folderId: dbSong.folder_id || undefined,
+        genre: dbSong.genre || undefined,
+        songImageUrl: dbSong.song_image_url || undefined,
+        artistImageUrl: dbSong.artist_image_url || undefined,
+        key: dbSong.key || undefined,
+        firstChord: dbSong.first_chord || undefined,
+        lastChord: dbSong.last_chord || undefined,
+        format: 'structured' as const,
+        sections: [],
+        content: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }) as Song
+
     const { data, error } = await (client.from('songs') as any)
-      .select('id, title, author, folder_id, genre, key, first_chord, last_chord, song_image_url, artist_image_url')
+      .select(playlistColumns)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return (data || []).map((dbSong: any) => ({
-      id: dbSong.id,
-      title: dbSong.title,
-      author: dbSong.author || '',
-      folderId: dbSong.folder_id || undefined,
-      genre: dbSong.genre || undefined,
-      songImageUrl: dbSong.song_image_url || undefined,
-      artistImageUrl: dbSong.artist_image_url || undefined,
-      key: dbSong.key || undefined,
-      firstChord: dbSong.first_chord || undefined,
-      lastChord: dbSong.last_chord || undefined,
-      format: 'structured' as const,
-      sections: [],
-      content: '',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as Song))
+    const personalRows = (data || []) as Array<{
+      id: string
+      title: string
+      author: string | null
+      folder_id: string | null
+      genre: string | null
+      key: string | null
+      first_chord: string | null
+      last_chord: string | null
+      song_image_url: string | null
+      artist_image_url: string | null
+      cloned_from_id: string | null
+    }>
+
+    let libraryEntries: Array<{ songId: string; folderId?: string }> = []
+    try {
+      const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+      libraryEntries = await userLibraryRepo(client).listByUser(user.id)
+    } catch {
+      return personalRows.map(mapPlaylistRow)
+    }
+
+    const { mergeLibrarySongIds } = await import('@/lib/utils/mergeLibrarySongIds')
+    const personalClonedFromIds = new Map<string, string | undefined>()
+    for (const row of personalRows) {
+      personalClonedFromIds.set(row.id, row.cloned_from_id || undefined)
+    }
+
+    const mergedIds = mergeLibrarySongIds({
+      personalSongIds: personalRows.map((r) => r.id),
+      linkedSongIds: libraryEntries.map((e) => e.songId),
+      personalClonedFromIds,
+    })
+
+    const personalById = new Map(personalRows.map((r) => [r.id, r]))
+    const folderByLinkedSongId = new Map(
+      libraryEntries.map((e) => [e.songId, e.folderId ?? null] as const)
+    )
+    const linkedOnlyIds = mergedIds.filter((id) => !personalById.has(id))
+
+    const linkedById = new Map<string, (typeof personalRows)[number]>()
+    const chunkSize = 50
+    for (let i = 0; i < linkedOnlyIds.length; i += chunkSize) {
+      const chunk = linkedOnlyIds.slice(i, i + chunkSize)
+      const { data: linkedData, error: linkedError } = await (client.from('songs') as any)
+        .select(playlistColumns)
+        .in('id', chunk)
+      if (linkedError) throw linkedError
+      for (const row of (linkedData || []) as typeof personalRows) {
+        linkedById.set(row.id, {
+          ...row,
+          folder_id: folderByLinkedSongId.get(row.id) ?? null,
+        })
+      }
+    }
+
+    const out: Song[] = []
+    for (const id of mergedIds) {
+      const personal = personalById.get(id)
+      if (personal) {
+        out.push(mapPlaylistRow(personal))
+        continue
+      }
+      const linked = linkedById.get(id)
+      if (linked) out.push(mapPlaylistRow(linked))
+    }
+    return out
   },
 
   // Sidebar: metadata only (no sections/content) for folder counts and recent/popular lists
