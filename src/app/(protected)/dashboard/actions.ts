@@ -487,25 +487,20 @@ export async function cloneSongAction(songId: string, targetFolderId?: string) {
   // Prefer library link for catalog songs (no content clone)
   if (isCatalogSource && !sourceSong.userId) {
     const { addSongToUserLibrary } = await import('@/lib/services/userLibraryRepo')
+    const { song } = await addSongToUserLibrary(supabase, {
+      userId: user.id,
+      songId: sourceSong.id,
+      folderId: targetFolderId,
+    })
+    const gamification = gamificationRepo(supabase)
     try {
-      const { song } = await addSongToUserLibrary(supabase, {
-        userId: user.id,
-        songId: sourceSong.id,
-        folderId: targetFolderId,
-      })
-      const gamification = gamificationRepo(supabase)
-      try {
-        await gamification.awardXp(user.id, 15, 'clone_song', song.id)
-      } catch (error) {
-        console.error('Error awarding XP for library link:', error)
-      }
-      revalidatePath('/songs')
-      revalidatePath('/')
-      return song
+      await gamification.awardXp(user.id, 15, 'clone_song', song.id)
     } catch (error) {
-      // Table may not exist yet — fall through to legacy clone
-      console.warn('user_library link failed, falling back to clone:', error)
+      console.error('Error awarding XP for library link:', error)
     }
+    revalidatePath('/songs')
+    revalidatePath('/')
+    return song
   }
 
   const newSongData: NewSongData = {

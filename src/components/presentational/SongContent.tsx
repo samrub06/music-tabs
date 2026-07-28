@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
 import dynamic from 'next/dynamic';
-import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import ChordOverLyricsLine from '@/components/presentational/ChordOverLyricsLine';
 import SongStructuredEditor from '@/components/presentational/SongStructuredEditor';
@@ -43,7 +43,6 @@ import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/context/AuthContext';
 import ShareWithFriendIconButton from '@/components/social/ShareWithFriendIconButton';
 import { containsHebrew, getTextDirection } from '@/utils/rtl';
-import { submitSongEditSuggestionAction } from '@/app/song/[id]/suggestion-actions';
 import {
   Collapsible,
   CollapsibleContent,
@@ -279,13 +278,6 @@ export default function SongContent({
   const [practicePlaying, setPracticePlaying] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<SongRecording | null>(null);
   const [recordingPlaybackUrl, setRecordingPlaybackUrl] = useState<string | null>(null);
-  const [suggestOpen, setSuggestOpen] = useState(false);
-  const [suggestMessage, setSuggestMessage] = useState('');
-  const [suggestFeedback, setSuggestFeedback] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
-  const [suggestPending, startSuggestTransition] = useTransition();
   const practiceAudio = usePracticeAudio();
   const {
     phase: practicePromoPhase,
@@ -314,11 +306,6 @@ export default function SongContent({
     },
     []
   );
-
-  const isCatalogView = !isInLibrary;
-  const isPersonalCopy = isInLibrary && Boolean(transposedSong.clonedFromId);
-  const canSuggestToCatalog =
-    Boolean(isInLibrary && transposedSong.clonedFromId && onToggleEdit);
 
   const useRecordingPractice =
     practiceMode &&
@@ -989,102 +976,6 @@ export default function SongContent({
               </div>
             ) : null}
           </div>
-
-          {isPersonalCopy && (
-            <div
-              className={cn(
-                'rounded-xl border px-4 py-3 text-sm',
-                'border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100'
-              )}
-            >
-              <p>{t('songContent.personalCopyBanner')}</p>
-              {canSuggestToCatalog ? (
-                <div className="mt-2 space-y-2">
-                  {!suggestOpen ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSuggestOpen(true);
-                        setSuggestFeedback(null);
-                      }}
-                    >
-                      {t('songContent.suggestToCatalog')}
-                    </Button>
-                  ) : (
-                    <div className="space-y-2 rounded-lg border border-border/60 bg-background/80 p-3">
-                      <p className="text-xs text-muted-foreground">
-                        {t('songContent.suggestToCatalogHint')}
-                      </p>
-                      <textarea
-                        value={suggestMessage}
-                        onChange={(e) => setSuggestMessage(e.target.value)}
-                        rows={2}
-                        maxLength={1000}
-                        placeholder={t('songContent.suggestToCatalogMessage')}
-                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-                      />
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={suggestPending}
-                          onClick={() => {
-                            const catalogSongId = transposedSong.clonedFromId;
-                            if (!catalogSongId) return;
-                            startSuggestTransition(async () => {
-                              try {
-                                await submitSongEditSuggestionAction({
-                                  catalogSongId,
-                                  fromSongId: transposedSong.id,
-                                  message: suggestMessage,
-                                });
-                                setSuggestFeedback({
-                                  type: 'success',
-                                  message: t('songContent.suggestToCatalogSent'),
-                                });
-                                setSuggestOpen(false);
-                                setSuggestMessage('');
-                              } catch {
-                                setSuggestFeedback({
-                                  type: 'error',
-                                  message: t('songContent.suggestToCatalogError'),
-                                });
-                              }
-                            });
-                          }}
-                        >
-                          {t('songContent.suggestToCatalogSubmit')}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setSuggestOpen(false)}
-                        >
-                          {t('common.cancel')}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  {suggestFeedback ? (
-                    <p
-                      role="status"
-                      className={cn(
-                        'text-xs font-medium',
-                        suggestFeedback.type === 'success'
-                          ? 'text-green-700 dark:text-green-400'
-                          : 'text-destructive'
-                      )}
-                    >
-                      {suggestFeedback.message}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          )}
 
           <SongStoryCard
             songId={transposedSong.id}

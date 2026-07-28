@@ -152,16 +152,26 @@ export const songService = {
     userId: string,
     filterParams: SongListFilterParams
   ): Promise<Record<string, unknown>[]> {
+    // Likes live on user_library — do not filter songs.is_liked in the personal query
+    const listFilters: SongListFilterParams = {
+      ...filterParams,
+      likedOnly: false,
+    }
+
     const { query: personalQuery, orderColumn } = applyUserSongsListFilters(
       (client.from('songs') as any).select(USER_SONGS_LIST_COLUMNS),
       { id: userId },
-      filterParams
+      listFilters
     )
 
     const [personalRows, libraryEntries] = await Promise.all([
       fetchAllMatchingSongRows(personalQuery, orderColumn),
       userLibraryRepo(client).listByUserWithFolderFilter(userId, filterParams.folderId),
     ])
+
+    const likedSongIds = new Set(
+      libraryEntries.filter((e) => e.isLiked).map((e) => e.songId)
+    )
 
     const personalClonedFromIds = new Map<string, string | undefined>()
     for (const row of personalRows) {
@@ -185,9 +195,8 @@ export const songService = {
 
     const linkedOnlyIds = mergedIds.filter((id) => !personalById.has(id))
 
-    // likedOnly is personal-only; catalog links have no per-user is_liked
     let linkedRows: Record<string, unknown>[] = []
-    if (linkedOnlyIds.length > 0 && filterParams.likedOnly !== true) {
+    if (linkedOnlyIds.length > 0) {
       const chunkSize = 50
       for (let i = 0; i < linkedOnlyIds.length; i += chunkSize) {
         const chunk = linkedOnlyIds.slice(i, i + chunkSize)
@@ -205,12 +214,12 @@ export const songService = {
           ) {
             continue
           }
-          const libraryFolder = folderByLinkedSongId.get(String(row.id))
+          const id = String(row.id)
+          const libraryFolder = folderByLinkedSongId.get(id)
           linkedRows.push({
             ...row,
             folder_id: libraryFolder ?? null,
-            // Linked catalog songs are not "liked" in the personal sense
-            is_liked: false,
+            is_liked: likedSongIds.has(id),
           })
         }
       }
@@ -221,15 +230,23 @@ export const songService = {
     for (const id of mergedIds) {
       const personal = personalById.get(id)
       if (personal) {
-        mergedRows.push(personal)
+        mergedRows.push({
+          ...personal,
+          is_liked: likedSongIds.has(id) || personal.is_liked === true,
+        })
         continue
       }
       const linked = linkedById.get(id)
       if (linked) mergedRows.push(linked)
     }
 
-    mergedRows.sort((a, b) => compareSongListRowsByOrder(a, b, orderColumn))
-    return mergedRows
+    const afterLiked =
+      filterParams.likedOnly === true
+        ? mergedRows.filter((r) => r.is_liked === true)
+        : mergedRows
+
+    afterLiked.sort((a, b) => compareSongListRowsByOrder(a, b, orderColumn))
+    return afterLiked
   },
 
   async getAllSongIds(

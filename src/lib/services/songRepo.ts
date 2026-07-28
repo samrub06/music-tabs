@@ -28,13 +28,14 @@ function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row'])
     createdAt: new Date(dbSong.created_at),
     updatedAt: new Date(dbSong.updated_at),
     sections: sections,
+    format: 'structured',
     reviews: dbSong.reviews || undefined,
     capo: dbSong.capo || undefined,
     key: dbSong.key || undefined,
-    soundingKey: dbSong.sounding_key || undefined,
+    soundingKey: undefined,
     firstChord: dbSong.first_chord || undefined,
     lastChord: dbSong.last_chord || undefined,
-    chordProgression: dbSong.chord_progression || undefined,
+    chordProgression: dbSong.all_chords || undefined,
     version: dbSong.version || undefined,
     versionDescription: dbSong.version_description || undefined,
     rating: dbSong.rating || undefined,
@@ -316,7 +317,22 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       return null
     }
 
-    return mapDbSongToDomain(data)
+    const song = mapDbSongToDomain(data)
+    try {
+      const {
+        data: { user },
+      } = await client.auth.getUser()
+      if (user) {
+        const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+        const entry = await userLibraryRepo(client).getByUserAndSong(user.id, id)
+        if (entry) {
+          song.isLiked = entry.isLiked
+        }
+      }
+    } catch {
+      /* user_library.is_liked may be missing until migration */
+    }
+    return song
   },
 
   async getSongByTabId(tabId: string): Promise<Song | null> {
@@ -425,32 +441,8 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       throw new Error('User must be authenticated to favorite songs')
     }
 
-    const { data: current, error: fetchError } = await (client
-      .from('songs') as any)
-      .select('is_liked')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single()
-
-    if (fetchError || !current) {
-      throw fetchError ?? new Error('Song not found')
-    }
-
-    const nextLiked = !(current as { is_liked: boolean }).is_liked
-
-    const { error: updateError } = await (client.from('songs') as any)
-      .update({
-        is_liked: nextLiked,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-
-    if (updateError) {
-      throw updateError
-    }
-
-    return nextLiked
+    const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+    return userLibraryRepo(client).toggleLike(user.id, id)
   },
 
   async updateSongFolder(id: string, folderId?: string): Promise<Song> {
@@ -1379,7 +1371,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     if (!user) return []
 
     const columns =
-      `${LIGHTWEIGHT_LIST_COLUMNS}, difficulty, decade, capo, all_chords, key, chord_progression`
+      `${LIGHTWEIGHT_LIST_COLUMNS}, difficulty, decade, capo, all_chords, key`
 
     const { data: userSongs, error: userError } = await (client.from('songs') as any)
       .select(columns)

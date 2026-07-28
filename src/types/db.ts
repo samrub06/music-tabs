@@ -94,9 +94,7 @@ export interface Database {
           capo: number | null
           first_chord: string | null
           last_chord: string | null
-          chord_progression: string[] | null
           key: string | null
-          sounding_key: string | null
           reviews: number | null
           tab_id: string | null
           version: number | null
@@ -132,9 +130,7 @@ export interface Database {
           capo?: number | null
           first_chord?: string | null
           last_chord?: string | null
-          chord_progression?: string[] | null
           key?: string | null
-          sounding_key?: string | null
           reviews?: number | null
           tab_id?: string | null
           version?: number | null
@@ -170,9 +166,7 @@ export interface Database {
           capo?: number | null
           first_chord?: string | null
           last_chord?: string | null
-          chord_progression?: string[] | null
           key?: string | null
-          sounding_key?: string | null
           reviews?: number | null
           tab_id?: string | null
           version?: number | null
