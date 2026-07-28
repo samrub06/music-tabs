@@ -34,6 +34,7 @@ import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
 import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
+import { absoluteShareUrl } from '@/lib/seo/site';
 import { Button } from '@/components/ui/button';
 import { Youtube } from 'lucide-react';
 import { InstrumentToggle } from '@/components/chords/InstrumentToggle';
@@ -760,12 +761,7 @@ export default function SongContent({
   );
 
   const handleCopySongLink = useCallback(async () => {
-    const url =
-      typeof window !== 'undefined'
-        ? window.location.href
-        : pathname
-          ? `${pathname}`
-          : '';
+    const url = absoluteShareUrl(`/song/${transposedSong.id}`);
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
@@ -773,7 +769,7 @@ export default function SongContent({
     } catch (error) {
       console.error('Failed to copy song link:', error);
     }
-  }, [pathname]);
+  }, [transposedSong.id]);
 
   const shareButton = user ? (
     <ShareWithFriendIconButton

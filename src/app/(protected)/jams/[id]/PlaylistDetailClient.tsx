@@ -38,6 +38,7 @@ import { useSongCover } from '@/lib/hooks/useSongCover'
 import { getPlaylistDisplayCoverUrl } from '@/utils/playlistCover'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
+import { absoluteShareUrl } from '@/lib/seo/site'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import SongGallery from '@/components/SongGallery'
 import { PlaylistGlassHeader } from '@/components/library/PlaylistGlassHeader'
@@ -194,11 +195,7 @@ export default function PlaylistDetailClient({
   }, [isLandscapeMobile])
 
   const openShareDialog = useCallback(() => {
-    const url =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/jams/${playlist.id}`
-        : `/jams/${playlist.id}`
-    setShareUrl(url)
+    setShareUrl(absoluteShareUrl(`/jams/${playlist.id}`))
     setShareOpen(true)
   }, [playlist.id])
 

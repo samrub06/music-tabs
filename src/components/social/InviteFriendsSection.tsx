@@ -25,6 +25,7 @@ import {
   shareOrCopyInviteLink,
   validateInviteeEmails,
 } from '@/utils/inviteShare'
+import { absoluteShareUrl } from '@/lib/seo/site'
 
 export default function InviteFriendsSection() {
   const { t } = useLanguage()
@@ -43,10 +44,7 @@ export default function InviteFriendsSection() {
     getMyInvitationsAction().then(setInvitations).catch(console.error)
   }, [])
 
-  const buildInviteUrl = (code: string) => {
-    if (typeof window === 'undefined') return `/invite/${code}`
-    return `${window.location.origin}/invite/${code}`
-  }
+  const buildInviteUrl = (code: string) => absoluteShareUrl(`/invite/${code}`)
 
   const parseEmailsOrShowError = (): string[] | null => {
     const invalid = validateInviteeEmails(inviteeEmail)

@@ -41,6 +41,33 @@ export function absoluteUrl(path: string): string {
   return `${getSiteUrl()}${normalizedPath}`
 }
 
+/**
+ * Origin for user-facing share/invite links.
+ * Always prefer the branded production domain so links don't leak *.vercel.app
+ * or an old project host. Localhost keeps the current origin for dev testing.
+ */
+export function getPublicShareOrigin(): string {
+  if (
+    typeof window !== 'undefined' &&
+    /localhost|127\.0\.0\.1/i.test(window.location.hostname)
+  ) {
+    return window.location.origin
+  }
+
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (fromEnv && /tabascomusic\.com/i.test(fromEnv)) {
+    return fromEnv.replace(/\/\/tabascomusic\.com(?=\/|$)/i, '//www.tabascomusic.com')
+  }
+
+  return PRODUCTION_SITE_URL
+}
+
+/** Absolute URL for share/copy/invite links (branded public origin). */
+export function absoluteShareUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${getPublicShareOrigin()}${normalizedPath}`
+}
+
 /** Static brand assets in `public/` — keep in sync with media/logo_tabasco* sources. */
 export const BRAND_ASSETS = {
   logo: '/logo_tabasco.png',

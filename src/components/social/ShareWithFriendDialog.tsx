@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { absoluteShareUrl } from '@/lib/seo/site'
 
 interface ShareWithFriendDialogProps {
   open: boolean
@@ -52,11 +53,10 @@ export default function ShareWithFriendDialog({
   const [copied, setCopied] = useState(false)
   const [pending, startTransition] = useTransition()
 
-  const shareUrl = useMemo(() => {
-    const path = buildSharePath(entityType, entityId)
-    if (typeof window === 'undefined') return path
-    return `${window.location.origin}${path}`
-  }, [entityType, entityId])
+  const shareUrl = useMemo(
+    () => absoluteShareUrl(buildSharePath(entityType, entityId)),
+    [entityType, entityId]
+  )
 
   useEffect(() => {
     if (!open) {
