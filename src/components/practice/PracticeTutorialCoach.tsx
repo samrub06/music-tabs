@@ -85,7 +85,7 @@ export function PracticeTutorialCoach({
     <div className="pointer-events-none fixed inset-0 z-[90]">
       {rect ? (
         <div
-          className="absolute rounded-2xl ring-2 ring-[#E8DCC4]/90 shadow-[0_0_0_9999px_rgba(20,16,10,0.45)]"
+          className="absolute rounded-2xl ring-2 ring-white/70 shadow-[0_0_0_9999px_rgba(15,15,15,0.5)] dark:ring-white/40"
           style={{
             top: rect.top - 8,
             left: rect.left - 8,
@@ -93,38 +93,36 @@ export function PracticeTutorialCoach({
             height: rect.height + 16,
           }}
         >
-          <div className="absolute inset-0 animate-pulse rounded-2xl bg-[#E8DCC4]/12" />
+          <div className="absolute inset-0 animate-pulse rounded-2xl bg-white/10" />
         </div>
       ) : (
         <div className="absolute inset-0 bg-black/40" />
       )}
 
       <div
-        className="pointer-events-auto absolute w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border border-white/50 px-4 py-3 shadow-[0_12px_40px_rgba(60,45,25,0.28)]"
+        className={cn(
+          'pointer-events-auto absolute w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border border-border',
+          'bg-background/95 px-4 py-3 text-foreground shadow-lg backdrop-blur-xl'
+        )}
         style={{
           top: tipTop,
           left: tipLeft,
-          background:
-            'linear-gradient(145deg, rgba(248,240,224,0.92), rgba(220,208,184,0.82))',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          color: '#2F281C',
         }}
         role="dialog"
         aria-live="polite"
       >
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[#6B5E48]/90">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           {step === 'youtube' ? '1 / 2' : '2 / 2'}
         </p>
         <h3 className="mt-1 text-sm font-semibold tracking-tight">{title}</h3>
-        <p className="mt-1 text-xs leading-relaxed text-[#4A4032]/95">{body}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
         <div className="mt-3 flex items-center gap-2">
           <button
             type="button"
             onClick={onNext}
             className={cn(
-              'inline-flex h-9 flex-1 items-center justify-center rounded-xl px-3 text-xs font-bold',
-              'bg-[#2F281C] text-[#F6EFE2] transition hover:brightness-110'
+              'inline-flex h-9 flex-1 items-center justify-center rounded-xl px-3 text-xs font-semibold',
+              'bg-foreground text-background transition hover:opacity-90'
             )}
           >
             {cta}
@@ -132,7 +130,7 @@ export function PracticeTutorialCoach({
           <button
             type="button"
             onClick={onSkip}
-            className="inline-flex h-9 items-center justify-center rounded-xl px-2.5 text-xs font-medium text-[#6B5E48] hover:bg-black/5"
+            className="inline-flex h-9 items-center justify-center rounded-xl px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             {t('songContent.practiceTutorialSkip')}
           </button>

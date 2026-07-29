@@ -1543,12 +1543,15 @@ function StructuredSongContent({
         data-practice-line={globalLineIndex}
         data-lyric-key={lyricKey ?? undefined}
         className={cn(
-          'rounded-lg transition-all duration-200',
-          isPracticeActive && 'bg-primary/10 ring-2 ring-primary/40 px-2 py-1.5 scale-[1.01]',
-          isPracticeDimmed && 'opacity-25',
-          isYoutubeActive && 'bg-amber-500/15 ring-2 ring-amber-500/50 px-2 py-1',
-          syncTimed && 'cursor-pointer hover:bg-amber-500/10',
-          isYoutubeActive && 'scroll-mt-28'
+          'rounded-md transition-[background-color,box-shadow,opacity,border-color] duration-200',
+          isPracticeActive &&
+            'border-s-[3px] border-s-foreground/55 bg-muted/90 px-2.5 py-1.5 ring-1 ring-border/70',
+          isPracticeDimmed && 'opacity-30',
+          isYoutubeActive &&
+            'border-s-[3px] border-s-foreground/55 bg-muted/90 px-2.5 py-1.5 ring-1 ring-border/70',
+          syncTimed && !isYoutubeActive && 'cursor-pointer hover:bg-muted/50',
+          syncTimed && isYoutubeActive && 'cursor-pointer',
+          isYoutubeActive && 'scroll-mt-32 scroll-mb-48'
         )}
         onClick={
           syncTimed && typeof sectionIndex === 'number'
@@ -1658,7 +1661,7 @@ function StructuredSongContent({
   };
   
   useEffect(() => {
-    if (!practiceMode) return;
+    if (!practiceMode && !youtubeLyricSeekEnabled) return;
     setOpenSections((prev) => {
       const next = new Set(prev);
       song.sections.forEach((s: { name: string }, i: number) => {
@@ -1666,7 +1669,7 @@ function StructuredSongContent({
       });
       return next;
     });
-  }, [practiceMode, song.sections]);
+  }, [practiceMode, youtubeLyricSeekEnabled, song.sections]);
 
   useEffect(() => {
     if (!practiceMode) return;
@@ -1675,6 +1678,51 @@ function StructuredSongContent({
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [practiceMode, practiceLineIndex]);
+
+  // Follow YouTube / audio practice sync: keep the active timed lyric in view.
+  useEffect(() => {
+    if (!youtubeLyricSeekEnabled || !youtubeActiveLyricKey) return;
+
+    const sectionPart = youtubeActiveLyricKey.split(':')[0];
+    const sectionIndex = Number(sectionPart);
+    if (Number.isFinite(sectionIndex)) {
+      setOpenSections((prev) => {
+        if (prev.has(sectionIndex)) return prev;
+        const next = new Set(prev);
+        next.add(sectionIndex);
+        return next;
+      });
+    }
+
+    let cancelled = false;
+    let raf2 = 0;
+
+    const scrollToActive = () => {
+      if (cancelled) return;
+      const el = document.querySelector(`[data-lyric-key="${youtubeActiveLyricKey}"]`);
+      if (!(el instanceof HTMLElement)) return;
+
+      const rect = el.getBoundingClientRect();
+      const viewTop = 96;
+      const viewBottom = window.innerHeight - 160;
+      const fullyComfortable = rect.top >= viewTop && rect.bottom <= viewBottom;
+      if (fullyComfortable) return;
+
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    };
+
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(scrollToActive);
+    });
+    const fallback = window.setTimeout(scrollToActive, 140);
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+      window.clearTimeout(fallback);
+    };
+  }, [youtubeLyricSeekEnabled, youtubeActiveLyricKey]);
 
   const sectionStartOffsets = useMemo(() => {
     const offsets: number[] = [];

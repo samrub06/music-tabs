@@ -332,6 +332,7 @@ export default function SongViewer({
       const line = lyricSyncLookup.get(`${sectionIndex}:${lineIndex}`);
       if (line?.startSec == null) return;
       youtubePlayerApiRef.current?.seekTo(line.startSec);
+      setActiveLyricKey(`${sectionIndex}:${lineIndex}`);
       if (practiceTutorialStep === 'line') {
         setPracticeTutorialStep(null);
         setPracticeTutorialLineKey(null);
