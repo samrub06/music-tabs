@@ -31,3 +31,26 @@ export function buildLyricSyncLookup(
   }
   return map
 }
+
+/**
+ * True for real sung lyrics — rejects empty, pattern labels, and guitar-tab ascii
+ * that sometimes get timed in song_lyric_syncs.
+ */
+export function isPracticeTutorialLyricLine(text: string): boolean {
+  const t = text.trim()
+  if (!t) return false
+  if (/^main\s+pattern\b/i.test(t)) return false
+  // Standard tab rows: E|--- or e|-0-2-
+  if (/^[EADGBEeadgbe]\|/.test(t)) return false
+  // Ascii tab with multiple pipes and fret/dash runs
+  const pipeCount = (t.match(/\|/g) ?? []).length
+  if (pipeCount >= 2 && /\|[-0-9xXhHpPbB=~./\\]+/.test(t)) return false
+  return true
+}
+
+/** Timed sync rows that are actual lyric lines (song order preserved). */
+export function pickPracticeTutorialLyricLines(lines: LyricSyncLine[]): LyricSyncLine[] {
+  return lines.filter(
+    (line) => line.startSec != null && isPracticeTutorialLyricLine(line.text ?? '')
+  )
+}

@@ -15,7 +15,7 @@ import type { YoutubeVideoMode } from '@/utils/youtubeTutorial';
 import { isLyricPracticeYoutubeMode } from '@/utils/youtubeTutorial';
 import type { YoutubePlayerHandle } from '@/lib/youtube/iframeApi';
 import { getLyricSyncAction, ensureLyricSyncAction, hasReadyLyricSyncAction } from '@/app/song/[id]/lyricSyncActions';
-import { buildLyricSyncLookup } from '@/utils/lyricSync';
+import { buildLyricSyncLookup, pickPracticeTutorialLyricLines } from '@/utils/lyricSync';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   PracticeTutorialCoach,
@@ -349,13 +349,13 @@ export default function SongViewer({
 
   const goToPracticeLineStep = useCallback(() => {
     if (!youtubePlayerReady || lyricSync?.status !== 'ready') return false;
-    const timed = lyricSync.lines.filter((l) => l.startSec != null);
-    if (timed.length === 0) {
+    const lyricTimed = pickPracticeTutorialLyricLines(lyricSync.lines);
+    if (lyricTimed.length === 0) {
       endPracticeTutorial();
       return true;
     }
-    // Step 2: second timed lyric line (not the opener), seek so music matches the frame.
-    const target = timed.length > 1 ? timed[1] : timed[0];
+    // Step 2: second real lyric line (skip tabs/patterns), seek so music matches the frame.
+    const target = lyricTimed[Math.min(1, lyricTimed.length - 1)];
     const key = `${target.sectionIndex}:${target.lineIndex}`;
     if (target.startSec != null) {
       youtubePlayerApiRef.current?.seekTo(target.startSec);
