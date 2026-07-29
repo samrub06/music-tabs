@@ -5,6 +5,7 @@ export type YTPlayerInstance = {
   playVideo: () => void
   pauseVideo: () => void
   getCurrentTime: () => number
+  getDuration: () => number
   getPlayerState: () => number
   destroy: () => void
 }
@@ -59,7 +60,9 @@ export function loadYoutubeIframeApi(): Promise<void> {
 export type YoutubePlayerHandle = {
   seekTo: (seconds: number) => void
   getCurrentTime: () => number
+  getDuration: () => number
   play: () => void
+  pause: () => void
   isReady: () => boolean
   getVideoId: () => string | null
 }

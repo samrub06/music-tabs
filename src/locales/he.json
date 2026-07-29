@@ -964,7 +964,13 @@
     "open": "הצג וידאו",
     "expand": "הגדל",
     "shrink": "הקטן",
-    "dragMove": "הזז"
+    "dragMove": "הזז",
+    "audioPlayer": "נגן אודיו",
+    "play": "נגן",
+    "pause": "השהה",
+    "restart": "התחל מחדש",
+    "skipBack15": "15 שניות אחורה",
+    "skipForward15": "15 שניות קדימה"
   },
   "songContent": {
     "saving": "שומר...",

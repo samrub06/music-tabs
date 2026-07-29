@@ -956,7 +956,13 @@
     "open": "Show video",
     "expand": "Expand",
     "shrink": "Shrink",
-    "dragMove": "Move"
+    "dragMove": "Move",
+    "audioPlayer": "Audio player",
+    "play": "Play",
+    "pause": "Pause",
+    "restart": "Restart",
+    "skipBack15": "Back 15 seconds",
+    "skipForward15": "Forward 15 seconds"
   },
   "songContent": {
     "saving": "Saving...",

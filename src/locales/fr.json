@@ -964,7 +964,13 @@
     "open": "Afficher la vidéo",
     "expand": "Agrandir",
     "shrink": "Rétrécir",
-    "dragMove": "Déplacer"
+    "dragMove": "Déplacer",
+    "audioPlayer": "Lecteur audio",
+    "play": "Lecture",
+    "pause": "Pause",
+    "restart": "Revenir au début",
+    "skipBack15": "Reculer de 15 secondes",
+    "skipForward15": "Avancer de 15 secondes"
   },
   "songContent": {
     "saving": "Sauvegarde...",
