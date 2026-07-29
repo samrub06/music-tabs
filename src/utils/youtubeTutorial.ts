@@ -38,9 +38,10 @@ export function buildYoutubeOriginalQuery(
   const cleanAuthor = author.trim()
 
   const originalTerms: Record<'en' | 'fr' | 'he', string> = {
-    en: 'official audio OR official video OR lyrics',
-    fr: 'audio officiel OR clip officiel OR paroles',
-    he: 'רשמי OR מילים OR אודיו',
+    // Prefer lyrics/audio; avoid forcing "official video" (often VEVO, not iframe-friendly).
+    en: 'lyrics OR "official audio" -VEVO',
+    fr: 'paroles OR "audio officiel" -VEVO',
+    he: 'מילים OR אודיו -VEVO',
   }
 
   const parts = [cleanTitle]

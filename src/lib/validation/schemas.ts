@@ -314,6 +314,9 @@ export const spotifyImportSchema = z.object({
 export const youtubeTutorialSearchSchema = z.object({
   q: z.string().min(1, 'Search query is required').max(200, 'Search query is too long'),
   lang: z.enum(['en', 'fr', 'he']).optional(),
+  songId: z.string().uuid().optional(),
+  mode: z.enum(['tutorial', 'original', 'audio']).optional(),
+  instrument: z.enum(['piano', 'guitar']).optional(),
 })
 
 const songLineMarkerSchema = z.object({

@@ -646,6 +646,7 @@ export default function SongViewer({
       </div>
 
       <FloatingYoutubeTutorial
+        songId={song.id}
         songTitle={song.title}
         songAuthor={song.author}
         selectedInstrument={selectedInstrument}

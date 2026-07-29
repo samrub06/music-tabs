@@ -19,6 +19,7 @@ import {
 } from '@/lib/youtube/iframeApi'
 
 interface FloatingYoutubeTutorialProps {
+  songId?: string
   songTitle: string
   songAuthor: string
   selectedInstrument: 'piano' | 'guitar'
@@ -55,6 +56,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function FloatingYoutubeTutorial({
+  songId,
   songTitle,
   songAuthor,
   selectedInstrument,
@@ -112,7 +114,13 @@ export default function FloatingYoutubeTutorial({
     [videoMode, songTitle, songAuthor, selectedInstrument, language]
   )
 
-  const cacheKey = useMemo(() => `${searchQuery}::${language}`, [searchQuery, language])
+  const cacheKey = useMemo(
+    () =>
+      songId
+        ? `${songId}::${videoMode}::${selectedInstrument}::${language}`
+        : `${searchQuery}::${language}`,
+    [songId, videoMode, selectedInstrument, searchQuery, language]
+  )
 
   const youtubePageUrl = useMemo(() => buildYoutubeSearchPageUrl(searchQuery), [searchQuery])
 
@@ -182,7 +190,10 @@ export default function FloatingYoutubeTutorial({
         const params = new URLSearchParams({
           q: searchQuery,
           lang: language,
+          mode: videoMode,
+          instrument: selectedInstrument,
         })
+        if (songId) params.set('songId', songId)
         const response = await fetch(`/api/youtube/tutorial?${params.toString()}`, {
           signal: controller.signal,
         })
@@ -208,7 +219,7 @@ export default function FloatingYoutubeTutorial({
     void loadVideo()
 
     return () => controller.abort()
-  }, [isOpen, cacheKey, searchQuery, language, onVideoIdChange, onPlayerReadyChange])
+  }, [isOpen, cacheKey, searchQuery, language, songId, videoMode, selectedInstrument, onVideoIdChange, onPlayerReadyChange])
 
   useEffect(() => {
     if (!isOpen || !activeVideoId || !playerHostRef.current) return
