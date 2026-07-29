@@ -21,7 +21,6 @@ import {
   PracticeTutorialCoach,
   type PracticeTutorialStep,
 } from '@/components/practice/PracticeTutorialCoach';
-import { PracticeBootOverlay } from '@/components/practice/PracticeBootOverlay';
 
 const ChordDiagramModal = dynamic(() => import('./ChordDiagramModal'), { ssr: false });
 
@@ -194,10 +193,7 @@ export default function SongViewer({
   const [practiceTutorialStep, setPracticeTutorialStep] = useState<PracticeTutorialStep>(null);
   const [practiceTutorialLineKey, setPracticeTutorialLineKey] = useState<string | null>(null);
   const [practiceTutorialAwaitingSync, setPracticeTutorialAwaitingSync] = useState(false);
-  const [practiceBootOverlay, setPracticeBootOverlay] = useState(false);
-  const [practiceBootStarted, setPracticeBootStarted] = useState(false);
   const practiceAutoStartedRef = useRef(false);
-  const practiceBootStartedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     setYoutubeTutorialOpen(false);
@@ -212,18 +208,6 @@ export default function SongViewer({
     setPracticeTutorialLineKey(null);
     setPracticeTutorialAwaitingSync(false);
     practiceAutoStartedRef.current = false;
-    practiceBootStartedAtRef.current = null;
-    setPracticeBootStarted(false);
-
-    let boot = false;
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      boot = params.get('practice') === '1';
-    }
-    setPracticeBootOverlay(boot);
-    if (boot) {
-      practiceBootStartedAtRef.current = Date.now();
-    }
   }, [song?.id]);
 
   useEffect(() => {
@@ -397,57 +381,29 @@ export default function SongViewer({
     setPracticeTutorialAwaitingSync(false);
   }, []);
 
-  // Explorer “Try it” → /song/…?practice=1 auto-starts the coachmark tutorial.
+  // Explorer “Try it” → open Original video directly (no loading popup / coach).
   useEffect(() => {
-    if (!practiceBootOverlay) return;
     if (practiceAutoStartedRef.current) return;
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('practice') !== '1') return;
     if (!hasLyricPractice) return;
+
     practiceAutoStartedRef.current = true;
-    handleStartLyricPracticeTutorial();
-    setPracticeBootStarted(true);
+    setYoutubeVideoMode('original');
+    setYoutubeTutorialOpen(true);
+    setPracticeTutorialStep(null);
+    setPracticeTutorialLineKey(null);
+    setPracticeTutorialAwaitingSync(false);
+
     try {
-      const params = new URLSearchParams(window.location.search);
       params.delete('practice');
       const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
       window.history.replaceState({}, '', next);
     } catch {
       // ignore
     }
-  }, [practiceBootOverlay, hasLyricPractice, handleStartLyricPracticeTutorial]);
-
-  // Keep boot overlay at least ~1s, until YouTube is ready (max 6s).
-  useEffect(() => {
-    if (!practiceBootOverlay) return;
-    if (!practiceBootStarted) return;
-
-    const MIN_MS = 1000;
-    const MAX_MS = 6000;
-    const started = practiceBootStartedAtRef.current ?? Date.now();
-
-    const dismiss = () => setPracticeBootOverlay(false);
-
-    const elapsed = () => Date.now() - started;
-    if (youtubePlayerReady && elapsed() >= MIN_MS) {
-      dismiss();
-      return;
-    }
-    if (elapsed() >= MAX_MS) {
-      dismiss();
-      return;
-    }
-
-    const waitMs = youtubePlayerReady
-      ? Math.max(0, MIN_MS - elapsed())
-      : Math.max(0, MAX_MS - elapsed());
-
-    const id = window.setTimeout(() => {
-      if (youtubePlayerReady || Date.now() - started >= MAX_MS) {
-        dismiss();
-      }
-    }, waitMs);
-
-    return () => window.clearTimeout(id);
-  }, [practiceBootOverlay, practiceBootStarted, youtubePlayerReady]);
+  }, [hasLyricPractice]);
 
   const handlePracticeTutorialNext = useCallback(() => {
     if (practiceTutorialStep === 'youtube') {
@@ -663,13 +619,11 @@ export default function SongViewer({
       />
 
       <PracticeTutorialCoach
-        step={practiceBootOverlay ? null : practiceTutorialStep}
+        step={practiceTutorialStep}
         targetSelector={practiceTutorialTargetSelector}
         onNext={handlePracticeTutorialNext}
         onSkip={endPracticeTutorial}
       />
-
-      <PracticeBootOverlay open={practiceBootOverlay} />
 
       <SongQueueSheet
         open={songQueueOpen}
