@@ -98,6 +98,8 @@ export default function FloatingYoutubeTutorial({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [scrubbing, setScrubbing] = useState(false)
+  const [hoverScrubber, setHoverScrubber] = useState(false)
   const dragStateRef = useRef<{
     pointerId: number
     startX: number
@@ -177,6 +179,8 @@ export default function FloatingYoutubeTutorial({
     setCurrentTime(0)
     setDuration(0)
     setIsPlaying(false)
+    setScrubbing(false)
+    setHoverScrubber(false)
     ytPlayerRef.current?.destroy()
     ytPlayerRef.current = null
     if (playerApiRef) playerApiRef.current = null
@@ -522,11 +526,13 @@ export default function FloatingYoutubeTutorial({
 
   const onScrubChange = (value: number) => {
     scrubbingRef.current = true
+    setScrubbing(true)
     setCurrentTime(value)
   }
 
   const onScrubCommit = (value: number) => {
     scrubbingRef.current = false
+    setScrubbing(false)
     seekToSeconds(value, { play: true })
   }
 
@@ -534,6 +540,9 @@ export default function FloatingYoutubeTutorial({
 
   const progressMax = duration > 0 ? duration : 1
   const controlsDisabled = !playerReady
+  const progressPct =
+    duration > 0 ? (clamp(currentTime, 0, duration) / duration) * 100 : 0
+  const showTimeTooltip = hoverScrubber || scrubbing
 
   const cornerHandle = (corner: ResizeCorner, cursor: string, className: string) => (
     <div
@@ -682,16 +691,27 @@ export default function FloatingYoutubeTutorial({
           onPointerDown={stopPanelEvent}
           onClick={stopPanelEvent}
         >
-          {/* Scrubber — taller track + larger thumb for easier scrubbing */}
-          <div className="relative h-5 w-full px-3 pt-1.5">
-            <div className="pointer-events-none absolute inset-x-3 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black/[0.08] dark:bg-white/15">
+          {/* Scrubber — taller track + time tooltip on thumb */}
+          <div
+            className="relative mx-3 h-5 pt-1.5"
+            onPointerEnter={() => setHoverScrubber(true)}
+            onPointerLeave={() => setHoverScrubber(false)}
+          >
+            {showTimeTooltip && (
               <div
-                className="h-full rounded-full bg-red-500 dark:bg-red-400"
-                style={{
-                  width: `${
-                    duration > 0 ? (clamp(currentTime, 0, duration) / duration) * 100 : 0
-                  }%`,
-                }}
+                className="pointer-events-none absolute bottom-full z-10 mb-1.5 -translate-x-1/2 rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-background shadow-sm"
+                style={{ left: `${progressPct}%` }}
+                role="tooltip"
+              >
+                {formatClock(currentTime)}
+                <span className="text-background/60"> / </span>
+                {formatClock(duration)}
+              </div>
+            )}
+            <div className="pointer-events-none absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black/[0.08] dark:bg-white/15">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${progressPct}%` }}
               />
             </div>
             <input
@@ -702,52 +722,55 @@ export default function FloatingYoutubeTutorial({
               value={clamp(currentTime, 0, progressMax)}
               disabled={controlsDisabled || duration <= 0}
               aria-label={t('youtubeTutorial.audioPlayer')}
+              aria-valuetext={`${formatClock(currentTime)} / ${formatClock(duration)}`}
               onChange={(e) => onScrubChange(Number(e.target.value))}
+              onPointerDown={() => {
+                setScrubbing(true)
+                setHoverScrubber(true)
+              }}
               onPointerUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
-              onPointerCancel={(e) =>
+              onPointerCancel={(e) => {
                 onScrubCommit(Number((e.target as HTMLInputElement).value))
-              }
+                setHoverScrubber(false)
+              }}
               onMouseUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
-              onTouchEnd={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
+              onTouchEnd={(e) => {
+                onScrubCommit(Number((e.target as HTMLInputElement).value))
+                setHoverScrubber(false)
+              }}
               onBlur={(e) => onScrubCommit(Number(e.target.value))}
               className={cn(
-                'absolute inset-x-3 top-0 h-5 w-auto cursor-pointer appearance-none bg-transparent disabled:opacity-40',
+                'absolute inset-x-0 top-0 h-5 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
                 '[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-transparent',
                 '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:-mt-1 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4',
                 '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
-                '[&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(255,255,255,0.9),0_1px_4px_rgba(0,0,0,0.25)]',
-                'dark:[&::-webkit-slider-thumb]:bg-red-400 dark:[&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(24,24,27,0.95),0_1px_4px_rgba(0,0,0,0.5)]',
+                '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(255,255,255,0.9),0_1px_4px_rgba(0,0,0,0.25)]',
+                'dark:[&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(24,24,27,0.95),0_1px_4px_rgba(0,0,0,0.5)]',
                 '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-transparent',
                 '[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full',
-                '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-red-500 dark:[&::-moz-range-thumb]:bg-red-400'
+                '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary'
               )}
             />
           </div>
 
-          {/* Time left · controls centered · close right */}
+          {/* Controls centered · close right */}
           <div className="relative mx-auto grid max-w-lg grid-cols-[1fr_auto_1fr] items-center px-2 pb-2 pt-0.5">
-            <div className="flex min-w-0 items-center justify-start gap-1 ps-1 text-[12px] font-medium tabular-nums text-muted-foreground">
+            <div className="min-w-0 ps-1 text-[11px] text-muted-foreground">
               {(fetchState.status === 'loading' && !playerReady) ||
               (fetchState.status === 'error' && !playerReady) ? (
                 fetchState.status === 'loading' ? (
-                  <span className="truncate text-[11px]">{t('youtubeTutorial.loadingOriginal')}</span>
+                  <span className="truncate">{t('youtubeTutorial.loadingOriginal')}</span>
                 ) : (
                   <a
                     href={youtubePageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="truncate text-[11px] underline-offset-2 hover:underline"
+                    className="truncate underline-offset-2 hover:underline"
                   >
                     {t('youtubeTutorial.openYoutube')}
                   </a>
                 )
-              ) : (
-                <>
-                  <span>{formatClock(currentTime)}</span>
-                  <span className="text-muted-foreground/50">/</span>
-                  <span>{formatClock(duration)}</span>
-                </>
-              )}
+              ) : null}
             </div>
 
             <div className="flex items-center justify-center gap-1">
@@ -776,7 +799,7 @@ export default function FloatingYoutubeTutorial({
                 type="button"
                 onClick={togglePlay}
                 disabled={controlsDisabled}
-                className="mx-0.5 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-950 text-white shadow-sm transition-transform active:scale-95 disabled:opacity-35 dark:bg-white dark:text-neutral-950"
+                className="mx-0.5 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:opacity-35"
                 aria-label={isPlaying ? t('youtubeTutorial.pause') : t('youtubeTutorial.play')}
               >
                 {isPlaying ? (
