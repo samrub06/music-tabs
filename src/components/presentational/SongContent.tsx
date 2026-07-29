@@ -893,7 +893,9 @@ export default function SongContent({
       ref={contentRef}
       className={cn(
         'song-content-scrollable relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto',
-        !isAuthenticated && 'pb-[5.5rem] sm:pb-24'
+        youtubeTutorialOpen && youtubeVideoMode === 'audio'
+          ? 'pb-20'
+          : !isAuthenticated && 'pb-[5.5rem] sm:pb-24'
       )}
       style={{ 
         WebkitOverflowScrolling: 'touch',

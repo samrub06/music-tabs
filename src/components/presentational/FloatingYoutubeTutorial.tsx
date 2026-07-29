@@ -674,147 +674,137 @@ export default function FloatingYoutubeTutorial({
           aria-label={t('youtubeTutorial.audioPlayer')}
           className={cn(
             'fixed inset-x-0 bottom-0 z-[60]',
-            'border-t border-white/15 bg-zinc-950 text-white',
+            'border-t border-black/[0.06] bg-white/95 text-foreground backdrop-blur-xl',
+            'dark:border-white/[0.08] dark:bg-zinc-950/95 dark:text-white',
             'pb-[env(safe-area-inset-bottom,0px)]',
-            'shadow-[0_-12px_40px_rgba(0,0,0,0.45)]'
+            'shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.45)]'
           )}
           onPointerDown={stopPanelEvent}
           onClick={stopPanelEvent}
         >
-          <div className="mx-auto flex max-w-lg flex-col gap-2 px-4 pb-2.5 pt-3">
+          {/* Thin scrubber flush to top — keeps bar short so lyrics stay visible */}
+          <div className="relative h-3 w-full">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden bg-black/[0.08] dark:bg-white/15">
+              <div
+                className="h-full bg-red-500 dark:bg-red-400"
+                style={{
+                  width: `${
+                    duration > 0 ? (clamp(currentTime, 0, duration) / duration) * 100 : 0
+                  }%`,
+                }}
+              />
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={progressMax}
+              step={0.1}
+              value={clamp(currentTime, 0, progressMax)}
+              disabled={controlsDisabled || duration <= 0}
+              aria-label={t('youtubeTutorial.audioPlayer')}
+              onChange={(e) => onScrubChange(Number(e.target.value))}
+              onPointerUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
+              onPointerCancel={(e) =>
+                onScrubCommit(Number((e.target as HTMLInputElement).value))
+              }
+              onMouseUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
+              onTouchEnd={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
+              onBlur={(e) => onScrubCommit(Number(e.target.value))}
+              className={cn(
+                'absolute inset-0 h-3 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
+                '[&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:bg-transparent',
+                '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:-mt-[5px] [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3',
+                '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
+                '[&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:shadow-sm dark:[&::-webkit-slider-thumb]:bg-red-400',
+                '[&::-moz-range-track]:h-0.5 [&::-moz-range-track]:bg-transparent',
+                '[&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full',
+                '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-red-500 dark:[&::-moz-range-thumb]:bg-red-400'
+              )}
+            />
+          </div>
+
+          <div className="mx-auto flex max-w-lg items-center gap-0.5 px-2 pb-1.5 pt-0.5">
             {(fetchState.status === 'loading' && !playerReady) ||
             (fetchState.status === 'error' && !playerReady) ? (
-              <div className="flex items-center justify-between gap-2 text-[11px] text-white/60">
+              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 px-1 text-[11px] text-muted-foreground">
                 {fetchState.status === 'loading' ? (
-                  <span>{t('youtubeTutorial.loadingOriginal')}</span>
+                  <span className="truncate">{t('youtubeTutorial.loadingOriginal')}</span>
                 ) : (
                   <a
                     href={youtubePageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline-offset-2 hover:underline"
+                    className="truncate underline-offset-2 hover:underline"
                   >
                     {t('youtubeTutorial.openYoutube')}
                   </a>
                 )}
+              </div>
+            ) : (
+              <>
                 <button
                   type="button"
-                  onClick={() => onClose()}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white"
-                  aria-label={t('songHeader.close')}
+                  onClick={restart}
+                  disabled={controlsDisabled}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
+                  aria-label={t('youtubeTutorial.restart')}
                 >
-                  <XMarkIcon className="h-4 w-4" />
+                  <ArrowPathIcon className="h-4 w-4" />
                 </button>
-              </div>
-            ) : null}
-
-            {/* Visible scrubber + thumb */}
-            <div className="flex items-center gap-2.5">
-              <span className="w-9 shrink-0 text-end text-[11px] font-medium tabular-nums text-white/70">
-                {formatClock(currentTime)}
-              </span>
-              <div className="relative h-5 flex-1">
-                <div className="pointer-events-none absolute inset-y-0 inset-x-0 flex items-center">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
-                    <div
-                      className="h-full rounded-full bg-white"
-                      style={{
-                        width: `${
-                          duration > 0 ? (clamp(currentTime, 0, duration) / duration) * 100 : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={progressMax}
-                  step={0.1}
-                  value={clamp(currentTime, 0, progressMax)}
-                  disabled={controlsDisabled || duration <= 0}
-                  aria-label={t('youtubeTutorial.audioPlayer')}
-                  onChange={(e) => onScrubChange(Number(e.target.value))}
-                  onPointerUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
-                  onPointerCancel={(e) =>
-                    onScrubCommit(Number((e.target as HTMLInputElement).value))
-                  }
-                  onMouseUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
-                  onTouchEnd={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
-                  onBlur={(e) => onScrubCommit(Number(e.target.value))}
-                  className={cn(
-                    'absolute inset-0 h-5 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
-                    '[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-transparent',
-                    '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:-mt-1 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4',
-                    '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
-                    '[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(0,0,0,0.35),0_1px_4px_rgba(0,0,0,0.5)]',
-                    '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-transparent',
-                    '[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full',
-                    '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white'
+                <button
+                  type="button"
+                  onClick={() => seekRelative(-SEEK_STEP_SEC)}
+                  disabled={controlsDisabled}
+                  className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
+                  aria-label={t('youtubeTutorial.skipBack15')}
+                >
+                  <BackwardIcon className="h-[1.125rem] w-[1.125rem]" />
+                  <span className="absolute bottom-0.5 text-[7px] font-bold tabular-nums leading-none">
+                    15
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  disabled={controlsDisabled}
+                  className="mx-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-950 text-white shadow-sm transition-transform active:scale-95 disabled:opacity-35 dark:bg-white dark:text-neutral-950"
+                  aria-label={isPlaying ? t('youtubeTutorial.pause') : t('youtubeTutorial.play')}
+                >
+                  {isPlaying ? (
+                    <PauseIcon className="h-5 w-5" />
+                  ) : (
+                    <PlayIcon className="ml-0.5 h-5 w-5" />
                   )}
-                />
-              </div>
-              <span className="w-9 shrink-0 text-[11px] font-medium tabular-nums text-white/70">
-                {formatClock(duration)}
-              </span>
-            </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => seekRelative(SEEK_STEP_SEC)}
+                  disabled={controlsDisabled}
+                  className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
+                  aria-label={t('youtubeTutorial.skipForward15')}
+                >
+                  <ForwardIcon className="h-[1.125rem] w-[1.125rem]" />
+                  <span className="absolute bottom-0.5 text-[7px] font-bold tabular-nums leading-none">
+                    15
+                  </span>
+                </button>
 
-            <div className="relative flex items-center justify-center gap-1 pb-0.5">
-              <button
-                type="button"
-                onClick={restart}
-                disabled={controlsDisabled}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
-                aria-label={t('youtubeTutorial.restart')}
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => seekRelative(-SEEK_STEP_SEC)}
-                disabled={controlsDisabled}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
-                aria-label={t('youtubeTutorial.skipBack15')}
-              >
-                <BackwardIcon className="h-5 w-5" />
-                <span className="absolute bottom-1 text-[8px] font-bold tabular-nums leading-none">
-                  15
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={togglePlay}
-                disabled={controlsDisabled}
-                className="mx-1 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-zinc-950 shadow-md transition-transform active:scale-95 disabled:opacity-35"
-                aria-label={isPlaying ? t('youtubeTutorial.pause') : t('youtubeTutorial.play')}
-              >
-                {isPlaying ? (
-                  <PauseIcon className="h-6 w-6" />
-                ) : (
-                  <PlayIcon className="ml-0.5 h-6 w-6" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => seekRelative(SEEK_STEP_SEC)}
-                disabled={controlsDisabled}
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
-                aria-label={t('youtubeTutorial.skipForward15')}
-              >
-                <ForwardIcon className="h-5 w-5" />
-                <span className="absolute bottom-1 text-[8px] font-bold tabular-nums leading-none">
-                  15
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onClose()}
-                className="absolute end-0 inline-flex h-10 w-10 items-center justify-center rounded-full text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label={t('songHeader.close')}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
+                <div className="ms-1 flex min-w-0 flex-1 items-center justify-end gap-1 px-1 text-[11px] font-medium tabular-nums text-muted-foreground">
+                  <span>{formatClock(currentTime)}</span>
+                  <span className="text-muted-foreground/50">/</span>
+                  <span>{formatClock(duration)}</span>
+                </div>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => onClose()}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
+              aria-label={t('songHeader.close')}
+            >
+              <XMarkIcon className="h-[1.125rem] w-[1.125rem]" />
+            </button>
           </div>
         </div>
       )}
