@@ -354,8 +354,12 @@ export default function SongViewer({
       endPracticeTutorial();
       return true;
     }
-    const target = timed[Math.min(1, timed.length - 1)];
+    // Step 2: second timed lyric line (not the opener), seek so music matches the frame.
+    const target = timed.length > 1 ? timed[1] : timed[0];
     const key = `${target.sectionIndex}:${target.lineIndex}`;
+    if (target.startSec != null) {
+      youtubePlayerApiRef.current?.seekTo(target.startSec);
+    }
     setPracticeTutorialLineKey(key);
     setActiveLyricKey(key);
     setPracticeTutorialStep('line');
