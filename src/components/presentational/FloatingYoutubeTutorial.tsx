@@ -682,11 +682,11 @@ export default function FloatingYoutubeTutorial({
           onPointerDown={stopPanelEvent}
           onClick={stopPanelEvent}
         >
-          {/* Thin scrubber flush to top — keeps bar short so lyrics stay visible */}
-          <div className="relative h-3 w-full">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 overflow-hidden bg-black/[0.08] dark:bg-white/15">
+          {/* Scrubber — taller track + larger thumb for easier scrubbing */}
+          <div className="relative h-5 w-full px-3 pt-1.5">
+            <div className="pointer-events-none absolute inset-x-3 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black/[0.08] dark:bg-white/15">
               <div
-                className="h-full bg-red-500 dark:bg-red-400"
+                className="h-full rounded-full bg-red-500 dark:bg-red-400"
                 style={{
                   width: `${
                     duration > 0 ? (clamp(currentTime, 0, duration) / duration) * 100 : 0
@@ -711,100 +711,104 @@ export default function FloatingYoutubeTutorial({
               onTouchEnd={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
               onBlur={(e) => onScrubCommit(Number(e.target.value))}
               className={cn(
-                'absolute inset-0 h-3 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
-                '[&::-webkit-slider-runnable-track]:h-0.5 [&::-webkit-slider-runnable-track]:bg-transparent',
-                '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:-mt-[5px] [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3',
+                'absolute inset-x-3 top-0 h-5 w-auto cursor-pointer appearance-none bg-transparent disabled:opacity-40',
+                '[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-transparent',
+                '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:-mt-1 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4',
                 '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
-                '[&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:shadow-sm dark:[&::-webkit-slider-thumb]:bg-red-400',
-                '[&::-moz-range-track]:h-0.5 [&::-moz-range-track]:bg-transparent',
-                '[&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:rounded-full',
+                '[&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(255,255,255,0.9),0_1px_4px_rgba(0,0,0,0.25)]',
+                'dark:[&::-webkit-slider-thumb]:bg-red-400 dark:[&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(24,24,27,0.95),0_1px_4px_rgba(0,0,0,0.5)]',
+                '[&::-moz-range-track]:h-1.5 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-transparent',
+                '[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full',
                 '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-red-500 dark:[&::-moz-range-thumb]:bg-red-400'
               )}
             />
           </div>
 
-          <div className="mx-auto flex max-w-lg items-center gap-0.5 px-2 pb-1.5 pt-0.5">
-            {(fetchState.status === 'loading' && !playerReady) ||
-            (fetchState.status === 'error' && !playerReady) ? (
-              <div className="flex min-w-0 flex-1 items-center justify-between gap-2 px-1 text-[11px] text-muted-foreground">
-                {fetchState.status === 'loading' ? (
-                  <span className="truncate">{t('youtubeTutorial.loadingOriginal')}</span>
+          {/* Time left · controls centered · close right */}
+          <div className="relative mx-auto grid max-w-lg grid-cols-[1fr_auto_1fr] items-center px-2 pb-2 pt-0.5">
+            <div className="flex min-w-0 items-center justify-start gap-1 ps-1 text-[12px] font-medium tabular-nums text-muted-foreground">
+              {(fetchState.status === 'loading' && !playerReady) ||
+              (fetchState.status === 'error' && !playerReady) ? (
+                fetchState.status === 'loading' ? (
+                  <span className="truncate text-[11px]">{t('youtubeTutorial.loadingOriginal')}</span>
                 ) : (
                   <a
                     href={youtubePageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="truncate underline-offset-2 hover:underline"
+                    className="truncate text-[11px] underline-offset-2 hover:underline"
                   >
                     {t('youtubeTutorial.openYoutube')}
                   </a>
-                )}
-              </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={restart}
-                  disabled={controlsDisabled}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
-                  aria-label={t('youtubeTutorial.restart')}
-                >
-                  <ArrowPathIcon className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => seekRelative(-SEEK_STEP_SEC)}
-                  disabled={controlsDisabled}
-                  className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
-                  aria-label={t('youtubeTutorial.skipBack15')}
-                >
-                  <BackwardIcon className="h-[1.125rem] w-[1.125rem]" />
-                  <span className="absolute bottom-0.5 text-[7px] font-bold tabular-nums leading-none">
-                    15
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  disabled={controlsDisabled}
-                  className="mx-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-950 text-white shadow-sm transition-transform active:scale-95 disabled:opacity-35 dark:bg-white dark:text-neutral-950"
-                  aria-label={isPlaying ? t('youtubeTutorial.pause') : t('youtubeTutorial.play')}
-                >
-                  {isPlaying ? (
-                    <PauseIcon className="h-5 w-5" />
-                  ) : (
-                    <PlayIcon className="ml-0.5 h-5 w-5" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => seekRelative(SEEK_STEP_SEC)}
-                  disabled={controlsDisabled}
-                  className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
-                  aria-label={t('youtubeTutorial.skipForward15')}
-                >
-                  <ForwardIcon className="h-[1.125rem] w-[1.125rem]" />
-                  <span className="absolute bottom-0.5 text-[7px] font-bold tabular-nums leading-none">
-                    15
-                  </span>
-                </button>
-
-                <div className="ms-1 flex min-w-0 flex-1 items-center justify-end gap-1 px-1 text-[11px] font-medium tabular-nums text-muted-foreground">
+                )
+              ) : (
+                <>
                   <span>{formatClock(currentTime)}</span>
                   <span className="text-muted-foreground/50">/</span>
                   <span>{formatClock(duration)}</span>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
 
-            <button
-              type="button"
-              onClick={() => onClose()}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
-              aria-label={t('songHeader.close')}
-            >
-              <XMarkIcon className="h-[1.125rem] w-[1.125rem]" />
-            </button>
+            <div className="flex items-center justify-center gap-1">
+              <button
+                type="button"
+                onClick={restart}
+                disabled={controlsDisabled}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
+                aria-label={t('youtubeTutorial.restart')}
+              >
+                <ArrowPathIcon className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => seekRelative(-SEEK_STEP_SEC)}
+                disabled={controlsDisabled}
+                className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
+                aria-label={t('youtubeTutorial.skipBack15')}
+              >
+                <BackwardIcon className="h-6 w-6" />
+                <span className="absolute bottom-1 text-[8px] font-bold tabular-nums leading-none">
+                  15
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={togglePlay}
+                disabled={controlsDisabled}
+                className="mx-0.5 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-950 text-white shadow-sm transition-transform active:scale-95 disabled:opacity-35 dark:bg-white dark:text-neutral-950"
+                aria-label={isPlaying ? t('youtubeTutorial.pause') : t('youtubeTutorial.play')}
+              >
+                {isPlaying ? (
+                  <PauseIcon className="h-6 w-6" />
+                ) : (
+                  <PlayIcon className="ml-0.5 h-6 w-6" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => seekRelative(SEEK_STEP_SEC)}
+                disabled={controlsDisabled}
+                className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground disabled:opacity-35 dark:hover:bg-white/10"
+                aria-label={t('youtubeTutorial.skipForward15')}
+              >
+                <ForwardIcon className="h-6 w-6" />
+                <span className="absolute bottom-1 text-[8px] font-bold tabular-nums leading-none">
+                  15
+                </span>
+              </button>
+            </div>
+
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => onClose()}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
+                aria-label={t('songHeader.close')}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -894,7 +894,7 @@ export default function SongContent({
       className={cn(
         'song-content-scrollable relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto',
         youtubeTutorialOpen && youtubeVideoMode === 'audio'
-          ? 'pb-20'
+          ? 'pb-24'
           : !isAuthenticated && 'pb-[5.5rem] sm:pb-24'
       )}
       style={{ 
