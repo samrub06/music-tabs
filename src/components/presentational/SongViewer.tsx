@@ -21,6 +21,28 @@ import {
   PracticeTutorialCoach,
   type PracticeTutorialStep,
 } from '@/components/practice/PracticeTutorialCoach';
+import {
+  completePracticeCoachAction,
+} from '@/app/song/[id]/practiceCoachActions';
+
+/** Guest-only fallback; authenticated users persist in profiles.practice_coach_completed_at */
+const PRACTICE_COACH_DONE_KEY = 'tabasco:lyric-practice-coach-done'
+
+function readGuestPracticeCoachDone(): boolean {
+  try {
+    return localStorage.getItem(PRACTICE_COACH_DONE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeGuestPracticeCoachDone(): void {
+  try {
+    localStorage.setItem(PRACTICE_COACH_DONE_KEY, '1')
+  } catch {
+    // ignore quota / private mode
+  }
+}
 
 const ChordDiagramModal = dynamic(() => import('./ChordDiagramModal'), { ssr: false });
 
@@ -80,6 +102,8 @@ interface SongViewerProps {
   onReachSongEnd?: () => void;
   canAwardOnEndReach?: boolean;
   isAuthenticated?: boolean;
+  /** From profiles.practice_coach_completed_at when logged in */
+  practiceCoachCompleted?: boolean;
   manualBpm?: number | null;
   onSetManualBpm?: (bpm: number) => void;
   knownChordIds?: Set<string>;
@@ -153,6 +177,7 @@ export default function SongViewer({
     onReachSongEnd,
     canAwardOnEndReach,
     isAuthenticated = false,
+    practiceCoachCompleted = false,
     manualBpm,
     onSetManualBpm,
     easyChordMode,
@@ -193,7 +218,25 @@ export default function SongViewer({
   const [practiceTutorialStep, setPracticeTutorialStep] = useState<PracticeTutorialStep>(null);
   const [practiceTutorialLineKey, setPracticeTutorialLineKey] = useState<string | null>(null);
   const [practiceTutorialAwaitingSync, setPracticeTutorialAwaitingSync] = useState(false);
+  const [coachCompleted, setCoachCompleted] = useState(practiceCoachCompleted);
   const practiceAutoStartedRef = useRef(false);
+
+  useEffect(() => {
+    setCoachCompleted(practiceCoachCompleted);
+  }, [practiceCoachCompleted]);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+    setCoachCompleted(readGuestPracticeCoachDone());
+  }, [isAuthenticated, song?.id]);
+
+  // One-time migrate: guest localStorage completion → profile DB
+  useEffect(() => {
+    if (!isAuthenticated || practiceCoachCompleted) return;
+    if (!readGuestPracticeCoachDone()) return;
+    setCoachCompleted(true);
+    void completePracticeCoachAction().catch(() => {});
+  }, [isAuthenticated, practiceCoachCompleted]);
 
   useEffect(() => {
     setYoutubeTutorialOpen(false);
@@ -327,6 +370,17 @@ export default function SongViewer({
     [lyricSync]
   );
 
+  const persistPracticeCoachDone = useCallback(() => {
+    setCoachCompleted(true);
+    if (isAuthenticated) {
+      void completePracticeCoachAction().catch(() => {
+        // Keep UI optimistic; next session will re-fetch from DB
+      });
+      return;
+    }
+    writeGuestPracticeCoachDone();
+  }, [isAuthenticated]);
+
   const handleLyricLineSeek = useCallback(
     (sectionIndex: number, lineIndex: number) => {
       const line = lyricSyncLookup.get(`${sectionIndex}:${lineIndex}`);
@@ -334,25 +388,27 @@ export default function SongViewer({
       youtubePlayerApiRef.current?.seekTo(line.startSec);
       setActiveLyricKey(`${sectionIndex}:${lineIndex}`);
       if (practiceTutorialStep === 'line') {
+        void persistPracticeCoachDone();
         setPracticeTutorialStep(null);
         setPracticeTutorialLineKey(null);
         setPracticeTutorialAwaitingSync(false);
       }
     },
-    [lyricSyncLookup, practiceTutorialStep]
+    [lyricSyncLookup, practiceTutorialStep, persistPracticeCoachDone]
   );
 
-  const endPracticeTutorial = useCallback(() => {
+  const endPracticeTutorial = useCallback((options?: { markDone?: boolean }) => {
+    if (options?.markDone) void persistPracticeCoachDone();
     setPracticeTutorialStep(null);
     setPracticeTutorialLineKey(null);
     setPracticeTutorialAwaitingSync(false);
-  }, []);
+  }, [persistPracticeCoachDone]);
 
   const goToPracticeLineStep = useCallback(() => {
     if (!youtubePlayerReady || lyricSync?.status !== 'ready') return false;
     const lyricTimed = pickPracticeTutorialLyricLines(lyricSync.lines);
     if (lyricTimed.length === 0) {
-      endPracticeTutorial();
+      endPracticeTutorial({ markDone: true });
       return true;
     }
     // Step 2: second real lyric line (skip tabs/patterns), seek so music matches the frame.
@@ -381,10 +437,17 @@ export default function SongViewer({
   const handleStartLyricPracticeTutorial = useCallback(() => {
     setYoutubeVideoMode('original');
     setYoutubeTutorialOpen(true);
+    // After the coach has been finished/skipped once, just open practice — no redo.
+    if (coachCompleted) {
+      setPracticeTutorialStep(null);
+      setPracticeTutorialLineKey(null);
+      setPracticeTutorialAwaitingSync(false);
+      return;
+    }
     setPracticeTutorialStep('youtube');
     setPracticeTutorialLineKey(null);
     setPracticeTutorialAwaitingSync(false);
-  }, []);
+  }, [coachCompleted]);
 
   // Explorer “Try it” → open Original + coachmark tutorial (no loading overlay).
   useEffect(() => {
@@ -419,7 +482,7 @@ export default function SongViewer({
       if (Number.isFinite(sectionIndex) && Number.isFinite(lineIndex)) {
         handleLyricLineSeek(sectionIndex, lineIndex);
       }
-      endPracticeTutorial();
+      endPracticeTutorial({ markDone: true });
     }
   }, [
     practiceTutorialStep,
@@ -428,6 +491,10 @@ export default function SongViewer({
     handleLyricLineSeek,
     endPracticeTutorial,
   ]);
+
+  const handlePracticeTutorialSkip = useCallback(() => {
+    endPracticeTutorial({ markDone: true });
+  }, [endPracticeTutorial]);
 
   // After "Next" on video step, advance once lyric sync is ready.
   useEffect(() => {
@@ -623,7 +690,7 @@ export default function SongViewer({
         step={practiceTutorialStep}
         targetSelector={practiceTutorialTargetSelector}
         onNext={handlePracticeTutorialNext}
-        onSkip={endPracticeTutorial}
+        onSkip={handlePracticeTutorialSkip}
       />
 
       <SongQueueSheet

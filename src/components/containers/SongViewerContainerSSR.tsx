@@ -45,6 +45,7 @@ interface SongViewerContainerSSRProps {
   canEdit?: boolean;
   onAddToLibrary?: () => void;
   initialInstrument?: 'piano' | 'guitar';
+  practiceCoachCompleted?: boolean;
 }
 
 export default function SongViewerContainerSSR({ 
@@ -58,6 +59,7 @@ export default function SongViewerContainerSSR({
   canEdit = true,
   onAddToLibrary,
   initialInstrument,
+  practiceCoachCompleted = false,
 }: SongViewerContainerSSRProps) {
   const router = useRouter();
   const { t } = useLanguage();
@@ -706,6 +708,7 @@ export default function SongViewerContainerSSR({
     onReachSongEnd: canAwardOnEndReach ? handleReachSongEnd : undefined,
     canAwardOnEndReach,
     isAuthenticated,
+    practiceCoachCompleted,
     knownChordIds,
     chordNameToIdMap,
     chords,

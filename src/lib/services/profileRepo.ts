@@ -12,6 +12,7 @@ export interface Profile {
   spotifyId: string | null
   tsnioutFilterEnabled: boolean
   onboardingCompletedAt: Date | null
+  practiceCoachCompletedAt: Date | null
   createdAt: Date
   updatedAt: Date
 }
@@ -39,6 +40,9 @@ function mapDbProfileToDomain(dbProfile: Database['public']['Tables']['profiles'
     tsnioutFilterEnabled: dbProfile.tsniout_filter_enabled ?? false,
     onboardingCompletedAt: dbProfile.onboarding_completed_at
       ? new Date(dbProfile.onboarding_completed_at)
+      : null,
+    practiceCoachCompletedAt: dbProfile.practice_coach_completed_at
+      ? new Date(dbProfile.practice_coach_completed_at)
       : null,
     createdAt: new Date(dbProfile.created_at),
     updatedAt: new Date(dbProfile.updated_at)
@@ -83,7 +87,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
   async getProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await client
       .from('profiles')
-      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, practice_coach_completed_at, created_at, updated_at')
       .eq('id', userId)
       .single()
 
@@ -209,7 +213,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     const { data, error } = await (client.from('profiles') as any)
       .update(updateData)
       .eq('id', userId)
-      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, practice_coach_completed_at, created_at, updated_at')
       .single()
 
     if (error) throw error
@@ -224,7 +228,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     const { data, error } = await (client.from('profiles') as any)
       .update({ spotify_id: spotifyId, spotify_refresh_token: refreshToken })
       .eq('id', userId)
-      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, practice_coach_completed_at, created_at, updated_at')
       .single()
 
     if (error) throw error
@@ -253,7 +257,7 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
     const { data, error } = await (client.from('profiles') as any)
       .update({ spotify_id: null, spotify_refresh_token: null })
       .eq('id', userId)
-      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, created_at, updated_at')
+      .select('id, email, full_name, avatar_url, preferred_instrument, spotify_id, tsniout_filter_enabled, onboarding_completed_at, practice_coach_completed_at, created_at, updated_at')
       .single()
 
     if (error) throw error
@@ -268,5 +272,26 @@ export const profileRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
     return !(data as { onboarding_completed_at?: string | null } | null)?.onboarding_completed_at
+  },
+
+  async hasCompletedPracticeCoach(userId: string): Promise<boolean> {
+    const { data, error } = await (client.from('profiles') as any)
+      .select('practice_coach_completed_at')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    return Boolean(
+      (data as { practice_coach_completed_at?: string | null } | null)?.practice_coach_completed_at
+    )
+  },
+
+  async completePracticeCoach(userId: string): Promise<void> {
+    const { error } = await (client.from('profiles') as any)
+      .update({ practice_coach_completed_at: new Date().toISOString() })
+      .eq('id', userId)
+      .is('practice_coach_completed_at', null)
+
+    if (error) throw error
   },
 })

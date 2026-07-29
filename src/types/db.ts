@@ -21,6 +21,7 @@ export interface Database {
           tsniout_filter_enabled: boolean
           is_admin: boolean
           onboarding_completed_at: string | null
+          practice_coach_completed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -35,6 +36,7 @@ export interface Database {
           tsniout_filter_enabled?: boolean
           is_admin?: boolean
           onboarding_completed_at?: string | null
+          practice_coach_completed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +51,7 @@ export interface Database {
           tsniout_filter_enabled?: boolean
           is_admin?: boolean
           onboarding_completed_at?: string | null
+          practice_coach_completed_at?: string | null
           created_at?: string
           updated_at?: string
         }

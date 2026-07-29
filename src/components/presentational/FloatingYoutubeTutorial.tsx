@@ -753,24 +753,30 @@ export default function FloatingYoutubeTutorial({
             />
           </div>
 
-          {/* Controls centered · close right */}
-          <div className="relative mx-auto grid max-w-lg grid-cols-[1fr_auto_1fr] items-center px-2 pb-2 pt-0.5">
-            <div className="min-w-0 ps-1 text-[11px] text-muted-foreground">
+          {/* Play dead-center; time + close are absolute so they don't shift it */}
+          <div className="relative mx-auto flex max-w-lg items-center justify-center px-2 pb-2 pt-0.5">
+            <div className="absolute start-2 top-1/2 z-10 max-w-[30%] -translate-y-1/2 truncate text-[12px] font-medium tabular-nums text-muted-foreground">
               {(fetchState.status === 'loading' && !playerReady) ||
               (fetchState.status === 'error' && !playerReady) ? (
                 fetchState.status === 'loading' ? (
-                  <span className="truncate">{t('youtubeTutorial.loadingOriginal')}</span>
+                  <span className="text-[11px] font-normal">{t('youtubeTutorial.loadingOriginal')}</span>
                 ) : (
                   <a
                     href={youtubePageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="truncate underline-offset-2 hover:underline"
+                    className="text-[11px] font-normal underline-offset-2 hover:underline"
                   >
                     {t('youtubeTutorial.openYoutube')}
                   </a>
                 )
-              ) : null}
+              ) : (
+                <>
+                  <span>{formatClock(currentTime)}</span>
+                  <span className="text-muted-foreground/50"> / </span>
+                  <span>{formatClock(duration)}</span>
+                </>
+              )}
             </div>
 
             <div className="flex items-center justify-center gap-1">
@@ -820,18 +826,18 @@ export default function FloatingYoutubeTutorial({
                   15
                 </span>
               </button>
+              {/* Balance restart so play/pause stays geometrically centered */}
+              <div className="h-11 w-11 shrink-0" aria-hidden />
             </div>
 
-            <div className="flex items-center justify-end">
-              <button
-                type="button"
-                onClick={() => onClose()}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
-                aria-label={t('songHeader.close')}
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => onClose()}
+              className="absolute end-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
+              aria-label={t('songHeader.close')}
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
           </div>
         </div>
       )}

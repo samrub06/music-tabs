@@ -20,11 +20,15 @@ export default async function SongPageData({ songId }: SongPageDataProps) {
   const preferredInstrumentPromise = userPromise.then(({ data: { user } }) =>
     user ? profileRepo(supabase).getPreferredInstrument(user.id) : Promise.resolve(null)
   )
+  const practiceCoachDonePromise = userPromise.then(({ data: { user } }) =>
+    user ? profileRepo(supabase).hasCompletedPracticeCoach(user.id) : Promise.resolve(false)
+  )
 
-  const [{ data: { user } }, song, preferredInstrument] = await Promise.all([
+  const [{ data: { user } }, song, preferredInstrument, practiceCoachCompleted] = await Promise.all([
     userPromise,
     songPromise,
     preferredInstrumentPromise,
+    practiceCoachDonePromise,
   ])
 
   if (!song) {
@@ -55,6 +59,7 @@ export default async function SongPageData({ songId }: SongPageDataProps) {
       librarySongId={librarySongId}
       canEdit={canEdit}
       initialInstrument={initialInstrument}
+      practiceCoachCompleted={practiceCoachCompleted}
     />
   )
 }
