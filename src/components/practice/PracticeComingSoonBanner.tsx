@@ -242,45 +242,54 @@ export function PracticeComingSoonBanner({
 interface PracticeComingSoonChipProps {
   visible: boolean
   onOpen?: () => void
-  onDismiss?: () => void
+  /** When practice sync is ready, chip tap launches the tutorial. */
+  onStartPractice?: () => void
+  practiceAvailable?: boolean
 }
 
-/** Compact chip next to transpose — click opens banner; X dismisses. */
+/** Frosted beige glass chip — feature entry (no dismiss). */
 export function PracticeComingSoonChip({
   visible,
   onOpen,
-  onDismiss,
+  onStartPractice,
+  practiceAvailable = false,
 }: PracticeComingSoonChipProps) {
   const { t } = useLanguage()
 
   if (!visible) return null
 
+  const handleOpen = () => {
+    if (practiceAvailable && onStartPractice) {
+      onStartPractice()
+      return
+    }
+    onOpen?.()
+  }
+
   return (
-    <div
+    <button
+      type="button"
+      onClick={handleOpen}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-full border border-black/10 py-1.5 pe-1 ps-2.5 animate-in fade-in zoom-in-95 duration-300 sm:gap-1.5 sm:px-1 sm:ps-3',
-        'min-h-9 sm:min-h-[40px]'
+        'group relative inline-flex h-12 shrink-0 items-center overflow-hidden rounded-full px-2.5',
+        'sm:h-11 sm:px-3',
+        'border border-white/45 shadow-none backdrop-blur-xl backdrop-saturate-150',
+        'ring-1 ring-inset ring-white/40 transition-all duration-200 active:scale-[0.98]',
+        'text-xs font-semibold tracking-tight sm:text-sm'
       )}
-      style={{ backgroundColor: BANNER_BG, color: BANNER_INK }}
-      role="group"
+      style={{
+        background:
+          'linear-gradient(145deg, rgba(245,236,218,0.78), rgba(214,200,172,0.62))',
+        color: '#2F281C',
+      }}
+      title={t('songContent.practiceModeChipHint')}
+      aria-label={t('songContent.practiceModeChipAria')}
     >
-      <button
-        type="button"
-        onClick={onOpen}
-        className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight sm:max-w-none sm:text-sm"
-        title={t('songContent.practiceBannerTitle')}
-      >
-        {t('songContent.practiceBannerTitle')}
-      </button>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/10 sm:h-8 sm:w-8"
-        aria-label={t('common.close')}
-        title={t('common.close')}
-      >
-        <XMarkIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-      </button>
-    </div>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-3 top-0 h-1/2 rounded-b-full bg-gradient-to-b from-white/50 to-transparent"
+      />
+      <span className="relative z-10 whitespace-nowrap">{t('songContent.practiceMode')}</span>
+    </button>
   )
 }

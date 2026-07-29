@@ -248,9 +248,9 @@ export function RecordSongChip({
   return (
     <div
       className={cn(
-        'inline-flex shrink-0 items-center gap-0.5 rounded-full border border-black/20 bg-black/[0.06] py-1.5 pe-1 ps-2.5 animate-in fade-in zoom-in-95 duration-300 sm:gap-1 sm:ps-3',
+        'inline-flex h-12 shrink-0 items-center gap-0.5 rounded-full border border-black/20 bg-black/[0.06] pe-1 ps-2.5',
         'dark:border-white/20 dark:bg-white/[0.08]',
-        'min-h-9 sm:min-h-[40px]'
+        'sm:h-11 sm:gap-1 sm:ps-3'
       )}
       role="status"
     >

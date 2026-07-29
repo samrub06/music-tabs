@@ -51,11 +51,8 @@ import {
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { SongRecordingPanel } from '@/components/practice/SongRecordingPanel';
 import {
-  PracticeComingSoonBanner,
   PracticeComingSoonChip,
-  usePracticeComingSoonPromo,
 } from '@/components/practice/PracticeComingSoonBanner';
-import { LyricPracticeHint } from '@/components/practice/LyricPracticeHint';
 import {
   RecordSongChip,
   useRecordSongPromo,
@@ -89,7 +86,7 @@ import {
 
 const toolPillClass = (active: boolean) =>
   cn(
-    'shrink-0 whitespace-nowrap rounded-full px-2.5 py-1.5 min-h-9 text-xs font-medium transition-all duration-200 sm:px-3 sm:py-2 sm:min-h-[40px] sm:text-sm',
+    'inline-flex h-12 shrink-0 items-center whitespace-nowrap rounded-full px-2.5 text-xs font-medium transition-all duration-200 sm:h-11 sm:px-3 sm:text-sm',
     active
       ? 'bg-primary text-primary-foreground shadow-sm'
       : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -284,13 +281,6 @@ export default function SongContent({
   const [selectedRecording, setSelectedRecording] = useState<SongRecording | null>(null);
   const [recordingPlaybackUrl, setRecordingPlaybackUrl] = useState<string | null>(null);
   const practiceAudio = usePracticeAudio();
-  const {
-    phase: practicePromoPhase,
-    dismiss: dismissPracticePromo,
-    markBannerReady,
-    collapseToChip,
-    reopenBanner,
-  } = usePracticeComingSoonPromo();
   const {
     phase: recordPromoPhase,
     dismiss: dismissRecordPromo,
@@ -553,6 +543,24 @@ export default function SongContent({
         </span>
         <span className="text-sm font-semibold tabular-nums leading-none text-foreground">
           {transposedSong.capo}
+        </span>
+      </div>
+    ) : null;
+
+  const bpmDisplay =
+    typeof bpm === 'number' && bpm > 0 ? (
+      <div
+        className={cn(
+          'flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2 sm:w-16',
+          actionTileHeight
+        )}
+        title={t('songContent.BPM_LABEL').replace('{bpm}', String(bpm))}
+      >
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground leading-none">
+          BPM
+        </span>
+        <span className="text-sm font-semibold tabular-nums leading-none text-foreground">
+          {bpm}
         </span>
       </div>
     ) : null;
@@ -897,13 +905,18 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50 dark:bg-background">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 sm:gap-2.5">
-            {/* Row 1: cover + title + capo */}
+            {/* Row 1: cover + title + capo / bpm badges */}
             <div className="flex w-full items-start gap-2">
               {songCoverVignette}
               <div className="min-w-0 flex-1 self-center">
                 {songTitleBlock}
               </div>
-              {capoDisplay}
+              {(capoDisplay || bpmDisplay) && (
+                <div className="flex shrink-0 items-start gap-1.5">
+                  {capoDisplay}
+                  {bpmDisplay}
+                </div>
+              )}
             </div>
 
             {/* Always-visible YouTube row — full width */}
@@ -1136,9 +1149,11 @@ export default function SongContent({
                 )}
 
                 <PracticeComingSoonChip
-                  visible={practicePromoPhase === 'chip'}
-                  onOpen={reopenBanner}
-                  onDismiss={dismissPracticePromo}
+                  visible={hasLyricPractice}
+                  practiceAvailable={hasLyricPractice}
+                  onStartPractice={
+                    hasLyricPractice ? onStartLyricPracticeTutorial : undefined
+                  }
                 />
                 {isAuthenticated ? (
                   <RecordSongChip
@@ -1147,17 +1162,6 @@ export default function SongContent({
                   />
                 ) : null}
                 </div>
-
-                <PracticeComingSoonBanner
-                  phase={practicePromoPhase}
-                  onSnakeFilled={markBannerReady}
-                  onDismiss={dismissPracticePromo}
-                  onCollapseToChip={collapseToChip}
-                  practiceAvailable={hasLyricPractice}
-                  onStartPractice={
-                    hasLyricPractice ? onStartLyricPracticeTutorial : undefined
-                  }
-                />
 
                 {isAuthenticated && SONG_RECORDING_ENABLED ? (
                   <SongRecordingPanel
@@ -1177,11 +1181,6 @@ export default function SongContent({
                   />
                 ) : null}
 
-                {bpm && (
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                    {t('songContent.BPM_LABEL').replace('{bpm}', String(bpm))}
-                  </p>
-                )}
               </div>
             </CollapsibleContent>
           </Collapsible>
@@ -1244,11 +1243,6 @@ export default function SongContent({
               onExit={exitPracticeMode}
             />
           ) : null}
-
-          <LyricPracticeHint
-            visible={youtubeLyricSeekEnabled}
-            className="mb-3"
-          />
 
           {/* Song Content — portrait practice chrome; landscape uses fullscreen overlay */}
           {!landscapePracticeActive ? (
@@ -1553,7 +1547,8 @@ function StructuredSongContent({
           isPracticeActive && 'bg-primary/10 ring-2 ring-primary/40 px-2 py-1.5 scale-[1.01]',
           isPracticeDimmed && 'opacity-25',
           isYoutubeActive && 'bg-amber-500/15 ring-2 ring-amber-500/50 px-2 py-1',
-          syncTimed && 'cursor-pointer hover:bg-amber-500/10'
+          syncTimed && 'cursor-pointer hover:bg-amber-500/10',
+          isYoutubeActive && 'scroll-mt-28'
         )}
         onClick={
           syncTimed && typeof sectionIndex === 'number'

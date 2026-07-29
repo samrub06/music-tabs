@@ -12,6 +12,7 @@ import FeaturedSongSection from '../library/FeaturedSongSection'
 import RecentSongsSection from '../library/RecentSongsSection'
 import PopularSongsSection from '../library/PopularSongsSection'
 import SpotifyComingSoonSection from '@/components/library/SpotifyComingSoonSection'
+import { PracticeModeExplorerBanner } from '@/components/library/PracticeModeExplorerBanner'
 import { profileRepo } from '@/lib/services/profileRepo'
 import type { ForYouArtistSong } from '@/types/forYou'
 
@@ -80,6 +81,8 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
           showSectionTitle={false}
         />
       </div>
+
+      <PracticeModeExplorerBanner />
 
       <div id="hub-zone-international" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="international" />

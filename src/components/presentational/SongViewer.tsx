@@ -17,6 +17,11 @@ import type { YoutubePlayerHandle } from '@/lib/youtube/iframeApi';
 import { getLyricSyncAction, ensureLyricSyncAction, hasReadyLyricSyncAction } from '@/app/song/[id]/lyricSyncActions';
 import { buildLyricSyncLookup } from '@/utils/lyricSync';
 import { useLanguage } from '@/context/LanguageContext';
+import {
+  PracticeTutorialCoach,
+  type PracticeTutorialStep,
+} from '@/components/practice/PracticeTutorialCoach';
+import { PracticeBootOverlay } from '@/components/practice/PracticeBootOverlay';
 
 const ChordDiagramModal = dynamic(() => import('./ChordDiagramModal'), { ssr: false });
 
@@ -186,7 +191,13 @@ export default function SongViewer({
   const [lyricSyncLoading, setLyricSyncLoading] = useState(false);
   const [activeLyricKey, setActiveLyricKey] = useState<string | null>(null);
   const [hasLyricPractice, setHasLyricPractice] = useState(false);
-  const [practiceTutorialPending, setPracticeTutorialPending] = useState(false);
+  const [practiceTutorialStep, setPracticeTutorialStep] = useState<PracticeTutorialStep>(null);
+  const [practiceTutorialLineKey, setPracticeTutorialLineKey] = useState<string | null>(null);
+  const [practiceTutorialAwaitingSync, setPracticeTutorialAwaitingSync] = useState(false);
+  const [practiceBootOverlay, setPracticeBootOverlay] = useState(false);
+  const [practiceBootStarted, setPracticeBootStarted] = useState(false);
+  const practiceAutoStartedRef = useRef(false);
+  const practiceBootStartedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     setYoutubeTutorialOpen(false);
@@ -197,7 +208,22 @@ export default function SongViewer({
     setLyricSync(null);
     setActiveLyricKey(null);
     setHasLyricPractice(false);
-    setPracticeTutorialPending(false);
+    setPracticeTutorialStep(null);
+    setPracticeTutorialLineKey(null);
+    setPracticeTutorialAwaitingSync(false);
+    practiceAutoStartedRef.current = false;
+    practiceBootStartedAtRef.current = null;
+    setPracticeBootStarted(false);
+
+    let boot = false;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      boot = params.get('practice') === '1';
+    }
+    setPracticeBootOverlay(boot);
+    if (boot) {
+      practiceBootStartedAtRef.current = Date.now();
+    }
   }, [song?.id]);
 
   useEffect(() => {
@@ -275,8 +301,12 @@ export default function SongViewer({
     return () => window.clearInterval(id);
   }, [lyricSyncLoading, song?.id, youtubeVideoId]);
 
-  // Highlight current line from YouTube time
+  // Highlight current line from YouTube time (paused during line-step coachmark)
   useEffect(() => {
+    if (practiceTutorialStep === 'line' && practiceTutorialLineKey) {
+      setActiveLyricKey(practiceTutorialLineKey);
+      return;
+    }
     if (!practiceLyricSyncEnabled || lyricSync?.status !== 'ready' || !youtubePlayerReady) {
       setActiveLyricKey(null);
       return;
@@ -300,7 +330,13 @@ export default function SongViewer({
       setActiveLyricKey(current);
     }, 200);
     return () => window.clearInterval(id);
-  }, [practiceLyricSyncEnabled, lyricSync, youtubePlayerReady]);
+  }, [
+    practiceLyricSyncEnabled,
+    lyricSync,
+    youtubePlayerReady,
+    practiceTutorialStep,
+    practiceTutorialLineKey,
+  ]);
 
   const lyricSyncLookup = useMemo(
     () => buildLyricSyncLookup(lyricSync?.status === 'ready' ? lyricSync.lines : []),
@@ -312,14 +348,41 @@ export default function SongViewer({
       const line = lyricSyncLookup.get(`${sectionIndex}:${lineIndex}`);
       if (line?.startSec == null) return;
       youtubePlayerApiRef.current?.seekTo(line.startSec);
+      if (practiceTutorialStep === 'line') {
+        setPracticeTutorialStep(null);
+        setPracticeTutorialLineKey(null);
+        setPracticeTutorialAwaitingSync(false);
+      }
     },
-    [lyricSyncLookup]
+    [lyricSyncLookup, practiceTutorialStep]
   );
+
+  const endPracticeTutorial = useCallback(() => {
+    setPracticeTutorialStep(null);
+    setPracticeTutorialLineKey(null);
+    setPracticeTutorialAwaitingSync(false);
+  }, []);
+
+  const goToPracticeLineStep = useCallback(() => {
+    if (!youtubePlayerReady || lyricSync?.status !== 'ready') return false;
+    const timed = lyricSync.lines.filter((l) => l.startSec != null);
+    if (timed.length === 0) {
+      endPracticeTutorial();
+      return true;
+    }
+    const target = timed[Math.min(1, timed.length - 1)];
+    const key = `${target.sectionIndex}:${target.lineIndex}`;
+    setPracticeTutorialLineKey(key);
+    setActiveLyricKey(key);
+    setPracticeTutorialStep('line');
+    setPracticeTutorialAwaitingSync(false);
+    return true;
+  }, [lyricSync, youtubePlayerReady, endPracticeTutorial]);
 
   const handleSelectYoutubeMode = (mode: YoutubeVideoMode) => {
     if (youtubeTutorialOpen && youtubeVideoMode === mode) {
       setYoutubeTutorialOpen(false);
-      setPracticeTutorialPending(false);
+      endPracticeTutorial();
       return;
     }
     setYoutubeVideoMode(mode);
@@ -329,32 +392,105 @@ export default function SongViewer({
   const handleStartLyricPracticeTutorial = useCallback(() => {
     setYoutubeVideoMode('original');
     setYoutubeTutorialOpen(true);
-    setPracticeTutorialPending(true);
+    setPracticeTutorialStep('youtube');
+    setPracticeTutorialLineKey(null);
+    setPracticeTutorialAwaitingSync(false);
   }, []);
 
-  // Tutorial: after Original video + sync are ready, wait briefly then seek 2nd timed line.
+  // Explorer “Try it” → /song/…?practice=1 auto-starts the coachmark tutorial.
   useEffect(() => {
-    if (!practiceTutorialPending) return;
-    if (!youtubePlayerReady || lyricSync?.status !== 'ready') return;
+    if (!practiceBootOverlay) return;
+    if (practiceAutoStartedRef.current) return;
+    if (!hasLyricPractice) return;
+    practiceAutoStartedRef.current = true;
+    handleStartLyricPracticeTutorial();
+    setPracticeBootStarted(true);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      params.delete('practice');
+      const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', next);
+    } catch {
+      // ignore
+    }
+  }, [practiceBootOverlay, hasLyricPractice, handleStartLyricPracticeTutorial]);
 
-    const timed = lyricSync.lines.filter((l) => l.startSec != null);
-    if (timed.length === 0) {
-      setPracticeTutorialPending(false);
+  // Keep boot overlay at least ~1s, until YouTube is ready (max 6s).
+  useEffect(() => {
+    if (!practiceBootOverlay) return;
+    if (!practiceBootStarted) return;
+
+    const MIN_MS = 1000;
+    const MAX_MS = 6000;
+    const started = practiceBootStartedAtRef.current ?? Date.now();
+
+    const dismiss = () => setPracticeBootOverlay(false);
+
+    const elapsed = () => Date.now() - started;
+    if (youtubePlayerReady && elapsed() >= MIN_MS) {
+      dismiss();
+      return;
+    }
+    if (elapsed() >= MAX_MS) {
+      dismiss();
       return;
     }
 
-    const target = timed[Math.min(1, timed.length - 1)];
-    const showMs = 1400;
+    const waitMs = youtubePlayerReady
+      ? Math.max(0, MIN_MS - elapsed())
+      : Math.max(0, MAX_MS - elapsed());
+
     const id = window.setTimeout(() => {
-      if (target.startSec != null) {
-        youtubePlayerApiRef.current?.seekTo(target.startSec);
-        setActiveLyricKey(`${target.sectionIndex}:${target.lineIndex}`);
+      if (youtubePlayerReady || Date.now() - started >= MAX_MS) {
+        dismiss();
       }
-      setPracticeTutorialPending(false);
-    }, showMs);
+    }, waitMs);
 
     return () => window.clearTimeout(id);
-  }, [practiceTutorialPending, youtubePlayerReady, lyricSync]);
+  }, [practiceBootOverlay, practiceBootStarted, youtubePlayerReady]);
+
+  const handlePracticeTutorialNext = useCallback(() => {
+    if (practiceTutorialStep === 'youtube') {
+      if (goToPracticeLineStep()) return;
+      setPracticeTutorialAwaitingSync(true);
+      return;
+    }
+    if (practiceTutorialStep === 'line' && practiceTutorialLineKey) {
+      const [sectionRaw, lineRaw] = practiceTutorialLineKey.split(':');
+      const sectionIndex = Number(sectionRaw);
+      const lineIndex = Number(lineRaw);
+      if (Number.isFinite(sectionIndex) && Number.isFinite(lineIndex)) {
+        handleLyricLineSeek(sectionIndex, lineIndex);
+      }
+      endPracticeTutorial();
+    }
+  }, [
+    practiceTutorialStep,
+    practiceTutorialLineKey,
+    goToPracticeLineStep,
+    handleLyricLineSeek,
+    endPracticeTutorial,
+  ]);
+
+  // After "Next" on video step, advance once lyric sync is ready.
+  useEffect(() => {
+    if (!practiceTutorialAwaitingSync) return;
+    if (practiceTutorialStep !== 'youtube') return;
+    goToPracticeLineStep();
+  }, [
+    practiceTutorialAwaitingSync,
+    practiceTutorialStep,
+    lyricSync,
+    youtubePlayerReady,
+    goToPracticeLineStep,
+  ]);
+
+  const practiceTutorialTargetSelector =
+    practiceTutorialStep === 'youtube'
+      ? '[data-practice-target="youtube-player"]'
+      : practiceTutorialStep === 'line' && practiceTutorialLineKey
+        ? `[data-lyric-key="${practiceTutorialLineKey}"]`
+        : null;
 
   const syncBanner = (() => {
     if (!isLyricPracticeYoutubeMode(youtubeVideoMode)) return null;
@@ -515,12 +651,24 @@ export default function SongViewer({
         selectedInstrument={selectedInstrument}
         isOpen={youtubeTutorialOpen}
         videoMode={youtubeVideoMode}
-        onClose={() => setYoutubeTutorialOpen(false)}
+        onClose={() => {
+          setYoutubeTutorialOpen(false);
+          endPracticeTutorial();
+        }}
         playerApiRef={youtubePlayerApiRef}
         onVideoIdChange={setYoutubeVideoId}
         onPlayerReadyChange={setYoutubePlayerReady}
         syncBanner={syncBanner}
       />
+
+      <PracticeTutorialCoach
+        step={practiceBootOverlay ? null : practiceTutorialStep}
+        targetSelector={practiceTutorialTargetSelector}
+        onNext={handlePracticeTutorialNext}
+        onSkip={endPracticeTutorial}
+      />
+
+      <PracticeBootOverlay open={practiceBootOverlay} />
 
       <SongQueueSheet
         open={songQueueOpen}

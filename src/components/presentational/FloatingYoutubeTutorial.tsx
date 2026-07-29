@@ -423,6 +423,7 @@ export default function FloatingYoutubeTutorial({
   return createPortal(
     <>
       <div
+        data-practice-target="youtube-player"
         className={cn(
           'fixed z-[70] overflow-hidden',
           isMinimized
