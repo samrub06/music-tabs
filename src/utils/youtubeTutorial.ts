@@ -69,7 +69,7 @@ export function isLyricPracticeYoutubeMode(mode: YoutubeVideoMode): boolean {
   return mode === 'original' || mode === 'audio'
 }
 
-export function buildYoutubeVideoEmbedUrl(videoId: string): string {
+export function buildYoutubeVideoEmbedUrl(videoId: string, autoplay = false): string {
   const params = new URLSearchParams({
     rel: '0',
     modestbranding: '1',
@@ -77,6 +77,9 @@ export function buildYoutubeVideoEmbedUrl(videoId: string): string {
     enablejsapi: '1',
     fs: '1',
   })
+  if (autoplay) {
+    params.set('autoplay', '1')
+  }
 
   if (typeof window !== 'undefined') {
     params.set('origin', window.location.origin)

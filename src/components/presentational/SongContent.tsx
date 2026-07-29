@@ -51,6 +51,7 @@ import {
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { SongRecordingPanel } from '@/components/practice/SongRecordingPanel';
 import {
+  PracticeComingSoonBanner,
   PracticeComingSoonChip,
   usePracticeComingSoonPromo,
 } from '@/components/practice/PracticeComingSoonBanner';
@@ -150,6 +151,8 @@ interface SongContentProps {
   youtubeLyricSyncLookup?: Map<string, { startSec: number | null }>;
   youtubeActiveLyricKey?: string | null;
   onYoutubeLyricLineClick?: (sectionIndex: number, lineIndex: number) => void;
+  hasLyricPractice?: boolean;
+  onStartLyricPracticeTutorial?: () => void;
 }
 
 export default function SongContent({
@@ -208,6 +211,8 @@ export default function SongContent({
   youtubeLyricSyncLookup,
   youtubeActiveLyricKey = null,
   onYoutubeLyricLineClick,
+  hasLyricPractice = false,
+  onStartLyricPracticeTutorial,
 }: SongContentProps) {
   const { t, isRtl } = useLanguage();
   const pathname = usePathname();
@@ -282,6 +287,9 @@ export default function SongContent({
   const {
     phase: practicePromoPhase,
     dismiss: dismissPracticePromo,
+    markBannerReady,
+    collapseToChip,
+    reopenBanner,
   } = usePracticeComingSoonPromo();
   const {
     phase: recordPromoPhase,
@@ -1129,6 +1137,7 @@ export default function SongContent({
 
                 <PracticeComingSoonChip
                   visible={practicePromoPhase === 'chip'}
+                  onOpen={reopenBanner}
                   onDismiss={dismissPracticePromo}
                 />
                 {isAuthenticated ? (
@@ -1138,6 +1147,17 @@ export default function SongContent({
                   />
                 ) : null}
                 </div>
+
+                <PracticeComingSoonBanner
+                  phase={practicePromoPhase}
+                  onSnakeFilled={markBannerReady}
+                  onDismiss={dismissPracticePromo}
+                  onCollapseToChip={collapseToChip}
+                  practiceAvailable={hasLyricPractice}
+                  onStartPractice={
+                    hasLyricPractice ? onStartLyricPracticeTutorial : undefined
+                  }
+                />
 
                 {isAuthenticated && SONG_RECORDING_ENABLED ? (
                   <SongRecordingPanel

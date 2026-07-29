@@ -149,3 +149,31 @@ export async function ensureLyricSyncAction(input: unknown): Promise<{
     }
   }
 }
+
+const songIdSchema = z.object({
+  songId: z.string().uuid(),
+})
+
+/** True when this song (or its catalog parent) has a ready lyric sync for Practice. */
+export async function hasReadyLyricSyncAction(input: unknown): Promise<{
+  available: boolean
+}> {
+  const { songId } = songIdSchema.parse(input)
+  const lookupIds = await resolveLookupSongIds(songId)
+
+  const anyFile = await readAnyReadyFileCacheForSongIds(lookupIds)
+  if (anyFile?.status === 'ready') return { available: true }
+
+  try {
+    const supabase = await createSafeServerClient()
+    const repo = lyricSyncRepo(supabase)
+    for (const id of lookupIds) {
+      const ready = await repo.getReadyBySongId(id)
+      if (ready?.status === 'ready') return { available: true }
+    }
+  } catch (error) {
+    if (!isMissingTableError(error)) throw error
+  }
+
+  return { available: false }
+}

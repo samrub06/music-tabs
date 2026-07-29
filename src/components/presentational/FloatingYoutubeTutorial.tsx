@@ -228,6 +228,7 @@ export default function FloatingYoutubeTutorial({
         width: '100%',
         height: '100%',
         playerVars: {
+          autoplay: 1,
           rel: 0,
           modestbranding: 1,
           playsinline: 1,
@@ -235,10 +236,16 @@ export default function FloatingYoutubeTutorial({
           origin: window.location.origin,
         },
         events: {
-          onReady: () => {
+          onReady: (event) => {
             if (destroyed) return
             setPlayerReady(true)
             onPlayerReadyChange?.(true)
+            // User opened via a click; start playback without an extra play tap.
+            try {
+              event.target.playVideo()
+            } catch {
+              ytPlayerRef.current?.playVideo()
+            }
             const handle: YoutubePlayerHandle = {
               seekTo: (seconds: number) => {
                 ytPlayerRef.current?.seekTo(seconds, true)

@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils'
 const BANNER_BG = '#D0C8B0'
 const BANNER_INK = '#2A2418'
 
-const STORAGE_DISMISSED = 'tabasco:practice-promo-dismissed-v2'
-const STORAGE_COLLAPSED = 'tabasco:practice-promo-collapsed-v2'
+const STORAGE_DISMISSED = 'tabasco:practice-promo-dismissed-v3'
+const STORAGE_COLLAPSED = 'tabasco:practice-promo-collapsed-v3'
 const BANNER_DURATION_MS = 10_000
 /** Pause after snake fills so the close icon is visible before collapsing. */
 const READY_HOLD_MS = 900
@@ -42,8 +42,8 @@ function writeStorageFlag(key: string): void {
 }
 
 /**
- * Practice promo flow: chip in the toolbar until permanently dismissed.
- * (Hero banner kept in file for reuse; song page uses chip-only.)
+ * Practice promo: chip next to transpose.
+ * Chip click reopens the banner; X dismisses permanently.
  */
 export function usePracticeComingSoonPromo() {
   const [phase, setPhase] = useState<PracticePromoPhase>('loading')
@@ -76,9 +76,9 @@ export function usePracticeComingSoonPromo() {
     )
   }, [])
 
-  /** @deprecated Chip no longer reopens the banner; kept for API compat. */
+  /** Chip → reopen banner. */
   const reopenBanner = useCallback(() => {
-    // no-op: promos stay as chips only
+    setPhase((current) => (current === 'chip' ? 'banner' : current))
   }, [])
 
   // After close icon is shown, auto-collapse to chip
@@ -101,6 +101,11 @@ interface PracticeComingSoonBannerProps {
   phase: PracticePromoPhase
   onSnakeFilled: () => void
   onDismiss: () => void
+  /** Collapse banner back to chip without permanent dismiss. */
+  onCollapseToChip?: () => void
+  /** When set, CTA starts Practice instead of being disabled. */
+  onStartPractice?: () => void
+  practiceAvailable?: boolean
 }
 
 /**
@@ -110,6 +115,9 @@ export function PracticeComingSoonBanner({
   phase,
   onSnakeFilled,
   onDismiss,
+  onCollapseToChip,
+  onStartPractice,
+  practiceAvailable = false,
 }: PracticeComingSoonBannerProps) {
   const { t } = useLanguage()
   const showClose = phase === 'ready' || phase === 'collapsing'
@@ -169,7 +177,7 @@ export function PracticeComingSoonBanner({
               className="absolute end-2.5 top-2.5 z-20 rounded-full border border-black/15 bg-black/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm sm:end-3 sm:top-3 sm:px-2.5 sm:text-[11px]"
               style={{ color: BANNER_INK }}
             >
-              {t('common.comingSoon')}
+              {practiceAvailable ? t('songContent.practiceBannerReadyBadge') : t('common.comingSoon')}
             </span>
           )}
 
@@ -207,8 +215,18 @@ export function PracticeComingSoonBanner({
             <div className="mt-3 shrink-0 sm:mt-4">
               <button
                 type="button"
-                disabled
-                className="inline-flex cursor-default items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide opacity-90 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
+                disabled={!practiceAvailable || !onStartPractice}
+                onClick={() => {
+                  if (!practiceAvailable || !onStartPractice) return
+                  onStartPractice()
+                  onCollapseToChip?.()
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide sm:gap-2 sm:px-4 sm:py-2 sm:text-xs',
+                  practiceAvailable && onStartPractice
+                    ? 'cursor-pointer opacity-100 hover:brightness-110'
+                    : 'cursor-default opacity-90'
+                )}
                 style={{ backgroundColor: BANNER_INK, color: BANNER_BG }}
               >
                 {t('songContent.practiceBannerCta')}
@@ -223,12 +241,14 @@ export function PracticeComingSoonBanner({
 
 interface PracticeComingSoonChipProps {
   visible: boolean
+  onOpen?: () => void
   onDismiss?: () => void
 }
 
-/** Compact chip — X permanently dismisses (hides chip, no banner). Feature stays disabled. */
+/** Compact chip next to transpose — click opens banner; X dismisses. */
 export function PracticeComingSoonChip({
   visible,
+  onOpen,
   onDismiss,
 }: PracticeComingSoonChipProps) {
   const { t } = useLanguage()
@@ -242,14 +262,16 @@ export function PracticeComingSoonChip({
         'min-h-9 sm:min-h-[40px]'
       )}
       style={{ backgroundColor: BANNER_BG, color: BANNER_INK }}
-      role="status"
+      role="group"
     >
-      <span
+      <button
+        type="button"
+        onClick={onOpen}
         className="max-w-[7.5rem] truncate text-left text-xs font-semibold tracking-tight sm:max-w-none sm:text-sm"
         title={t('songContent.practiceBannerTitle')}
       >
         {t('songContent.practiceBannerTitle')}
-      </span>
+      </button>
       <button
         type="button"
         onClick={onDismiss}
