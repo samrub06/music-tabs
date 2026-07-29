@@ -110,8 +110,45 @@ def best_window_match(
     if not candidates:
         return None
 
+    # Prefer earliest near-best match so verse beats later refrain repeats.
     best_score = max(c[2] for c in candidates)
-    near_best = [c for c in candidates if c[2] >= best_score - 0.08]
+    near_best = [c for c in candidates if c[2] >= best_score - 0.12]
+    return min(near_best, key=lambda c: c[0])
+
+
+def best_segment_match(
+    text: str,
+    result: dict,
+    min_start: float = 0.0,
+    min_score: float = 0.35,
+) -> tuple[float, float, float] | None:
+    """Pick earliest qualifying segment at/after min_start (not highest score)."""
+    target = normalize(text)
+    if not target:
+        return None
+
+    qualifying: list[tuple[float, float, float]] = []
+    for seg in result.get("segments") or []:
+        start = float(seg.get("start", 0.0))
+        if start + 0.05 < min_start:
+            continue
+        score = SequenceMatcher(None, target, normalize(seg.get("text", ""))).ratio()
+        if score >= min_score:
+            qualifying.append((start, float(seg.get("end", start)), score))
+
+    if not qualifying:
+        # Fall back: earliest among all segments scoring reasonably, ignoring min_start.
+        for seg in result.get("segments") or []:
+            start = float(seg.get("start", 0.0))
+            score = SequenceMatcher(None, target, normalize(seg.get("text", ""))).ratio()
+            if score >= min_score:
+                qualifying.append((start, float(seg.get("end", start)), score))
+
+    if not qualifying:
+        return None
+
+    best_score = max(c[2] for c in qualifying)
+    near_best = [c for c in qualifying if c[2] >= best_score - 0.12]
     return min(near_best, key=lambda c: c[0])
 
 
@@ -119,6 +156,7 @@ def align_lines(words: list[dict], result: dict, lines: list[dict]) -> list[dict
     tokens, idx_map = token_stream(words)
     cursor = 0
     aligned: list[dict] = []
+    prev_end = 0.0
 
     for line in lines:
         text = str(line.get("text") or "").strip()
@@ -139,30 +177,38 @@ def align_lines(words: list[dict], result: dict, lines: list[dict]) -> list[dict
         if match is None:
             match = best_window_match(target, tokens, 0, min_score=0.38)
         if match is None:
-            # segment fallback
-            best_si = -1
-            best_score = 0.0
-            for si, seg in enumerate(result.get("segments") or []):
-                score = SequenceMatcher(None, normalize(text), normalize(seg.get("text", ""))).ratio()
-                if score > best_score:
-                    best_score = score
-                    best_si = si
-            if best_si >= 0 and best_score >= 0.35:
-                seg = result["segments"][best_si]
-                base["startSec"] = round(float(seg["start"]), 2)
-                base["endSec"] = round(float(seg["end"]), 2)
-                base["score"] = round(best_score, 3)
+            seg_match = best_segment_match(text, result, min_start=prev_end, min_score=0.35)
+            if seg_match is not None:
+                start_sec, end_sec, score = seg_match
+                base["startSec"] = round(start_sec, 2)
+                base["endSec"] = round(end_sec, 2)
+                base["score"] = round(score, 3)
+                prev_end = end_sec
             aligned.append(base)
             continue
 
         start_i, end_i, score = match
         abs_start = idx_map[start_i]
         abs_end = idx_map[end_i]
-        base["startSec"] = round(words[abs_start]["start"], 2)
-        base["endSec"] = round(words[abs_end]["end"], 2)
+        start_sec = float(words[abs_start]["start"])
+        end_sec = float(words[abs_end]["end"])
+        # If the earliest global rematch jumped backward past a later refrain,
+        # prefer continuing forward from prev_end when possible.
+        if start_sec + 0.25 < prev_end and cursor > 0:
+            forward = best_window_match(target, tokens, cursor, min_score=0.38)
+            if forward is not None:
+                start_i, end_i, score = forward
+                abs_start = idx_map[start_i]
+                abs_end = idx_map[end_i]
+                start_sec = float(words[abs_start]["start"])
+                end_sec = float(words[abs_end]["end"])
+
+        base["startSec"] = round(start_sec, 2)
+        base["endSec"] = round(end_sec, 2)
         base["score"] = round(score, 3)
         aligned.append(base)
         cursor = end_i + 1
+        prev_end = end_sec
 
     return aligned
 

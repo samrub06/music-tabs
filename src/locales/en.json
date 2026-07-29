@@ -955,7 +955,8 @@
     "minimize": "Listen without video",
     "open": "Show video",
     "expand": "Expand",
-    "shrink": "Shrink"
+    "shrink": "Shrink",
+    "dragMove": "Move"
   },
   "songContent": {
     "saving": "Saving...",

@@ -963,7 +963,8 @@
     "minimize": "האזן בלי וידאו",
     "open": "הצג וידאו",
     "expand": "הגדל",
-    "shrink": "הקטן"
+    "shrink": "הקטן",
+    "dragMove": "הזז"
   },
   "songContent": {
     "saving": "שומר...",

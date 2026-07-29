@@ -381,7 +381,7 @@ export default function SongViewer({
     setPracticeTutorialAwaitingSync(false);
   }, []);
 
-  // Explorer “Try it” → open Original video directly (no loading popup / coach).
+  // Explorer “Try it” → open Original + coachmark tutorial (no loading overlay).
   useEffect(() => {
     if (practiceAutoStartedRef.current) return;
     if (typeof window === 'undefined') return;
@@ -390,11 +390,7 @@ export default function SongViewer({
     if (!hasLyricPractice) return;
 
     practiceAutoStartedRef.current = true;
-    setYoutubeVideoMode('original');
-    setYoutubeTutorialOpen(true);
-    setPracticeTutorialStep(null);
-    setPracticeTutorialLineKey(null);
-    setPracticeTutorialAwaitingSync(false);
+    handleStartLyricPracticeTutorial();
 
     try {
       params.delete('practice');
@@ -403,7 +399,7 @@ export default function SongViewer({
     } catch {
       // ignore
     }
-  }, [hasLyricPractice]);
+  }, [hasLyricPractice, handleStartLyricPracticeTutorial]);
 
   const handlePracticeTutorialNext = useCallback(() => {
     if (practiceTutorialStep === 'youtube') {

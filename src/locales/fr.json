@@ -963,7 +963,8 @@
     "minimize": "Écouter sans vidéo",
     "open": "Afficher la vidéo",
     "expand": "Agrandir",
-    "shrink": "Rétrécir"
+    "shrink": "Rétrécir",
+    "dragMove": "Déplacer"
   },
   "songContent": {
     "saving": "Sauvegarde...",

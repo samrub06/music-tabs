@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { ArrowsPointingOutIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Youtube } from 'lucide-react'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -462,15 +462,26 @@ export default function FloatingYoutubeTutorial({
         onTouchStart={stopPanelEvent}
         aria-hidden={isMinimized}
       >
-        {/* Drag strip — top edge only, keeps chrome minimal */}
+        {/* Drag strip + visible move handle */}
         {!isMinimized && (
           <div
-            className="absolute inset-x-0 top-0 z-10 h-7 cursor-grab touch-none active:cursor-grabbing"
+            className="absolute inset-x-0 top-0 z-10 flex h-8 cursor-grab items-center justify-center touch-none active:cursor-grabbing"
             onPointerDown={onDragPointerDown}
             onPointerMove={onDragPointerMove}
             onPointerUp={onDragPointerUp}
             onPointerCancel={onDragPointerUp}
-          />
+          >
+            <div
+              className="pointer-events-none inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-white/90 backdrop-blur-sm"
+              aria-hidden
+            >
+              <ArrowsPointingOutIcon className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-medium tracking-wide">
+                {t('youtubeTutorial.dragMove')}
+              </span>
+            </div>
+            <span className="sr-only">{t('youtubeTutorial.dragMove')}</span>
+          </div>
         )}
 
         {/* Close only */}
