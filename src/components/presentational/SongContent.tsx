@@ -15,6 +15,7 @@ import {
   HeartIcon,
   PlusIcon,
   ShareIcon,
+  SpeakerWaveIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { useLanguage } from '@/context/LanguageContext';
@@ -36,7 +37,6 @@ import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
 import { absoluteShareUrl } from '@/lib/seo/site';
 import { Button } from '@/components/ui/button';
-import { Youtube } from 'lucide-react';
 import { InstrumentToggle } from '@/components/chords/InstrumentToggle';
 import { InstrumentSwitchHint } from '@/components/chords/InstrumentSwitchHint';
 import { usePathname } from 'next/navigation';
@@ -70,12 +70,6 @@ import {
   LandscapePracticeView,
 } from '@/components/practice/LandscapePracticeView';
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
-
-const ChordDiagramsGrid = dynamic(
-  () => import('./ChordDiagramsGrid').then((mod) => mod.ChordDiagramsGrid),
-  { ssr: false }
-);
-
 import {
   Select,
   SelectContent,
@@ -83,6 +77,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+/** Official YouTube play-mark (brand glyph). */
+function YoutubeBrandIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+    </svg>
+  )
+}
+
+const ChordDiagramsGrid = dynamic(
+  () => import('./ChordDiagramsGrid').then((mod) => mod.ChordDiagramsGrid),
+  { ssr: false }
+);
 
 const toolPillClass = (active: boolean) =>
   cn(
@@ -696,14 +709,30 @@ export default function SongContent({
       </Link>
     ) : null;
 
+  const youtubeModeButtonClass = (active: boolean) =>
+    cn(
+      'group/wiggle flex min-h-[3rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2 transition-colors sm:min-h-[3.25rem]',
+      active
+        ? 'bg-[#FF0000] text-white shadow-sm'
+        : 'text-[#b91c1c] hover:bg-[#FF0000]/10 dark:text-red-300 dark:hover:bg-[#FF0000]/15'
+    );
+
+  const youtubeModeBadgeClass = (active: boolean) =>
+    cn(
+      'inline-flex max-w-full truncate rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide sm:text-[10px]',
+      active
+        ? 'bg-white/20 text-white'
+        : 'bg-[#FF0000]/15 text-[#b91c1c] dark:bg-white/10 dark:text-red-200'
+    );
+
   const youtubeActions =
     onSelectYoutubeMode ? (
       <div
         className={cn(
-          'flex h-11 w-full min-w-0 items-stretch gap-0.5 rounded-xl border p-0.5',
-          youtubeTutorialOpen
-            ? 'border-red-500/40 bg-red-500/10'
-            : 'border-border/80 bg-muted/30'
+          'flex w-full min-w-0 items-stretch gap-1 rounded-xl border p-1',
+          'border-[#FF0000]/25 bg-[#FF0000]/10',
+          'dark:border-[#FF0000]/35 dark:bg-[#FF0000]/15',
+          youtubeTutorialOpen && 'ring-1 ring-[#FF0000]/35'
         )}
         role="group"
         aria-label={t('youtubeTutorial.title')}
@@ -711,16 +740,17 @@ export default function SongContent({
         <button
           type="button"
           onClick={() => onSelectYoutubeMode('tutorial')}
-          className={cn(
-            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.65rem] px-1.5 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-2 sm:text-sm',
+          className={youtubeModeButtonClass(
             youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
-              ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
-              : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
         >
-          <Youtube className="icon-hover-wiggle h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-          <span className="truncate">
+          <YoutubeBrandIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]" />
+          <span
+            className={youtubeModeBadgeClass(
+              youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
+            )}
+          >
             {selectedInstrument === 'guitar'
               ? t('youtubeTutorial.guitarModeShort')
               : t('youtubeTutorial.pianoModeShort')}
@@ -729,31 +759,37 @@ export default function SongContent({
         <button
           type="button"
           onClick={() => onSelectYoutubeMode('original')}
-          className={cn(
-            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.65rem] px-1.5 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-2 sm:text-sm',
+          className={youtubeModeButtonClass(
             youtubeTutorialOpen && youtubeVideoMode === 'original'
-              ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
-              : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
         >
-          <Youtube className="icon-hover-wiggle h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-          <span className="truncate">{t('youtubeTutorial.modeOriginal')}</span>
+          <YoutubeBrandIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]" />
+          <span
+            className={youtubeModeBadgeClass(
+              youtubeTutorialOpen && youtubeVideoMode === 'original'
+            )}
+          >
+            {t('youtubeTutorial.modeOriginal')}
+          </span>
         </button>
         <button
           type="button"
           onClick={() => onSelectYoutubeMode('audio')}
-          className={cn(
-            'group/wiggle flex min-w-0 flex-1 items-center justify-center gap-1 rounded-[0.65rem] px-1.5 text-[11px] font-medium transition-colors sm:gap-1.5 sm:px-2 sm:text-sm',
+          className={youtubeModeButtonClass(
             youtubeTutorialOpen && youtubeVideoMode === 'audio'
-              ? 'bg-background text-red-600 shadow-sm dark:text-red-400'
-              : 'text-muted-foreground hover:text-foreground'
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'audio'}
           title={t('youtubeTutorial.modeAudioHint')}
         >
-          <MusicalNoteIcon className="icon-hover-wiggle h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-          <span className="truncate">{t('youtubeTutorial.modeAudio')}</span>
+          <SpeakerWaveIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]" />
+          <span
+            className={youtubeModeBadgeClass(
+              youtubeTutorialOpen && youtubeVideoMode === 'audio'
+            )}
+          >
+            {t('youtubeTutorial.modeAudio')}
+          </span>
         </button>
       </div>
     ) : null;
