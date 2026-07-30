@@ -753,31 +753,16 @@ export default function FloatingYoutubeTutorial({
             />
           </div>
 
-          {/* Play dead-center; time + close are absolute so they don't shift it */}
-          <div className="relative mx-auto flex max-w-lg items-center justify-center px-2 pb-2 pt-0.5">
-            <div className="absolute start-2 top-1/2 z-10 max-w-[30%] -translate-y-1/2 truncate text-[12px] font-medium tabular-nums text-muted-foreground">
-              {(fetchState.status === 'loading' && !playerReady) ||
-              (fetchState.status === 'error' && !playerReady) ? (
-                fetchState.status === 'loading' ? (
-                  <span className="text-[11px] font-normal">{t('youtubeTutorial.loadingOriginal')}</span>
-                ) : (
-                  <a
-                    href={youtubePageUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-normal underline-offset-2 hover:underline"
-                  >
-                    {t('youtubeTutorial.openYoutube')}
-                  </a>
-                )
-              ) : (
-                <>
-                  <span>{formatClock(currentTime)}</span>
-                  <span className="text-muted-foreground/50"> / </span>
-                  <span>{formatClock(duration)}</span>
-                </>
-              )}
-            </div>
+          {/* Play dead-center; time + close absolute so they don't shift it */}
+          <div className="relative mx-auto flex h-12 max-w-lg items-center justify-center px-2 pb-2">
+            {/* Time only when ready — hide loading/search copy */}
+            {playerReady && (
+              <div className="pointer-events-none absolute inset-y-0 start-2 z-10 flex max-w-[30%] items-center truncate text-[12px] font-medium tabular-nums text-muted-foreground">
+                <span>{formatClock(currentTime)}</span>
+                <span className="text-muted-foreground/50"> / </span>
+                <span>{formatClock(duration)}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-center gap-1">
               <button
@@ -805,7 +790,7 @@ export default function FloatingYoutubeTutorial({
                 type="button"
                 onClick={togglePlay}
                 disabled={controlsDisabled}
-                className="mx-0.5 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:opacity-35"
+                className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-transform active:scale-95 disabled:opacity-35"
                 aria-label={isPlaying ? t('youtubeTutorial.pause') : t('youtubeTutorial.play')}
               >
                 {isPlaying ? (
@@ -830,14 +815,16 @@ export default function FloatingYoutubeTutorial({
               <div className="h-11 w-11 shrink-0" aria-hidden />
             </div>
 
-            <button
-              type="button"
-              onClick={() => onClose()}
-              className="absolute end-2 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
-              aria-label={t('songHeader.close')}
-            >
-              <XMarkIcon className="h-5 w-5" />
-            </button>
+            <div className="absolute inset-y-0 end-2 z-10 flex items-center">
+              <button
+                type="button"
+                onClick={() => onClose()}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/[0.05] hover:text-foreground dark:hover:bg-white/10"
+                aria-label={t('songHeader.close')}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
