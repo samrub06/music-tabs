@@ -1,5 +1,6 @@
 export type LibrarySongRef = {
   id: string
+  slug?: string
   title: string
   author: string
   genre?: string

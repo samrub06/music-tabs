@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSongCover } from '@/lib/hooks/useSongCover'
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
+import { songPath } from '@/lib/seo/songPath'
 
 interface FeaturedSongCardProps {
   song: Song
@@ -45,7 +46,7 @@ export default function FeaturedSongCard({ song, onAddClick, addingId, title }: 
           <div className="flex justify-end">
             <div className="flex items-center gap-3">
               <Link
-                href={`/song/${song.id}`}
+                href={songPath(song)}
                 className="group relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/45 bg-zinc-200/55 text-foreground shadow-[0_14px_14px_rgba(0,0,0,0.2)] ring-1 ring-inset ring-white/40 backdrop-blur-xl backdrop-saturate-150 transition-all duration-200 hover:scale-110 hover:bg-zinc-200/70 active:scale-95"
                 aria-label={t('search.viewSong')}
               >

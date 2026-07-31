@@ -28,7 +28,7 @@ import { shareOrCopyLink } from '@/utils/shareLink';
 import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
 import { useAuthContext } from '@/context/AuthContext';
 import { UserPlusIcon } from '@heroicons/react/24/outline';
-import { absoluteShareUrl } from '@/lib/seo/site';
+import { absoluteSongShareUrl } from '@/lib/seo/songPath';
 
 function interpolate(template: string, vars: Record<string, string>) {
   return Object.entries(vars).reduce(
@@ -102,7 +102,7 @@ export default function ToolsBottomBar({
   }, []);
 
   const handleShareLink = useCallback(async () => {
-    const url = absoluteShareUrl(`/song/${song.id}`);
+    const url = absoluteSongShareUrl(song);
 
     const title = `${song.title} — ${song.author}`;
     const text = interpolate(t('songHeader.shareSongText'), {

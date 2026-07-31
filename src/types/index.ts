@@ -75,6 +75,8 @@ export interface StructuredSong {
   id: string;
   title: string;
   author: string;
+  /** Public SEO slug for catalog songs (`/song/{slug}`). */
+  slug?: string;
   userId?: string;
   folderId?: string;
   format: 'structured';

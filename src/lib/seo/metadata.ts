@@ -6,9 +6,12 @@ import {
   HOME_TITLE,
   SITE_NAME,
 } from './site'
+import { absoluteSongUrl, absoluteArtistUrl } from './songPath'
+import { artistSeoCopy, songSeoCopy } from './songSeoCopy'
 
 type SongSeoInput = {
   id?: string
+  slug?: string | null
   title: string
   author: string
   songImageUrl?: string
@@ -80,28 +83,31 @@ export const exploreMetadata: Metadata = {
     description:
       'Browse trending international songs, chords, and tabs. Filter by genre, decade, and difficulty.',
   },
+  robots: { index: true, follow: true },
 }
 
 export function songMetadata(song: SongSeoInput): Metadata {
-  const title = `${song.title} — ${song.author}`
-  const description = `Chords and lyrics for "${song.title}" by ${song.author}. Transpose, autoscroll, and practice on ${SITE_NAME}.`
+  const copy = songSeoCopy(song)
   const rawImage = song.songImageUrl || song.artistImageUrl
   const coverImage = rawImage ? toAbsoluteOgImageUrl(rawImage) : null
   const fallbackImage = absoluteUrl(BRAND_ASSETS.openGraph)
   const image = coverImage || fallbackImage
   const indexable = !song.userId
-  const pageUrl = song.id ? absoluteUrl(`/song/${song.id}`) : undefined
+  const pageUrl = song.id
+    ? absoluteSongUrl({ id: song.id, slug: song.slug })
+    : undefined
 
   return {
-    title,
-    description,
+    title: copy.title,
+    description: copy.description,
     alternates: pageUrl ? { canonical: pageUrl } : undefined,
     robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
     openGraph: {
-      title,
-      description,
+      title: copy.title,
+      description: copy.description,
       type: 'article',
       url: pageUrl,
+      locale: copy.ogLocale,
       siteName: SITE_NAME,
       images: [
         {
@@ -114,8 +120,47 @@ export function songMetadata(song: SongSeoInput): Metadata {
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: copy.title,
+      description: copy.description,
+      images: [image],
+    },
+  }
+}
+
+export function artistMetadata(input: {
+  author: string
+  authorSlug: string
+  songCount: number
+}): Metadata {
+  const copy = artistSeoCopy(input.author)
+  const pageUrl = absoluteArtistUrl(input.authorSlug)
+  const image = absoluteUrl(BRAND_ASSETS.openGraph)
+
+  return {
+    title: copy.title,
+    description: copy.description,
+    alternates: { canonical: pageUrl },
+    robots: { index: true, follow: true },
+    openGraph: {
+      title: copy.title,
+      description: copy.description,
+      type: 'website',
+      url: pageUrl,
+      locale: copy.ogLocale,
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: copy.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: copy.title,
+      description: copy.description,
       images: [image],
     },
   }

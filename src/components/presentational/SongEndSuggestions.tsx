@@ -13,9 +13,12 @@ import {
 } from '@/utils/songSuggestions'
 import { cn } from '@/lib/utils'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
+import { artistPath, songPath } from '@/lib/seo/songPath'
+import { artistSlugFromAuthor } from '@/utils/slugify'
 
 export type NextSongRef = {
   id: string
+  slug?: string
   title: string
   author?: string
   genre?: string
@@ -92,7 +95,7 @@ function ArtistSongRow({ song }: { song: LibrarySongRef }) {
 
   return (
     <Link
-      href={`/song/${song.id}`}
+      href={songPath(song)}
       className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted/50"
     >
       <SongThumbnail
@@ -220,7 +223,7 @@ export function SongEndSuggestions({
           songImageUrl={nextSong.songImageUrl}
           artistImageUrl={nextSong.artistImageUrl}
           genre={nextSong.genre}
-          href={`/song/${nextSong.id}`}
+          href={songPath(nextSong)}
           onNavigate={onPlayNext}
         />
       )}
@@ -234,9 +237,12 @@ export function SongEndSuggestions({
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <span className="min-w-0 flex-1 text-sm font-semibold text-foreground">
+            <Link
+              href={artistPath(artistSlugFromAuthor(currentAuthor))}
+              className="min-w-0 flex-1 text-sm font-semibold text-foreground hover:text-primary"
+            >
               {t('songEnd.moreByArtist').replace('{artist}', currentAuthor)}
-            </span>
+            </Link>
             <span className="shrink-0 text-xs text-muted-foreground">
               {artistSongs.length}
             </span>
@@ -262,7 +268,7 @@ export function SongEndSuggestions({
           songImageUrl={genreAlternative.songImageUrl}
           artistImageUrl={genreAlternative.artistImageUrl}
           genre={genreAlternative.genre}
-          href={`/song/${genreAlternative.id}`}
+          href={songPath(genreAlternative)}
         />
       )}
     </div>

@@ -7,6 +7,7 @@ import { Song } from '@/types'
 import Link from 'next/link'
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid'
 import { useRef } from 'react'
+import { songPath } from '@/lib/seo/songPath'
 
 export interface SongLibraryStatus {
   label: string
@@ -31,7 +32,7 @@ function HorizontalSongSlide({
 
   return (
     <div className="group relative w-40 flex-shrink-0 sm:w-48">
-      <Link href={`/song/${song.id}`}>
+      <Link href={songPath(song)}>
         <div className="relative mb-2 aspect-square overflow-hidden rounded-lg bg-gray-800 shadow-lg transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
           {coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -50,7 +51,7 @@ function HorizontalSongSlide({
       </Link>
 
       <div className="px-1">
-        <Link href={`/song/${song.id}`}>
+        <Link href={songPath(song)}>
           <h3 className="mb-1 truncate text-sm font-semibold text-gray-900 hover:underline dark:text-gray-100 sm:text-base">
             {song.title}
           </h3>

@@ -17,6 +17,8 @@ export default function robots(): MetadataRoute.Robots {
         '/add-song',
         '/search/recent',
         '/search/recent-songs',
+        '/onboarding',
+        '/admin',
       ],
     },
     sitemap: absoluteUrl('/sitemap.xml'),

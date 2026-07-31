@@ -35,7 +35,7 @@ import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
 import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
-import { absoluteShareUrl } from '@/lib/seo/site';
+import { absoluteSongShareUrl } from '@/lib/seo/songPath';
 import { Button } from '@/components/ui/button';
 import { InstrumentToggle } from '@/components/chords/InstrumentToggle';
 import { InstrumentSwitchHint } from '@/components/chords/InstrumentSwitchHint';
@@ -800,7 +800,7 @@ export default function SongContent({
   );
 
   const handleCopySongLink = useCallback(async () => {
-    const url = absoluteShareUrl(`/song/${transposedSong.id}`);
+    const url = absoluteSongShareUrl(transposedSong);
     try {
       await navigator.clipboard.writeText(url);
       setLinkCopied(true);
@@ -808,7 +808,7 @@ export default function SongContent({
     } catch (error) {
       console.error('Failed to copy song link:', error);
     }
-  }, [transposedSong.id]);
+  }, [transposedSong]);
 
   const shareButton = user ? (
     <ShareWithFriendIconButton

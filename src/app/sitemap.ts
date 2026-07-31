@@ -1,14 +1,16 @@
 import type { MetadataRoute } from 'next'
 import { absoluteUrl } from '@/lib/seo/site'
 import {
+  getPublicArtistSitemapEntries,
   getPublicPlaylistSitemapEntries,
   getPublicSongSitemapEntries,
 } from '@/lib/seo/sitemapData'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [songs, playlists] = await Promise.all([
+  const [songs, playlists, artists] = await Promise.all([
     getPublicSongSitemapEntries(),
     getPublicPlaylistSitemapEntries(),
+    getPublicArtistSitemapEntries(),
   ])
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -38,5 +40,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticRoutes, ...playlistRoutes, ...songRoutes]
+  const artistRoutes: MetadataRoute.Sitemap = artists.map((entry) => ({
+    url: entry.url,
+    changeFrequency: 'weekly',
+    priority: 0.75,
+  }))
+
+  return [...staticRoutes, ...playlistRoutes, ...artistRoutes, ...songRoutes]
 }

@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -32,7 +33,6 @@ export default function Pagination({
   onNavigate,
   onShowAll,
 }: PaginationProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { t, isRtl } = useLanguage()
@@ -45,32 +45,50 @@ export default function Pagination({
   const to = Math.min(page * limit, total)
   const progress = totalPages > 1 ? (page / totalPages) * 100 : 100
 
-  const navigate = (nextPage: number) => {
-    if (onNavigate) {
-      onNavigate(nextPage)
-      return
-    }
+  const hrefForPage = (nextPage: number) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.set('page', String(nextPage))
     params.set('limit', String(limit))
-    router.push(`${pathname}?${params.toString()}`)
+    return `${pathname}?${params.toString()}`
+  }
+
+  const showAllHref = () => {
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    params.set('limit', String(showAllLimit!))
+    params.set('page', '1')
+    return `${pathname}?${params.toString()}`
+  }
+
+  const navigate = (nextPage: number) => {
+    if (onNavigate) {
+      onNavigate(nextPage)
+    }
   }
 
   const handleShowAll = () => {
     if (onShowAll) {
       onShowAll()
-      return
     }
-    const params = new URLSearchParams(searchParams?.toString() || '')
-    params.set('limit', String(showAllLimit!))
-    params.set('page', '1')
-    router.push(`${pathname}?${params.toString()}`)
   }
 
   if (totalPages <= 1 && !showAllVisible) return null
 
   const pageLabel = interpolate(t('common.pageOf'), { current: page, total: totalPages })
   const rangeLabel = interpolate(t('common.showingRange'), { from, to, total })
+
+  const prevClassName = cn(
+    'flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium transition-colors sm:flex-initial sm:min-w-[7.5rem]',
+    canPrev
+      ? 'bg-muted text-foreground active:bg-muted/80'
+      : 'cursor-not-allowed bg-muted/40 text-muted-foreground pointer-events-none'
+  )
+
+  const nextClassName = cn(
+    'flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium transition-colors sm:flex-initial sm:min-w-[7.5rem]',
+    canNext
+      ? 'bg-muted text-foreground active:bg-muted/80'
+      : 'cursor-not-allowed bg-muted/40 text-muted-foreground pointer-events-none'
+  )
 
   return (
     <nav
@@ -81,25 +99,37 @@ export default function Pagination({
       {totalPages > 1 && (
         <div className="space-y-3">
           <div className="flex items-stretch gap-2 sm:justify-center sm:gap-3">
-            <button
-              type="button"
-              className={cn(
-                'flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium transition-colors sm:flex-initial sm:min-w-[7.5rem]',
-                canPrev
-                  ? 'bg-muted text-foreground active:bg-muted/80'
-                  : 'cursor-not-allowed bg-muted/40 text-muted-foreground'
-              )}
-              onClick={() => navigate(page - 1)}
-              disabled={!canPrev}
-              aria-label={t('common.previous')}
-            >
-              {isRtl ? (
-                <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
-              ) : (
-                <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
-              )}
-              <span className="truncate">{t('common.previous')}</span>
-            </button>
+            {onNavigate ? (
+              <button
+                type="button"
+                className={prevClassName}
+                onClick={() => navigate(page - 1)}
+                disabled={!canPrev}
+                aria-label={t('common.previous')}
+              >
+                {isRtl ? (
+                  <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+                ) : (
+                  <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+                )}
+                <span className="truncate">{t('common.previous')}</span>
+              </button>
+            ) : (
+              <Link
+                href={hrefForPage(page - 1)}
+                className={prevClassName}
+                aria-disabled={!canPrev}
+                tabIndex={canPrev ? 0 : -1}
+                aria-label={t('common.previous')}
+              >
+                {isRtl ? (
+                  <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+                ) : (
+                  <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+                )}
+                <span className="truncate">{t('common.previous')}</span>
+              </Link>
+            )}
 
             <div className="flex min-w-[5.5rem] flex-col items-center justify-center px-1 text-center">
               <span className="text-sm font-semibold tabular-nums text-foreground">{pageLabel}</span>
@@ -108,25 +138,37 @@ export default function Pagination({
               </span>
             </div>
 
-            <button
-              type="button"
-              className={cn(
-                'flex min-h-[48px] flex-1 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-medium transition-colors sm:flex-initial sm:min-w-[7.5rem]',
-                canNext
-                  ? 'bg-muted text-foreground active:bg-muted/80'
-                  : 'cursor-not-allowed bg-muted/40 text-muted-foreground'
-              )}
-              onClick={() => navigate(page + 1)}
-              disabled={!canNext}
-              aria-label={t('common.next')}
-            >
-              <span className="truncate">{t('common.next')}</span>
-              {isRtl ? (
-                <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
-              ) : (
-                <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
-              )}
-            </button>
+            {onNavigate ? (
+              <button
+                type="button"
+                className={nextClassName}
+                onClick={() => navigate(page + 1)}
+                disabled={!canNext}
+                aria-label={t('common.next')}
+              >
+                <span className="truncate">{t('common.next')}</span>
+                {isRtl ? (
+                  <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+                )}
+              </button>
+            ) : (
+              <Link
+                href={hrefForPage(page + 1)}
+                className={nextClassName}
+                aria-disabled={!canNext}
+                tabIndex={canNext ? 0 : -1}
+                aria-label={t('common.next')}
+              >
+                <span className="truncate">{t('common.next')}</span>
+                {isRtl ? (
+                  <ChevronLeftIcon className="h-5 w-5 shrink-0" aria-hidden />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5 shrink-0" aria-hidden />
+                )}
+              </Link>
+            )}
           </div>
 
           <div
@@ -145,19 +187,26 @@ export default function Pagination({
         </div>
       )}
 
-      {showAllVisible && (
-        <Button
-          type="button"
-          variant="outline"
-          className={cn(
-            'mt-3 min-h-[44px] w-full',
-            totalPages <= 1 && 'mt-0'
-          )}
-          onClick={handleShowAll}
-        >
-          {t('common.showAll')}
-        </Button>
-      )}
+      {showAllVisible &&
+        (onShowAll ? (
+          <Button
+            type="button"
+            variant="outline"
+            className={cn('mt-3 min-h-[44px] w-full', totalPages <= 1 && 'mt-0')}
+            onClick={handleShowAll}
+          >
+            {t('common.showAll')}
+          </Button>
+        ) : (
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+            className={cn('mt-3 min-h-[44px] w-full', totalPages <= 1 && 'mt-0')}
+          >
+            <Link href={showAllHref()}>{t('common.showAll')}</Link>
+          </Button>
+        ))}
     </nav>
   )
 }

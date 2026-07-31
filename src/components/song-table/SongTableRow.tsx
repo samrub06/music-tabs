@@ -22,7 +22,9 @@ import {
 import { HeartIcon as HeartSolidIcon, MusicalNoteIcon } from '@heroicons/react/24/solid'
 import { useSongCover } from '@/lib/hooks/useSongCover'
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder'
+import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { songPath } from '@/lib/seo/songPath'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { toggleSongFavoriteAction } from '@/app/song/[id]/actions'
@@ -102,6 +104,21 @@ export default function SongTableRow({
     opacity: isDragging ? 0.5 : 1,
   }
 
+  const persistSongNavigation = () => {
+    if (typeof window === 'undefined') return
+    const songList = songs.map((s) => s.id)
+    const currentIndex = songs.findIndex((s) => s.id === song.id)
+    sessionStorage.setItem(
+      'songNavigation',
+      JSON.stringify({
+        songList,
+        currentIndex: currentIndex >= 0 ? currentIndex : 0,
+        sourceUrl: pathname || window.location.pathname,
+      })
+    )
+    sessionStorage.removeItem('hasUsedNext')
+  }
+
   const handleSongClick = () => {
     if (isDragging) return
 
@@ -110,19 +127,8 @@ export default function SongTableRow({
       return
     }
 
-    if (typeof window !== 'undefined') {
-      const songList = songs.map((s) => s.id)
-      const currentIndex = songs.findIndex((s) => s.id === song.id)
-      const navigationData = {
-        songList,
-        currentIndex: currentIndex >= 0 ? currentIndex : 0,
-        sourceUrl: pathname || window.location.pathname,
-      }
-      sessionStorage.setItem('songNavigation', JSON.stringify(navigationData))
-      sessionStorage.removeItem('hasUsedNext')
-    }
-
-    router.push(`/song/${song.id}`)
+    persistSongNavigation()
+    router.push(songPath(song))
   }
 
   const handleToggleFavorite = (e: MouseEvent) => {
@@ -268,7 +274,20 @@ export default function SongTableRow({
 
         <div className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}>
           {visibleColumns.includes('title') && (
-            <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+            <Link
+              href={songPath(song)}
+              onClick={(e) => {
+                if (isSelectMode && hasUser) {
+                  e.preventDefault()
+                  return
+                }
+                e.stopPropagation()
+                persistSongNavigation()
+              }}
+              className="block truncate text-sm font-medium text-foreground hover:text-primary"
+            >
+              {song.title}
+            </Link>
           )}
           {metadataParts.length > 0 && (
             <p className="mt-0.5 flex flex-wrap items-center justify-start gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
@@ -373,7 +392,7 @@ export default function SongTableRow({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => router.push(`/song/${song.id}`)}>
+                  <DropdownMenuItem onClick={() => router.push(songPath(song))}>
                     <PencilSquareIcon className="me-2 h-4 w-4" aria-hidden />
                     {t('songs.edit')}
                   </DropdownMenuItem>

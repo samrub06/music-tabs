@@ -6,6 +6,7 @@ import { structuredSongToText } from '@/utils/structuredToText'
 import { extractAllChords, extractChordMetadataFromSections } from '@/utils/structuredSong'
 import { dedupeCatalogSongs } from '@/lib/utils/catalogSongDedup'
 import { FEATURED_CATALOG_SONG_SLUG } from '@/data/featuredCatalogSong'
+import { artistSlugFromAuthor, isUuid, songSlugFromTitleAuthor } from '@/utils/slugify'
 
 function isHebrewCatalogSong(song: Pick<Song, 'title' | 'author' | 'genre' | 'sourceSite'>): boolean {
   if (song.genre?.startsWith('hebrew-')) return true
@@ -16,12 +17,48 @@ function isHebrewCatalogSong(song: Pick<Song, 'title' | 'author' | 'genre' | 'so
 }
 
 // Helper to map DB result to Domain Entity
+async function allocateUniqueCatalogSlug(
+  client: SupabaseClient<Database>,
+  title: string,
+  author: string,
+  excludeId?: string
+): Promise<string> {
+  const base = songSlugFromTitleAuthor(title, author)
+  let candidate = base
+  let suffix = 2
+
+  while (true) {
+    let query = (client.from('songs') as any)
+      .select('id')
+      .eq('slug', candidate)
+      .is('user_id', null)
+      .limit(1)
+
+    if (excludeId) {
+      query = query.neq('id', excludeId)
+    }
+
+    const { data, error } = await query
+    if (error) {
+      console.error('allocateUniqueCatalogSlug lookup failed:', error)
+      return `${base}-${Date.now().toString(36)}`
+    }
+    if (!data?.length) return candidate
+    candidate = `${base}-${suffix}`
+    suffix += 1
+    if (suffix > 500) {
+      return `${base}-${Date.now().toString(36)}`
+    }
+  }
+}
+
 function mapDbSongToDomain(dbSong: Database['public']['Tables']['songs']['Row']): Song {
   const sections = (dbSong.sections as unknown as SongSection[]) || []
 
   return {
     ...dbSong,
     content: '', // Sections are source of truth; use renderStructuredSong() when text is needed
+    slug: dbSong.slug || undefined,
     userId: dbSong.user_id || undefined,
     folderId: dbSong.folder_id || undefined,
     createdAt: new Date(dbSong.created_at),
@@ -67,6 +104,7 @@ function mapDbSongToList(
     id: dbSong.id!,
     title: dbSong.title!,
     author: dbSong.author!,
+    slug: dbSong.slug || undefined,
     format: 'structured',
     sections: [], // Empty for lists
     content: '', // Empty for lists
@@ -88,15 +126,17 @@ function mapDbSongToList(
     decade: dbSong.decade || undefined,
     capo: dbSong.capo ?? undefined,
     clonedFromId: dbSong.cloned_from_id || undefined,
+    userId: dbSong.user_id || undefined,
+    isPublic: dbSong.is_public ?? undefined,
   } as Song
 }
 
 /** Explicit columns for song detail pages (avoid select('*')). */
 export const SONG_DETAIL_COLUMNS =
-  'id, user_id, title, author, folder_id, created_at, updated_at, capo, first_chord, last_chord, key, reviews, tab_id, version, version_description, rating, difficulty, artist_url, artist_image_url, song_image_url, sheet_image_url, source_url, source_site, view_count, format, sections, is_public, is_trending, genre, decade, bpm, all_chords, cloned_from_id'
+  'id, user_id, title, author, slug, folder_id, created_at, updated_at, capo, first_chord, last_chord, key, reviews, tab_id, version, version_description, rating, difficulty, artist_url, artist_image_url, song_image_url, sheet_image_url, source_url, source_site, view_count, format, sections, is_public, is_trending, genre, decade, bpm, all_chords, cloned_from_id'
 
 const LIGHTWEIGHT_LIST_COLUMNS =
-  'id, title, author, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, source_site'
+  'id, user_id, title, author, slug, folder_id, created_at, updated_at, rating, artist_image_url, song_image_url, view_count, version, version_description, genre, tab_id, source_url, source_site, is_public'
 
 const PUBLIC_PLAYLIST_LIST_COLUMNS =
   'id, title, author, song_image_url, artist_image_url, genre, key, source_site'
@@ -270,6 +310,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
 
     // Extract all unique chords from the song
     const allChords = extractAllChords(structuredSong)
+    const slug = await allocateUniqueCatalogSlug(client, songData.title, songData.author)
 
     const { data, error } = await (client
       .from('songs') as any)
@@ -277,6 +318,7 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
         user_id: null, // System owned
         title: songData.title,
         author: songData.author,
+        slug,
         folder_id: songData.folderId ?? null,
         format: 'structured',
         sections: structuredSong.sections as unknown as Database['public']['Tables']['songs']['Insert']['sections'],
@@ -342,6 +384,52 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       console.warn('user_library overlay failed for getSong:', err)
     }
     return song
+  },
+
+  async getSongBySlug(slug: string): Promise<Song | null> {
+    const decoded = decodeURIComponent(slug).trim()
+    if (!decoded) return null
+
+    const { data, error } = await client
+      .from('songs')
+      .select(SONG_DETAIL_COLUMNS)
+      .eq('slug', decoded)
+      .is('user_id', null)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error fetching song by slug:', error)
+      return null
+    }
+    if (!data) return null
+
+    const song = mapDbSongToDomain(data)
+    try {
+      const {
+        data: { user },
+      } = await client.auth.getUser()
+      if (user) {
+        const { userLibraryRepo } = await import('@/lib/services/userLibraryRepo')
+        const entry = await userLibraryRepo(client).getByUserAndSong(user.id, song.id)
+        if (entry) {
+          song.isLiked = entry.isLiked
+          song.folderId = entry.folderId
+        }
+      }
+    } catch (err) {
+      console.warn('user_library overlay failed for getSongBySlug:', err)
+    }
+    return song
+  },
+
+  /** Resolve `/song/[param]` where param is a UUID or catalog slug. */
+  async getSongByIdOrSlug(param: string): Promise<Song | null> {
+    const decoded = decodeURIComponent(param).trim()
+    if (!decoded) return null
+    if (isUuid(decoded)) {
+      return this.getSong(decoded)
+    }
+    return this.getSongBySlug(decoded)
   },
 
   async getSongByTabId(tabId: string): Promise<Song | null> {
@@ -426,6 +514,21 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
       if (!updates.key && chordMetadata.firstChord) {
         updateData.key = chordMetadata.firstChord
       }
+    }
+
+    const { data: existing } = await (client.from('songs') as any)
+      .select('user_id')
+      .eq('id', id)
+      .maybeSingle()
+
+    const existingUserId = (existing as { user_id: string | null } | null)?.user_id
+    if (existing && existingUserId == null) {
+      updateData.slug = await allocateUniqueCatalogSlug(
+        client,
+        updates.title,
+        updates.author,
+        id
+      )
     }
 
     const { data, error } = await (client
@@ -793,6 +896,46 @@ export const songRepo = (client: SupabaseClient<Database>) => ({
     const { data, error } = await builder
     if (error) throw error
     return (data || []).map(mapDbSongToList)
+  },
+
+  /** Distinct public catalog authors (for artist hubs / sitemap). */
+  async getPublicCatalogAuthors(): Promise<string[]> {
+    const authors = new Set<string>()
+    const pageSize = 1000
+    let from = 0
+
+    while (true) {
+      const { data, error } = await (client.from('songs') as any)
+        .select('author')
+        .is('user_id', null)
+        .or('is_trending.eq.true,is_public.eq.true')
+        .not('author', 'is', null)
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        console.error('getPublicCatalogAuthors failed:', error)
+        break
+      }
+      if (!data?.length) break
+
+      for (const row of data as Array<{ author: string | null }>) {
+        const author = row.author?.trim()
+        if (author) authors.add(author)
+      }
+
+      if (data.length < pageSize) break
+      from += pageSize
+    }
+
+    return Array.from(authors).sort((a, b) => a.localeCompare(b))
+  },
+
+  async getPublicAuthorBySlug(authorSlug: string): Promise<string | null> {
+    const target = decodeURIComponent(authorSlug).trim()
+    if (!target) return null
+
+    const authors = await this.getPublicCatalogAuthors()
+    return authors.find((author) => artistSlugFromAuthor(author) === target) ?? null
   },
 
   async getUserSongsByAuthorLightweight(author: string, limit: number = 15): Promise<Song[]> {

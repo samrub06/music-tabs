@@ -7,6 +7,11 @@ import { getCachedSong } from './loadSong'
 import { songRepo } from '@/lib/services/songRepo'
 import { findUserSongMatch } from '@/lib/utils/songLibraryMatch'
 import { canEditSong } from '@/lib/utils/songEditPermissions'
+import { SongSeoContent } from '@/components/presentational/SongSeoContent'
+import { SongSeoGate } from '@/components/seo/SongSeoGate'
+import Link from 'next/link'
+import { artistPath } from '@/lib/seo/songPath'
+import { artistSlugFromAuthor } from '@/utils/slugify'
 
 interface SongPageDataProps {
   songId: string
@@ -47,19 +52,31 @@ export default async function SongPageData({ songId }: SongPageDataProps) {
   const canEdit = canEditSong(song, { userId: user?.id, isAdmin })
   const isInLibrary = isOwnedByUser || Boolean(librarySongId)
   const initialInstrument = preferredInstrument === 'guitar' ? 'guitar' : 'piano'
+  const indexable = !song.userId
+  const authorSlug = artistSlugFromAuthor(song.author)
 
   return (
-    <SongViewerContainerSSR
-      song={song}
-      onUpdate={updateSongAction}
-      onDelete={deleteSongAction}
-      isAuthenticated={!!user}
-      isInLibrary={isInLibrary}
-      isOwnedByUser={isOwnedByUser}
-      librarySongId={librarySongId}
-      canEdit={canEdit}
-      initialInstrument={initialInstrument}
-      practiceCoachCompleted={practiceCoachCompleted}
-    />
+    <>
+      {indexable ? (
+        <SongSeoGate>
+          <SongSeoContent song={song} />
+          <p>
+            <Link href={artistPath(authorSlug)}>{song.author}</Link>
+          </p>
+        </SongSeoGate>
+      ) : null}
+      <SongViewerContainerSSR
+        song={song}
+        onUpdate={updateSongAction}
+        onDelete={deleteSongAction}
+        isAuthenticated={!!user}
+        isInLibrary={isInLibrary}
+        isOwnedByUser={isOwnedByUser}
+        librarySongId={librarySongId}
+        canEdit={canEdit}
+        initialInstrument={initialInstrument}
+        practiceCoachCompleted={practiceCoachCompleted}
+      />
+    </>
   )
 }

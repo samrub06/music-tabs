@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import type { Song } from '@/types'
 import { useDraggable } from '@dnd-kit/core'
@@ -16,6 +17,7 @@ import {
   type PlaylistCarouselDockProps,
 } from '@/components/library/PlaylistCarouselDock'
 import { useMemo, useCallback } from 'react'
+import { songPath } from '@/lib/seo/songPath'
 
 interface SongGalleryProps {
   songs: Song[]
@@ -97,7 +99,6 @@ function DraggableSongCard({
   song,
   songs,
   pathname,
-  router,
   hasUser,
   variant = 'default',
   onSongSelect,
@@ -105,7 +106,6 @@ function DraggableSongCard({
   song: Song
   songs: Song[]
   pathname: string | null
-  router: ReturnType<typeof useRouter>
   hasUser?: boolean
   variant?: 'default' | 'compact' | 'folder'
   onSongSelect?: (song: Song) => void
@@ -130,33 +130,25 @@ function DraggableSongCard({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  const handleSongClick = () => {
+  const href = songPath(song)
+
+  const handleNavigateClick = () => {
     if (isDragging) return
     if (onSongSelect) {
       onSongSelect(song)
       return
     }
     storeSongNavigation(songs, song, pathname)
-    router.push(`/song/${song.id}`)
   }
 
   const isCompact = variant === 'compact' || variant === 'folder'
   const coverUrl = useSongCover(song)
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'group relative flex flex-col',
-        isCompact ? 'gap-1' : 'gap-2',
-        isDragging && 'z-50 opacity-75'
-      )}
-    >
+  const cardInner = (
+    <>
       <div
-        onClick={handleSongClick}
         className={cn(
-          'relative aspect-square w-full cursor-pointer overflow-hidden bg-muted',
+          'relative aspect-square w-full overflow-hidden bg-muted',
           isCompact ? 'rounded-lg' : 'rounded-xl',
           canDrag && 'active:cursor-grabbing'
         )}
@@ -177,10 +169,7 @@ function DraggableSongCard({
         )}
       </div>
 
-      <div
-        onClick={handleSongClick}
-        className={cn('min-w-0 cursor-pointer', isCompact ? 'space-y-0' : 'space-y-0.5', UI_TEXT_ALIGN)}
-      >
+      <div className={cn('min-w-0', isCompact ? 'space-y-0' : 'space-y-0.5', UI_TEXT_ALIGN)}>
         <h3
           className={cn(
             'truncate font-medium text-foreground transition-colors group-hover:text-primary',
@@ -193,6 +182,39 @@ function DraggableSongCard({
           {song.author}
         </p>
       </div>
+    </>
+  )
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'group relative flex flex-col',
+        isCompact ? 'gap-1' : 'gap-2',
+        isDragging && 'z-50 opacity-75'
+      )}
+    >
+      {onSongSelect ? (
+        <button
+          type="button"
+          onClick={handleNavigateClick}
+          className={cn(
+            'flex w-full cursor-pointer flex-col text-start',
+            isCompact ? 'gap-1' : 'gap-2'
+          )}
+        >
+          {cardInner}
+        </button>
+      ) : (
+        <Link
+          href={href}
+          onClick={handleNavigateClick}
+          className={cn('flex flex-col', isCompact ? 'gap-1' : 'gap-2')}
+        >
+          {cardInner}
+        </Link>
+      )}
     </div>
   )
 }
@@ -217,7 +239,7 @@ export default function SongGallery({
         return
       }
       storeSongNavigation(songs, song, pathname)
-      router.push(`/song/${song.id}`)
+      router.push(songPath(song))
     },
     [onSongSelect, songs, pathname, router]
   )
@@ -258,7 +280,6 @@ export default function SongGallery({
           song={song}
           songs={songs}
           pathname={pathname}
-          router={router}
           hasUser={hasUser}
           variant={variant}
           onSongSelect={onSongSelect}

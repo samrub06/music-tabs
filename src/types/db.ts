@@ -91,6 +91,7 @@ export interface Database {
           user_id: string | null
           title: string
           author: string | null
+          slug: string | null
           folder_id: string | null
           created_at: string
           updated_at: string
@@ -126,6 +127,7 @@ export interface Database {
           user_id?: string | null
           title: string
           author?: string | null
+          slug?: string | null
           folder_id?: string | null
           created_at?: string
           updated_at?: string
@@ -161,6 +163,7 @@ export interface Database {
           user_id?: string | null
           title?: string
           author?: string | null
+          slug?: string | null
           folder_id?: string | null
           created_at?: string
           updated_at?: string
