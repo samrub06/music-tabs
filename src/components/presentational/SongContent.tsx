@@ -1581,9 +1581,8 @@ function StructuredSongContent({
         data-practice-line={globalLineIndex}
         data-lyric-key={lyricKey ?? undefined}
         className={cn(
-          'rounded-md transition-[background-color,box-shadow,opacity,border-color] duration-200',
-          isPracticeActive &&
-            'border-s-[3px] border-s-foreground/55 bg-muted/90 px-2.5 py-1.5 ring-1 ring-border/70',
+          'rounded-md transition-[background-color,opacity] duration-200',
+          isPracticeActive && 'w-full rounded-lg bg-muted/35 py-1 dark:bg-muted/25',
           isPracticeDimmed && 'opacity-30',
           isYoutubeActive &&
             'border-s-[3px] border-s-foreground/55 bg-muted/90 px-2.5 py-1.5 ring-1 ring-border/70',
