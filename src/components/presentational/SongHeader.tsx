@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import {
   MinusIcon,
@@ -26,9 +27,7 @@ interface SongHeaderProps {
   onToggleAutoScroll: () => void;
   onSetAutoScrollSpeed: (speed: number) => void;
   onResetScroll: () => void;
-  onPrevSong?: () => void;
   onNextSong?: () => void;
-  canPrevSong?: boolean;
   canNextSong?: boolean;
   nextSongInfo?: { title: string; author?: string } | null;
   onToggleToolsBar?: () => void;
@@ -43,14 +42,13 @@ export default function SongHeader({
   lyricFollowActive = false,
   onToggleAutoScroll,
   onSetAutoScrollSpeed,
-  onPrevSong,
   onNextSong,
-  canPrevSong,
   canNextSong,
   onToggleToolsBar,
   songBrowserOpen = false,
   onToggleSongBrowser,
 }: SongHeaderProps) {
+  const router = useRouter();
   const { t, isRtl } = useLanguage();
   const playing = autoScroll.isActive;
   const followMode = lyricFollowActive && !playing;
@@ -63,6 +61,16 @@ export default function SongHeader({
         className="flex min-h-14 w-full min-w-0 items-center justify-between gap-2 p-2.5 sm:min-h-0 sm:p-2"
         dir={isRtl ? 'rtl' : 'ltr'}
       >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+          className="h-11 w-11 shrink-0 sm:h-10 sm:w-10"
+          aria-label={t('common.back')}
+        >
+          <BackArrowIcon className="h-5 w-5" />
+        </Button>
+
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
           <div
             className={cn(
@@ -167,20 +175,6 @@ export default function SongHeader({
           )}
           aria-hidden={centerActive}
         >
-          {onPrevSong && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onPrevSong}
-              disabled={!canPrevSong}
-              className="inline-flex h-11 w-11 sm:h-10 sm:w-10"
-              aria-label={t('common.previous')}
-              tabIndex={centerActive ? -1 : undefined}
-            >
-              <BackArrowIcon className="h-5 w-5" />
-            </Button>
-          )}
-
           {showNextGroup && (
             <div
               data-song-browser-trigger

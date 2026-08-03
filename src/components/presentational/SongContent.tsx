@@ -35,7 +35,7 @@ import { songHasOnlyEasyChords } from '@/utils/chordDifficulty';
 import { formatSectionDisplayName } from '@/utils/sectionDisplayName';
 import { groupLinesForDisplay } from '@/utils/repeatBlockGroups';
 import { cn } from '@/lib/utils';
-import { absoluteSongShareUrl } from '@/lib/seo/songPath';
+import { absoluteSongShareUrl, songPath } from '@/lib/seo/songPath';
 import { Button } from '@/components/ui/button';
 import { InstrumentToggle } from '@/components/chords/InstrumentToggle';
 import { InstrumentSwitchHint } from '@/components/chords/InstrumentSwitchHint';
@@ -957,6 +957,7 @@ export default function SongContent({
       entityType="song"
       entityId={transposedSong.id}
       entityTitle={transposedSong.title}
+      sharePath={songPath(transposedSong)}
       className={
         isInLibrary
           ? cn(

@@ -11,6 +11,8 @@ interface ShareWithFriendIconButtonProps {
   entityType: SharedEntityType
   entityId: string
   entityTitle: string
+  /** Canonical public path for copy/link preview (e.g. `/song/slug`). */
+  sharePath?: string
   className?: string
   iconClassName?: string
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void
@@ -20,6 +22,7 @@ export default function ShareWithFriendIconButton({
   entityType,
   entityId,
   entityTitle,
+  sharePath,
   className,
   iconClassName,
   onClick,
@@ -53,6 +56,7 @@ export default function ShareWithFriendIconButton({
         entityType={entityType}
         entityId={entityId}
         entityTitle={entityTitle}
+        sharePath={sharePath}
       />
     </>
   )

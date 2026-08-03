@@ -28,7 +28,7 @@ import { shareOrCopyLink } from '@/utils/shareLink';
 import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
 import { useAuthContext } from '@/context/AuthContext';
 import { UserPlusIcon } from '@heroicons/react/24/outline';
-import { absoluteSongShareUrl } from '@/lib/seo/songPath';
+import { absoluteSongShareUrl, songPath } from '@/lib/seo/songPath';
 import {
   type ChordSectionPref,
   readChordSectionPref,
@@ -460,6 +460,7 @@ export default function ToolsBottomBar({
           entityType="song"
           entityId={song.id}
           entityTitle={song.title}
+          sharePath={songPath(song)}
         />
       )}
     </div>

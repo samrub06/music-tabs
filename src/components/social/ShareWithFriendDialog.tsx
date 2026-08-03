@@ -22,6 +22,12 @@ interface ShareWithFriendDialogProps {
   entityType: SharedEntityType
   entityId: string
   entityTitle: string
+  /**
+   * Canonical public path for the link preview / copy action.
+   * Prefer SEO slug paths for catalog songs (`/song/my-song-slug`).
+   * `entityId` remains the DB id for friend share records.
+   */
+  sharePath?: string
 }
 
 function getInitials(name: string | null | undefined, email: string) {
@@ -45,6 +51,7 @@ export default function ShareWithFriendDialog({
   entityType,
   entityId,
   entityTitle,
+  sharePath,
 }: ShareWithFriendDialogProps) {
   const { t } = useLanguage()
   const [friends, setFriends] = useState<FriendProfile[]>([])
@@ -54,8 +61,8 @@ export default function ShareWithFriendDialog({
   const [pending, startTransition] = useTransition()
 
   const shareUrl = useMemo(
-    () => absoluteShareUrl(buildSharePath(entityType, entityId)),
-    [entityType, entityId]
+    () => absoluteShareUrl(sharePath ?? buildSharePath(entityType, entityId)),
+    [entityType, entityId, sharePath]
   )
 
   useEffect(() => {

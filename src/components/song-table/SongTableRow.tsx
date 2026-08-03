@@ -434,6 +434,7 @@ export default function SongTableRow({
         entityType="song"
         entityId={song.id}
         entityTitle={song.title}
+        sharePath={songPath(song)}
       />
     </li>
   )

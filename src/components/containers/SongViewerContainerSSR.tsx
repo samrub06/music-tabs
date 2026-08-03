@@ -577,32 +577,6 @@ export default function SongViewerContainerSSR({
     await runCompleteProgress('end_reached');
   }, [song.id, runCompleteProgress]);
 
-  const handlePrevSong = () => {
-    if (typeof window === 'undefined') return;
-
-    const navigationDataStr = sessionStorage.getItem('songNavigation');
-    if (!navigationDataStr) return;
-
-    try {
-      const navigationData = JSON.parse(navigationDataStr);
-      const { songList, currentIndex } = navigationData;
-      if (currentIndex > 0) {
-        const prevIndex = currentIndex - 1;
-        const prevSongId = songList[prevIndex];
-        sessionStorage.setItem(
-          'songNavigation',
-          JSON.stringify({
-            ...navigationData,
-            currentIndex: prevIndex,
-          })
-        );
-        router.replace(`/song/${prevSongId}`);
-      }
-    } catch (error) {
-      console.error('Error parsing navigation data for prev:', error);
-    }
-  };
-
   // Calculate navigation availability
   const canNextSong = (() => {
     if (typeof window === 'undefined') return false;
@@ -614,18 +588,6 @@ export default function SongViewerContainerSSR({
       const navigationData = JSON.parse(navigationDataStr);
       const { songList, currentIndex } = navigationData;
       return currentIndex < songList.length - 1;
-    } catch {
-      return false;
-    }
-  })();
-
-  const canPrevSong = (() => {
-    if (typeof window === 'undefined') return false;
-    const navigationDataStr = sessionStorage.getItem('songNavigation');
-    if (!navigationDataStr) return false;
-    try {
-      const navigationData = JSON.parse(navigationDataStr);
-      return Number(navigationData.currentIndex) > 0;
     } catch {
       return false;
     }
@@ -716,9 +678,7 @@ export default function SongViewerContainerSSR({
     onToggleEasyChordMode: () => setEasyChordMode(prev => !prev),
     useCapo,
     onToggleCapo: handleToggleCapo,
-    onPrevSong: handlePrevSong,
     onNextSong: handleNextSong,
-    canPrevSong: canPrevSong,
     canNextSong: canNextSong,
     nextSongInfo: nextSongInfo,
     onPlayNext: handleNextSong,
