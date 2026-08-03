@@ -64,7 +64,8 @@ export function scoreYoutubeEmbedCandidate(video: {
   return score
 }
 
-function pickBestEmbedCandidate(
+/** Prefer non-VEVO/Topic; never pick restricted if any non-restricted exists. */
+export function pickBestEmbedCandidate(
   videos: YoutubeTutorialVideo[]
 ): YoutubeTutorialVideo | null {
   if (videos.length === 0) return null
@@ -73,8 +74,14 @@ function pickBestEmbedCandidate(
     (a, b) => scoreYoutubeEmbedCandidate(b) - scoreYoutubeEmbedCandidate(a)
   )
 
-  // Prefer a non-restricted hit; fall back to best score overall.
-  return ranked.find((v) => !isLikelyEmbedRestricted(v)) ?? ranked[0] ?? null
+  const nonRestricted = ranked.filter((v) => !isLikelyEmbedRestricted(v))
+  if (nonRestricted.length > 0) {
+    // Prefer top non-VEVO; if the #1 non-restricted is weak vs #2/#3, still take best score among them.
+    return nonRestricted[0] ?? null
+  }
+
+  // Last resort only when every candidate looks restricted.
+  return ranked[0] ?? null
 }
 
 async function filterConfirmedEmbeddable(

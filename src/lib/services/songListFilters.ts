@@ -4,13 +4,68 @@ import type { Database } from '@/types/db'
 export type SongListTab = 'all' | 'recent' | 'popular'
 export type SongListCapoFilter = 'any' | 'with' | 'without'
 
+export type SongListDifficultyMax = 1 | 2 | 3 | 4
+
 export type SongListFilterParams = {
   q?: string
   tab?: SongListTab
   easyChord?: boolean
+  /** UG-style max level: 1 Absolute Beginner … 4 Advanced (inclusive). */
+  difficultyMax?: SongListDifficultyMax
   capoFilter?: SongListCapoFilter
   likedOnly?: boolean
   folderId?: string
+}
+
+/** Map free-text / UG id difficulty to 1–4 (null = unknown). */
+export function normalizeDifficultyLevel(raw: unknown): SongListDifficultyMax | null {
+  if (raw == null) return null
+  const s = String(raw).trim().toLowerCase()
+  if (!s) return null
+  if (s === '1' || s.includes('absolute')) return 1
+  if (
+    s === '2' ||
+    s.includes('beginner') ||
+    s.includes('débutant') ||
+    s.includes('debutant') ||
+    s.includes('novice') ||
+    s === 'easy' ||
+    s.includes('facile') ||
+    s.includes('easy')
+  ) {
+    return 2
+  }
+  if (
+    s === '3' ||
+    s.includes('intermediate') ||
+    s.includes('intermédiaire') ||
+    s.includes('intermediaire') ||
+    s.includes('medium') ||
+    s.includes('moyen')
+  ) {
+    return 3
+  }
+  if (
+    s === '4' ||
+    s.includes('advanced') ||
+    s.includes('avancé') ||
+    s.includes('avance') ||
+    s.includes('expert') ||
+    s.includes('hard') ||
+    s.includes('difficult')
+  ) {
+    return 4
+  }
+  return null
+}
+
+export function difficultyMatchesMax(
+  raw: unknown,
+  max: SongListDifficultyMax
+): boolean {
+  const level = normalizeDifficultyLevel(raw)
+  if (level == null) return false
+  return level <= max
 }
 
 export const USER_SONGS_LIST_COLUMNS =
@@ -28,7 +83,45 @@ export function applySongAttributeFilters(
     query = query.or(`title.ilike.%${q}%,author.ilike.%${q}%`)
   }
 
-  if (params.easyChord === true) {
+  if (params.difficultyMax != null) {
+    const max = params.difficultyMax
+    const parts: string[] = []
+    if (max >= 1) parts.push('difficulty.eq.1', 'difficulty.ilike.%absolute%')
+    if (max >= 2) {
+      parts.push(
+        'difficulty.eq.2',
+        'difficulty.ilike.%easy%',
+        'difficulty.ilike.%facile%',
+        'difficulty.ilike.%beginner%',
+        'difficulty.ilike.%débutant%',
+        'difficulty.ilike.%debutant%',
+        'difficulty.ilike.%novice%'
+      )
+    }
+    if (max >= 3) {
+      parts.push(
+        'difficulty.eq.3',
+        'difficulty.ilike.%intermediate%',
+        'difficulty.ilike.%intermédiaire%',
+        'difficulty.ilike.%intermediaire%',
+        'difficulty.ilike.%medium%',
+        'difficulty.ilike.%moyen%'
+      )
+    }
+    if (max >= 4) {
+      parts.push(
+        'difficulty.eq.4',
+        'difficulty.ilike.%advanced%',
+        'difficulty.ilike.%avanc%',
+        'difficulty.ilike.%expert%',
+        'difficulty.ilike.%hard%',
+        'difficulty.ilike.%difficult%'
+      )
+    }
+    if (parts.length > 0) {
+      query = query.or(parts.join(','))
+    }
+  } else if (params.easyChord === true) {
     query = query.or(
       'difficulty.ilike.%easy%,difficulty.ilike.%facile%,difficulty.ilike.%beginner%,difficulty.ilike.%débutant%'
     )
@@ -65,15 +158,10 @@ export function songListRowMatchesFilters(
     if (!title.includes(q) && !author.includes(q)) return false
   }
 
-  if (params.easyChord === true) {
-    const difficulty = String(row.difficulty ?? '').toLowerCase()
-    const easy =
-      difficulty.includes('easy') ||
-      difficulty.includes('facile') ||
-      difficulty.includes('beginner') ||
-      difficulty.includes('débutant') ||
-      difficulty.includes('debutant')
-    if (!easy) return false
+  if (params.difficultyMax != null) {
+    if (!difficultyMatchesMax(row.difficulty, params.difficultyMax)) return false
+  } else if (params.easyChord === true) {
+    if (!difficultyMatchesMax(row.difficulty, 2)) return false
   }
 
   if (params.capoFilter === 'with') {

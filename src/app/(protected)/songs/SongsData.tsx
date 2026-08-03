@@ -3,17 +3,38 @@ import { createSafeServerClient } from '@/lib/supabase/server'
 import { folderRepo } from '@/lib/services/folderRepo'
 import { songService } from '@/lib/services/songService'
 import { playlistRepo } from '@/lib/services/playlistRepo'
-import SongsClient from './SongsClient'
+import SongsClient, { type DifficultyMaxFilter } from './SongsClient'
 import SongsPageSkeleton from '@/components/library/SongsPageSkeleton'
 import type { Playlist } from '@/types'
 
 type OrderByOption = 'created_at' | 'updated_at' | 'view_count'
 
+function parseDifficultyMax(raw: string | undefined, easyChord: boolean): DifficultyMaxFilter {
+  if (raw === '1' || raw === '2' || raw === '3' || raw === '4') {
+    return Number(raw) as 1 | 2 | 3 | 4
+  }
+  if (easyChord) return 2
+  return null
+}
+
 export default async function SongsData({
   searchParams,
   userId,
 }: {
-  searchParams: Promise<{ page?: string; view?: string; limit?: string; searchQuery?: string; songId?: string; folder?: string; sortOrder?: string; tab?: string; easyChord?: string; capo?: string; filter?: string }>
+  searchParams: Promise<{
+    page?: string
+    view?: string
+    limit?: string
+    searchQuery?: string
+    songId?: string
+    folder?: string
+    sortOrder?: string
+    tab?: string
+    easyChord?: string
+    difficulty?: string
+    capo?: string
+    filter?: string
+  }>
   userId: string
 }) {
   const params = await searchParams
@@ -26,24 +47,26 @@ export default async function SongsData({
   const initialSortOrder = (params?.sortOrder === 'desc' ? 'desc' : 'asc') as 'asc' | 'desc'
   const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const easyChord = params?.easyChord === '1' || params?.easyChord === 'true'
+  const difficultyMax = parseDifficultyMax(params?.difficulty, easyChord)
   const capoParam = params?.capo as string | undefined
   const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'
   const likedOnly = params?.filter === 'liked'
 
-  const catalogKey = `${page}:${limit}:${tab}:${view}:${initialFolder ?? ''}:${initialSortOrder}:${easyChord}:${capoFilter}:${likedOnly}`
+  // Exclude `page` so infinite-scroll appends are not wiped by soft navigations.
+  const catalogKey = `${limit}:${tab}:${view}:${initialFolder ?? ''}:${initialSortOrder}:${difficultyMax ?? ''}:${capoFilter}:${likedOnly}`
 
   return (
     <Suspense key={catalogKey} fallback={<SongsPageSkeleton view={view} />}>
       <SongsDataWrapper
         userId={userId}
-        page={page}
+        page={1}
         limit={limit}
         tab={tab}
         view={view}
         initialSongId={initialSongId}
         initialFolder={initialFolder}
         initialSortOrder={initialSortOrder}
-        easyChord={easyChord}
+        difficultyMax={difficultyMax}
         capoFilter={capoFilter}
         likedOnly={likedOnly}
       />
@@ -60,7 +83,7 @@ async function SongsDataWrapper({
   initialSongId,
   initialFolder,
   initialSortOrder,
-  easyChord,
+  difficultyMax,
   capoFilter,
   likedOnly,
 }: {
@@ -72,7 +95,7 @@ async function SongsDataWrapper({
   initialSongId?: string
   initialFolder?: string
   initialSortOrder?: 'asc' | 'desc'
-  easyChord?: boolean
+  difficultyMax?: DifficultyMaxFilter
   capoFilter?: 'any' | 'with' | 'without'
   likedOnly?: boolean
 }) {
@@ -87,11 +110,12 @@ async function SongsDataWrapper({
       limit,
       '',
       orderBy,
-      easyChord,
+      undefined,
       capoFilter,
       likedOnly,
       folderId,
-      userId
+      userId,
+      difficultyMax ?? undefined
     ),
     playlistRepo(supabase).getAllPlaylistsLightweight(userId),
     folderRepo(supabase).getSongCountsByFolder(userId),
@@ -120,7 +144,7 @@ async function SongsDataWrapper({
       initialSongId={initialSongId}
       initialFolder={initialFolder}
       initialSortOrder={initialSortOrder}
-      initialEasyChord={easyChord}
+      initialDifficultyMax={difficultyMax ?? null}
       initialCapoFilter={capoFilter}
       likedOnly={likedOnly}
       folderSongCounts={folderSongCounts}

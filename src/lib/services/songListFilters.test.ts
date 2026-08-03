@@ -28,6 +28,19 @@ describe('songListRowMatchesFilters', () => {
     expect(songListRowMatchesFilters(base, { capoFilter: 'with' })).toBe(false)
   })
 
+  it('filters by difficultyMax inclusive', () => {
+    expect(songListRowMatchesFilters(base, { difficultyMax: 2 })).toBe(true)
+    expect(
+      songListRowMatchesFilters({ ...base, difficulty: '3' }, { difficultyMax: 2 })
+    ).toBe(false)
+    expect(
+      songListRowMatchesFilters({ ...base, difficulty: 'Intermediate' }, { difficultyMax: 3 })
+    ).toBe(true)
+    expect(
+      songListRowMatchesFilters({ ...base, difficulty: 'Advanced' }, { difficultyMax: 3 })
+    ).toBe(false)
+  })
+
   it('requires liked and popular views when those filters are on', () => {
     expect(songListRowMatchesFilters(base, { likedOnly: true })).toBe(false)
     expect(songListRowMatchesFilters({ ...base, is_liked: true }, { likedOnly: true })).toBe(true)

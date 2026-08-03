@@ -136,6 +136,7 @@ export const selectableSongIdsSchema = z.object({
   q: z.string().optional(),
   tab: z.enum(['all', 'recent', 'popular']).optional(),
   easyChord: z.boolean().optional(),
+  difficultyMax: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
   capoFilter: z.enum(['any', 'with', 'without']).optional(),
   likedOnly: z.boolean().optional(),
   folderId: z.union([z.string().uuid(), z.literal('unorganized')]).optional(),
@@ -149,6 +150,7 @@ export const userSongsListQuerySchema = z.object({
   tab: z.enum(['all', 'recent', 'popular']).optional(),
   folder: z.string().optional(),
   easyChord: z.boolean().optional(),
+  difficultyMax: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
   capo: z.enum(['any', 'with', 'without']).optional(),
   likedOnly: z.boolean().optional(),
 })

@@ -2,16 +2,17 @@
 
 import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
-import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import { cn } from '@/lib/utils'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
 import { usePageHeader } from '@/context/PageHeaderContext'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Song, Folder } from '@/types'
 import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '@/app/(protected)/dashboard/actions'
+import { fetchUserSongsListAction } from '@/app/(protected)/songs/actions'
+import { useInfiniteScrollLoadMore } from '@/lib/hooks/useInfiniteScrollLoadMore'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import DragDropOverlay from '@/components/DragDropOverlay'
@@ -84,19 +85,68 @@ export default function FolderSongsClient({
   // Other state
   const [currentFolder, setCurrentFolder] = useState<string | null>(folder.id)
   const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
-  const totalPages = Math.max(1, Math.ceil(total / limit))
+  const [displaySongs, setDisplaySongs] = useState(songs)
+  const [displayTotal, setDisplayTotal] = useState(total)
+  const [listPage, setListPage] = useState(page)
+  const [isListLoading, setIsListLoading] = useState(false)
+
+  const folderFilterKey = `${folder.id}:${searchQuery}:${limit}`
+  const prevFolderFilterKeyRef = useRef(folderFilterKey)
+  const folderLoadingLockRef = useRef(false)
 
   useEffect(() => {
-    const prefetchPage = (nextPage: number) => {
-      const params = new URLSearchParams(searchParams?.toString() || '')
-      params.set('page', String(nextPage))
-      params.set('limit', String(limit))
-      router.prefetch(`${pathname}?${params.toString()}`)
+    const filtersChanged = prevFolderFilterKeyRef.current !== folderFilterKey
+    prevFolderFilterKeyRef.current = folderFilterKey
+    if (filtersChanged || listPage <= 1) {
+      setDisplaySongs(songs)
+      setDisplayTotal(total)
+      setListPage(1)
+      folderLoadingLockRef.current = false
     }
+  }, [songs, total, folderFilterKey, listPage])
 
-    if (page > 1) prefetchPage(page - 1)
-    if (page < totalPages) prefetchPage(page + 1)
-  }, [page, limit, totalPages, pathname, searchParams, router])
+  const hasMoreSongs = displaySongs.length < displayTotal
+  const handleLoadMore = useCallback(() => {
+    if (folderLoadingLockRef.current || isListLoading || !hasMoreSongs) return
+    folderLoadingLockRef.current = true
+    const nextPage = listPage + 1
+    setIsListLoading(true)
+    void fetchUserSongsListAction({
+      page: nextPage,
+      limit,
+      searchQuery: searchQuery.trim() || undefined,
+      folder: folder.id,
+    })
+      .then((result) => {
+        setDisplaySongs((prev) => {
+          const seen = new Set(prev.map((s) => s.id))
+          const merged = [...prev]
+          for (const song of result.songs) {
+            if (!seen.has(song.id)) {
+              seen.add(song.id)
+              merged.push(song)
+            }
+          }
+          return merged
+        })
+        setDisplayTotal(result.total)
+        setListPage(nextPage)
+        // Do not write `page` into the URL — that remounts RSC and wipes appends.
+      })
+      .catch(console.error)
+      .finally(() => {
+        folderLoadingLockRef.current = false
+        setIsListLoading(false)
+      })
+  }, [isListLoading, hasMoreSongs, listPage, limit, searchQuery, folder.id])
+
+  const loadMoreSentinelRef = useInfiniteScrollLoadMore({
+    enabled: displaySongs.length > 0,
+    hasMore: hasMoreSongs,
+    loading: isListLoading,
+    onLoadMore: handleLoadMore,
+  })
+
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draggedSong, setDraggedSong] = useState<Song | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -234,7 +284,7 @@ export default function FolderSongsClient({
 
   // Client-side sort and search filter (search is server-side via q; we filter displayed list for consistency)
   const sortedSongs = useMemo(() => {
-    let list = [...songs]
+    let list = [...displaySongs]
     const q = searchQuery.toLowerCase().trim()
     if (q) {
       list = list.filter(
@@ -271,7 +321,7 @@ export default function FolderSongsClient({
     })
     if (sortDirection === 'desc') list.reverse()
     return list
-  }, [songs, searchQuery, sortField, sortDirection])
+  }, [displaySongs, searchQuery, sortField, sortDirection])
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -451,13 +501,17 @@ export default function FolderSongsClient({
                 sortDirection={sortDirection}
                 onSortChange={handleSortChange}
               />
-              <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
+              {isListLoading && hasMoreSongs ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
+              ) : null}
             </>
           ) : (
             <>
               <SongGallery songs={sortedSongs} variant="folder" hasUser diskRackOnLandscape />
-              {!isLandscapeMobile ? (
-                <Pagination page={page} limit={limit} total={total} showAllLimit={10000} />
+              <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
+              {isListLoading && hasMoreSongs ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
               ) : null}
             </>
           )

@@ -32,22 +32,15 @@ export function buildYoutubeTutorialQuery(
 export function buildYoutubeOriginalQuery(
   title: string,
   author: string,
-  language: 'en' | 'fr' | 'he' = 'en'
+  _language: 'en' | 'fr' | 'he' = 'en'
 ): string {
   const cleanTitle = title.trim()
   const cleanAuthor = author.trim()
 
-  const originalTerms: Record<'en' | 'fr' | 'he', string> = {
-    // Prefer lyrics/audio; avoid forcing "official video" (often VEVO, not iframe-friendly).
-    en: 'lyrics OR "official audio" -VEVO',
-    fr: 'paroles OR "audio officiel" -VEVO',
-    he: 'מילים OR אודיו -VEVO',
-  }
-
-  const parts = [cleanTitle]
+  // Bare artist + title — ranking (not query terms) prefers non-VEVO embeds.
+  const parts: string[] = []
   if (cleanAuthor) parts.push(cleanAuthor)
-  parts.push(originalTerms[language] ?? originalTerms.en)
-
+  if (cleanTitle) parts.push(cleanTitle)
   return parts.join(' ')
 }
 

@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils'
 
 import { getNotificationHref } from '@/utils/notificationNavigation'
+import { emitNotificationsChanged, NOTIFICATIONS_CHANGED_EVENT } from '@/utils/notificationEvents'
 export default function NotificationBell() {
   const { t } = useLanguage()
   const router = useRouter()
@@ -46,8 +47,13 @@ export default function NotificationBell() {
 
   useEffect(() => {
     refreshCount()
-    const interval = window.setInterval(refreshCount, 60000)
-    return () => window.clearInterval(interval)
+    const interval = window.setInterval(refreshCount, 20000)
+    const onChanged = () => refreshCount()
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, onChanged)
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, onChanged)
+    }
   }, [refreshCount])
 
   useEffect(() => {
@@ -60,6 +66,7 @@ export default function NotificationBell() {
       if (!notification.readAt) {
         await markNotificationReadAction(notification.id)
         refreshCount()
+        emitNotificationsChanged()
       }
       const href = getNotificationHref(notification)
       if (href) {

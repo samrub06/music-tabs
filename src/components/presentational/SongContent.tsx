@@ -48,6 +48,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  CHORD_SECTION_AUTO_COLLAPSE_AFTER,
+  incrementChordSectionOpenCount,
+  markChordCollapseHintSeen,
+  readChordSectionOpenCount,
+  resolveInitialChordSectionOpen,
+  shouldShowChordCollapseHint,
+} from '@/utils/chordSectionPrefs';
 import { SongEndSuggestions, type NextSongRef } from './SongEndSuggestions';
 import { SongRecordingPanel } from '@/components/practice/SongRecordingPanel';
 import {
@@ -280,8 +288,30 @@ export default function SongContent({
     return () => observer.disconnect();
   }, [canAwardOnEndReach, onReachSongEnd, isAuthenticated, transposedSong.id]);
 
-  const [chordSectionOpen, setChordSectionOpen] = useState(true);
+  const [chordSectionOpen, setChordSectionOpen] = useState(() =>
+    typeof window === 'undefined' ? true : resolveInitialChordSectionOpen()
+  );
+  const [chordCollapseHint, setChordCollapseHint] = useState(false);
   const [sheetSectionOpen, setSheetSectionOpen] = useState(true);
+
+  useEffect(() => {
+    const open = resolveInitialChordSectionOpen();
+    setChordSectionOpen(open);
+    const pastThreshold = readChordSectionOpenCount() >= CHORD_SECTION_AUTO_COLLAPSE_AFTER;
+    if (!open && pastThreshold && shouldShowChordCollapseHint()) {
+      setChordCollapseHint(true);
+      markChordCollapseHintSeen();
+      const id = window.setTimeout(() => setChordCollapseHint(false), 2800);
+      return () => window.clearTimeout(id);
+    }
+  }, []);
+
+  const handleChordSectionOpenChange = useCallback((open: boolean) => {
+    setChordSectionOpen(open);
+    if (open) {
+      incrementChordSectionOpenCount();
+    }
+  }, []);
   const sheetImageUrl =
     typeof transposedSong?.sheetImageUrl === 'string' && transposedSong.sheetImageUrl.trim()
       ? transposedSong.sheetImageUrl.trim()
@@ -1049,18 +1079,28 @@ export default function SongContent({
           {/* Chord Diagrams Section - accordion */}
           <Collapsible
             open={chordSectionOpen}
-            onOpenChange={setChordSectionOpen}
+            onOpenChange={handleChordSectionOpenChange}
             className="w-full"
           >
             <CollapsibleTrigger asChild>
               <div
                 role="button"
                 tabIndex={0}
-                className="flex w-full min-h-[48px] cursor-pointer select-none items-center justify-between gap-3 rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground touch-manipulation hover:bg-muted/80"
+                className={cn(
+                  'flex w-full min-h-[48px] cursor-pointer select-none items-center justify-between gap-3 rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground touch-manipulation hover:bg-muted/80',
+                  chordCollapseHint && 'ring-2 ring-primary/50 animate-pulse'
+                )}
               >
-                <div className="flex min-w-0 items-center">
-                  <MusicalNoteIcon className="me-2 h-5 w-5 shrink-0" />
-                  <span className="truncate">{t('songContent.CHORDS_USED_TITLE')}</span>
+                <div className="flex min-w-0 flex-col items-start gap-0.5">
+                  <div className="flex min-w-0 items-center">
+                    <MusicalNoteIcon className="me-2 h-5 w-5 shrink-0" />
+                    <span className="truncate">{t('songContent.CHORDS_USED_TITLE')}</span>
+                  </div>
+                  {chordCollapseHint ? (
+                    <span className="ps-7 text-xs font-normal text-muted-foreground">
+                      {t('songContent.chordsSectionCollapsedHint')}
+                    </span>
+                  ) : null}
                 </div>
                 {onSetSelectedInstrument ? (
                   <div
@@ -1294,6 +1334,7 @@ export default function SongContent({
               youtubeLyricSyncLookup={youtubeLyricSyncLookup}
               youtubeActiveLyricKey={youtubeActiveLyricKey}
               onYoutubeLyricLineClick={onYoutubeLyricLineClick}
+              autoScrollIsActive={autoScrollIsActive}
             />
           ) : null}
 
@@ -1355,6 +1396,7 @@ interface StructuredSongContentProps {
   youtubeLyricSyncLookup?: Map<string, { startSec: number | null }>;
   youtubeActiveLyricKey?: string | null;
   onYoutubeLyricLineClick?: (sectionIndex: number, lineIndex: number) => void;
+  autoScrollIsActive?: boolean;
 }
 
 function PracticeModeBar({
@@ -1427,6 +1469,7 @@ function StructuredSongContent({
   youtubeLyricSyncLookup,
   youtubeActiveLyricKey = null,
   onYoutubeLyricLineClick,
+  autoScrollIsActive = false,
 }: StructuredSongContentProps) {
   const { t } = useLanguage();
   const measurementRef = useRef<HTMLDivElement>(null);
@@ -1717,7 +1760,9 @@ function StructuredSongContent({
   }, [practiceMode, practiceLineIndex]);
 
   // Follow YouTube / audio practice sync: keep the active timed lyric in view.
+  // Skip when header continuous autoscroll is driving scroll (mutual exclusion).
   useEffect(() => {
+    if (autoScrollIsActive) return;
     if (!youtubeLyricSeekEnabled || !youtubeActiveLyricKey) return;
 
     const sectionPart = youtubeActiveLyricKey.split(':')[0];
@@ -1759,7 +1804,7 @@ function StructuredSongContent({
       window.cancelAnimationFrame(raf2);
       window.clearTimeout(fallback);
     };
-  }, [youtubeLyricSeekEnabled, youtubeActiveLyricKey]);
+  }, [autoScrollIsActive, youtubeLyricSeekEnabled, youtubeActiveLyricKey]);
 
   const sectionStartOffsets = useMemo(() => {
     const offsets: number[] = [];

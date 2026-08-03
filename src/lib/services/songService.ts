@@ -4,9 +4,11 @@ import { extractAllChords } from '@/utils/structuredSong';
 import {
   applySongListFilters,
   applyUserSongsListFilters,
+  difficultyMatchesMax,
   fetchAllSongIdsFromQuery,
   orderByToTab,
   USER_SONGS_LIST_COLUMNS,
+  type SongListDifficultyMax,
   type SongListFilterParams,
 } from '@/lib/services/songListFilters'
 import { SONG_DETAIL_COLUMNS } from '@/lib/services/songRepo'
@@ -39,12 +41,14 @@ function mapUserSongRowToList(song: Record<string, unknown>) {
 }
 
 function libraryListRpcArgs(params: SongListFilterParams, orderBy?: string) {
+  const easyFromDifficulty =
+    params.difficultyMax != null ? params.difficultyMax <= 2 : false
   return {
     p_q: params.q?.trim() || null,
     p_folder_id: params.folderId ?? null,
     p_liked_only: params.likedOnly === true,
     p_order: orderBy ?? 'created_at',
-    p_easy_chord: params.easyChord === true,
+    p_easy_chord: params.easyChord === true || easyFromDifficulty,
     p_capo_filter: params.capoFilter ?? 'any',
   }
 }
@@ -78,7 +82,8 @@ export const songService = {
     capoFilter?: 'any' | 'with' | 'without',
     likedOnly?: boolean,
     folderId?: string,
-    userId?: string
+    userId?: string,
+    difficultyMax?: SongListDifficultyMax
   ): Promise<{ songs: Song[], total: number }> {
     const client = clientSupabase;
     if (!client) {
@@ -93,6 +98,7 @@ export const songService = {
       q,
       tab: orderByToTab(orderBy),
       easyChord,
+      difficultyMax,
       capoFilter,
       likedOnly,
       folderId,
@@ -136,6 +142,28 @@ export const songService = {
     }
 
     const from = (page - 1) * limit
+
+    // Difficulty max is not in the RPC — fetch library then filter/paginate in memory.
+    if (filterParams.difficultyMax != null) {
+      const { data, error } = await client.rpc('get_user_library_songs', {
+        p_limit: 5000,
+        p_offset: 0,
+        ...libraryListRpcArgs(
+          { ...filterParams, easyChord: undefined, difficultyMax: undefined },
+          orderBy ?? 'created_at'
+        ),
+      })
+      throwIfLibraryRpcMissing(error)
+      const rows = ((data ?? []) as Array<Record<string, unknown>>).filter((row) =>
+        difficultyMatchesMax(row.difficulty, filterParams.difficultyMax!)
+      )
+      const pageRows = rows.slice(from, from + limit)
+      return {
+        songs: pageRows.map((song) => mapUserSongRowToList(song) as Song),
+        total: rows.length,
+      }
+    }
+
     const { data, error } = await client.rpc('get_user_library_songs', {
       p_limit: limit,
       p_offset: from,
@@ -174,6 +202,23 @@ export const songService = {
         : params.tab === 'popular'
           ? 'view_count'
           : 'created_at'
+
+    if (params.difficultyMax != null) {
+      const { songs } = await this.getAllSongs(
+        client,
+        1,
+        5000,
+        params.q,
+        orderBy,
+        undefined,
+        params.capoFilter,
+        params.likedOnly,
+        params.folderId,
+        user.id,
+        params.difficultyMax
+      )
+      return songs.map((s) => s.id)
+    }
 
     const { data, error } = await client.rpc('get_user_library_song_ids', {
       ...libraryListRpcArgs(params, orderBy),

@@ -9,6 +9,7 @@ import SongContent from './SongContent';
 import ToolsBottomBar from './ToolsBottomBar';
 import FloatingYoutubeTutorial from './FloatingYoutubeTutorial';
 import SongQueueSheet from './SongQueueSheet';
+import SongNavVignetteBar from './SongNavVignetteBar';
 import type { Folder } from '@/types';
 import type { NextSongRef } from './SongEndSuggestions';
 import type { YoutubeVideoMode } from '@/utils/youtubeTutorial';
@@ -78,6 +79,7 @@ interface SongViewerProps {
   onDelete?: () => void;
   onChordClick: (chord: string) => void;
   onToggleAutoScroll: () => void;
+  onSetAutoScrollActive?: (active: boolean) => void;
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
   onResetFontSize: () => void;
@@ -155,6 +157,7 @@ export default function SongViewer({
   onDelete,
   onChordClick,
   onToggleAutoScroll,
+  onSetAutoScrollActive,
   onIncreaseFontSize,
   onDecreaseFontSize,
   onResetFontSize,
@@ -268,6 +271,57 @@ export default function SongViewer({
 
   const practiceLyricSyncEnabled =
     youtubeTutorialOpen && isLyricPracticeYoutubeMode(youtubeVideoMode) && !!youtubeVideoId;
+
+  const syncHasTimedLines =
+    lyricSync?.status === 'ready' &&
+    lyricSync.lines.some((line) => line.startSec != null);
+
+  const lyricFollowActive =
+    practiceLyricSyncEnabled &&
+    syncHasTimedLines &&
+    youtubePlayerReady &&
+    !autoScroll.isActive;
+
+  const headerAutoScrollFallbackRef = useRef(false);
+
+  // Lyric follow when sync exists; otherwise enable header autoscroll once.
+  useEffect(() => {
+    if (!practiceLyricSyncEnabled) {
+      headerAutoScrollFallbackRef.current = false;
+      return;
+    }
+    if (lyricSyncLoading) return;
+
+    if (syncHasTimedLines && youtubePlayerReady) {
+      if (headerAutoScrollFallbackRef.current) {
+        onSetAutoScrollActive?.(false);
+        headerAutoScrollFallbackRef.current = false;
+      }
+      return;
+    }
+
+    const syncUnavailable =
+      !hasLyricPractice ||
+      lyricSync?.status === 'failed' ||
+      (lyricSync?.status === 'ready' && !syncHasTimedLines) ||
+      (Boolean(youtubeVideoId) && !lyricSyncLoading && lyricSync == null);
+
+    if (!syncUnavailable) return;
+    if (headerAutoScrollFallbackRef.current || autoScroll.isActive) return;
+
+    onSetAutoScrollActive?.(true);
+    headerAutoScrollFallbackRef.current = true;
+  }, [
+    practiceLyricSyncEnabled,
+    lyricSyncLoading,
+    syncHasTimedLines,
+    youtubePlayerReady,
+    hasLyricPractice,
+    lyricSync,
+    youtubeVideoId,
+    autoScroll.isActive,
+    onSetAutoScrollActive,
+  ]);
 
   useEffect(() => {
     if (!practiceLyricSyncEnabled || !song?.id || !youtubeVideoId) {
@@ -555,6 +609,7 @@ export default function SongViewer({
       {/* Header */}
       <SongHeader
         autoScroll={autoScroll}
+        lyricFollowActive={lyricFollowActive}
         onNavigateBack={onNavigateBack}
         onToggleAutoScroll={onToggleAutoScroll}
         onSetAutoScrollSpeed={onSetAutoScrollSpeed}
@@ -566,6 +621,14 @@ export default function SongViewer({
         nextSongInfo={nextSongInfo}
         onToggleToolsBar={onToggleToolsBar}
         isInLibrary={isInLibrary}
+      />
+
+      <SongNavVignetteBar
+        currentSongId={song.id}
+        currentTitle={song.title}
+        currentAuthor={song.author ?? ''}
+        currentSongImageUrl={song.songImageUrl}
+        currentArtistImageUrl={song.artistImageUrl}
       />
 
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">

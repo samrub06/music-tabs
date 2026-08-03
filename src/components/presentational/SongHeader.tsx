@@ -20,6 +20,8 @@ interface SongHeaderProps {
     isActive: boolean;
     speed: number;
   };
+  /** Lyric-line follow is active (audio/practice sync) — shown as ON in the header. */
+  lyricFollowActive?: boolean;
   onNavigateBack: () => void;
   onToggleAutoScroll: () => void;
   onSetAutoScrollSpeed: (speed: number) => void;
@@ -35,6 +37,7 @@ interface SongHeaderProps {
 
 export default function SongHeader({
   autoScroll,
+  lyricFollowActive = false,
   onNavigateBack,
   onToggleAutoScroll,
   onSetAutoScrollSpeed,
@@ -46,6 +49,8 @@ export default function SongHeader({
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
   const playing = autoScroll.isActive;
+  const followMode = lyricFollowActive && !playing;
+  const centerActive = playing || followMode;
 
   return (
     <div className="flex-shrink-0 border-b border-border bg-background relative">
@@ -59,10 +64,10 @@ export default function SongHeader({
           onClick={onNavigateBack}
           className={cn(
             'flex-shrink-0 h-11 w-11 sm:h-10 sm:w-10 transition-all duration-300 ease-out motion-reduce:transition-none',
-            playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0 border-0'
+            centerActive && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0 border-0'
           )}
           aria-label={t('songHeader.back')}
-          tabIndex={playing ? -1 : undefined}
+          tabIndex={centerActive ? -1 : undefined}
         >
           <BackArrowIcon className="h-5 w-5" />
         </Button>
@@ -71,7 +76,8 @@ export default function SongHeader({
           <div
             className={cn(
               'flex min-w-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 transition-all duration-300 ease-out motion-reduce:transition-none',
-              playing ? 'max-w-[20rem] flex-none' : 'max-w-full flex-1'
+              centerActive ? 'max-w-[20rem] flex-none' : 'max-w-full flex-1',
+              followMode && 'border-primary/40 bg-primary/10'
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
@@ -107,6 +113,18 @@ export default function SongHeader({
                   <PlusIcon className="h-4 w-4" />
                 </Button>
               </div>
+            ) : followMode ? (
+              <div
+                className="flex h-11 sm:h-10 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-primary"
+                title={t('songHeader.FOLLOWING_LYRICS')}
+                aria-live="polite"
+              >
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75 motion-reduce:animate-none" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
+                <span className="truncate">{t('songHeader.FOLLOWING_LYRICS')}</span>
+              </div>
             ) : (
               <button
                 type="button"
@@ -127,7 +145,7 @@ export default function SongHeader({
                 <div
                   className={cn(
                     'h-8 w-px shrink-0 bg-border/80 transition-all duration-300 motion-reduce:transition-none',
-                    playing && 'w-0 opacity-0'
+                    centerActive && 'w-0 opacity-0'
                   )}
                   aria-hidden
                 />
@@ -136,13 +154,13 @@ export default function SongHeader({
                   size="icon"
                   className={cn(
                     'h-11 w-11 sm:h-10 sm:w-10 shrink-0 rounded-none rounded-e-xl rtl:rounded-e-none rtl:rounded-s-xl transition-all duration-300 ease-out motion-reduce:transition-none',
-                    playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0'
+                    centerActive && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0'
                   )}
                   onClick={() => onToggleToolsBar()}
                   aria-label={t('songHeader.TOOLS_LABEL')}
                   title={t('songHeader.TOOLS_LABEL')}
-                  tabIndex={playing ? -1 : undefined}
-                  aria-hidden={playing}
+                  tabIndex={centerActive ? -1 : undefined}
+                  aria-hidden={centerActive}
                 >
                   <AdjustmentsHorizontalIcon className="h-5 w-5" />
                 </Button>
@@ -154,9 +172,9 @@ export default function SongHeader({
         <div
           className={cn(
             'flex items-center gap-1 flex-shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none',
-            playing && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden'
+            centerActive && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden'
           )}
-          aria-hidden={playing}
+          aria-hidden={centerActive}
         >
           {onPrevSong && (
             <Button
@@ -164,9 +182,9 @@ export default function SongHeader({
               size="icon"
               onClick={onPrevSong}
               disabled={!canPrevSong}
-              className="hidden sm:inline-flex h-10 w-10"
+              className="inline-flex h-11 w-11 sm:h-10 sm:w-10"
               aria-label={t('common.previous')}
-              tabIndex={playing ? -1 : undefined}
+              tabIndex={centerActive ? -1 : undefined}
             >
               <BackArrowIcon className="h-5 w-5" />
             </Button>
@@ -182,7 +200,7 @@ export default function SongHeader({
                 isRtl && 'flex-row-reverse'
               )}
               aria-label={t('songHeader.nextSong')}
-              tabIndex={playing ? -1 : undefined}
+              tabIndex={centerActive ? -1 : undefined}
             >
               <span className="text-sm font-medium">{t('songHeader.next')}</span>
               <ForwardArrowIcon className="h-5 w-5 shrink-0" />

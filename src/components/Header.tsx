@@ -21,6 +21,7 @@ import { AppLogo } from '@/components/AppLogo'
 import HeaderLevelProgress from './gamification/HeaderLevelProgress'
 import type { ThemePreference } from '@/context/ThemeContext'
 import NotificationBell from './social/NotificationBell'
+import NotificationStack from './social/NotificationStack'
 import { Button } from '@/components/ui/button'
 import { GlassActionTile } from '@/components/library/GlassActionTile'
 import {
@@ -281,6 +282,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {user && <HeaderLevelProgress />}
 
         {user && <NotificationBell />}
+        {user && <NotificationStack />}
 
         {!loading && (
           user ? (

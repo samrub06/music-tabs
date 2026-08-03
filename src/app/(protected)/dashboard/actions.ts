@@ -234,6 +234,7 @@ export async function getSelectableSongIdsAction(payload: unknown): Promise<stri
     q: filters.q,
     tab: filters.tab,
     easyChord: filters.easyChord,
+    difficultyMax: filters.difficultyMax,
     capoFilter: filters.capoFilter,
     likedOnly: filters.likedOnly,
     folderId: filters.folderId,

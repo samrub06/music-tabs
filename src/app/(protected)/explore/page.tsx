@@ -22,7 +22,6 @@ export default async function ExplorePage({
   }>
 }) {
   const params = await searchParams
-  const page = Math.max(1, parseInt(params?.page || '1', 10))
   const limit = Math.max(1, parseInt(params?.limit || '24', 10))
   const view = (params?.view === 'table' ? 'table' : 'gallery') as 'gallery' | 'table'
   const q = params?.q || ''
@@ -33,7 +32,9 @@ export default async function ExplorePage({
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const catalogKey = `${page}:${limit}:${q}:${genre ?? ''}:${difficulty ?? ''}:${decade ?? ''}:${view}`
+  // Exclude `page` from the Suspense key so infinite-scroll appends are not wiped
+  // by a soft navigation that only changes the page query param.
+  const catalogKey = `${limit}:${q}:${genre ?? ''}:${difficulty ?? ''}:${decade ?? ''}:${view}`
 
   return (
     <ExploreClient
@@ -43,7 +44,7 @@ export default async function ExplorePage({
     >
       <Suspense key={catalogKey} fallback={<ExploreCatalogSkeleton view={view} />}>
         <ExploreCatalogSection
-          page={page}
+          page={1}
           limit={limit}
           q={q}
           genre={genre}

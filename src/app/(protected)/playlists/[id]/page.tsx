@@ -40,7 +40,6 @@ export default async function FolderSongsPage({
     notFound()
   }
 
-  const page = Math.max(1, Number(searchParamsResolved?.page) || 1)
   const limit = Math.max(1, Number(searchParamsResolved?.limit) || 50)
   const view =
     searchParamsResolved?.view === 'table' || searchParamsResolved?.view === 'gallery'
@@ -56,7 +55,7 @@ export default async function FolderSongsPage({
     <Suspense fallback={<FolderSongsSkeleton />}>
       <FolderSongsData
         folder={folder}
-        page={page}
+        page={1}
         limit={limit}
         view={view}
         q={q}

@@ -456,6 +456,10 @@ export default function SongViewerContainerSSR({
     setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive }));
   };
 
+  const handleSetAutoScrollActive = (active: boolean) => {
+    setAutoScroll((prev) => (prev.isActive === active ? prev : { ...prev, isActive: active }));
+  };
+
   const resetScroll = () => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -588,11 +592,28 @@ export default function SongViewerContainerSSR({
   }, [song.id, runCompleteProgress]);
 
   const handlePrevSong = () => {
-    if (!hasUsedNext) return;
-    
-    // Use browser history to go back
-    if (typeof window !== 'undefined') {
-      window.history.back();
+    if (typeof window === 'undefined') return;
+
+    const navigationDataStr = sessionStorage.getItem('songNavigation');
+    if (!navigationDataStr) return;
+
+    try {
+      const navigationData = JSON.parse(navigationDataStr);
+      const { songList, currentIndex } = navigationData;
+      if (currentIndex > 0) {
+        const prevIndex = currentIndex - 1;
+        const prevSongId = songList[prevIndex];
+        sessionStorage.setItem(
+          'songNavigation',
+          JSON.stringify({
+            ...navigationData,
+            currentIndex: prevIndex,
+          })
+        );
+        router.replace(`/song/${prevSongId}`);
+      }
+    } catch (error) {
+      console.error('Error parsing navigation data for prev:', error);
     }
   };
 
@@ -612,7 +633,17 @@ export default function SongViewerContainerSSR({
     }
   })();
 
-  const canPrevSong = hasUsedNext;
+  const canPrevSong = (() => {
+    if (typeof window === 'undefined') return false;
+    const navigationDataStr = sessionStorage.getItem('songNavigation');
+    if (!navigationDataStr) return false;
+    try {
+      const navigationData = JSON.parse(navigationDataStr);
+      return Number(navigationData.currentIndex) > 0;
+    } catch {
+      return false;
+    }
+  })();
 
   const canAwardOnEndReach =
     !canNextSong &&
@@ -684,6 +715,7 @@ export default function SongViewerContainerSSR({
     onDelete: canEdit ? handleDelete : undefined,
     onChordClick: handleChordClick,
     onToggleAutoScroll: handleToggleAutoScroll,
+    onSetAutoScrollActive: handleSetAutoScrollActive,
     onIncreaseFontSize: increaseFontSize,
     onDecreaseFontSize: decreaseFontSize,
     onResetFontSize: resetFontSize,

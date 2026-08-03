@@ -29,6 +29,11 @@ import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
 import { useAuthContext } from '@/context/AuthContext';
 import { UserPlusIcon } from '@heroicons/react/24/outline';
 import { absoluteSongShareUrl } from '@/lib/seo/songPath';
+import {
+  type ChordSectionPref,
+  readChordSectionPref,
+  writeChordSectionPref,
+} from '@/utils/chordSectionPrefs';
 
 function interpolate(template: string, vars: Record<string, string>) {
   return Object.entries(vars).reduce(
@@ -93,7 +98,17 @@ export default function ToolsBottomBar({
   const { user } = useAuthContext();
   const [linkCopied, setLinkCopied] = useState(false);
   const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false);
+  const [chordSectionPref, setChordSectionPref] = useState<ChordSectionPref>('auto');
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setChordSectionPref(readChordSectionPref());
+  }, []);
+
+  const handleChordSectionPref = (pref: ChordSectionPref) => {
+    setChordSectionPref(pref);
+    writeChordSectionPref(pref);
+  };
 
   useEffect(() => {
     return () => {
@@ -271,6 +286,28 @@ export default function ToolsBottomBar({
             <button type="button" onClick={() => onSetSelectedInstrument('guitar')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'guitar' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
               <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
             </button>
+          </div>
+        </div>
+
+        <div className={cardClass}>
+          <p className={labelClass}>{t('songContent.chordSectionPref')}</p>
+          <div className={segmentClass}>
+            {(
+              [
+                ['auto', 'chordSectionPrefAuto'],
+                ['always_open', 'chordSectionPrefOpen'],
+                ['always_collapsed', 'chordSectionPrefCollapsed'],
+              ] as const
+            ).map(([value, labelKey]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => handleChordSectionPref(value)}
+                className={segmentOptionClass(chordSectionPref === value)}
+              >
+                {t(`songContent.${labelKey}`)}
+              </button>
+            ))}
           </div>
         </div>
         <div className={cardClass}>

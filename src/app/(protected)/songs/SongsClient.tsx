@@ -2,13 +2,13 @@
 
 import SongTable from '@/components/SongTable'
 import SongGallery from '@/components/SongGallery'
-import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
 import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon, MusicalNoteIcon, ClockIcon, FireIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import { cn } from '@/lib/utils'
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import { useInfiniteScrollLoadMore } from '@/lib/hooks/useInfiniteScrollLoadMore'
 import { Song, Playlist } from '@/types'
 import { useFoldersContext } from '@/context/FoldersContext'
 import { addFolderAction, updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '../dashboard/actions'
@@ -47,6 +47,15 @@ function toolbarSegmentButton(
 }
 
 export type CapoFilter = 'any' | 'with' | 'without'
+export type DifficultyMaxFilter = 1 | 2 | 3 | 4 | null
+
+const DIFFICULTY_LEVELS: Array<{ value: DifficultyMaxFilter; labelKey: string }> = [
+  { value: null, labelKey: 'difficultyAny' },
+  { value: 1, labelKey: 'difficultyAbsoluteBeginner' },
+  { value: 2, labelKey: 'difficultyBeginner' },
+  { value: 3, labelKey: 'difficultyIntermediate' },
+  { value: 4, labelKey: 'difficultyAdvanced' },
+]
 
 interface SongsClientProps {
   songs: Song[]
@@ -60,12 +69,13 @@ interface SongsClientProps {
   initialFolder?: string
   initialSortOrder?: 'asc' | 'desc'
   initialEasyChord?: boolean
+  initialDifficultyMax?: DifficultyMaxFilter
   initialCapoFilter?: CapoFilter
   likedOnly?: boolean
   folderSongCounts?: FolderSongCounts
 }
 
-export default function SongsClient({ songs, total, page, limit, initialView = 'gallery', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
+export default function SongsClient({ songs, total, page, limit, initialView = 'gallery', initialTab = 'all', playlists = [], initialSongId, initialFolder, initialSortOrder = 'asc', initialEasyChord = false, initialDifficultyMax = null, initialCapoFilter = 'any', likedOnly = false, folderSongCounts = {} }: SongsClientProps) {
   const { t } = useLanguage()
   const { folders, refreshFolders } = useFoldersContext()
   const isLandscapeMobile = useLandscapeMobile()
@@ -106,7 +116,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const [selectedFolder, setSelectedFolder] = useState<string | undefined>(initialFolder)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
-  const [filterEasyChord, setFilterEasyChord] = useState<boolean>(initialEasyChord)
+  const [filterDifficultyMax, setFilterDifficultyMax] = useState<DifficultyMaxFilter>(
+    initialDifficultyMax ?? (initialEasyChord ? 2 : null)
+  )
   const [filterCapo, setFilterCapo] = useState<CapoFilter>(initialCapoFilter)
   
   // Other state
@@ -174,14 +186,35 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     })
   }, [searchParams, replaceQueryParams])
 
-  // Sync list from server when not searching
+  const listFilterKey = useMemo(
+    () =>
+      [
+        activeTab,
+        currentFolder ?? '',
+        filterDifficultyMax ?? '',
+        filterCapo,
+        likedOnly ? '1' : '0',
+        limit,
+      ].join(':'),
+    [activeTab, currentFolder, filterDifficultyMax, filterCapo, likedOnly, limit]
+  )
+  const prevListFilterKeyRef = useRef(listFilterKey)
+
+  // Sync from RSC only when filters change (never wipe an appended page-2+ list).
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    const filtersChanged = prevListFilterKeyRef.current !== listFilterKey
+    prevListFilterKeyRef.current = listFilterKey
+
+    if (searchQuery.trim()) return
+
+    if (filtersChanged || searchPage <= 1) {
       setDisplaySongs(songs)
       setDisplayTotal(total)
-      setSearchPage(page)
+      setSearchPage(1)
     }
-  }, [songs, total, page, searchQuery])
+  }, [songs, total, listFilterKey, searchQuery, searchPage])
+
+  const listLoadingLockRef = useRef(false)
 
   const fetchSongList = useCallback(
     async (overrides?: {
@@ -189,9 +222,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       searchQuery?: string
       folder?: string | undefined
       tab?: 'all' | 'recent' | 'popular'
-      easyChord?: boolean
+      difficultyMax?: DifficultyMaxFilter
       capo?: CapoFilter
+      append?: boolean
     }) => {
+      if (overrides?.append && listLoadingLockRef.current) return
+      if (overrides?.append) listLoadingLockRef.current = true
       setIsListLoading(true)
       try {
         const folderValue =
@@ -204,8 +240,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         const searchValue =
           overrides?.searchQuery !== undefined ? overrides.searchQuery : searchQuery.trim()
 
+        const difficultyMax =
+          overrides?.difficultyMax !== undefined
+            ? overrides.difficultyMax
+            : filterDifficultyMax
+
+        const nextPage = overrides?.page ?? 1
         const result = await fetchUserSongsListAction({
-          page: overrides?.page ?? 1,
+          page: nextPage,
           limit,
           searchQuery: searchValue || undefined,
           tab: overrides?.tab ?? activeTab,
@@ -213,15 +255,29 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             folderValue === 'unorganized'
               ? 'unorganized'
               : folderValue || undefined,
-          easyChord: overrides?.easyChord ?? (filterEasyChord || undefined),
+          difficultyMax: difficultyMax ?? undefined,
           capo: overrides?.capo ?? filterCapo,
           likedOnly: likedOnly || undefined,
         })
-        setDisplaySongs(result.songs)
+        setDisplaySongs((prev) => {
+          if (!overrides?.append) return result.songs
+          const seen = new Set(prev.map((s) => s.id))
+          const merged = [...prev]
+          for (const song of result.songs) {
+            if (!seen.has(song.id)) {
+              seen.add(song.id)
+              merged.push(song)
+            }
+          }
+          return merged
+        })
         setDisplayTotal(result.total)
+        setSearchPage(nextPage)
+        // Do not write `page` into the URL — that remounts RSC and wipes appends.
       } catch (error) {
         console.error('Error fetching songs:', error)
       } finally {
+        listLoadingLockRef.current = false
         setIsListLoading(false)
       }
     },
@@ -229,7 +285,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       limit,
       activeTab,
       currentFolder,
-      filterEasyChord,
+      filterDifficultyMax,
       filterCapo,
       likedOnly,
       searchQuery,
@@ -266,11 +322,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     }
   }, [searchParams, router])
 
-  // Sync folder, sortOrder, tab, easyChord, capo from URL
+  // Sync folder, sortOrder, tab, difficulty, capo from URL
   useEffect(() => {
     const folderFromUrl = searchParams?.get('folder')
     const sortOrderFromUrl = searchParams?.get('sortOrder')
     const tabFromUrl = searchParams?.get('tab')
+    const difficultyFromUrl = searchParams?.get('difficulty')
     const easyChordFromUrl = searchParams?.get('easyChord')
     const capoFromUrl = searchParams?.get('capo')
     if (folderFromUrl !== null) {
@@ -288,10 +345,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     } else {
       setActiveTab('all')
     }
-    if (easyChordFromUrl === '1' || easyChordFromUrl === 'true') {
-      setFilterEasyChord(true)
+    if (difficultyFromUrl === '1' || difficultyFromUrl === '2' || difficultyFromUrl === '3' || difficultyFromUrl === '4') {
+      setFilterDifficultyMax(Number(difficultyFromUrl) as 1 | 2 | 3 | 4)
+    } else if (easyChordFromUrl === '1' || easyChordFromUrl === 'true') {
+      setFilterDifficultyMax(2)
     } else {
-      setFilterEasyChord(false)
+      setFilterDifficultyMax(null)
     }
     if (capoFromUrl === 'with' || capoFromUrl === 'without') {
       setFilterCapo(capoFromUrl)
@@ -410,7 +469,17 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return sorted
   }, [filteredSongs, searchQuery, activeTab])
 
-  const applyQuery = (next: { view?: 'gallery' | 'table'; page?: number; limit?: number; songId?: string; folder?: string; sortOrder?: 'asc' | 'desc'; tab?: 'all' | 'recent' | 'popular'; easyChord?: boolean; capo?: CapoFilter }) => {
+  const applyQuery = (next: {
+    view?: 'gallery' | 'table'
+    page?: number
+    limit?: number
+    songId?: string
+    folder?: string
+    sortOrder?: 'asc' | 'desc'
+    tab?: 'all' | 'recent' | 'popular'
+    difficultyMax?: DifficultyMaxFilter
+    capo?: CapoFilter
+  }) => {
     setLocalSearchValue('')
     setSearchQuery('')
     prevDebouncedSearchRef.current = ''
@@ -419,6 +488,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     const params = new URLSearchParams(searchParams?.toString() || '')
     params.delete('q')
     params.delete('searchQuery')
+    params.delete('easyChord')
     if (next.view) params.set('view', next.view)
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
@@ -439,9 +509,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       if (next.tab !== 'all') params.set('tab', next.tab)
       else params.delete('tab')
     }
-    if (next.easyChord !== undefined) {
-      if (next.easyChord) params.set('easyChord', '1')
-      else params.delete('easyChord')
+    if (next.difficultyMax !== undefined) {
+      if (next.difficultyMax != null) params.set('difficulty', String(next.difficultyMax))
+      else params.delete('difficulty')
     }
     if (next.capo !== undefined) {
       if (next.capo !== 'any') params.set('capo', next.capo)
@@ -507,20 +577,31 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   }
 
   const isSearching = searchQuery.trim().length > 0
-  const displayPage = isSearching ? searchPage : page
+  const displayPage = Math.max(1, searchPage)
 
-  const handleSearchPaginationNavigate = useCallback(
-    (nextPage: number) => {
-      setSearchPage(nextPage)
-      void fetchSongList({ page: nextPage, searchQuery: searchQuery.trim() })
-    },
-    [fetchSongList, searchQuery]
-  )
+  const hasMoreSongs = displaySongs.length < displayTotal
+  const handleLoadMoreSongs = useCallback(() => {
+    if (isListLoading || !hasMoreSongs) return
+    void fetchSongList({
+      page: displayPage + 1,
+      searchQuery: searchQuery.trim() || undefined,
+      append: true,
+    })
+  }, [isListLoading, hasMoreSongs, fetchSongList, displayPage, searchQuery])
 
-  const handleSearchPaginationShowAll = useCallback(() => {
-    setSearchPage(1)
-    void fetchSongList({ page: 1, searchQuery: searchQuery.trim() })
-  }, [fetchSongList, searchQuery])
+  const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null)
+  const setScrollContainerNode = useCallback((node: HTMLDivElement | null) => {
+    scrollContainerRef.current = node
+    setScrollRoot(node)
+  }, [])
+
+  const loadMoreSentinelRef = useInfiniteScrollLoadMore({
+    enabled: true,
+    hasMore: hasMoreSongs,
+    loading: isListLoading,
+    onLoadMore: handleLoadMoreSongs,
+    root: scrollRoot,
+  })
 
   // Handle filter apply
   const handleApplyFilters = () => {
@@ -528,7 +609,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     setSortDirection(sortDirection)
     applyQuery({
       sortOrder: sortDirection,
-      easyChord: filterEasyChord,
+      difficultyMax: filterDifficultyMax,
       capo: filterCapo,
       page: 1,
     })
@@ -539,9 +620,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const handleClearFilters = () => {
     setSortField('title')
     setSortDirection('asc')
-    setFilterEasyChord(false)
+    setFilterDifficultyMax(null)
     setFilterCapo('any')
-    applyQuery({ sortOrder: 'asc', easyChord: false, capo: 'any', page: 1 })
+    applyQuery({ sortOrder: 'asc', difficultyMax: null, capo: 'any', page: 1 })
   }
 
   return (
@@ -814,7 +895,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         </div>
 
         <div
-          ref={scrollContainerRef}
+          ref={setScrollContainerNode}
           data-main-scroll
           className={cn(
             'relative z-0 min-h-0 flex-1 overscroll-contain',
@@ -827,9 +908,12 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           className={cn(
             'transition-opacity duration-300 ease-out',
             isLandscapeMobile && 'flex min-h-0 flex-1 flex-col',
-            isListLoading ? 'pointer-events-none opacity-45' : 'opacity-100'
+            // Dim only on full replace — keep list visible while appending pages.
+            isListLoading && displayPage <= 1
+              ? 'pointer-events-none opacity-45'
+              : 'opacity-100'
           )}
-          aria-busy={isListLoading}
+          aria-busy={isListLoading && displayPage <= 1}
         >
         {sortedSongs && sortedSongs.length > 0 ? (
           view === 'table' && !isLandscapeMobile ? (
@@ -858,7 +942,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 selectionFilters={{
                   q: searchQuery.trim() || undefined,
                   tab: activeTab,
-                  easyChord: filterEasyChord || undefined,
+                  difficultyMax: filterDifficultyMax ?? undefined,
                   capoFilter: filterCapo,
                   likedOnly: likedOnly || undefined,
                   folderId:
@@ -867,14 +951,10 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                       : currentFolder || undefined,
                 }}
               />
-              <Pagination
-                page={displayPage}
-                limit={limit}
-                total={displayTotal}
-                showAllLimit={10000}
-                onNavigate={isSearching ? handleSearchPaginationNavigate : undefined}
-                onShowAll={isSearching ? handleSearchPaginationShowAll : undefined}
-              />
+              <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
+              {isListLoading && hasMoreSongs ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
+              ) : null}
               {searchQuery.trim() && (
                 <Button
                   type="button"
@@ -889,31 +969,23 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
           ) : (
             <>
               <SongGallery songs={sortedSongs} variant="folder" hasUser diskRackOnLandscape />
-              {!isLandscapeMobile ? (
-                <>
-                  <Pagination
-                    page={displayPage}
-                    limit={limit}
-                    total={displayTotal}
-                    showAllLimit={10000}
-                    onNavigate={isSearching ? handleSearchPaginationNavigate : undefined}
-                    onShowAll={isSearching ? handleSearchPaginationShowAll : undefined}
-                  />
-                  {searchQuery.trim() && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-3 min-h-[44px] w-full"
-                      onClick={() => openAddSongPageForArtist(searchQuery.trim())}
-                    >
-                      {t('songs.searchMoreFromArtist').replace(
-                        '{artist}',
-                        searchQuery.trim()
-                      )}
-                    </Button>
-                  )}
-                </>
+              <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
+              {isListLoading && hasMoreSongs ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
               ) : null}
+              {searchQuery.trim() && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 min-h-[44px] w-full"
+                  onClick={() => openAddSongPageForArtist(searchQuery.trim())}
+                >
+                  {t('songs.searchMoreFromArtist').replace(
+                    '{artist}',
+                    searchQuery.trim()
+                  )}
+                </Button>
+              )}
             </>
           )
         ) : (
@@ -1033,31 +1105,33 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
 
             <div className="space-y-2 py-1">
               <Label className="text-[11px] font-medium text-muted-foreground block">
-                {t('songs.easyChord')}
+                {t('songs.difficultyFilter')}
               </Label>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setFilterEasyChord(false)}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
-                    !filterEasyChord
-                      ? 'border-primary text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('songs.easyChordAll')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterEasyChord(true)}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
-                    filterEasyChord
-                      ? 'border-primary text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('songs.easyChordOnly')}
-                </button>
+              <div
+                className="flex flex-col gap-0.5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-muted/40 p-1.5"
+                role="listbox"
+                aria-label={t('songs.difficultyFilter')}
+              >
+                {DIFFICULTY_LEVELS.map((level) => {
+                  const active = filterDifficultyMax === level.value
+                  return (
+                    <button
+                      key={level.labelKey}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => setFilterDifficultyMax(level.value)}
+                      className={cn(
+                        'w-full rounded-xl px-3 py-2.5 text-start text-sm font-medium min-h-[44px] transition-all',
+                        active
+                          ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                      )}
+                    >
+                      {t(`songs.${level.labelKey}`)}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 

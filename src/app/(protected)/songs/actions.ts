@@ -38,6 +38,7 @@ export async function fetchUserSongsListAction(
     params.capo,
     params.likedOnly,
     folderId,
-    user.id
+    user.id,
+    params.difficultyMax
   )
 }

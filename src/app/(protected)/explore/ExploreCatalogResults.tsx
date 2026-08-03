@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Song } from '@/types'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import SongGallery from '@/components/SongGallery'
 import SongTable from '@/components/SongTable'
-import Pagination from '@/components/Pagination'
 import { useLanguage } from '@/context/LanguageContext'
+import { useInfiniteScrollLoadMore } from '@/lib/hooks/useInfiniteScrollLoadMore'
+import { fetchExploreCatalogPageAction } from './actions'
 
 interface ExploreCatalogResultsProps {
   songs: Song[]
@@ -18,40 +19,89 @@ interface ExploreCatalogResultsProps {
 }
 
 export default function ExploreCatalogResults({
-  songs,
-  total,
-  page,
+  songs: initialSongs,
+  total: initialTotal,
+  page: initialPage,
   limit,
   view,
   userId,
 }: ExploreCatalogResultsProps) {
   const { t } = useLanguage()
-  const router = useRouter()
-  const pathname = usePathname()
   const searchParams = useSearchParams()
-  const prefetchedRef = useRef<Set<string>>(new Set())
 
-  const totalPages = Math.max(1, Math.ceil(total / limit))
-  const searchParamsKey = searchParams?.toString() ?? ''
+  // Filters only — never include `page` (append must not reset the list).
+  const filterKey = useMemo(() => {
+    const q = searchParams?.get('q') ?? searchParams?.get('searchQuery') ?? ''
+    const genre = searchParams?.get('genre') ?? ''
+    const difficulty = searchParams?.get('difficulty') ?? ''
+    const decade = searchParams?.get('decade') ?? ''
+    return `${q}:${genre}:${difficulty}:${decade}:${view}:${limit}`
+  }, [searchParams, view, limit])
+
+  const [items, setItems] = useState(initialSongs)
+  const [total, setTotal] = useState(initialTotal)
+  const [page, setPage] = useState(initialPage)
+  const [loading, setLoading] = useState(false)
+  const loadingLockRef = useRef(false)
 
   useEffect(() => {
-    const prefetchPage = (nextPage: number) => {
-      const params = new URLSearchParams(searchParamsKey)
-      params.set('page', String(nextPage))
-      params.set('limit', String(limit))
-      const href = `${pathname}?${params.toString()}`
-      const prefetchKey = `${href}|${nextPage}`
+    setItems(initialSongs)
+    setTotal(initialTotal)
+    setPage(1)
+    loadingLockRef.current = false
+  }, [filterKey, initialSongs, initialTotal])
 
-      if (prefetchedRef.current.has(prefetchKey)) return
-      prefetchedRef.current.add(prefetchKey)
-      router.prefetch(href)
-    }
+  const hasMore = items.length < total
 
-    if (page > 1) prefetchPage(page - 1)
-    if (page < totalPages) prefetchPage(page + 1)
-  }, [page, limit, totalPages, pathname, searchParamsKey, router])
+  const handleLoadMore = useCallback(() => {
+    if (loadingLockRef.current || loading || !hasMore) return
+    loadingLockRef.current = true
+    const nextPage = page + 1
+    setLoading(true)
+    const q = searchParams?.get('q') ?? searchParams?.get('searchQuery') ?? undefined
+    const genre = searchParams?.get('genre') ?? undefined
+    const difficulty = searchParams?.get('difficulty') ?? undefined
+    const decadeRaw = searchParams?.get('decade')
+    const decade = decadeRaw ? Number(decadeRaw) : undefined
 
-  if (songs.length === 0) {
+    void fetchExploreCatalogPageAction({
+      page: nextPage,
+      limit,
+      q: q || undefined,
+      genre,
+      difficulty,
+      decade: Number.isFinite(decade) ? decade : undefined,
+    })
+      .then((result) => {
+        setItems((prev) => {
+          const seen = new Set(prev.map((s) => s.id))
+          const merged = [...prev]
+          for (const song of result.songs) {
+            if (!seen.has(song.id)) {
+              seen.add(song.id)
+              merged.push(song)
+            }
+          }
+          return merged
+        })
+        setTotal(result.total)
+        setPage(nextPage)
+      })
+      .catch(console.error)
+      .finally(() => {
+        loadingLockRef.current = false
+        setLoading(false)
+      })
+  }, [loading, hasMore, page, limit, searchParams])
+
+  const sentinelRef = useInfiniteScrollLoadMore({
+    enabled: items.length > 0,
+    hasMore,
+    loading,
+    onLoadMore: handleLoadMore,
+  })
+
+  if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-lg font-medium text-foreground">{t('explore.EMPTY_TITLE')}</p>
@@ -62,11 +112,11 @@ export default function ExploreCatalogResults({
     )
   }
 
-  if (view === 'table') {
-    return (
-      <>
+  return (
+    <>
+      {view === 'table' ? (
         <SongTable
-          songs={songs}
+          songs={items}
           folders={[]}
           playlists={[]}
           hasUser={!!userId}
@@ -74,15 +124,13 @@ export default function ExploreCatalogResults({
           onDeleteSongs={async () => {}}
           onDeleteAllSongs={async () => {}}
         />
-        <Pagination page={page} limit={limit} total={total} />
-      </>
-    )
-  }
-
-  return (
-    <>
-      <SongGallery songs={songs} variant="folder" hasUser={!!userId} />
-      <Pagination page={page} limit={limit} total={total} />
+      ) : (
+        <SongGallery songs={items} variant="folder" hasUser={!!userId} />
+      )}
+      <div ref={sentinelRef} className="h-8 w-full" aria-hidden />
+      {loading && hasMore ? (
+        <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
+      ) : null}
     </>
   )
 }
