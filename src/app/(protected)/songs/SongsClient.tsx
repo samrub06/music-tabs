@@ -312,6 +312,20 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     ]
   )
 
+  // After delete/remove on song page, force a fresh list even if soft-nav reuses cached UI.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('songsListNeedsRefresh') !== '1') return
+      sessionStorage.removeItem('songsListNeedsRefresh')
+    } catch {
+      return
+    }
+    void fetchSongList({
+      page: 1,
+      searchQuery: searchQuery.trim() || undefined,
+    })
+  }, [fetchSongList, searchQuery])
+
   // Debounced search — client-side fetch only, no URL persistence
   useEffect(() => {
     const timer = setTimeout(() => {

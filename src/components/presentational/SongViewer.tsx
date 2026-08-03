@@ -94,7 +94,6 @@ interface SongViewerProps {
   onToggleEasyChordMode: () => void;
   useCapo: boolean;
   onToggleCapo: (value: boolean) => void;
-  onNavigateBack: () => void;
   onPrevSong?: () => void;
   onNextSong?: () => void;
   canPrevSong?: boolean;
@@ -170,7 +169,6 @@ export default function SongViewer({
   onSetAutoScrollSpeed,
   useCapo,
   onToggleCapo,
-  onNavigateBack,
   onPrevSong,
   onNextSong,
   canPrevSong,
@@ -616,7 +614,6 @@ export default function SongViewer({
         <SongHeader
           autoScroll={autoScroll}
           lyricFollowActive={lyricFollowActive}
-          onNavigateBack={onNavigateBack}
           onToggleAutoScroll={onToggleAutoScroll}
           onSetAutoScrollSpeed={onSetAutoScrollSpeed}
           onResetScroll={onResetScroll}

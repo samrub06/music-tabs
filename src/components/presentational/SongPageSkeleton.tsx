@@ -8,7 +8,6 @@ function SongHeaderSkeleton() {
   return (
     <div className="shrink-0 border-b border-border bg-background">
       <div className="flex min-h-[3.5rem] items-center justify-between gap-2 p-2">
-        <Bone className="h-10 w-10 shrink-0 rounded-lg" />
         <Bone className="h-10 min-w-0 flex-1 rounded-xl" />
         <div className="flex shrink-0 items-center gap-1">
           <Bone className="h-10 w-10 rounded-lg" />

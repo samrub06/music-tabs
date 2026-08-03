@@ -179,6 +179,16 @@ export default function SongViewerContainerSSR({
     }
   };
 
+  const markSongsListStaleAndGo = useCallback(() => {
+    try {
+      sessionStorage.setItem('songsListNeedsRefresh', '1')
+    } catch {
+      // ignore private mode / quota
+    }
+    router.push('/songs')
+    router.refresh()
+  }, [router])
+
   const handleRemoveFromLibrary = async () => {
     if (!isAuthenticated || !localIsInLibrary) return;
 
@@ -191,7 +201,7 @@ export default function SongViewerContainerSSR({
       await deleteSongAction(idToDelete);
       setRemoveDialogOpen(false);
       if (isOwnedByUser || idToDelete === song.id) {
-        router.push('/songs');
+        markSongsListStaleAndGo();
         return;
       }
       setLocalIsInLibrary(false);
@@ -445,10 +455,13 @@ export default function SongViewerContainerSSR({
   });
 
   // Business logic handlers
-  const handleDelete = () => {
-    if (confirm(t('songs.confirmDeleteSong'))) {
-      onDelete(song.id);
-      router.push('/songs');
+  const handleDelete = async () => {
+    if (!confirm(t('songs.confirmDeleteSong'))) return;
+    try {
+      await onDelete(song.id);
+      markSongsListStaleAndGo();
+    } catch (error) {
+      console.error('Failed to delete song:', error);
     }
   };
 
@@ -473,33 +486,6 @@ export default function SongViewerContainerSSR({
   const handleToggleCapo = (value: boolean) => {
     setUseCapo(value);
   };
-
-  // Navigation handlers
-  const handleNavigateBack = () => {
-    if (typeof window === 'undefined') {
-      router.push('/songs')
-      return
-    }
-
-    const navigationDataStr = sessionStorage.getItem('songNavigation')
-    if (navigationDataStr) {
-      try {
-        const navigationData = JSON.parse(navigationDataStr)
-        if (navigationData.sourceUrl) {
-          router.push(navigationData.sourceUrl)
-          return
-        }
-      } catch (error) {
-        console.error('Error parsing navigation data:', error)
-      }
-    }
-
-    if (window.history.length > 1) {
-      router.back()
-    } else {
-      router.push('/songs')
-    }
-  }
 
   const runCompleteProgress = useCallback(
     async (trigger: 'next' | 'end_reached'): Promise<SongProgressResult | null> => {
@@ -730,7 +716,6 @@ export default function SongViewerContainerSSR({
     onToggleEasyChordMode: () => setEasyChordMode(prev => !prev),
     useCapo,
     onToggleCapo: handleToggleCapo,
-    onNavigateBack: handleNavigateBack,
     onPrevSong: handlePrevSong,
     onNextSong: handleNextSong,
     canPrevSong: canPrevSong,

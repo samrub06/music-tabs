@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
 import { fetchArtistSongsForNavAction } from '@/app/song/[id]/artistSongsActions'
+import { artistPath } from '@/lib/seo/songPath'
+import { artistSlugFromAuthor } from '@/utils/slugify'
 
 type NavMode = 'list' | 'artist'
 
@@ -268,6 +271,13 @@ export default function SongNavVignetteBar({
     router.replace(`/song/${songId}`)
   }
 
+  const openArtistPage = () => {
+    const author = currentAuthor.trim()
+    if (!author) return
+    onOpenChange(false)
+    router.push(artistPath(artistSlugFromAuthor(author)))
+  }
+
   if (!open) return null
 
   return (
@@ -354,6 +364,25 @@ export default function SongNavVignetteBar({
           })
         )}
       </div>
+
+      {mode === 'artist' && currentAuthor.trim() ? (
+        <div className="border-t border-border/60 px-3 pb-2.5 pt-2">
+          <button
+            type="button"
+            onClick={openArtistPage}
+            className={cn(
+              'flex h-9 w-full min-h-[36px] items-center justify-center gap-2 rounded-xl',
+              'border border-border/70 bg-muted/40 px-3 text-sm font-medium text-foreground',
+              'transition-colors hover:bg-muted hover:text-primary'
+            )}
+          >
+            <MagnifyingGlassIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 truncate">
+              {t('songHeader.navSeeMoreArtist').replace('{artist}', currentAuthor.trim())}
+            </span>
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

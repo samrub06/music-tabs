@@ -945,6 +945,8 @@
     "navSongCount": "{count} שירים",
     "navSongCountOne": "שיר אחד",
     "navTapToOpen": "לחצו שוב לפתיחה",
+    "navSeeMoreArtist": "עוד מ{artist}",
+    "navSeeMoreArtistShort": "עוד",
     "TOOLS_LABEL": "כלים",
     "CAPO_WITH_VALUE": "קאפו {capo}",
     "openSongQueue": "רשימת שירים",

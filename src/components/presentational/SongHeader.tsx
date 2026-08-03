@@ -23,7 +23,6 @@ interface SongHeaderProps {
   };
   /** Lyric-line follow is active (audio/practice sync) — shown as ON in the header. */
   lyricFollowActive?: boolean;
-  onNavigateBack: () => void;
   onToggleAutoScroll: () => void;
   onSetAutoScrollSpeed: (speed: number) => void;
   onResetScroll: () => void;
@@ -42,7 +41,6 @@ interface SongHeaderProps {
 export default function SongHeader({
   autoScroll,
   lyricFollowActive = false,
-  onNavigateBack,
   onToggleAutoScroll,
   onSetAutoScrollSpeed,
   onPrevSong,
@@ -65,20 +63,6 @@ export default function SongHeader({
         className="flex min-h-14 w-full min-w-0 items-center justify-between gap-2 p-2.5 sm:min-h-0 sm:p-2"
         dir={isRtl ? 'rtl' : 'ltr'}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onNavigateBack}
-          className={cn(
-            'h-11 w-11 flex-shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none sm:h-10 sm:w-10',
-            centerActive && 'pointer-events-none max-w-0 scale-75 overflow-hidden border-0 p-0 opacity-0'
-          )}
-          aria-label={t('songHeader.back')}
-          tabIndex={centerActive ? -1 : undefined}
-        >
-          <BackArrowIcon className="h-5 w-5" />
-        </Button>
-
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
           <div
             className={cn(

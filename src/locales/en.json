@@ -937,6 +937,8 @@
     "navSongCount": "{count} songs",
     "navSongCountOne": "1 song",
     "navTapToOpen": "Tap again to open",
+    "navSeeMoreArtist": "See more from {artist}",
+    "navSeeMoreArtistShort": "See more",
     "TOOLS_LABEL": "Tools",
     "CAPO_WITH_VALUE": "Capo {capo}",
     "openSongQueue": "Song list",

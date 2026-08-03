@@ -43,14 +43,16 @@ function interpolate(template: string, vars: Record<string, string>) {
 }
 
 const BAR_MIN_HEIGHT = 48;
-const BAR_MAX_HEIGHT_PERCENT = 65;
+const BAR_MAX_HEIGHT_PERCENT = 92;
 
-/** Default open height — tall enough for share link + edit/delete at the bottom */
+/** Default open height — leave room for settings + sticky footer on short phones. */
 export function getDefaultToolsBarHeight(): number {
-  if (typeof window === 'undefined') return 420;
+  if (typeof window === 'undefined') return 520;
   const viewportHeight = window.innerHeight;
-  const ratio = viewportHeight < 740 ? 0.68 : 0.58;
-  return Math.round(Math.min(620, Math.max(440, viewportHeight * ratio)));
+  // Short phones need most of the viewport; taller phones stay around ~78%.
+  const ratio = viewportHeight < 780 ? 0.88 : 0.78;
+  const maxH = viewportHeight * (BAR_MAX_HEIGHT_PERCENT / 100);
+  return Math.round(Math.min(maxH, Math.max(480, viewportHeight * ratio)));
 }
 
 interface ToolsBottomBarProps {
@@ -190,51 +192,81 @@ export default function ToolsBottomBar({
 
   return (
     <div
-      className="flex flex-shrink-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-border bg-background pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
+      className="flex flex-shrink-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-border bg-background backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
       style={{ height: `${height}px` }}
     >
       <div
         role="separator"
         aria-label={t('songHeader.resize')}
         onPointerDown={onPointerDown}
-        className="relative flex items-center justify-center py-6 cursor-ns-resize touch-none min-h-[3.5rem]"
+        className="relative flex shrink-0 cursor-ns-resize touch-none items-center justify-center py-3 min-h-11"
       >
-        <div className="w-14 h-1 rounded-full bg-muted-foreground/25" />
+        <div className="h-1 w-14 rounded-full bg-muted-foreground/25" />
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="absolute right-2 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose()
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={t('songHeader.close')}
         >
-          <XMarkIcon className="h-8 w-8" />
+          <XMarkIcon className="h-6 w-6" />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pb-10 space-y-3.5">
+      <div className="min-h-0 flex-1 space-y-3.5 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3">
         {/* First card: row Text size + Easy chords, then Key · Transpose */}
         <div className={cardClass}>
-          <div className="flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-[160px]">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[160px] flex-1">
               <p className={labelClass}>{t('songHeader.fontSize')}</p>
               <div className="flex items-center justify-center gap-3">
-                <Button variant="outline" size="icon" onClick={onDecreaseFontSize} disabled={fontSize <= 10} className="h-9 w-9 rounded-xl shrink-0">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onDecreaseFontSize}
+                  disabled={fontSize <= 10}
+                  className="h-9 w-9 shrink-0 rounded-xl"
+                >
                   <MinusIcon className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium tabular-nums min-w-[2.5rem] text-center">{fontSize}</span>
-                <Button variant="outline" size="icon" onClick={onIncreaseFontSize} disabled={fontSize >= 24} className="h-9 w-9 rounded-xl shrink-0">
+                <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                  {fontSize}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onIncreaseFontSize}
+                  disabled={fontSize >= 24}
+                  className="h-9 w-9 shrink-0 rounded-xl"
+                >
                   <PlusIcon className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={onResetFontSize} className="h-9 w-9 rounded-xl shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onResetFontSize}
+                  className="h-9 w-9 shrink-0 rounded-xl"
+                >
                   <EyeIcon className="h-4 w-4" />
                 </Button>
               </div>
             </div>
             {!hasOnlyEasyChords && (
-              <div className="flex-shrink-0 min-w-[150px]">
+              <div className="min-w-[150px] flex-shrink-0">
                 <p className={labelClass}>{t('songHeader.easyChords')}</p>
-                <button type="button" onClick={onToggleEasyChordMode} className={`w-full rounded-xl py-2.5 text-sm font-medium transition-all min-h-[2.5rem] ${easyChordMode ? 'bg-primary text-primary-foreground' : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                <button
+                  type="button"
+                  onClick={onToggleEasyChordMode}
+                  className={`min-h-[2.5rem] w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
+                    easyChordMode
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
                   {t('songHeader.easyChords')}
                 </button>
               </div>
@@ -243,23 +275,39 @@ export default function ToolsBottomBar({
           {(song.firstChord || song.key) && (
             <div className="mt-3">
               <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
-                  <SelectTrigger className="flex-1 h-10 rounded-xl border border-amber-200/80 dark:border-amber-700/50 bg-background/50 focus:ring-amber-500/20">
+                  <SelectTrigger className="h-10 flex-1 rounded-xl border border-amber-200/80 bg-background/50 focus:ring-amber-500/20 dark:border-amber-700/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {availableKeys.map((key) => (
-                      <SelectItem key={key} value={key}>{key}</SelectItem>
+                      <SelectItem key={key} value={key}>
+                        {key}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 overflow-hidden shrink-0">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))} disabled={transposeValue <= -11}>
+                <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-none"
+                    onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))}
+                    disabled={transposeValue <= -11}
+                  >
                     <MinusIcon className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm font-semibold tabular-nums min-w-[2.25rem] text-center text-amber-700 dark:text-amber-400">{transposeValue > 0 ? `+${transposeValue}` : transposeValue}</span>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none" onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))} disabled={transposeValue >= 11}>
+                  <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+                    {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-none"
+                    onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))}
+                    disabled={transposeValue >= 11}
+                  >
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                 </div>
@@ -271,8 +319,20 @@ export default function ToolsBottomBar({
           <div className={cardClass}>
             <p className={labelClass}>{t('songHeader.capo')}</p>
             <div className={segmentClass}>
-              <button type="button" onClick={() => onToggleCapo(true)} className={segmentOptionClass(useCapo)}>Capo {song.capo}</button>
-              <button type="button" onClick={() => onToggleCapo(false)} className={segmentOptionClass(!useCapo)}>{t('songHeader.noCapo')}</button>
+              <button
+                type="button"
+                onClick={() => onToggleCapo(true)}
+                className={segmentOptionClass(useCapo)}
+              >
+                Capo {song.capo}
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleCapo(false)}
+                className={segmentOptionClass(!useCapo)}
+              >
+                {t('songHeader.noCapo')}
+              </button>
             </div>
           </div>
         )}
@@ -280,10 +340,26 @@ export default function ToolsBottomBar({
         <div className={cardClass}>
           <p className={labelClass}>{t('songHeader.instrument')}</p>
           <div className={segmentClass}>
-            <button type="button" onClick={() => onSetSelectedInstrument('piano')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'piano' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button
+              type="button"
+              onClick={() => onSetSelectedInstrument('piano')}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
+                selectedInstrument === 'piano'
+                  ? 'bg-blue-500/15 text-blue-700 shadow-sm dark:text-blue-400'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               <Piano className="h-4 w-4 shrink-0" /> {t('songHeader.piano')}
             </button>
-            <button type="button" onClick={() => onSetSelectedInstrument('guitar')} className={`flex-1 rounded-full py-2 flex items-center justify-center gap-1.5 text-sm font-medium transition-all duration-200 ${selectedInstrument === 'guitar' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button
+              type="button"
+              onClick={() => onSetSelectedInstrument('guitar')}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
+                selectedInstrument === 'guitar'
+                  ? 'bg-amber-500/15 text-amber-700 shadow-sm dark:text-amber-400'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
             </button>
           </div>
@@ -350,22 +426,33 @@ export default function ToolsBottomBar({
             </Button>
           </div>
         )}
-
-        {(onToggleEdit || onDelete) && (
-          <div className="flex gap-2.5 pt-0.5 pb-2">
-            {onToggleEdit && (
-              <Button variant="outline" size="sm" onClick={onToggleEdit} className="flex-1 h-10 rounded-xl font-medium">
-                <PencilIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.edit')}
-              </Button>
-            )}
-            {onDelete && (
-              <Button variant="destructive" size="sm" onClick={onDelete} className="h-10 rounded-xl font-medium px-4">
-                <TrashIcon className="h-4 w-4 mr-1.5" /> {t('songHeader.delete')}
-              </Button>
-            )}
-          </div>
-        )}
       </div>
+
+      {(onToggleEdit || onDelete) && (
+        <div className="flex shrink-0 gap-2.5 border-t border-border/60 bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+          {onToggleEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleEdit}
+              className="h-11 min-h-[44px] flex-1 rounded-xl font-medium"
+            >
+              <PencilIcon className="mr-1.5 h-4 w-4" /> {t('songHeader.edit')}
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onDelete}
+              className="h-11 min-h-[44px] rounded-xl px-4 font-medium"
+            >
+              <TrashIcon className="mr-1.5 h-4 w-4" /> {t('songHeader.delete')}
+            </Button>
+          )}
+        </div>
+      )}
+
       {user && (
         <ShareWithFriendDialog
           open={shareWithFriendOpen}
@@ -376,5 +463,5 @@ export default function ToolsBottomBar({
         />
       )}
     </div>
-  );
+  )
 }
