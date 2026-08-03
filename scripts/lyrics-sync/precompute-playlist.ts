@@ -1,6 +1,9 @@
 /**
  * Precompute YouTube lyric sync for curated playlist, single song, or full public catalog.
  *
+ * `--all-public` prioritizes songs in curated public playlists (explorer), then the rest
+ * of the catalog. Already-ready syncs are skipped.
+ *
  * Usage:
  *   npx tsx scripts/lyrics-sync/precompute-playlist.ts --slug=ishay-ribo --limit=3
  *   npx tsx scripts/lyrics-sync/precompute-playlist.ts --song-id=UUID --lang=fr --video-id=8yOuNrT0dOw
@@ -121,25 +124,71 @@ function cleanupStemAudio(stem: string) {
   }
 }
 
-async function fetchAllPublicSongs(
-  db: SupabaseClient<Database>,
-  opts: { offset: number; limit: number }
-): Promise<{ songs: SongRow[]; total: number }> {
+/** Unique song IDs from curated explorer playlists, in display_order then playlist order. */
+async function fetchCuratedPublicPlaylistSongIds(
+  db: SupabaseClient<Database>
+): Promise<string[]> {
   const client = db as any
-  const countRes = await client
-    .from('songs')
-    .select('id', { count: 'exact', head: true })
-    .or('is_public.eq.true,user_id.is.null')
-  if (countRes.error) throw countRes.error
-  const totalCount = countRes.count ?? 0
+  const { data, error } = await client
+    .from('playlists')
+    .select('song_ids, display_order, curated_slug, name')
+    .eq('is_public', true)
+    .not('curated_slug', 'is', null)
+    .order('display_order', { ascending: true, nullsFirst: false })
 
+  if (error) throw error
+
+  const seen = new Set<string>()
+  const ordered: string[] = []
+  for (const row of data || []) {
+    for (const id of (row.song_ids || []) as string[]) {
+      if (!id || seen.has(id)) continue
+      seen.add(id)
+      ordered.push(id)
+    }
+  }
+  return ordered
+}
+
+async function fetchSongsByIdsPreserveOrder(
+  db: SupabaseClient<Database>,
+  ids: string[]
+): Promise<SongRow[]> {
+  if (ids.length === 0) return []
+  const client = db as any
+  const byId = new Map<string, SongRow>()
+
+  for (let i = 0; i < ids.length; i += PAGE_SIZE) {
+    const chunk = ids.slice(i, i + PAGE_SIZE)
+    const { data, error } = await client
+      .from('songs')
+      .select('id, title, author, sections')
+      .in('id', chunk)
+    if (error) throw error
+    for (const row of (data || []) as SongRow[]) {
+      byId.set(row.id, row)
+    }
+  }
+
+  return ids.map((id) => byId.get(id)).filter((s): s is SongRow => Boolean(s))
+}
+
+/**
+ * Catalog songs not in `excludeIds`, in created_at order.
+ * `skip` is how many non-excluded songs to skip (for offset past playlist priority).
+ */
+async function fetchCatalogSongsExcluding(
+  db: SupabaseClient<Database>,
+  excludeIds: Set<string>,
+  opts: { skip: number; limit: number }
+): Promise<SongRow[]> {
+  const client = db as any
   const collected: SongRow[] = []
-  let remaining = opts.limit
-  let from = opts.offset
+  let skipped = 0
+  let from = 0
 
-  while (remaining > 0) {
-    const chunk = Math.min(PAGE_SIZE, remaining)
-    const to = from + chunk - 1
+  while (collected.length < opts.limit) {
+    const to = from + PAGE_SIZE - 1
     const { data, error } = await client
       .from('songs')
       .select('id, title, author, sections')
@@ -150,13 +199,67 @@ async function fetchAllPublicSongs(
 
     if (error) throw error
     const batch = (data || []) as SongRow[]
-    collected.push(...batch)
-    if (batch.length < chunk) break
-    from += chunk
-    remaining -= chunk
+    if (batch.length === 0) break
+
+    for (const song of batch) {
+      if (excludeIds.has(song.id)) continue
+      if (skipped < opts.skip) {
+        skipped++
+        continue
+      }
+      collected.push(song)
+      if (collected.length >= opts.limit) break
+    }
+
+    if (batch.length < PAGE_SIZE) break
+    from += PAGE_SIZE
   }
 
-  return { songs: collected, total: totalCount }
+  return collected
+}
+
+/**
+ * Public catalog with curated playlist songs first (explorer), then the rest.
+ * Offset/limit apply to this prioritized sequence.
+ */
+async function fetchAllPublicSongs(
+  db: SupabaseClient<Database>,
+  opts: { offset: number; limit: number }
+): Promise<{ songs: SongRow[]; total: number; playlistPriorityCount: number }> {
+  const client = db as any
+  const countRes = await client
+    .from('songs')
+    .select('id', { count: 'exact', head: true })
+    .or('is_public.eq.true,user_id.is.null')
+  if (countRes.error) throw countRes.error
+  const totalCount = countRes.count ?? 0
+
+  const priorityIds = await fetchCuratedPublicPlaylistSongIds(db)
+  const prioritySet = new Set(priorityIds)
+  const end = opts.offset + opts.limit
+  const songs: SongRow[] = []
+
+  if (opts.offset < priorityIds.length) {
+    const fromPriority = priorityIds.slice(opts.offset, Math.min(end, priorityIds.length))
+    songs.push(...(await fetchSongsByIdsPreserveOrder(db, fromPriority)))
+  }
+
+  const stillNeed = opts.limit - songs.length
+  if (stillNeed > 0) {
+    const catalogSkip = Math.max(0, opts.offset - priorityIds.length)
+    songs.push(
+      ...(await fetchCatalogSongsExcluding(db, prioritySet, {
+        skip: catalogSkip,
+        limit: stillNeed,
+      }))
+    )
+  }
+
+  return {
+    songs,
+    total: totalCount,
+    playlistPriorityCount: priorityIds.length,
+  }
 }
 
 async function processSong(
@@ -469,13 +572,19 @@ async function main() {
 
   if (args.allPublic) {
     console.log(
-      `Catalog --all-public offset=${args.offset} limit=${args.limit}${args.dryRun ? ' (dry-run)' : ''}${args.cleanupAudio ? ' cleanup-audio' : ''}`
+      `Catalog --all-public (playlist-first) offset=${args.offset} limit=${args.limit}${args.dryRun ? ' (dry-run)' : ''}${args.cleanupAudio ? ' cleanup-audio' : ''}`
     )
-    const { songs, total } = await fetchAllPublicSongs(supabase, {
+    const { songs, total, playlistPriorityCount } = await fetchAllPublicSongs(supabase, {
       offset: args.offset,
       limit: args.limit,
     })
-    console.log(`Loaded ${songs.length} songs (catalog total≈${total})`)
+    const inPlaylistWindow =
+      args.offset < playlistPriorityCount
+        ? Math.min(songs.length, Math.max(0, playlistPriorityCount - args.offset))
+        : 0
+    console.log(
+      `Loaded ${songs.length} songs (catalog total≈${total}; curated-playlist priority=${playlistPriorityCount}; this batch playlist=${inPlaylistWindow})`
+    )
 
     for (const song of songs) {
       await processSong(repo, song, processOpts, counters)

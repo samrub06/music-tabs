@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Resumable full-catalog lyric-sync precompute.
+# Resumable full-catalog lyric-sync precompute (curated public playlists first).
 # Usage: bash scripts/lyrics-sync/run-all-public.sh [batch_size] [start_offset]
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -11,7 +11,7 @@ LOG_DIR="$ROOT/experiments/lyric-sync"
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/precompute-all.log"
 
-echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] start offset=$OFFSET batch=$BATCH" | tee -a "$LOG"
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] start offset=$OFFSET batch=$BATCH (playlist-first)" | tee -a "$LOG"
 
 while true; do
   echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] batch offset=$OFFSET limit=$BATCH" | tee -a "$LOG"
