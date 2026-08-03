@@ -279,6 +279,8 @@
     "tableView": "תצוגת טבלה",
     "filters": "מסננים",
     "advancedFilters": "מסננים מתקדמים",
+    "filterResultsCount": "{count} שירים",
+    "seeResults": "הצג {count} תוצאות",
     "recentSearches": "חיפושים אחרונים",
     "all": "הכל",
     "recent": "אחרונים",

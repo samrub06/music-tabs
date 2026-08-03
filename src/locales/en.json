@@ -279,6 +279,8 @@
     "tableView": "Table View",
     "filters": "Filters",
     "advancedFilters": "Advanced Filters",
+    "filterResultsCount": "{count} songs",
+    "seeResults": "See {count} results",
     "recentSearches": "Recent searches",
     "all": "All",
     "recent": "Recent",

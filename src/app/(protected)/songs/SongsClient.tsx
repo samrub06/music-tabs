@@ -214,17 +214,22 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   )
   const prevListFilterKeyRef = useRef(listFilterKey)
 
-  // Sync from RSC only when filters change (never wipe an appended page-2+ list).
+  // Sync from RSC when server props change. Client live filter updates go through
+  // fetchSongList — never stomp those with stale RSC props on filter-key alone.
   useEffect(() => {
     const filtersChanged = prevListFilterKeyRef.current !== listFilterKey
     prevListFilterKeyRef.current = listFilterKey
 
     if (searchQuery.trim()) return
 
-    if (filtersChanged || searchPage <= 1) {
+    if (filtersChanged) {
+      setSearchPage(1)
+      return
+    }
+
+    if (searchPage <= 1) {
       setDisplaySongs(songs)
       setDisplayTotal(total)
-      setSearchPage(1)
     }
   }, [songs, total, listFilterKey, searchQuery, searchPage])
 
@@ -483,57 +488,60 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     return sorted
   }, [filteredSongs, searchQuery, activeTab])
 
-  const applyQuery = (next: {
-    page?: number
-    limit?: number
-    songId?: string
-    folder?: string
-    sortOrder?: 'asc' | 'desc'
-    tab?: 'all' | 'recent' | 'popular'
-    difficultyMax?: DifficultyMaxFilter
-    capo?: CapoFilter
-  }) => {
-    setLocalSearchValue('')
-    setSearchQuery('')
-    prevDebouncedSearchRef.current = ''
-    setSearchPage(1)
+  /** Live advanced filters: update URL (replaceState) + refetch when server filters change. Preserves search. */
+  const updateListFilters = useCallback(
+    (next: {
+      sortField?: SortField
+      sortDirection?: SortDirection
+      difficultyMax?: DifficultyMaxFilter
+      capo?: CapoFilter
+    }) => {
+      const nextSortDirection =
+        next.sortDirection !== undefined ? next.sortDirection : sortDirection
+      const nextDifficulty =
+        next.difficultyMax !== undefined ? next.difficultyMax : filterDifficultyMax
+      const nextCapo = next.capo !== undefined ? next.capo : filterCapo
 
-    const params = new URLSearchParams(searchParams?.toString() || '')
-    params.delete('q')
-    params.delete('searchQuery')
-    params.delete('easyChord')
-    // View is client state (updated via replaceState); re-apply so Next navigations keep it.
-    if (view === 'table') params.set('view', 'table')
-    else params.delete('view')
-    if (next.page) params.set('page', String(next.page))
-    if (next.limit) params.set('limit', String(next.limit))
-    else if (!params.has('limit')) params.set('limit', String(limit))
-    if (next.songId !== undefined) {
-      if (next.songId) params.set('songId', next.songId)
-      else params.delete('songId')
-    }
-    if (next.folder !== undefined) {
-      if (next.folder) params.set('folder', next.folder)
-      else params.delete('folder')
-    }
-    if (next.sortOrder !== undefined) {
-      if (next.sortOrder) params.set('sortOrder', next.sortOrder)
-      else params.delete('sortOrder')
-    }
-    if (next.tab !== undefined) {
-      if (next.tab !== 'all') params.set('tab', next.tab)
-      else params.delete('tab')
-    }
-    if (next.difficultyMax !== undefined) {
-      if (next.difficultyMax != null) params.set('difficulty', String(next.difficultyMax))
-      else params.delete('difficulty')
-    }
-    if (next.capo !== undefined) {
-      if (next.capo !== 'any') params.set('capo', next.capo)
-      else params.delete('capo')
-    }
-    router.push(`${pathname}?${params.toString()}`)
-  }
+      if (next.sortField !== undefined) setSortField(next.sortField)
+      if (next.sortDirection !== undefined) setSortDirection(next.sortDirection)
+      if (next.difficultyMax !== undefined) setFilterDifficultyMax(next.difficultyMax)
+      if (next.capo !== undefined) setFilterCapo(next.capo)
+
+      replaceQueryParams((params) => {
+        params.set('page', '1')
+        if (nextSortDirection === 'desc') params.set('sortOrder', 'desc')
+        else params.delete('sortOrder')
+        if (nextDifficulty != null) {
+          params.set('difficulty', String(nextDifficulty))
+          params.delete('easyChord')
+        } else {
+          params.delete('difficulty')
+          params.delete('easyChord')
+        }
+        if (nextCapo !== 'any') params.set('capo', nextCapo)
+        else params.delete('capo')
+      })
+
+      const needsServerFetch =
+        next.difficultyMax !== undefined || next.capo !== undefined
+      if (needsServerFetch) {
+        void fetchSongList({
+          page: 1,
+          difficultyMax: nextDifficulty,
+          capo: nextCapo,
+          searchQuery: searchQuery.trim() || undefined,
+        })
+      }
+    },
+    [
+      sortDirection,
+      filterDifficultyMax,
+      filterCapo,
+      replaceQueryParams,
+      fetchSongList,
+      searchQuery,
+    ]
+  )
 
   const handleFolderChange = (folderId: string | undefined) => {
     setSelectedFolder(folderId)
@@ -572,9 +580,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   }
 
   const handleSortChange = (field: SortField, direction: SortDirection) => {
-    setSortField(field)
-    setSortDirection(direction)
-    applyQuery({ sortOrder: direction, page: 1 })
+    updateListFilters({ sortField: field, sortDirection: direction })
   }
 
   const toggleSelectMode = () => {
@@ -618,27 +624,41 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     root: scrollRoot,
   })
 
-  // Handle filter apply
-  const handleApplyFilters = () => {
-    setSortField(sortField)
-    setSortDirection(sortDirection)
-    applyQuery({
-      sortOrder: sortDirection,
-      difficultyMax: filterDifficultyMax,
-      capo: filterCapo,
-      page: 1,
-    })
-    setIsFilterSheetOpen(false)
-  }
+  const hasActiveFilters =
+    sortField !== 'title' ||
+    sortDirection !== 'asc' ||
+    filterDifficultyMax != null ||
+    filterCapo !== 'any'
 
-  // Handle filter clear
+  // Clear filters live (sheet stays open so results stay visible)
   const handleClearFilters = () => {
     setSortField('title')
     setSortDirection('asc')
     setFilterDifficultyMax(null)
     setFilterCapo('any')
-    applyQuery({ sortOrder: 'asc', difficultyMax: null, capo: 'any', page: 1 })
+    replaceQueryParams((params) => {
+      params.set('page', '1')
+      params.delete('sortOrder')
+      params.delete('difficulty')
+      params.delete('easyChord')
+      params.delete('capo')
+    })
+    void fetchSongList({
+      page: 1,
+      difficultyMax: null,
+      capo: 'any',
+      searchQuery: searchQuery.trim() || undefined,
+    })
   }
+
+  const filterResultsLabel = t('songs.filterResultsCount').replace(
+    '{count}',
+    String(displayTotal)
+  )
+  const seeResultsLabel = t('songs.seeResults').replace(
+    '{count}',
+    String(displayTotal)
+  )
 
   return (
     <DndContext
@@ -740,15 +760,22 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
             type="button"
             onClick={() => setIsFilterSheetOpen(true)}
             className={cn(
-              'shrink-0 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-all duration-200 flex items-center justify-center',
+              'relative shrink-0 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 transition-all duration-200 flex items-center justify-center',
               isLandscapeMobile ? 'h-8 w-8 p-0' : 'p-3 min-h-[44px] min-w-[44px]',
-              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0 max-lg:p-0'
+              isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0 max-lg:p-0',
+              hasActiveFilters && 'text-primary hover:text-primary'
             )}
             aria-label={t('songs.filters')}
           >
             <AdjustmentsHorizontalIcon
               className={cn('max-lg:shrink-0', isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')}
             />
+            {hasActiveFilters && (
+              <span
+                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary"
+                aria-hidden
+              />
+            )}
           </button>
           <button
             type="button"
@@ -1049,41 +1076,54 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
         duration={5000}
       />
 
-      {/* Advanced Filter Sheet - ui-design-toolsbar style */}
+      {/* Advanced Filter Sheet — live preview (list stays visible behind) */}
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent
           side="bottom"
           showCloseButton={false}
-          className="flex h-[85vh] max-h-[640px] flex-col rounded-t-[1.75rem] border-0 bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
+          overlayClassName="bg-black/35 dark:bg-black/50"
+          className="flex h-auto max-h-[min(52vh,440px)] flex-col gap-0 overflow-hidden rounded-t-[1.75rem] border border-b-0 border-black/[0.06] bg-background/95 p-0 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-background/98 dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
         >
           {/* Bar + Close aligned on same row */}
-          <div className="shrink-0 flex items-center py-1.5 -mt-1">
+          <div className="flex shrink-0 items-center px-4 py-1.5">
             <div className="flex-1" aria-hidden />
-            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
+            <div className="h-1 w-14 shrink-0 touch-none rounded-full bg-muted-foreground/25" />
             <div className="flex flex-1 justify-end">
-              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+              <SheetClose className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
                 <XMarkIcon className="h-5 w-5" />
                 <span className="sr-only">{t('common.close')}</span>
               </SheetClose>
             </div>
           </div>
 
-          <SheetHeader className="shrink-0 px-1 pb-2">
+          <SheetHeader className="shrink-0 space-y-1 px-5 pb-2 text-start sm:text-start">
             <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
+            <p
+              className="text-sm text-muted-foreground tabular-nums"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {isListLoading ? t('common.loading') : filterResultsLabel}
+            </p>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
-            <div className="space-y-2 py-1">
-              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground block">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-3">
+            <div className="space-y-2">
+              <Label
+                htmlFor="sortField"
+                className="block text-[11px] font-medium text-muted-foreground"
+              >
                 {t('songs.sortBy')}
               </Label>
               <Select
                 value={sortField}
-                onValueChange={(value) => setSortField(value as SortField)}
+                onValueChange={(value) =>
+                  updateListFilters({ sortField: value as SortField })
+                }
               >
                 <SelectTrigger
                   id="sortField"
-                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                  className="h-11 w-full rounded-xl border-border/70 bg-muted/40 px-3 shadow-none focus:ring-0"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -1095,35 +1135,44 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2 py-1">
-              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground block">
-                {t('songs.sortOrder')}
-              </Label>
-              <Select
-                value={sortDirection}
-                onValueChange={(value) => setSortDirection(value as SortDirection)}
+              <div
+                className="flex rounded-full bg-muted/80 p-0.5 gap-0.5"
+                role="group"
+                aria-label={t('songs.sortOrder')}
               >
-                <SelectTrigger
-                  id="sortDirection"
-                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                <button
+                  type="button"
+                  onClick={() => updateListFilters({ sortDirection: 'asc' })}
+                  className={cn(
+                    'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+                    sortDirection === 'asc'
+                      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
                 >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc">{t('songs.ascending')}</SelectItem>
-                  <SelectItem value="desc">{t('songs.descending')}</SelectItem>
-                </SelectContent>
-              </Select>
+                  {t('songs.ascending')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateListFilters({ sortDirection: 'desc' })}
+                  className={cn(
+                    'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+                    sortDirection === 'desc'
+                      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {t('songs.descending')}
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-2 py-1">
-              <Label className="text-[11px] font-medium text-muted-foreground block">
+            <div className="space-y-2">
+              <Label className="block text-[11px] font-medium text-muted-foreground">
                 {t('songs.difficultyFilter')}
               </Label>
               <div
-                className="flex flex-col gap-0.5 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] bg-muted/40 p-1.5"
+                className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 role="listbox"
                 aria-label={t('songs.difficultyFilter')}
               >
@@ -1135,12 +1184,14 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                       type="button"
                       role="option"
                       aria-selected={active}
-                      onClick={() => setFilterDifficultyMax(level.value)}
+                      onClick={() =>
+                        updateListFilters({ difficultyMax: level.value })
+                      }
                       className={cn(
-                        'w-full rounded-xl px-3 py-2.5 text-start text-sm font-medium min-h-[44px] transition-all',
+                        'shrink-0 rounded-full px-3.5 py-2 text-sm font-medium min-h-[40px] transition-all duration-200',
                         active
-                          ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-white/[0.06]'
                       )}
                     >
                       {t(`songs.${level.labelKey}`)}
@@ -1150,61 +1201,50 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               </div>
             </div>
 
-            <div className="space-y-2 py-1">
-              <Label className="text-[11px] font-medium text-muted-foreground block">
+            <div className="space-y-2">
+              <Label className="block text-[11px] font-medium text-muted-foreground">
                 {t('songs.capo')}
               </Label>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => setFilterCapo('any')}
-                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
-                    filterCapo === 'any'
-                      ? 'border-primary text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('songs.capoAny')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterCapo('with')}
-                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
-                    filterCapo === 'with'
-                      ? 'border-primary text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('songs.capoWith')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilterCapo('without')}
-                  className={`flex-1 flex items-center justify-center px-3 py-3 text-sm font-medium min-h-[40px] border-b-2 transition-colors ${
-                    filterCapo === 'without'
-                      ? 'border-primary text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {t('songs.capoWithout')}
-                </button>
+              <div className="flex rounded-full bg-muted/80 p-0.5 gap-0.5">
+                {(
+                  [
+                    { value: 'any' as const, label: t('songs.capoAny') },
+                    { value: 'with' as const, label: t('songs.capoWith') },
+                    { value: 'without' as const, label: t('songs.capoWithout') },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateListFilters({ capo: opt.value })}
+                    className={cn(
+                      'flex-1 rounded-full py-2 text-sm font-medium min-h-[40px] transition-all duration-200',
+                      filterCapo === opt.value
+                        ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 safe-area-inset-bottom">
+          <SheetFooter className="safe-area-inset-bottom flex shrink-0 flex-row gap-3 border-t border-black/[0.06] px-5 py-3 pb-6 dark:border-white/[0.08]">
             <Button
               variant="outline"
               onClick={handleClearFilters}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+              disabled={!hasActiveFilters}
+              className="h-10 min-h-[44px] flex-1 rounded-xl font-medium sm:flex-initial"
             >
               {t('common.clear')}
             </Button>
             <Button
-              onClick={handleApplyFilters}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+              onClick={() => setIsFilterSheetOpen(false)}
+              className="h-10 min-h-[44px] flex-1 rounded-xl font-medium sm:flex-initial"
             >
-              {t('common.apply')}
+              {isListLoading ? t('common.loading') : seeResultsLabel}
             </Button>
           </SheetFooter>
         </SheetContent>

@@ -77,8 +77,6 @@ export default function FolderSongsClient({
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
-  const [draftSortField, setDraftSortField] = useState<SortField>('title')
-  const [draftSortDirection, setDraftSortDirection] = useState<SortDirection>(initialSortOrder)
 
   const hasActiveFilters = sortField !== 'title' || sortDirection !== 'asc'
 
@@ -259,38 +257,45 @@ export default function FolderSongsClient({
     [view, searchParams, pathname]
   )
 
+  const replaceSortParams = useCallback(
+    (direction: SortDirection) => {
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      if (direction === 'desc') params.set('sortOrder', 'desc')
+      else params.delete('sortOrder')
+      params.set('page', '1')
+      const query = params.toString()
+      window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
+    },
+    [pathname, searchParams]
+  )
+
+  const updateSortFilters = useCallback(
+    (next: { sortField?: SortField; sortDirection?: SortDirection }) => {
+      if (next.sortField !== undefined) setSortField(next.sortField)
+      if (next.sortDirection !== undefined) {
+        setSortDirection(next.sortDirection)
+        replaceSortParams(next.sortDirection)
+      }
+    },
+    [replaceSortParams]
+  )
+
   const handleClearSearch = () => {
     setLocalSearchValue('')
     setSearchQuery('')
     applyQuery({ q: '', page: 1 })
   }
 
-  const handleApplyFilters = () => {
-    setSortField(draftSortField)
-    setSortDirection(draftSortDirection)
-    applyQuery({ sortOrder: draftSortDirection, page: 1 })
-    setIsFilterSheetOpen(false)
-  }
-
   const handleClearFilters = () => {
-    setDraftSortField('title')
-    setDraftSortDirection('asc')
     setSortField('title')
     setSortDirection('asc')
-    applyQuery({ sortOrder: 'asc', page: 1 })
-    setIsFilterSheetOpen(false)
-  }
-
-  const openFilterSheet = () => {
-    setDraftSortField(sortField)
-    setDraftSortDirection(sortDirection)
-    setIsFilterSheetOpen(true)
+    replaceSortParams('asc')
   }
 
   const handleSortChange = (field: SortField, direction: SortDirection) => {
     setSortField(field)
     setSortDirection(direction)
-    applyQuery({ sortOrder: direction, page: 1 })
+    replaceSortParams(direction)
   }
 
   // Client-side sort and search filter (search is server-side via q; we filter displayed list for consistency)
@@ -409,7 +414,7 @@ export default function FolderSongsClient({
             </div>
             <button
               type="button"
-              onClick={openFilterSheet}
+              onClick={() => setIsFilterSheetOpen(true)}
               className={cn(
                 'relative flex shrink-0 items-center justify-center border border-border bg-background text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
                 isLandscapeMobile
@@ -562,37 +567,53 @@ export default function FolderSongsClient({
         duration={5000}
       />
 
-      {/* Filter Sheet - same style as /songs */}
+      {/* Filter Sheet — live preview (list stays visible behind) */}
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent
           side="bottom"
           showCloseButton={false}
-          className="flex h-[85vh] max-h-[640px] flex-col rounded-t-[1.75rem] border-0 bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
+          overlayClassName="bg-black/35 dark:bg-black/50"
+          className="flex h-auto max-h-[min(48vh,380px)] flex-col gap-0 overflow-hidden rounded-t-[1.75rem] border border-b-0 border-black/[0.06] bg-background/95 p-0 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-background/98 dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
         >
-          <div className="shrink-0 flex items-center py-1.5 -mt-1">
+          <div className="flex shrink-0 items-center px-4 py-1.5">
             <div className="flex-1" aria-hidden />
-            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
+            <div className="h-1 w-14 shrink-0 touch-none rounded-full bg-muted-foreground/25" />
             <div className="flex flex-1 justify-end">
-              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+              <SheetClose className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
                 <XMarkIcon className="h-5 w-5" />
                 <span className="sr-only">{t('common.close')}</span>
               </SheetClose>
             </div>
           </div>
 
-          <SheetHeader className="shrink-0 px-1 pb-2">
+          <SheetHeader className="shrink-0 space-y-1 px-5 pb-2 text-start sm:text-start">
             <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
+            <p
+              className="text-sm text-muted-foreground tabular-nums"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {t('songs.filterResultsCount').replace('{count}', String(displayTotal))}
+            </p>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
-            <div className="space-y-2 py-1">
-              <Label htmlFor="sortField" className="text-[11px] font-medium text-muted-foreground block">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-3">
+            <div className="space-y-2">
+              <Label
+                htmlFor="sortField"
+                className="block text-[11px] font-medium text-muted-foreground"
+              >
                 {t('songs.sortBy')}
               </Label>
-              <Select value={draftSortField} onValueChange={(value) => setDraftSortField(value as SortField)}>
+              <Select
+                value={sortField}
+                onValueChange={(value) =>
+                  updateSortFilters({ sortField: value as SortField })
+                }
+              >
                 <SelectTrigger
                   id="sortField"
-                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                  className="h-11 w-full rounded-xl border-border/70 bg-muted/40 px-3 shadow-none focus:ring-0"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -604,37 +625,53 @@ export default function FolderSongsClient({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2 py-1">
-              <Label htmlFor="sortDirection" className="text-[11px] font-medium text-muted-foreground block">
-                {t('songs.sortOrder')}
-              </Label>
-              <Select value={draftSortDirection} onValueChange={(value) => setDraftSortDirection(value as SortDirection)}>
-                <SelectTrigger
-                  id="sortDirection"
-                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+              <div
+                className="flex rounded-full bg-muted/80 p-0.5 gap-0.5"
+                role="group"
+                aria-label={t('songs.sortOrder')}
+              >
+                <button
+                  type="button"
+                  onClick={() => updateSortFilters({ sortDirection: 'asc' })}
+                  className={cn(
+                    'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+                    sortDirection === 'asc'
+                      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
                 >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc">{t('songs.ascending')}</SelectItem>
-                  <SelectItem value="desc">{t('songs.descending')}</SelectItem>
-                </SelectContent>
-              </Select>
+                  {t('songs.ascending')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateSortFilters({ sortDirection: 'desc' })}
+                  className={cn(
+                    'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+                    sortDirection === 'desc'
+                      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {t('songs.descending')}
+                </button>
+              </div>
             </div>
           </div>
 
-          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 safe-area-inset-bottom">
+          <SheetFooter className="safe-area-inset-bottom flex shrink-0 flex-row gap-3 border-t border-black/[0.06] px-5 py-3 pb-6 dark:border-white/[0.08]">
             <Button
               variant="outline"
               onClick={handleClearFilters}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+              disabled={!hasActiveFilters}
+              className="h-10 min-h-[44px] flex-1 rounded-xl font-medium sm:flex-initial"
             >
               {t('common.clear')}
             </Button>
-            <Button onClick={handleApplyFilters} className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial">
-              {t('common.apply')}
+            <Button
+              onClick={() => setIsFilterSheetOpen(false)}
+              className="h-10 min-h-[44px] flex-1 rounded-xl font-medium sm:flex-initial"
+            >
+              {t('songs.seeResults').replace('{count}', String(displayTotal))}
             </Button>
           </SheetFooter>
         </SheetContent>
