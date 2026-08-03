@@ -1113,14 +1113,14 @@ export default function SongContent({
                   <div
                     className={cn(
                       'min-w-0',
-                      !isInLibrary && shareButton ? 'flex-[3]' : 'w-full'
+                      !isInLibrary && shareButton ? 'flex-1' : 'w-full'
                     )}
                   >
                     {addToLibraryFullWidth}
                   </div>
                 ) : null}
                 {!isInLibrary && shareButton ? (
-                  <div className="min-w-11 flex-1 basis-1/4">{shareButton}</div>
+                  <div className="w-11 shrink-0 self-stretch sm:w-12">{shareButton}</div>
                 ) : null}
               </div>
             ) : null}
