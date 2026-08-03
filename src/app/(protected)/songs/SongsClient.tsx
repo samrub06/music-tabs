@@ -97,7 +97,8 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  // Mutable: callback ref + useHideHeaderOnScroll both write `.current` (React 19 RefObject is readonly).
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null) as React.MutableRefObject<HTMLDivElement | null>
   useHideHeaderOnScroll(scrollContainerRef, true)
   
   // Search state (ephemeral — not persisted in URL or localStorage)
