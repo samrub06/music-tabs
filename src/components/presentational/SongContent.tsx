@@ -78,6 +78,8 @@ import {
   LandscapePracticeView,
 } from '@/components/practice/LandscapePracticeView';
 import { SongCoverPlaceholder } from '@/components/presentational/SongCoverPlaceholder';
+import { VignetteGlossHint } from '@/components/library/PlaylistGlassHeader';
+import { fetchArtistSongsForNavAction } from '@/app/song/[id]/artistSongsActions';
 import {
   Select,
   SelectContent,
@@ -473,6 +475,61 @@ export default function SongContent({
     practiceAudio.pause();
   };
 
+  const [coverExpanded, setCoverExpanded] = useState(false);
+  const [artistSongCount, setArtistSongCount] = useState<number | null>(null);
+  const coverVignetteRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!coverExpanded) return;
+    const author = transposedSong?.author?.trim();
+    if (!author) {
+      setArtistSongCount(1);
+      return;
+    }
+    let cancelled = false;
+    void fetchArtistSongsForNavAction({
+      author,
+      excludeSongId: transposedSong?.id,
+      limit: 40,
+    })
+      .then((songs) => {
+        if (!cancelled) setArtistSongCount(songs.length + 1);
+      })
+      .catch(() => {
+        if (!cancelled) setArtistSongCount(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [coverExpanded, transposedSong?.author, transposedSong?.id]);
+
+  useEffect(() => {
+    if (!coverExpanded) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const node = coverVignetteRef.current;
+      if (!node) return;
+      if (event.target instanceof Node && !node.contains(event.target)) {
+        setCoverExpanded(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setCoverExpanded(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [coverExpanded]);
+
+  const songCountLabel =
+    artistSongCount == null
+      ? null
+      : artistSongCount === 1
+        ? t('songHeader.navSongCountOne')
+        : t('songHeader.navSongCount').replace('{count}', String(artistSongCount));
+
   const songTitleBlock = (
     <div className="min-w-0 w-full text-start" dir={isRtl ? 'rtl' : 'ltr'}>
       <h2 className="text-lg font-bold text-foreground sm:text-base break-words">
@@ -491,22 +548,77 @@ export default function SongContent({
 
   const actionTileHeight = 'h-14 min-h-14 sm:h-16 sm:min-h-16';
 
+  /** Cover tile — expands full width with title/artist inside (no page overlay). */
   const songCoverVignette = (
     <div
+      ref={coverVignetteRef}
       className={cn(
-        'relative h-14 w-14 shrink-0 self-start overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-16',
+        'relative self-start',
+        coverExpanded ? 'z-20 w-full min-w-0' : 'z-20 shrink-0'
       )}
     >
-      {coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={coverUrl}
-          alt=""
-          className="h-full w-full object-cover"
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-xl bg-muted text-left',
+          'border border-black/10 dark:border-white/15',
+          'shadow-[0_10px_28px_-12px_rgba(0,0,0,0.45)] ring-1 ring-inset ring-white/25',
+          'transition-[width,height] duration-300 ease-out',
+          coverExpanded
+            ? 'h-44 w-full rounded-2xl sm:h-48'
+            : 'h-14 w-14 sm:h-16 sm:w-16'
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setCoverExpanded((v) => !v)}
+          aria-expanded={coverExpanded}
+          aria-label={transposedSong?.title || t('songHeader.navBrowseSongs')}
+          className="absolute inset-0 z-[2]"
         />
-      ) : (
-        <SongCoverPlaceholder iconClassName="min-h-7 min-w-7 max-h-10 max-w-10" />
-      )}
+        {coverUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverUrl}
+            alt=""
+            className={cn(
+              'pointer-events-none absolute inset-0 h-full w-full object-cover transition-transform duration-300',
+              coverExpanded ? 'scale-105' : 'scale-100'
+            )}
+          />
+        ) : (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
+            {coverExpanded ? (
+              <MusicalNoteIcon className="h-8 w-8 text-primary-foreground/90" />
+            ) : (
+              <SongCoverPlaceholder iconClassName="min-h-7 min-w-7 max-h-10 max-w-10" />
+            )}
+          </div>
+        )}
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-0',
+            coverExpanded
+              ? 'bg-gradient-to-t from-black/90 via-black/50 to-black/15'
+              : 'bg-gradient-to-t from-black/35 via-transparent to-transparent'
+          )}
+        />
+        <VignetteGlossHint active={coverExpanded} />
+        {coverExpanded ? (
+          <div className="pointer-events-none relative z-[3] flex h-full flex-col justify-end p-3 sm:p-3.5">
+            <p className="line-clamp-2 text-base font-bold leading-snug text-white drop-shadow sm:text-lg">
+              {transposedSong?.title || ''}
+            </p>
+            {transposedSong?.author ? (
+              <p className="mt-0.5 truncate text-sm text-white/90">{transposedSong.author}</p>
+            ) : null}
+            {songCountLabel ? (
+              <p className="mt-1.5 text-xs text-white/80">{songCountLabel}</p>
+            ) : (
+              <p className="mt-1.5 text-xs text-white/65">{t('common.loading')}</p>
+            )}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 
@@ -741,28 +853,28 @@ export default function SongContent({
 
   const youtubeModeButtonClass = (active: boolean) =>
     cn(
-      'group/wiggle flex min-h-[3rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1.5 py-2 transition-colors sm:min-h-[3.25rem]',
+      'group/wiggle flex min-h-[3rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-2 transition-all duration-200 sm:min-h-[3.25rem]',
       active
-        ? 'bg-[#FF0000] text-white shadow-sm'
-        : 'text-[#b91c1c] hover:bg-[#FF0000]/10 dark:text-red-300 dark:hover:bg-[#FF0000]/15'
+        ? 'scale-[1.03] bg-gray-200/95 text-foreground shadow-sm dark:bg-white/15'
+        : 'bg-transparent text-muted-foreground hover:bg-white/55 dark:hover:bg-white/10'
     );
 
   const youtubeModeBadgeClass = (active: boolean) =>
     cn(
-      'inline-flex max-w-full truncate rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide sm:text-[10px]',
+      'inline-flex max-w-full truncate rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide sm:text-[10px]',
       active
-        ? 'bg-white/20 text-white'
-        : 'bg-[#FF0000]/15 text-[#b91c1c] dark:bg-white/10 dark:text-red-200'
+        ? 'bg-white/80 text-foreground dark:bg-white/10'
+        : 'bg-black/[0.04] text-muted-foreground dark:bg-white/[0.06]'
     );
 
   const youtubeActions =
     onSelectYoutubeMode ? (
       <div
         className={cn(
-          'flex w-full min-w-0 items-stretch gap-1 rounded-xl border p-1',
-          'border-[#FF0000]/25 bg-[#FF0000]/10',
-          'dark:border-[#FF0000]/35 dark:bg-[#FF0000]/15',
-          youtubeTutorialOpen && 'ring-1 ring-[#FF0000]/35'
+          'flex w-full min-w-0 items-stretch gap-1 rounded-2xl border p-1',
+          'border-white/70 bg-white/65 shadow-[0_8px_24px_-16px_rgba(0,0,0,0.18)] backdrop-blur-xl',
+          'dark:border-white/[0.1] dark:bg-white/[0.06]',
+          youtubeTutorialOpen && 'ring-1 ring-black/5 dark:ring-white/10'
         )}
         role="group"
         aria-label={t('youtubeTutorial.title')}
@@ -775,7 +887,7 @@ export default function SongContent({
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'tutorial'}
         >
-          <YoutubeBrandIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]" />
+          <YoutubeBrandIcon className="icon-hover-wiggle h-5 w-5 shrink-0 text-[#FF0000] sm:h-[1.35rem] sm:w-[1.35rem]" />
           <span
             className={youtubeModeBadgeClass(
               youtubeTutorialOpen && youtubeVideoMode === 'tutorial'
@@ -794,7 +906,7 @@ export default function SongContent({
           )}
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'original'}
         >
-          <YoutubeBrandIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]" />
+          <YoutubeBrandIcon className="icon-hover-wiggle h-5 w-5 shrink-0 text-[#FF0000] sm:h-[1.35rem] sm:w-[1.35rem]" />
           <span
             className={youtubeModeBadgeClass(
               youtubeTutorialOpen && youtubeVideoMode === 'original'
@@ -812,7 +924,7 @@ export default function SongContent({
           aria-pressed={youtubeTutorialOpen && youtubeVideoMode === 'audio'}
           title={t('youtubeTutorial.modeAudioHint')}
         >
-          <SpeakerWaveIcon className="icon-hover-wiggle h-5 w-5 shrink-0 sm:h-[1.35rem] sm:w-[1.35rem]" />
+          <SpeakerWaveIcon className="icon-hover-wiggle h-5 w-5 shrink-0 text-[#1DB954] sm:h-[1.35rem] sm:w-[1.35rem]" />
           <span
             className={youtubeModeBadgeClass(
               youtubeTutorialOpen && youtubeVideoMode === 'audio'
@@ -973,18 +1085,22 @@ export default function SongContent({
       <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50 dark:bg-background">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 sm:gap-2.5">
-            {/* Row 1: cover + title + capo / bpm badges */}
+            {/* Row 1: cover (+ title/badges collapse when vignette expanded full width) */}
             <div className="flex w-full items-start gap-2">
               {songCoverVignette}
-              <div className="min-w-0 flex-1 self-center">
-                {songTitleBlock}
-              </div>
-              {(capoDisplay || bpmDisplay) && (
-                <div className="flex shrink-0 items-start gap-1.5">
-                  {capoDisplay}
-                  {bpmDisplay}
-                </div>
-              )}
+              {!coverExpanded ? (
+                <>
+                  <div className="min-w-0 flex-1 self-center">
+                    {songTitleBlock}
+                  </div>
+                  {(capoDisplay || bpmDisplay) && (
+                    <div className="flex shrink-0 items-start gap-1.5">
+                      {capoDisplay}
+                      {bpmDisplay}
+                    </div>
+                  )}
+                </>
+              ) : null}
             </div>
 
             {/* Always-visible YouTube row — full width */}

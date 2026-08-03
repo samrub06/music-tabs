@@ -211,6 +211,7 @@ export default function SongViewer({
   const [youtubeTutorialOpen, setYoutubeTutorialOpen] = useState(false);
   const [youtubeVideoMode, setYoutubeVideoMode] = useState<YoutubeVideoMode>('tutorial');
   const [songQueueOpen, setSongQueueOpen] = useState(false);
+  const [songBrowserOpen, setSongBrowserOpen] = useState(false);
   const youtubePlayerApiRef = useRef<YoutubePlayerHandle | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [youtubePlayerReady, setYoutubePlayerReady] = useState(false);
@@ -223,6 +224,10 @@ export default function SongViewer({
   const [practiceTutorialAwaitingSync, setPracticeTutorialAwaitingSync] = useState(false);
   const [coachCompleted, setCoachCompleted] = useState(practiceCoachCompleted);
   const practiceAutoStartedRef = useRef(false);
+
+  useEffect(() => {
+    setSongBrowserOpen(false)
+  }, [song.id])
 
   useEffect(() => {
     setCoachCompleted(practiceCoachCompleted);
@@ -605,33 +610,38 @@ export default function SongViewer({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-screen md:min-h-0 bg-background overflow-hidden">
-      {/* Header */}
-      <SongHeader
-        autoScroll={autoScroll}
-        lyricFollowActive={lyricFollowActive}
-        onNavigateBack={onNavigateBack}
-        onToggleAutoScroll={onToggleAutoScroll}
-        onSetAutoScrollSpeed={onSetAutoScrollSpeed}
-        onResetScroll={onResetScroll}
-        onPrevSong={onPrevSong}
-        onNextSong={onNextSong}
-        canPrevSong={!!canPrevSong}
-        canNextSong={!!canNextSong}
-        nextSongInfo={nextSongInfo}
-        onToggleToolsBar={onToggleToolsBar}
-        isInLibrary={isInLibrary}
-      />
+    <div className="flex h-full min-h-screen flex-col overflow-hidden bg-background md:min-h-0">
+      {/* Header + song browser dropdown (anchored under Next chevron) */}
+      <div className="relative z-30 shrink-0">
+        <SongHeader
+          autoScroll={autoScroll}
+          lyricFollowActive={lyricFollowActive}
+          onNavigateBack={onNavigateBack}
+          onToggleAutoScroll={onToggleAutoScroll}
+          onSetAutoScrollSpeed={onSetAutoScrollSpeed}
+          onResetScroll={onResetScroll}
+          onPrevSong={onPrevSong}
+          onNextSong={onNextSong}
+          canPrevSong={!!canPrevSong}
+          canNextSong={!!canNextSong}
+          nextSongInfo={nextSongInfo}
+          onToggleToolsBar={onToggleToolsBar}
+          isInLibrary={isInLibrary}
+          songBrowserOpen={songBrowserOpen}
+          onToggleSongBrowser={() => setSongBrowserOpen((v) => !v)}
+        />
+        <SongNavVignetteBar
+          open={songBrowserOpen}
+          onOpenChange={setSongBrowserOpen}
+          currentSongId={song.id}
+          currentTitle={song.title}
+          currentAuthor={song.author ?? ''}
+          currentSongImageUrl={song.songImageUrl}
+          currentArtistImageUrl={song.artistImageUrl}
+        />
+      </div>
 
-      <SongNavVignetteBar
-        currentSongId={song.id}
-        currentTitle={song.title}
-        currentAuthor={song.author ?? ''}
-        currentSongImageUrl={song.songImageUrl}
-        currentArtistImageUrl={song.artistImageUrl}
-      />
-
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex-1 flex min-h-0 overflow-hidden">
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <SongContent

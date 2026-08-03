@@ -52,8 +52,8 @@ export default async function SongsData({
   const capoFilter = (capoParam === 'with' || capoParam === 'without' ? capoParam : 'any') as 'any' | 'with' | 'without'
   const likedOnly = params?.filter === 'liked'
 
-  // Exclude `page` so infinite-scroll appends are not wiped by soft navigations.
-  const catalogKey = `${limit}:${tab}:${view}:${initialFolder ?? ''}:${initialSortOrder}:${difficultyMax ?? ''}:${capoFilter}:${likedOnly}`
+  // Exclude `page` and `view` — view is client-only so toggle doesn't remount the page.
+  const catalogKey = `${limit}:${tab}:${initialFolder ?? ''}:${initialSortOrder}:${difficultyMax ?? ''}:${capoFilter}:${likedOnly}`
 
   return (
     <Suspense key={catalogKey} fallback={<SongsPageSkeleton view={view} />}>

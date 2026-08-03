@@ -152,13 +152,10 @@ export default function FolderSongsClient({
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const viewFromUrl = searchParams?.get('view')
-  const view: 'gallery' | 'table' =
-    viewFromUrl === 'gallery' || viewFromUrl === 'table'
-      ? viewFromUrl
-      : total < 10
-        ? 'table'
-        : 'gallery'
+  const [view, setView] = useState<'gallery' | 'table'>(() => {
+    if (initialView === 'gallery' || initialView === 'table') return initialView
+    return total < 10 ? 'table' : 'gallery'
+  })
 
   usePageHeader(folder.name, '/playlists')
 
@@ -231,13 +228,14 @@ export default function FolderSongsClient({
     }
   }
 
-  const applyQuery = (next: { q?: string; view?: 'gallery' | 'table'; page?: number; limit?: number; sortOrder?: 'asc' | 'desc' }) => {
+  const applyQuery = (next: { q?: string; page?: number; limit?: number; sortOrder?: 'asc' | 'desc' }) => {
     const params = new URLSearchParams(searchParams?.toString() || '')
     if (next.q !== undefined) {
       if (next.q) params.set('q', next.q)
       else params.delete('q')
     }
-    if (next.view) params.set('view', next.view)
+    if (view === 'table') params.set('view', 'table')
+    else params.delete('view')
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
     else if (!params.has('limit')) params.set('limit', String(limit))
@@ -247,6 +245,19 @@ export default function FolderSongsClient({
     }
     router.push(`${pathname}?${params.toString()}`)
   }
+
+  const handleViewChange = useCallback(
+    (next: 'gallery' | 'table') => {
+      if (next === view) return
+      setView(next)
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      if (next === 'gallery') params.delete('view')
+      else params.set('view', next)
+      const query = params.toString()
+      window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
+    },
+    [view, searchParams, pathname]
+  )
 
   const handleClearSearch = () => {
     setLocalSearchValue('')
@@ -445,7 +456,7 @@ export default function FolderSongsClient({
                   ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
               )}
-              onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+              onClick={() => handleViewChange('gallery')}
               title={t('songs.galleryView')}
             >
               <Squares2X2Icon className={cn(isLandscapeMobile ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5')} />
@@ -462,7 +473,7 @@ export default function FolderSongsClient({
                   ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                   : 'text-muted-foreground hover:text-foreground'
               )}
-              onClick={() => applyQuery({ view: 'table', page: 1 })}
+              onClick={() => handleViewChange('table')}
               title={t('songs.tableView')}
             >
               <TableCellsIcon className={cn(isLandscapeMobile ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5')} />

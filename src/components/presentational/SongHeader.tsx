@@ -7,6 +7,7 @@ import {
   PauseIcon,
   PlayIcon,
   AdjustmentsHorizontalIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import {
   BackArrowIcon,
@@ -33,6 +34,9 @@ interface SongHeaderProps {
   nextSongInfo?: { title: string; author?: string } | null;
   onToggleToolsBar?: () => void;
   isInLibrary?: boolean;
+  /** Browse list / artist songs dropdown next to Next. */
+  songBrowserOpen?: boolean;
+  onToggleSongBrowser?: () => void;
 }
 
 export default function SongHeader({
@@ -46,16 +50,19 @@ export default function SongHeader({
   canPrevSong,
   canNextSong,
   onToggleToolsBar,
+  songBrowserOpen = false,
+  onToggleSongBrowser,
 }: SongHeaderProps) {
   const { t, isRtl } = useLanguage();
   const playing = autoScroll.isActive;
   const followMode = lyricFollowActive && !playing;
   const centerActive = playing || followMode;
+  const showNextGroup = Boolean(onNextSong || onToggleSongBrowser);
 
   return (
-    <div className="flex-shrink-0 border-b border-border bg-background relative">
+    <div className="relative flex-shrink-0 border-b border-border bg-background">
       <div
-        className="flex items-center justify-between gap-2 p-2.5 sm:p-2 w-full min-w-0 min-h-14 sm:min-h-0"
+        className="flex min-h-14 w-full min-w-0 items-center justify-between gap-2 p-2.5 sm:min-h-0 sm:p-2"
         dir={isRtl ? 'rtl' : 'ltr'}
       >
         <Button
@@ -63,8 +70,8 @@ export default function SongHeader({
           size="icon"
           onClick={onNavigateBack}
           className={cn(
-            'flex-shrink-0 h-11 w-11 sm:h-10 sm:w-10 transition-all duration-300 ease-out motion-reduce:transition-none',
-            centerActive && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0 border-0'
+            'h-11 w-11 flex-shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none sm:h-10 sm:w-10',
+            centerActive && 'pointer-events-none max-w-0 scale-75 overflow-hidden border-0 p-0 opacity-0'
           )}
           aria-label={t('songHeader.back')}
           tabIndex={centerActive ? -1 : undefined}
@@ -115,7 +122,7 @@ export default function SongHeader({
               </div>
             ) : followMode ? (
               <div
-                className="flex h-11 sm:h-10 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-primary"
+                className="flex h-11 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-primary sm:h-10"
                 title={t('songHeader.FOLLOWING_LYRICS')}
                 aria-live="polite"
               >
@@ -130,7 +137,7 @@ export default function SongHeader({
                 type="button"
                 onClick={onToggleAutoScroll}
                 className={cn(
-                  'flex h-11 sm:h-10 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-foreground transition-colors',
+                  'flex h-11 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-foreground transition-colors sm:h-10',
                   'hover:bg-muted/50 active:bg-muted/70'
                 )}
                 title={t('songHeader.START_AUTO_SCROLL')}
@@ -153,8 +160,8 @@ export default function SongHeader({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    'h-11 w-11 sm:h-10 sm:w-10 shrink-0 rounded-none rounded-e-xl rtl:rounded-e-none rtl:rounded-s-xl transition-all duration-300 ease-out motion-reduce:transition-none',
-                    centerActive && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden p-0'
+                    'h-11 w-11 shrink-0 rounded-none rounded-e-xl transition-all duration-300 ease-out motion-reduce:transition-none sm:h-10 sm:w-10 rtl:rounded-e-none rtl:rounded-s-xl',
+                    centerActive && 'pointer-events-none max-w-0 scale-75 overflow-hidden p-0 opacity-0'
                   )}
                   onClick={() => onToggleToolsBar()}
                   aria-label={t('songHeader.TOOLS_LABEL')}
@@ -171,8 +178,8 @@ export default function SongHeader({
 
         <div
           className={cn(
-            'flex items-center gap-1 flex-shrink-0 transition-all duration-300 ease-out motion-reduce:transition-none',
-            centerActive && 'pointer-events-none max-w-0 scale-75 opacity-0 overflow-hidden'
+            'flex flex-shrink-0 items-center gap-1 transition-all duration-300 ease-out motion-reduce:transition-none',
+            centerActive && 'pointer-events-none max-w-0 scale-75 overflow-hidden opacity-0'
           )}
           aria-hidden={centerActive}
         >
@@ -190,21 +197,58 @@ export default function SongHeader({
             </Button>
           )}
 
-          {onNextSong && (
-            <Button
-              variant="default"
-              onClick={onNextSong}
-              disabled={!canNextSong}
+          {showNextGroup && (
+            <div
+              data-song-browser-trigger
               className={cn(
-                'h-11 sm:h-10 min-w-[5.25rem] shrink-0 gap-1.5 px-4 shadow-sm',
-                isRtl && 'flex-row-reverse'
+                'flex h-11 shrink-0 items-stretch overflow-hidden rounded-xl bg-primary text-primary-foreground shadow-sm sm:h-10',
+                songBrowserOpen && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-background'
               )}
-              aria-label={t('songHeader.nextSong')}
-              tabIndex={centerActive ? -1 : undefined}
             >
-              <span className="text-sm font-medium">{t('songHeader.next')}</span>
-              <ForwardArrowIcon className="h-5 w-5 shrink-0" />
-            </Button>
+              {onNextSong ? (
+                <button
+                  type="button"
+                  onClick={onNextSong}
+                  disabled={!canNextSong}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-3 text-sm font-medium transition-colors',
+                    'hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50',
+                    isRtl && 'flex-row-reverse'
+                  )}
+                  aria-label={t('songHeader.nextSong')}
+                  tabIndex={centerActive ? -1 : undefined}
+                >
+                  <span>{t('songHeader.next')}</span>
+                  <ForwardArrowIcon className="h-5 w-5 shrink-0" />
+                </button>
+              ) : null}
+
+              {onNextSong && onToggleSongBrowser ? (
+                <span className="my-2 w-px shrink-0 bg-primary-foreground/30" aria-hidden />
+              ) : null}
+
+              {onToggleSongBrowser ? (
+                <button
+                  type="button"
+                  onClick={onToggleSongBrowser}
+                  aria-expanded={songBrowserOpen}
+                  aria-label={t('songHeader.navBrowseSongs')}
+                  title={t('songHeader.navBrowseSongs')}
+                  tabIndex={centerActive ? -1 : undefined}
+                  className={cn(
+                    'inline-flex items-center justify-center px-2 transition-colors hover:bg-primary/90',
+                    'min-w-[2.25rem]'
+                  )}
+                >
+                  <ChevronDownIcon
+                    className={cn(
+                      'h-4 w-4 shrink-0 transition-transform duration-200',
+                      songBrowserOpen && 'rotate-180'
+                    )}
+                  />
+                </button>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

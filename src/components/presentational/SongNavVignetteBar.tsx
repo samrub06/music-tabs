@@ -7,12 +7,9 @@ import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
 import { cn } from '@/lib/utils'
-import {
-  fetchArtistSongsForNavAction,
-  type ArtistSongNavItem,
-} from '@/app/song/[id]/artistSongsActions'
+import { fetchArtistSongsForNavAction } from '@/app/song/[id]/artistSongsActions'
 
-type NavMode = 'queue' | 'artist'
+type NavMode = 'list' | 'artist'
 
 type QueueItem = {
   id: string
@@ -52,6 +49,8 @@ function readNav(): SongNavigationData | null {
 }
 
 interface SongNavVignetteBarProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
   currentSongId: string
   currentTitle: string
   currentAuthor: string
@@ -59,7 +58,10 @@ interface SongNavVignetteBarProps {
   currentArtistImageUrl?: string
 }
 
+/** Horizontal list/artist browser (triggered from Next chevron). Click → open song. */
 export default function SongNavVignetteBar({
+  open,
+  onOpenChange,
   currentSongId,
   currentTitle,
   currentAuthor,
@@ -69,13 +71,13 @@ export default function SongNavVignetteBar({
   const { t } = useLanguage()
   const router = useRouter()
   const { supabase } = useSupabase()
-  const [mode, setMode] = useState<NavMode>('queue')
+  const [mode, setMode] = useState<NavMode>('list')
   const [items, setItems] = useState<QueueItem[]>([])
   const [loading, setLoading] = useState(false)
-  const scrollerRef = useRef<HTMLDivElement>(null)
   const activeRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  const loadQueue = useCallback(async () => {
+  const loadList = useCallback(async () => {
     const nav = readNav()
     if (!nav) {
       setItems([
@@ -123,7 +125,7 @@ export default function SongNavVignetteBar({
         }))
       )
     } catch (error) {
-      console.error('SongNavVignetteBar queue load failed:', error)
+      console.error('SongNavVignetteBar list load failed:', error)
       setItems([])
     }
   }, [
@@ -146,14 +148,16 @@ export default function SongNavVignetteBar({
         excludeSongId: currentSongId,
         limit: 24,
       })
-      const current: ArtistSongNavItem = {
-        id: currentSongId,
-        title: currentTitle,
-        author: currentAuthor,
-        songImageUrl: currentSongImageUrl,
-        artistImageUrl: currentArtistImageUrl,
-      }
-      setItems([current, ...others])
+      setItems([
+        {
+          id: currentSongId,
+          title: currentTitle,
+          author: currentAuthor,
+          songImageUrl: currentSongImageUrl,
+          artistImageUrl: currentArtistImageUrl,
+        },
+        ...others,
+      ])
     } catch (error) {
       console.error('SongNavVignetteBar artist load failed:', error)
       setItems([
@@ -175,27 +179,54 @@ export default function SongNavVignetteBar({
   ])
 
   useEffect(() => {
+    if (!open) return
     let cancelled = false
     setLoading(true)
-    const run = mode === 'queue' ? loadQueue : loadArtist
+    const run = mode === 'list' ? loadList : loadArtist
     void run().finally(() => {
       if (!cancelled) setLoading(false)
     })
     return () => {
       cancelled = true
     }
-  }, [mode, loadQueue, loadArtist, currentSongId])
+  }, [open, mode, loadList, loadArtist, currentSongId])
 
   useEffect(() => {
+    if (!open) return
     activeRef.current?.scrollIntoView({
       behavior: 'smooth',
       inline: 'center',
       block: 'nearest',
     })
-  }, [items, currentSongId, mode])
+  }, [items, currentSongId, mode, open])
 
-  const handleSelect = (songId: string) => {
-    if (songId === currentSongId) return
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: PointerEvent) => {
+      const node = panelRef.current
+      if (!node) return
+      if (event.target instanceof Node && !node.contains(event.target)) {
+        const target = event.target as HTMLElement
+        if (target.closest('[data-song-browser-trigger]')) return
+        onOpenChange(false)
+      }
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onOpenChange(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open, onOpenChange])
+
+  const navigateToSong = (songId: string) => {
+    if (songId === currentSongId) {
+      onOpenChange(false)
+      return
+    }
 
     if (mode === 'artist') {
       const songList = items.map((i) => i.id)
@@ -233,35 +264,47 @@ export default function SongNavVignetteBar({
       }
     }
 
+    onOpenChange(false)
     router.replace(`/song/${songId}`)
   }
 
-  if (!currentAuthor && mode === 'artist') return null
+  if (!open) return null
 
   return (
-    <div className="shrink-0 border-b border-border/80 bg-background/95 backdrop-blur-sm">
-      <div className="flex items-center justify-center px-3 pt-2">
-        <div className="flex w-full max-w-md rounded-full bg-muted/80 p-0.5 gap-0.5">
+    <div
+      ref={panelRef}
+      className={cn(
+        'absolute inset-x-0 top-full z-40 border-b border-border/80',
+        'bg-background/98 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.25)] backdrop-blur-xl',
+        'animate-in fade-in-0 slide-in-from-top-1 duration-200'
+      )}
+      role="dialog"
+      aria-label={t('songHeader.navBrowseSongs')}
+    >
+      <div className="flex items-center justify-center px-3 pt-2.5">
+        <div className="flex w-full max-w-md gap-0.5 rounded-full bg-muted/80 p-0.5">
           <button
             type="button"
-            onClick={() => setMode('queue')}
+            onClick={() => setMode('list')}
             className={cn(
               'flex-1 rounded-full py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm',
-              mode === 'queue'
+              mode === 'list'
                 ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            {t('songHeader.navQueue')}
+            {t('songHeader.navList')}
           </button>
           <button
             type="button"
             onClick={() => setMode('artist')}
+            disabled={!currentAuthor.trim()}
             className={cn(
               'flex-1 rounded-full py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm',
               mode === 'artist'
                 ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                : 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+              !currentAuthor.trim() && 'opacity-40'
             )}
           >
             {t('songHeader.navArtist')}
@@ -270,12 +313,11 @@ export default function SongNavVignetteBar({
       </div>
 
       <div
-        ref={scrollerRef}
-        className="flex gap-2 overflow-x-auto px-3 py-2.5 scrollbar-none"
+        className="flex gap-2.5 overflow-x-auto overscroll-x-contain px-3 py-3 scrollbar-hide touch-pan-x"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {loading && items.length === 0 ? (
-          <p className="w-full py-4 text-center text-xs text-muted-foreground">
+          <p className="w-full py-6 text-center text-xs text-muted-foreground">
             {t('common.loading')}
           </p>
         ) : (
@@ -286,14 +328,14 @@ export default function SongNavVignetteBar({
                 key={item.id}
                 ref={active ? activeRef : undefined}
                 type="button"
-                onClick={() => handleSelect(item.id)}
+                onClick={() => navigateToSong(item.id)}
+                aria-current={active ? 'true' : undefined}
                 className={cn(
                   'flex w-[4.5rem] shrink-0 flex-col items-center gap-1 rounded-xl p-1 transition-all sm:w-20',
                   active
                     ? 'bg-primary/10 ring-2 ring-primary/40'
                     : 'hover:bg-muted/60'
                 )}
-                aria-current={active ? 'true' : undefined}
               >
                 <div className="h-14 w-14 overflow-hidden rounded-lg sm:h-16 sm:w-16">
                   <SongThumbnail

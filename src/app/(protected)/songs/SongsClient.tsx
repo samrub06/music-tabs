@@ -130,7 +130,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
-  const view = (searchParams?.get('view') as 'gallery' | 'table') || initialView
+  const [view, setView] = useState<'gallery' | 'table'>(() =>
+    initialView === 'table' ? 'table' : 'gallery'
+  )
   const totalPages = Math.max(1, Math.ceil(displayTotal / limit))
   const searchParamsKey = searchParams?.toString() ?? ''
   const prefetchedRef = useRef<Set<string>>(new Set())
@@ -169,6 +171,18 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
       window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
     },
     [pathname, searchParams]
+  )
+
+  const handleViewChange = useCallback(
+    (next: 'gallery' | 'table') => {
+      if (next === view) return
+      setView(next)
+      replaceQueryParams((params) => {
+        if (next === 'gallery') params.delete('view')
+        else params.set('view', next)
+      })
+    },
+    [view, replaceQueryParams]
   )
 
   // One-shot deep link: apply search from URL once, then strip it so it is not cached
@@ -470,7 +484,6 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
   }, [filteredSongs, searchQuery, activeTab])
 
   const applyQuery = (next: {
-    view?: 'gallery' | 'table'
     page?: number
     limit?: number
     songId?: string
@@ -489,7 +502,9 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
     params.delete('q')
     params.delete('searchQuery')
     params.delete('easyChord')
-    if (next.view) params.set('view', next.view)
+    // View is client state (updated via replaceState); re-apply so Next navigations keep it.
+    if (view === 'table') params.set('view', 'table')
+    else params.delete('view')
     if (next.page) params.set('page', String(next.page))
     if (next.limit) params.set('limit', String(next.limit))
     else if (!params.has('limit')) params.set('limit', String(limit))
@@ -805,7 +820,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 className={toolbarSegmentButton(view === 'gallery', undefined, true)}
-                onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                onClick={() => handleViewChange('gallery')}
                 title={t('songs.galleryView')}
                 aria-label={t('songs.galleryView')}
               >
@@ -814,7 +829,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
               <button
                 type="button"
                 className={toolbarSegmentButton(view === 'table', undefined, true)}
-                onClick={() => applyQuery({ view: 'table', page: 1 })}
+                onClick={() => handleViewChange('table')}
                 title={t('songs.tableView')}
                 aria-label={t('songs.tableView')}
               >
@@ -873,7 +888,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 <button
                   type="button"
                   className={toolbarSegmentButton(view === 'gallery')}
-                  onClick={() => applyQuery({ view: 'gallery', page: 1 })}
+                  onClick={() => handleViewChange('gallery')}
                   title={t('songs.galleryView')}
                 >
                   <Squares2X2Icon className="h-4 w-4 flex-shrink-0" />
@@ -882,7 +897,7 @@ export default function SongsClient({ songs, total, page, limit, initialView = '
                 <button
                   type="button"
                   className={toolbarSegmentButton(view === 'table')}
-                  onClick={() => applyQuery({ view: 'table', page: 1 })}
+                  onClick={() => handleViewChange('table')}
                   title={t('songs.tableView')}
                 >
                   <TableCellsIcon className="h-4 w-4 flex-shrink-0" />

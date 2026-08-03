@@ -147,7 +147,7 @@ export function ChordDiagramsGrid({
 
   return (
     <div>
-      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:gap-3 md:overflow-visible md:pb-0 lg:grid-cols-4">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 scrollbar-hide md:grid md:grid-cols-3 md:gap-3 md:overflow-visible md:pb-0 lg:grid-cols-4">
         {unknownChords.map((songChordName: string) => {
           const variantGroup = getChordVariantGroup(songChordName);
           const previewVariant = variantGroup?.variants[0];
