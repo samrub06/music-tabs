@@ -37,7 +37,7 @@ export function FilterChip({
           ? 'min-h-[28px] px-2 py-0.5 text-xs'
           : 'min-h-[36px] px-3.5 py-2 text-sm',
         active
-          ? 'bg-muted/80 text-primary dark:bg-white/[0.08]'
+          ? 'bg-primary/15 text-primary dark:bg-primary/20'
           : 'bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-white/[0.06] dark:hover:bg-white/10',
         className
       )}

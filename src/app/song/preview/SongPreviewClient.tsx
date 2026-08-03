@@ -108,10 +108,10 @@ export default function SongPreviewClient({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">{t('songPreview.LOADING')}</p>
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">{t('songPreview.LOADING')}</p>
         </div>
       </div>
     )
@@ -119,14 +119,14 @@ export default function SongPreviewClient({
 
   if (error || !song) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <p className="text-red-600 dark:text-red-400 mb-4">
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="mx-auto max-w-md p-6 text-center">
+          <p className="mb-4 text-destructive">
             {error || t('songPreview.NOT_FOUND')}
           </p>
           <button
             onClick={() => router.push('/')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <BackArrowIcon className="h-4 w-4" />
             {t('songPreview.BACK_TO_SEARCH')}
@@ -137,7 +137,7 @@ export default function SongPreviewClient({
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <SongViewerContainerSSR
         song={song}
         onUpdate={mockUpdateAction}

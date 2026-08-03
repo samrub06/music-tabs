@@ -2,8 +2,8 @@ import { ReactNode } from 'react'
 
 export default function SongLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-background">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {children}
       </div>
     </div>

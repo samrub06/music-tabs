@@ -1082,7 +1082,7 @@ export default function SongContent({
       }}
       onTouchStart={handleTouchStart}
     >
-      <div className="px-3 sm:px-4 md:px-6 py-4 bg-gray-50 dark:bg-background">
+      <div className="bg-background px-3 py-4 sm:px-4 md:px-6">
         <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 sm:gap-2.5">
             {/* Row 1: cover (+ title/badges collapse when vignette expanded full width) */}

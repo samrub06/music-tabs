@@ -115,7 +115,7 @@ function EndSuggestionsSkeleton() {
 
 export default function SongPageSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-background">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <SongHeaderSkeleton />
 
       <div className="min-h-0 flex-1 overflow-hidden">
