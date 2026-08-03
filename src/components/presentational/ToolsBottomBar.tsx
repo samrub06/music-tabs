@@ -135,7 +135,7 @@ export default function ToolsBottomBar({
     } catch (error) {
       console.error('Failed to share song link:', error);
     }
-  }, [song.author, song.id, song.title, t]);
+  }, [song, t]);
 
   const getBaseChord = () => song.firstChord || song.key || 'C';
   const getAvailableKeys = () => generateAllKeys(getBaseChord());
