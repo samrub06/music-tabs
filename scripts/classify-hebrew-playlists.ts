@@ -1,10 +1,11 @@
 /**
- * Admin/ops one-shot: classify Negina + Tab4U hassidic dump songs into Hebrew playlists.
+ * Admin/ops one-shot: classify Negina + Tab4U + songbook dump songs into Hebrew playlists.
  *
  * Usage:
  *   npm run classify:hebrew-playlists -- --dry-run --limit=50
  *   npm run classify:hebrew-playlists
  *   npm run classify:hebrew-playlists -- --aggressive --tab4u-only
+ *   npm run classify:hebrew-playlists -- --songbook-only
  */
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
@@ -29,6 +30,7 @@ function parseArgs() {
   let dryRun = false
   let aggressive = false
   let tab4uOnly = false
+  let songbookOnly = false
   let limit: number | undefined
   let offset = 0
 
@@ -36,6 +38,7 @@ function parseArgs() {
     if (arg === '--dry-run') dryRun = true
     else if (arg === '--aggressive') aggressive = true
     else if (arg === '--tab4u-only') tab4uOnly = true
+    else if (arg === '--songbook-only' || arg === '--songbook') songbookOnly = true
     else if (arg.startsWith('--limit=')) {
       limit = Number.parseInt(arg.split('=')[1] ?? '', 10)
     } else if (arg.startsWith('--offset=')) {
@@ -43,7 +46,7 @@ function parseArgs() {
     }
   }
 
-  return { dryRun, aggressive, tab4uOnly, limit, offset }
+  return { dryRun, aggressive, tab4uOnly, songbookOnly, limit, offset }
 }
 
 async function loadDumpSongs(
@@ -122,12 +125,17 @@ async function run() {
     )
   }
 
-  const { dryRun, aggressive, tab4uOnly, limit, offset } = parseArgs()
-  // Include modern so new artist buckets (Hanan, Razel, Banai, Rand) can peel off
-  // songs already tagged hebrew-modern.
-  const genres = tab4uOnly
-    ? [HEBREW_CATALOG_GENRES.tab4uHassidic]
-    : [...HEBREW_DUMP_GENRES, HEBREW_CATALOG_GENRES.modern]
+  const { dryRun, aggressive, tab4uOnly, songbookOnly, limit, offset } = parseArgs()
+
+  let genres: string[]
+  if (tab4uOnly) {
+    genres = [HEBREW_CATALOG_GENRES.tab4uHassidic]
+  } else if (songbookOnly) {
+    genres = [HEBREW_CATALOG_GENRES.songbook]
+  } else {
+    // Dumps (Negina + Tab4U + songbook) + modern so artist buckets can peel off.
+    genres = [...HEBREW_DUMP_GENRES, HEBREW_CATALOG_GENRES.modern]
+  }
 
   const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -159,7 +167,7 @@ async function run() {
         const willApply = shouldApplyClassification(c, applyOpts)
         const genre = willApply
           ? categoryToCatalogGenre(c.category)
-          : HEBREW_CATALOG_GENRES.tab4uHassidic
+          : HEBREW_CATALOG_GENRES.songbook
         const mark = willApply ? '→' : '~'
         console.log(
           `  ${mark} [${c.source}] ${c.category.padEnd(16)} conf=${c.confidence.toFixed(2)} decade=${c.decade ?? '-'}  ${genre}`

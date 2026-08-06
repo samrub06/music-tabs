@@ -253,6 +253,28 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     seedMode: 'manual',
   },
   {
+    slug: 'jewish-liturgy',
+    name: 'Liturgie',
+    description: 'ליטורגיה — zemirot, birkat, havdalah et chants liturgiques',
+    section: 'jewish',
+    displayOrder: 25,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.liturgy },
+    gradientFrom: 'from-slate-600',
+    gradientTo: 'to-blue-900',
+    seedMode: 'manual',
+  },
+  {
+    slug: 'yeshiva',
+    name: 'Yeshiva',
+    description: 'ישיבה — choeurs yeshiva et style yeshivish',
+    section: 'jewish',
+    displayOrder: 26,
+    filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.yeshiva },
+    gradientFrom: 'from-stone-700',
+    gradientTo: 'to-amber-900',
+    seedMode: 'manual',
+  },
+  {
     slug: 'carlebach',
     name: 'Carlebach',
     description: 'קרליבך — classiques et reprises modernes (Zusha, nigounim) (Tab4U)',
@@ -418,6 +440,28 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     seedMode: 'manual',
   },
   {
+    slug: 'spotify-top-israel',
+    name: 'Top Israel',
+    description: 'Popular tracks from Spotify Top 50 Israel',
+    section: 'jewish',
+    displayOrder: 27,
+    filter: { type: 'genre', value: 'spotify-top-israel' },
+    gradientFrom: 'from-blue-600',
+    gradientTo: 'to-sky-800',
+    seedMode: 'manual',
+  },
+  {
+    slug: 'spotify-top-global',
+    name: 'Top Global',
+    description: 'Popular tracks from Spotify Top 50 Global',
+    section: 'genre',
+    displayOrder: 0,
+    filter: { type: 'genre', value: 'spotify-top-global' },
+    gradientFrom: 'from-teal-600',
+    gradientTo: 'to-emerald-800',
+    seedMode: 'manual',
+  },
+  {
     slug: '60s',
     name: '60s',
     description: 'Hits from the 1960s',
@@ -541,6 +585,8 @@ export type HubZone = 'songbook' | 'israeli' | 'international'
 
 const SONGBOOK_HUB_SLUGS = new Set([
   'jewish-songbook',
+  'jewish-liturgy',
+  'yeshiva',
   'chabad-nigunim',
   'hassidic',
   'tab4u-hassidic-full',
@@ -560,6 +606,7 @@ const ISRAELI_HUB_SLUGS = new Set([
   'yosef-karduner',
   'akiva',
   'negina-jewish-music',
+  'spotify-top-israel',
 ])
 
 export function getHubZoneForSlug(slug: string): HubZone | undefined {

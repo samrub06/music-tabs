@@ -76,6 +76,30 @@ describe('classifyHebrewSongHeuristic', () => {
     ).toBe('modern')
   })
 
+  it('detects liturgy markers', () => {
+    const result = classifyHebrewSongHeuristic({
+      id: '4a',
+      title: 'ברכת המזון',
+      author: 'Unknown',
+    })
+    expect(result?.category).toBe('liturgy')
+    expect(categoryToCatalogGenre(result!.category)).toBe(
+      HEBREW_CATALOG_GENRES.liturgy
+    )
+  })
+
+  it('detects yeshiva choir markers', () => {
+    const result = classifyHebrewSongHeuristic({
+      id: '4b',
+      title: 'ניגון',
+      author: 'Miami Boys Choir',
+    })
+    expect(result?.category).toBe('yeshiva')
+    expect(categoryToCatalogGenre(result!.category)).toBe(
+      HEBREW_CATALOG_GENRES.yeshiva
+    )
+  })
+
   it('returns null when unknown', () => {
     expect(
       classifyHebrewSongHeuristic({

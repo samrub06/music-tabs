@@ -10,6 +10,8 @@ function parseArgs() {
   let limit: number | undefined
   let dryRun = false
   let source: 'tab4u' | 'ultimate-guitar' | 'both' = 'tab4u'
+  let liturgyOnly = false
+  let sections: string[] | undefined
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--limit' && args[i + 1]) {
@@ -17,6 +19,11 @@ function parseArgs() {
       i++
     } else if (args[i] === '--dry-run') {
       dryRun = true
+    } else if (args[i] === '--liturgy') {
+      liturgyOnly = true
+    } else if (args[i] === '--sections' && args[i + 1]) {
+      sections = args[i + 1].split(',').map((s) => s.trim()).filter(Boolean)
+      i++
     } else if (args[i] === '--source' && args[i + 1]) {
       const value = args[i + 1]
       if (value === 'tab4u' || value === 'ultimate-guitar' || value === 'both') {
@@ -26,7 +33,7 @@ function parseArgs() {
     }
   }
 
-  return { limit, dryRun, source }
+  return { limit, dryRun, source, liturgyOnly, sections }
 }
 
 async function run() {
@@ -40,7 +47,7 @@ async function run() {
     process.exit(1)
   }
 
-  const { limit, dryRun, source } = parseArgs()
+  const { limit, dryRun, source, liturgyOnly, sections } = parseArgs()
 
   if (source === 'ultimate-guitar' || source === 'both') {
     process.env.UG_SKIP_PROXY = '1'
@@ -53,50 +60,64 @@ async function run() {
   const sourceLabel =
     source === 'both' ? 'Tab4U + Ultimate Guitar' : source === 'ultimate-guitar' ? 'Ultimate Guitar' : 'Tab4U'
 
-  console.log(
-    `Importing songbook from ${sourceLabel}${dryRun ? ' (dry run)' : ''}${limit ? ` — limit ${limit} entries` : ''}...\n`
-  )
-  if (source === 'ultimate-guitar' || source === 'both') {
-    console.log('UG: direct fetch (no proxy)\n')
-  }
+  const seed = songbookSeedService(supabase)
 
   try {
-    const summary = await songbookSeedService(supabase).seedFromSonglist({
+    if (liturgyOnly || (sections?.includes('liturgy') && sections.length === 1)) {
+      console.log(
+        `Importing liturgy section into jewish-liturgy from ${sourceLabel}${dryRun ? ' (dry run)' : ''}${limit ? ` — limit ${limit} entries` : ''}...\n`
+      )
+      const summary = await seed.seedLiturgySection({ limit, dryRun, source })
+      printSummary(summary)
+      return
+    }
+
+    console.log(
+      `Importing songbook from ${sourceLabel}${dryRun ? ' (dry run)' : ''}${limit ? ` — limit ${limit} entries` : ''}...\n`
+    )
+    if (source === 'ultimate-guitar' || source === 'both') {
+      console.log('UG: direct fetch (no proxy)\n')
+    }
+
+    const summary = await seed.seedFromSonglist({
       limit,
       dryRun,
       source,
-      sectionIds: ['main', 'supplementary'],
+      sectionIds: sections ?? ['main', 'supplementary'],
     })
-
-    console.log(
-      `Playlist ${summary.playlistAction}: ${summary.songCount} songs in DB`
-    )
-    console.log(
-      `Added: ${summary.added} | Updated: ${summary.updated} | Skipped: ${summary.skipped} | Errors: ${summary.errors}\n`
-    )
-
-    for (const result of summary.results) {
-      if (result.status === 'added') {
-        console.log(`  + ${result.title} — ${result.author}`)
-        console.log(`    ${result.url}`)
-      } else if (result.status === 'updated') {
-        console.log(`  ↻ ${result.title} — ${result.author}`)
-      } else if (result.status === 'skipped') {
-        console.log(
-          `  ⚠ skip ${result.transliteration ?? result.query} — ${result.reason}`
-        )
-      } else {
-        console.log(
-          `  ✗ ${result.transliteration ?? result.query} — ${result.reason}`
-        )
-      }
-    }
-
-    console.log('\nDone.')
+    printSummary(summary)
   } catch (error) {
     console.error('Seed failed:', error)
     process.exit(1)
   }
+}
+
+function printSummary(summary: Awaited<ReturnType<ReturnType<typeof songbookSeedService>['seedFromSonglist']>>) {
+  console.log(
+    `Playlist ${summary.playlistAction}: ${summary.songCount} songs in DB`
+  )
+  console.log(
+    `Added: ${summary.added} | Updated: ${summary.updated} | Skipped: ${summary.skipped} | Errors: ${summary.errors}\n`
+  )
+
+  for (const result of summary.results) {
+    if (result.status === 'added') {
+      console.log(`  + ${result.title} — ${result.author}`)
+      console.log(`    ${result.url}`)
+    } else if (result.status === 'updated') {
+      console.log(`  ↻ ${result.title} — ${result.author}`)
+    } else if (result.status === 'skipped') {
+      console.log(
+        `  ⚠ skip ${result.transliteration ?? result.query} — ${result.reason}`
+      )
+    } else {
+      console.log(
+        `  ✗ ${result.transliteration ?? result.query} — ${result.reason}`
+      )
+    }
+  }
+
+  console.log('\nDone.')
 }
 
 run()

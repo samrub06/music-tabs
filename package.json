@@ -28,6 +28,8 @@
     "seed:acoustic-playlists": "npx tsx scripts/seed-catalog-manual-playlists.ts --only=acoustic,world-music",
     "triage:null-genres": "npx tsx scripts/triage-null-genres.ts",
     "seed:songbook": "npx tsx scripts/seed-songbook.ts",
+    "seed:spotify-popular": "npx tsx scripts/seed-from-spotify-popular.ts",
+    "seed:popular-playlists": "npx tsx scripts/seed-from-spotify-popular.ts",
     "seed:jewish-chord-book": "npx tsx scripts/seed-jewish-chord-book.ts",
     "seed:jewish-chord-book:b": "npx tsx scripts/seed-jewish-chord-book.ts --part=b",
     "validate:jcb-extract": "npx tsx scripts/validate-jcb-extract.ts",

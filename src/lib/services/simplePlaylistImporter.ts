@@ -1,5 +1,6 @@
 import { parsePlaylistWithAI } from './aiParserService';
-import { ScrapedSong, scrapeSongFromUrl, searchUltimateGuitarOnly, SearchResult } from './scraperService';
+import { ScrapedSong, scrapeSongFromUrl } from './scraperService';
+import { searchTabsByLocale } from './localeScrapeRouter';
 import { songRepo } from './songRepo';
 import { folderRepo } from './folderRepo';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -66,15 +67,22 @@ async function processSong(
   console.log(`🎵 Processing: "${song.title}" by "${song.artist}"`);
 
   try {
-    // 1. Chercher sur Ultimate Guitar
-    const searchResults = await searchUltimateGuitarOnly(searchQuery);
+    // 1. Locale-aware search: Hebrew/Israeli → Tab4U/Negina; else Ultimate Guitar
+    console.log(`🔍 Locale search: ${searchQuery}`);
+    const hit = await searchTabsByLocale(song.title, song.artist);
     
-    if (searchResults.length === 0) {
+    if (hit.results.length === 0) {
       return { status: 'failed', error: 'No results found', title: song.title, artist: song.artist };
     }
 
     // Prendre la première version
-    const bestVersion = searchResults[0];
+    const bestVersion = hit.results[0];
+    const sourceLabel =
+      hit.source === 'tab4u'
+        ? 'Tab4U'
+        : hit.source === 'negina'
+          ? 'Negina'
+          : 'Ultimate Guitar';
     
     // 2. Scraper le contenu AVEC les métadonnées de recherche
     const scrapedSong = await scrapeSongFromUrl(bestVersion.url, bestVersion);
@@ -88,7 +96,7 @@ async function processSong(
       title: song.title, 
       author: song.artist,
       content: scrapedSong.content,
-      source: 'Ultimate Guitar',
+      source: sourceLabel,
       url: bestVersion.url,
       reviews: scrapedSong.reviews,
       capo: scrapedSong.capo,
@@ -101,7 +109,7 @@ async function processSong(
       artistImageUrl: scrapedSong.artistImageUrl,
       songImageUrl: scrapedSong.songImageUrl,
       sourceUrl: scrapedSong.url,
-      sourceSite: scrapedSong.source,
+      sourceSite: scrapedSong.source || sourceLabel,
       tabId: scrapedSong.tabId,
       songGenre: scrapedSong.songGenre
     };

@@ -17,6 +17,8 @@ const PAGE_SIZE = 1000
 export const CLASSIFY_REBUILD_SLUGS = [
   'chabad-nigunim',
   'hassidic',
+  'jewish-liturgy',
+  'yeshiva',
   'classic-israeli',
   'modern-israeli',
   'hanan-ben-ari',
@@ -27,6 +29,7 @@ export const CLASSIFY_REBUILD_SLUGS = [
   'yosef-karduner',
   'akiva',
   'carlebach',
+  'jewish-songbook',
   'negina-jewish-music',
   'tab4u-hassidic-full',
 ] as const

@@ -5,6 +5,8 @@ import {
   SONGBOOK_PLAYLIST,
   type SongbookEntry,
 } from '@/data/songbookCatalog'
+import { HEBREW_CATALOG_GENRES } from '@/data/hebrewCatalogGenres'
+import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 import {
   cleanTab4uAuthor,
 } from '@/lib/services/hebrewPlaylistSeedService'
@@ -47,6 +49,21 @@ export interface SongbookSeedOptions {
   dryRun?: boolean
   /** Which external sources to query (default: tab4u). */
   source?: SongbookSeedSource
+  /**
+   * Catalog genre tag for upserted songs.
+   * Default: hebrew-songbook. Liturgy seed should use hebrew-liturgy.
+   */
+  catalogGenre?: string
+  /**
+   * Target curated playlist. Default: jewish-songbook.
+   * Liturgy seed should target jewish-liturgy.
+   */
+  playlist?: {
+    slug: string
+    name: string
+    description: string
+    displayOrder: number
+  }
 }
 
 interface ArtistTarget {
@@ -288,7 +305,8 @@ async function upsertSongbookSongFromSource(
   client: SupabaseClient<Database>,
   result: SearchResult,
   sourceSite: 'Tab4U' | 'Ultimate Guitar',
-  dryRun: boolean
+  dryRun: boolean,
+  catalogGenre: string = SONGBOOK_CATALOG_GENRE
 ): Promise<{ songId: string; action: 'added' | 'updated'; author: string }> {
   const tabId =
     sourceSite === 'Tab4U' ? tab4uTabId(result.url) : ugTabId(result.url)
@@ -326,7 +344,7 @@ async function upsertSongbookSongFromSource(
     tab_id: resolvedTabId,
     is_public: true,
     is_trending: true,
-    genre: SONGBOOK_CATALOG_GENRE,
+    genre: catalogGenre,
     updated_at: now,
   }
 
@@ -383,7 +401,7 @@ async function upsertSongbookSongFromSource(
       artistImageUrl: scraped.artistImageUrl,
       songImageUrl: scraped.songImageUrl,
     },
-    { isPublic: true, isTrending: true, genre: SONGBOOK_CATALOG_GENRE }
+    { isPublic: true, isTrending: true, genre: catalogGenre }
   )
 
   return { songId: created.id, action: 'added', author }
@@ -415,26 +433,32 @@ function loadSongbookEntries(options: SongbookSeedOptions): SongbookEntry[] {
 async function upsertSongbookPlaylist(
   client: SupabaseClient<Database>,
   songIds: string[],
-  dryRun: boolean
+  dryRun: boolean,
+  playlist: {
+    slug: string
+    name: string
+    description: string
+    displayOrder: number
+  } = SONGBOOK_PLAYLIST
 ): Promise<'created' | 'updated'> {
   if (dryRun) return 'updated'
 
   const now = new Date().toISOString()
   const row = {
     user_id: null,
-    name: SONGBOOK_PLAYLIST.name,
-    description: SONGBOOK_PLAYLIST.description,
+    name: playlist.name,
+    description: playlist.description,
     song_ids: songIds,
     is_public: true,
-    curated_slug: SONGBOOK_PLAYLIST.slug,
-    display_order: SONGBOOK_PLAYLIST.displayOrder,
-    image_url: null,
+    curated_slug: playlist.slug,
+    display_order: playlist.displayOrder,
+    image_url: getCuratedPlaylistCoverUrl(playlist.slug) ?? null,
     updated_at: now,
   }
 
   const { data: existing, error: existingError } = await (client.from('playlists') as any)
     .select('id, song_ids')
-    .eq('curated_slug', SONGBOOK_PLAYLIST.slug)
+    .eq('curated_slug', playlist.slug)
     .maybeSingle()
 
   if (existingError) throw existingError
@@ -460,7 +484,8 @@ async function seedSongbookEntryFromSource(
   client: SupabaseClient<Database>,
   entry: SongbookEntry,
   source: 'tab4u' | 'ultimate-guitar',
-  dryRun: boolean
+  dryRun: boolean,
+  catalogGenre: string
 ): Promise<SongbookSeedResult[]> {
   const results: SongbookSeedResult[] = []
   const importedUrls = new Set<string>()
@@ -486,7 +511,8 @@ async function seedSongbookEntryFromSource(
           client,
           match,
           sourceLabel,
-          dryRun
+          dryRun,
+          catalogGenre
         )
 
         results.push({
@@ -526,14 +552,30 @@ async function seedSongbookEntry(
   client: SupabaseClient<Database>,
   entry: SongbookEntry,
   sources: Array<'tab4u' | 'ultimate-guitar'>,
-  dryRun: boolean
+  dryRun: boolean,
+  catalogGenre: string
 ): Promise<SongbookSeedResult[]> {
   const all: SongbookSeedResult[] = []
   for (const source of sources) {
-    all.push(...(await seedSongbookEntryFromSource(client, entry, source, dryRun)))
+    all.push(
+      ...(await seedSongbookEntryFromSource(
+        client,
+        entry,
+        source,
+        dryRun,
+        catalogGenre
+      ))
+    )
   }
   return all
 }
+
+export const LITURGY_SEED_PLAYLIST = {
+  slug: 'jewish-liturgy',
+  name: 'Liturgie',
+  description: 'ליטורגיה — zemirot, birkat, havdalah et chants liturgiques',
+  displayOrder: 25,
+} as const
 
 export const songbookSeedService = (client: SupabaseClient<Database>) => ({
   async seedFromSonglist(options: SongbookSeedOptions = {}): Promise<SongbookSeedSummary> {
@@ -544,13 +586,22 @@ export const songbookSeedService = (client: SupabaseClient<Database>) => ({
         ? ['tab4u', 'ultimate-guitar']
         : [sourceOption]
 
+    const catalogGenre = options.catalogGenre ?? SONGBOOK_CATALOG_GENRE
+    const playlist = options.playlist ?? SONGBOOK_PLAYLIST
+
     const entries = loadSongbookEntries(options)
     const allResults: SongbookSeedResult[] = []
     const songIds: string[] = []
     const seenSongIds = new Set<string>()
 
     for (const entry of entries) {
-      const entryResults = await seedSongbookEntry(client, entry, sources, dryRun)
+      const entryResults = await seedSongbookEntry(
+        client,
+        entry,
+        sources,
+        dryRun,
+        catalogGenre
+      )
       allResults.push(...entryResults)
 
       for (const result of entryResults) {
@@ -565,7 +616,12 @@ export const songbookSeedService = (client: SupabaseClient<Database>) => ({
       await sleep(REQUEST_DELAY_MS)
     }
 
-    const playlistAction = await upsertSongbookPlaylist(client, songIds, dryRun)
+    const playlistAction = await upsertSongbookPlaylist(
+      client,
+      songIds,
+      dryRun,
+      playlist
+    )
 
     return {
       playlistAction,
@@ -576,5 +632,17 @@ export const songbookSeedService = (client: SupabaseClient<Database>) => ({
       errors: allResults.filter((r) => r.status === 'error').length,
       results: allResults,
     }
+  },
+
+  /** Seed songlist `liturgy` section into hebrew-liturgy / jewish-liturgy (not songbook). */
+  async seedLiturgySection(
+    options: Omit<SongbookSeedOptions, 'sectionIds' | 'catalogGenre' | 'playlist'> = {}
+  ): Promise<SongbookSeedSummary> {
+    return this.seedFromSonglist({
+      ...options,
+      sectionIds: ['liturgy'],
+      catalogGenre: HEBREW_CATALOG_GENRES.liturgy,
+      playlist: LITURGY_SEED_PLAYLIST,
+    })
   },
 })

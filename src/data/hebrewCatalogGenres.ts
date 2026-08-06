@@ -14,6 +14,10 @@ export const HEBREW_CATALOG_GENRES = {
   aharonRazel: 'hebrew-aharon-razel',
   eviatarBanai: 'hebrew-eviatar-banai',
   shuliRand: 'hebrew-shuli-rand',
+  /** Liturgy / litani (zemirot, birkat, havdalah, etc.) */
+  liturgy: 'hebrew-liturgy',
+  /** Yeshiva / yeshivish choirs & style */
+  yeshiva: 'hebrew-yeshiva',
   songbook: 'hebrew-songbook',
   neginaJewish: 'hebrew-negina-jewish',
   tab4uHassidic: 'hebrew-tab4u-hassidic',

@@ -11,11 +11,14 @@ import {
 export const HEBREW_DUMP_GENRES = [
   HEBREW_CATALOG_GENRES.neginaJewish,
   HEBREW_CATALOG_GENRES.tab4uHassidic,
+  HEBREW_CATALOG_GENRES.songbook,
 ] as const
 
 export type HebrewClassifierCategory =
   | 'chabad'
   | 'hassidic'
+  | 'liturgy'
+  | 'yeshiva'
   | 'classic_israeli'
   | 'modern'
   | 'ribo'
@@ -63,6 +66,8 @@ const VALID_DECADES = new Set([1960, 1970, 1980, 1990, 2000, 2010, 2020])
 const CATEGORY_TO_GENRE: Record<HebrewClassifierCategory, HebrewCatalogGenre> = {
   chabad: HEBREW_CATALOG_GENRES.chabad,
   hassidic: HEBREW_CATALOG_GENRES.hassidic,
+  liturgy: HEBREW_CATALOG_GENRES.liturgy,
+  yeshiva: HEBREW_CATALOG_GENRES.yeshiva,
   classic_israeli: HEBREW_CATALOG_GENRES.classicIsraeli,
   modern: HEBREW_CATALOG_GENRES.modern,
   ribo: HEBREW_CATALOG_GENRES.ribo,
@@ -82,6 +87,8 @@ export const CLASSIFY_GENRE_TO_PLAYLIST_SLUG: Partial<
 > = {
   [HEBREW_CATALOG_GENRES.chabad]: 'chabad-nigunim',
   [HEBREW_CATALOG_GENRES.hassidic]: 'hassidic',
+  [HEBREW_CATALOG_GENRES.liturgy]: 'jewish-liturgy',
+  [HEBREW_CATALOG_GENRES.yeshiva]: 'yeshiva',
   [HEBREW_CATALOG_GENRES.classicIsraeli]: 'classic-israeli',
   [HEBREW_CATALOG_GENRES.modern]: 'modern-israeli',
   [HEBREW_CATALOG_GENRES.ribo]: 'ishay-ribo',
@@ -92,6 +99,7 @@ export const CLASSIFY_GENRE_TO_PLAYLIST_SLUG: Partial<
   [HEBREW_CATALOG_GENRES.eviatarBanai]: 'eviatar-banai',
   [HEBREW_CATALOG_GENRES.shuliRand]: 'shuli-rand',
   [HEBREW_CATALOG_GENRES.carlebach]: 'carlebach',
+  [HEBREW_CATALOG_GENRES.songbook]: 'jewish-songbook',
   [HEBREW_CATALOG_GENRES.neginaJewish]: 'negina-jewish-music',
   [HEBREW_CATALOG_GENRES.tab4uHassidic]: 'tab4u-hassidic-full',
 }
@@ -99,6 +107,8 @@ export const CLASSIFY_GENRE_TO_PLAYLIST_SLUG: Partial<
 const VALID_CATEGORIES = new Set<HebrewClassifierCategory>([
   'chabad',
   'hassidic',
+  'liturgy',
+  'yeshiva',
   'classic_israeli',
   'modern',
   'ribo',
@@ -366,6 +376,68 @@ export function classifyHebrewSongHeuristic(
     }
   }
 
+  // Liturgy / litani (zemirot, birkat, havdalah) — narrow markers only
+  if (
+    textIncludesAny(blob, [
+      'הבדלה',
+      'havdalah',
+      'ברכת המזון',
+      'birkat hamazon',
+      'birkat',
+      'זמירות שבת',
+      'zemirot',
+      'קידוש',
+      'kiddush',
+      'מוצאי שבת',
+      'liturgy',
+      'ליטורג',
+      'אנעים זמירות',
+      'anim zmirot',
+    ])
+  ) {
+    return {
+      id: song.id,
+      category: 'liturgy',
+      decade: null,
+      confidence: 0.84,
+      reason: 'Liturgy / zemirot / birkat marker',
+      source: 'heuristic',
+    }
+  }
+
+  // Yeshiva / yeshivish choirs
+  if (
+    textIncludesAny(blob, [
+      'ישיבה',
+      'ישיבת',
+      'yeshiva',
+      'yeshivish',
+      'boys choir',
+      'miami boys',
+      'מקהלת',
+      'מקהלה',
+      'הר המור',
+      'har hamor',
+      'pirchei',
+      'פרחי',
+      'ישיבת חברון',
+      'ישיבת פוניבז',
+      'פוניבז',
+      'ponovezh',
+      'mir yeshiva',
+      'ישיבת מיר',
+    ])
+  ) {
+    return {
+      id: song.id,
+      category: 'yeshiva',
+      decade: null,
+      confidence: 0.85,
+      reason: 'Yeshiva choir / yeshivish marker',
+      source: 'heuristic',
+    }
+  }
+
   return null
 }
 
@@ -504,19 +576,21 @@ Use ONLY the given title+author. Never invent that an artist is someone else.
 
 Categories (priority order — pick the first that clearly fits):
 1. chabad — Chabad/Lubavitch nigunim ONLY when Habad/Lubavitch is explicit
-2. hassidic — Hasidic / חסידי that is NOT Chabad (Avraham Fried, Zanvil Weinberger, Modzitz, Breslov, Benny Friedman, Yaakov Shwekey, generic nigunim)
-3. classic_israeli — שירי ארץ ישראל / pre-2000 Israeli pop-folk (Arik Einstein, Naomi Shemer, Chava Alberstein, Ofra Haza, old army/folk). Decade usually < 2000.
-4. modern — Israeli / Jewish-Israeli ~2000+ that is NOT hasidic/chabad and NOT a named artist below.
+2. liturgy — Liturgical / litani: Birkat Hamazon, Havdalah, Shabbat zemirot sets, Kiddush melodies, Anim Zmirot. NOT every Lecha Dodi or Adon Olam cover by a named artist.
+3. yeshiva — Yeshiva choirs / yeshivish style (Boys Choir, Har Hamor, Pirchei, named yeshivas, מקהלת ישיבה)
+4. hassidic — Hasidic / חסידי that is NOT Chabad and NOT clear liturgy/yeshiva (Avraham Fried, Zanvil Weinberger, Modzitz, Breslov, Benny Friedman, Yaakov Shwekey, generic nigunim)
+5. classic_israeli — שירי ארץ ישראל / pre-2000 Israeli pop-folk (Arik Einstein, Naomi Shemer, Chava Alberstein, Ofra Haza, old army/folk). Decade usually < 2000.
+6. modern — Israeli / Jewish-Israeli ~2000+ that is NOT hasidic/chabad/liturgy/yeshiva and NOT a named artist below.
    Examples that MUST be modern: Yonatan Razel, Shlomi Shabat, Omer Adam, Yuval Dayan, Akiva Turgeman, Amir Benayoun, Dudu Aharon.
-5. ribo — ONLY if author is clearly Ishay Ribo / ישי ריבו
-6. karduner — ONLY if author is clearly Yosef Karduner / יוסף קארדונר
-7. akiva — ONLY the solo artist named exactly Akiva / עקיבא (NOT Akiva Turgeman, NOT Rabbi Akiva)
-8. hanan_ben_ari — ONLY Hanan Ben Ari / חנן בן ארי
-9. aharon_razel — ONLY Aharon Razel / אהרן רזאל (NOT Yonatan Razel)
-10. eviatar_banai — ONLY Eviatar Banai / אביתר בנאי
-11. shuli_rand — ONLY Shuli Rand / שולי רנד
-12. carlebach — ONLY Shlomo Carlebach / קרליבך
-13. unclassified — not enough signal
+7. ribo — ONLY if author is clearly Ishay Ribo / ישי ריבו
+8. karduner — ONLY if author is clearly Yosef Karduner / יוסף קארדונר
+9. akiva — ONLY the solo artist named exactly Akiva / עקיבא (NOT Akiva Turgeman, NOT Rabbi Akiva)
+10. hanan_ben_ari — ONLY Hanan Ben Ari / חנן בן ארי
+11. aharon_razel — ONLY Aharon Razel / אהרן רזאל (NOT Yonatan Razel)
+12. eviatar_banai — ONLY Eviatar Banai / אביתר בנאי
+13. shuli_rand — ONLY Shuli Rand / שולי רנד
+14. carlebach — ONLY Shlomo Carlebach / קרליבך
+15. unclassified — not enough signal
 
 Hard rules:
 - NEVER tag ribo/karduner/akiva/hanan_ben_ari/aharon_razel/eviatar_banai/shuli_rand/carlebach unless that exact artist appears in author/title.
@@ -525,6 +599,8 @@ Hard rules:
 - Hanan Ben Ari → hanan_ben_ari (never modern).
 - Akiva Turgeman → modern (never akiva).
 - Prefer chabad over hassidic only when Habad/Lubavitch is clear.
+- Prefer liturgy over hassidic when the piece is clearly a liturgical function song (birkat/havdalah/zemirot), not a concert nigun.
+- Prefer yeshiva over hassidic when choir/yeshiva markers are clear.
 - Prefer classic_israeli over modern when decade < 2000 OR classic Israeli style.
 - decade must be one of 1960,1970,1980,1990,2000,2010,2020 or null.
 - confidence 0-1; if unsure use unclassified with confidence < 0.55.
@@ -533,25 +609,28 @@ Return JSON object: { "songs": [ { "id", "category", "decade", "confidence", "re
 Include every input id exactly once.`
 
 const AGGRESSIVE_SYSTEM_PROMPT = `You are an expert in Israeli and Jewish music taxonomy.
-These songs come from Tab4U category "שירים חסידיים" (Hasidic songs dump). Respond with JSON only.
+These songs come from Tab4U / songbook dumps (Hasidic / religious). Respond with JSON only.
 Use ONLY the given title+author. Never invent that an artist is someone else.
 
 Categories (priority order):
 1. chabad — ONLY when Habad/Lubavitch is explicit
-2. ribo — ONLY Ishay Ribo / ישי ריבו
-3. karduner — ONLY Yosef Karduner
-4. akiva — ONLY solo artist Akiva / עקיבא (NOT Akiva Turgeman)
-5. hanan_ben_ari — ONLY Hanan Ben Ari / חנן בן ארי
-6. aharon_razel — ONLY Aharon Razel / אהרן רזאל
-7. eviatar_banai — ONLY Eviatar Banai / אביתר בנאי
-8. shuli_rand — ONLY Shuli Rand / שולי רנד
-9. carlebach — ONLY Shlomo Carlebach
-10. classic_israeli — clear pre-2000 שירי ארץ ישראל classics
-11. modern — clear modern Israeli non-hasidic (Yonatan Razel, Omer Adam, Akiva Turgeman, etc.)
-12. hassidic — DEFAULT for this dump: nigunim, Hasidic performers, Yiddish liturgical, Breslov, Shwekey, Fried, Beri Weber, Motty Steinmetz, Miami Boys Choir, army rabbinate choirs doing liturgical, unknown religious artists
+2. liturgy — Birkat, Havdalah, zemirot sets, clear liturgical function
+3. yeshiva — Boys Choir, Har Hamor, Pirchei, named yeshivas, מקהלת
+4. ribo — ONLY Ishay Ribo / ישי ריבו
+5. karduner — ONLY Yosef Karduner
+6. akiva — ONLY solo artist Akiva / עקיבא (NOT Akiva Turgeman)
+7. hanan_ben_ari — ONLY Hanan Ben Ari / חנן בן ארי
+8. aharon_razel — ONLY Aharon Razel / אהרן רזאל
+9. eviatar_banai — ONLY Eviatar Banai / אביתר בנאי
+10. shuli_rand — ONLY Shuli Rand / שולי רנד
+11. carlebach — ONLY Shlomo Carlebach
+12. classic_israeli — clear pre-2000 שירי ארץ ישראל classics
+13. modern — clear modern Israeli non-hasidic (Yonatan Razel, Omer Adam, Akiva Turgeman, etc.)
+14. hassidic — DEFAULT for this dump: nigunim, Hasidic performers, Yiddish liturgical, Breslov, Shwekey, Fried, Beri Weber, Motty Steinmetz, unknown religious artists
 
 Hard rules:
 - Prefer hassidic over unclassified. Almost never use unclassified.
+- Prefer liturgy/yeshiva over hassidic when markers are clear.
 - NEVER tag ribo/karduner/akiva/hanan_ben_ari/aharon_razel/eviatar_banai/shuli_rand/carlebach unless that exact artist appears.
 - decade: 1960|1970|1980|1990|2000|2010|2020 or null.
 - confidence 0-1; for hassidic default use >= 0.6 when uncertain but still hasidic-flavored.
