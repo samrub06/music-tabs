@@ -6,6 +6,8 @@ import {
 } from '@/data/hebrewPlaylists'
 import { upsertCatalogSongFromTab4u } from '@/lib/services/catalogSongUpsert'
 import { listTab4uCategorySongs, type SearchResult } from '@/lib/services/scraperService'
+import { classifyAndResolveGenre } from '@/lib/services/hebrewSongClassifierService'
+import { appendSongToGenrePlaylist } from '@/lib/services/hebrewPlaylistRebuildService'
 import type { Database } from '@/types/db'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 
@@ -20,11 +22,27 @@ export type Tab4uCategorySeedOptions = {
   skipExisting?: boolean
   playlistSlug?: string
   catalogGenre?: HebrewCatalogGenre
+  /** Admin seed only: AI/heuristic classify after upsert (default true). */
+  classify?: boolean
 }
 
 export type Tab4uCategorySongResult =
-  | { status: 'added'; songId: string; title: string; url: string }
-  | { status: 'updated'; songId: string; title: string; url: string }
+  | {
+      status: 'added'
+      songId: string
+      title: string
+      url: string
+      genre?: string
+      category?: string
+    }
+  | {
+      status: 'updated'
+      songId: string
+      title: string
+      url: string
+      genre?: string
+      category?: string
+    }
   | { status: 'skipped'; reason: string; url: string }
   | { status: 'error'; reason: string; url: string }
 
@@ -97,12 +115,27 @@ async function upsertCategoryPlaylist(
   return 'created'
 }
 
+async function applySongGenreDecade(
+  client: SupabaseClient<Database>,
+  songId: string,
+  genre: HebrewCatalogGenre,
+  decade: number | null
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    genre,
+    updated_at: new Date().toISOString(),
+  }
+  if (decade != null) patch.decade = decade
+  const { error } = await (client.from('songs') as any).update(patch).eq('id', songId)
+  if (error) throw error
+}
+
 async function seedCategorySong(
   client: SupabaseClient<Database>,
   result: SearchResult,
-  catalogGenre: HebrewCatalogGenre,
+  dumpGenre: HebrewCatalogGenre,
   options: Tab4uCategorySeedOptions
-): Promise<Tab4uCategorySongResult> {
+): Promise<Tab4uCategorySongResult & { residue?: boolean }> {
   try {
     if (options.skipExisting) {
       const existingId = await findExistingCatalogSongId(client, result.url)
@@ -115,8 +148,40 @@ async function seedCategorySong(
       return { status: 'skipped', reason: 'dry-run', url: result.url }
     }
 
-    const { songId, action } = await upsertCatalogSongFromTab4u(client, result, catalogGenre)
-    return { status: action, songId, title: result.title, url: result.url }
+    const { songId, action } = await upsertCatalogSongFromTab4u(client, result, dumpGenre)
+
+    let finalGenre: HebrewCatalogGenre = dumpGenre
+    let category = 'unclassified'
+    let residue = true
+    const shouldClassify = options.classify !== false
+
+    if (shouldClassify) {
+      const resolved = await classifyAndResolveGenre(
+        {
+          id: songId,
+          title: result.title,
+          author: result.author,
+        },
+        dumpGenre
+      )
+      category = resolved.classification.category
+      finalGenre = resolved.genre
+      if (resolved.applied) {
+        await applySongGenreDecade(client, songId, finalGenre, resolved.decade)
+        await appendSongToGenrePlaylist(client, finalGenre, songId)
+        residue = false
+      }
+    }
+
+    return {
+      status: action,
+      songId,
+      title: result.title,
+      url: result.url,
+      genre: finalGenre,
+      category,
+      residue,
+    }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     return { status: 'error', reason, url: result.url }
@@ -131,13 +196,13 @@ export const tab4uCategorySeedService = (client: SupabaseClient<Database>) => ({
       throw new Error(`Playlist definition not found: ${slug}`)
     }
 
-    const catalogGenre = options.catalogGenre ?? definition.catalogGenre
+    const dumpGenre = options.catalogGenre ?? definition.catalogGenre
     const cat = options.cat ?? TAB4U_HASSIDIC_CAT
     const maxSongs = options.maxSongs
     let offset = options.startOffset ?? 0
 
     const songResults: Tab4uCategorySongResult[] = []
-    const songIds: string[] = []
+    const residueSongIds: string[] = []
     const seenUrls = new Set<string>()
     let processed = 0
 
@@ -151,11 +216,17 @@ export const tab4uCategorySeedService = (client: SupabaseClient<Database>) => ({
 
         if (maxSongs !== undefined && processed >= maxSongs) break
 
-        const seedResult = await seedCategorySong(client, result, catalogGenre, options)
-        songResults.push(seedResult)
+        const seedResult = await seedCategorySong(client, result, dumpGenre, options)
+        const { residue, ...publicResult } = seedResult as Tab4uCategorySongResult & {
+          residue?: boolean
+        }
+        songResults.push(publicResult)
 
-        if (seedResult.status === 'added' || seedResult.status === 'updated') {
-          songIds.push(seedResult.songId)
+        if (
+          (publicResult.status === 'added' || publicResult.status === 'updated') &&
+          residue !== false
+        ) {
+          residueSongIds.push(publicResult.songId)
         }
 
         processed += 1
@@ -170,13 +241,13 @@ export const tab4uCategorySeedService = (client: SupabaseClient<Database>) => ({
     }
 
     let action: 'created' | 'updated' = 'created'
-    if (!options.dryRun && songIds.length > 0) {
-      action = await upsertCategoryPlaylist(client, definition, songIds)
+    if (!options.dryRun) {
+      action = await upsertCategoryPlaylist(client, definition, residueSongIds)
     }
 
     return {
       slug,
-      songCount: songIds.length,
+      songCount: residueSongIds.length,
       action,
       songs: songResults,
     }

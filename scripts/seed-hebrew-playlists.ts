@@ -1,10 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'
+import { HEBREW_PLAYLISTS } from '../src/data/hebrewPlaylists'
 import { hebrewPlaylistSeedService } from '../src/lib/services/hebrewPlaylistSeedService'
 import { LIBRARY_CATALOG_TAG } from '../src/lib/services/libraryCatalogCache'
 import type { Database } from '../src/types/db'
 
 dotenv.config({ path: '.env.local' })
+
+function parseSlugs(): string[] | null {
+  const raw = process.argv.find((a) => a.startsWith('--slug='))?.slice('--slug='.length)
+  if (!raw) return null
+  return raw.split(',').map((s) => s.trim()).filter(Boolean)
+}
 
 async function run() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -21,10 +28,32 @@ async function run() {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  console.log('Importing Hebrew playlists from Tab4U...\n')
+  const slugs = parseSlugs()
+  console.log(
+    slugs
+      ? `Importing Hebrew playlists from Tab4U (slugs: ${slugs.join(', ')})...\n`
+      : 'Importing Hebrew playlists from Tab4U...\n'
+  )
 
   try {
-    const results = await hebrewPlaylistSeedService(supabase).seedAllHebrewPlaylists()
+    const service = hebrewPlaylistSeedService(supabase)
+    const results = slugs
+      ? await Promise.all(
+          slugs.map(async (slug) => {
+            const definition = HEBREW_PLAYLISTS.find((p) => p.slug === slug)
+            if (!definition) throw new Error(`Unknown Hebrew playlist slug: ${slug}`)
+            if (definition.songs.length === 0) {
+              return {
+                slug,
+                songCount: 0,
+                action: 'updated' as const,
+                songs: [],
+              }
+            }
+            return service.seedPlaylist(definition)
+          })
+        )
+      : await service.seedAllHebrewPlaylists()
 
     for (const playlist of results) {
       const icon = playlist.songCount === 0 ? '⚠️ ' : playlist.action === 'created' ? '✅' : '🔄'

@@ -6,6 +6,10 @@ import {
 } from '@/data/hebrewPlaylists'
 import { upsertCatalogSongFromNegina } from '@/lib/services/catalogSongUpsert'
 import { listNeginaGenreSongs } from '@/lib/services/scraperService'
+import {
+  classifyAndResolveGenre,
+} from '@/lib/services/hebrewSongClassifierService'
+import { appendSongToGenrePlaylist } from '@/lib/services/hebrewPlaylistRebuildService'
 import type { Database } from '@/types/db'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
 
@@ -19,11 +23,27 @@ export type NeginaPlaylistSeedOptions = {
   skipExisting?: boolean
   playlistSlug?: string
   catalogGenre?: HebrewCatalogGenre
+  /** Admin seed only: AI/heuristic classify after upsert (default true). */
+  classify?: boolean
 }
 
 export type NeginaPlaylistSongResult =
-  | { status: 'added'; songId: string; title: string; url: string }
-  | { status: 'updated'; songId: string; title: string; url: string }
+  | {
+      status: 'added'
+      songId: string
+      title: string
+      url: string
+      genre?: string
+      category?: string
+    }
+  | {
+      status: 'updated'
+      songId: string
+      title: string
+      url: string
+      genre?: string
+      category?: string
+    }
   | { status: 'skipped'; reason: string; url: string }
   | { status: 'error'; reason: string; url: string }
 
@@ -96,6 +116,21 @@ async function upsertNeginaPlaylist(
   return 'created'
 }
 
+async function applySongGenreDecade(
+  client: SupabaseClient<Database>,
+  songId: string,
+  genre: HebrewCatalogGenre,
+  decade: number | null
+): Promise<void> {
+  const patch: Record<string, unknown> = {
+    genre,
+    updated_at: new Date().toISOString(),
+  }
+  if (decade != null) patch.decade = decade
+  const { error } = await (client.from('songs') as any).update(patch).eq('id', songId)
+  if (error) throw error
+}
+
 export const neginaPlaylistSeedService = (client: SupabaseClient<Database>) => ({
   async seedNeginaJewishPlaylist(
     options: NeginaPlaylistSeedOptions = {}
@@ -106,12 +141,13 @@ export const neginaPlaylistSeedService = (client: SupabaseClient<Database>) => (
       throw new Error(`Playlist definition not found: ${slug}`)
     }
 
-    const catalogGenre = options.catalogGenre ?? definition.catalogGenre
+    const dumpGenre = options.catalogGenre ?? definition.catalogGenre
     const maxSongs = options.maxSongs
     const startPage = options.startPage ?? 1
+    const shouldClassify = options.classify !== false
 
     const songResults: NeginaPlaylistSongResult[] = []
-    const songIds: string[] = []
+    const residueSongIds: string[] = []
     const seenUrls = new Set<string>()
     let processed = 0
 
@@ -151,16 +187,42 @@ export const neginaPlaylistSeedService = (client: SupabaseClient<Database>) => (
           const { songId, action } = await upsertCatalogSongFromNegina(
             client,
             result,
-            catalogGenre
+            dumpGenre
           )
+
+          let finalGenre: HebrewCatalogGenre = dumpGenre
+          let category = 'unclassified'
+
+          if (shouldClassify) {
+            const resolved = await classifyAndResolveGenre(
+              { id: songId, title: entry.title, author: entry.author },
+              dumpGenre
+            )
+            category = resolved.classification.category
+            finalGenre = resolved.genre
+            if (resolved.applied) {
+              await applySongGenreDecade(
+                client,
+                songId,
+                finalGenre,
+                resolved.decade
+              )
+              await appendSongToGenrePlaylist(client, finalGenre, songId)
+            } else {
+              residueSongIds.push(songId)
+            }
+          } else {
+            residueSongIds.push(songId)
+          }
 
           songResults.push({
             status: action,
             songId,
             title: entry.title,
             url: entry.url,
+            genre: finalGenre,
+            category,
           })
-          songIds.push(songId)
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error)
           songResults.push({ status: 'error', reason, url: entry.url })
@@ -174,13 +236,20 @@ export const neginaPlaylistSeedService = (client: SupabaseClient<Database>) => (
     }
 
     let action: 'created' | 'updated' = 'created'
-    if (!options.dryRun && songIds.length > 0) {
-      action = await upsertNeginaPlaylist(client, definition, songIds)
+    if (!options.dryRun && residueSongIds.length > 0) {
+      action = await upsertNeginaPlaylist(client, definition, residueSongIds)
+    } else if (
+      !options.dryRun &&
+      residueSongIds.length === 0 &&
+      songResults.some((s) => s.status === 'added' || s.status === 'updated')
+    ) {
+      // Ensure residue playlist exists even if empty this run (merge noop)
+      action = await upsertNeginaPlaylist(client, definition, [])
     }
 
     return {
       slug,
-      songCount: songIds.length,
+      songCount: residueSongIds.length,
       action,
       songs: songResults,
     }

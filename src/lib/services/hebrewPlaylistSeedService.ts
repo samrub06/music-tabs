@@ -15,6 +15,7 @@ import {
 import { cleanTab4uAuthor } from '@/lib/services/tab4uUtils'
 import type { Database } from '@/types/db'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
+import { rebuildHebrewPlaylistsFromGenres } from '@/lib/services/hebrewPlaylistRebuildService'
 
 const REQUEST_DELAY_MS = 600
 
@@ -49,7 +50,20 @@ function matchesEntry(result: SearchResult, entry: HebrewPlaylistSongEntry): boo
     if (!title.includes(normalizeMatchText(entry.titleIncludes))) return false
   }
   if (entry.authorIncludes) {
-    if (!author.includes(normalizeMatchText(entry.authorIncludes))) return false
+    const needle = normalizeMatchText(entry.authorIncludes)
+    if (!author.includes(needle)) return false
+    // Solo artist Akiva — exclude Akiva Turgeman / Bnei Akiva / Rabbi Akiva
+    if (needle === 'עקיבא' || needle === 'akiva') {
+      if (
+        author.includes('תורג') ||
+        author.includes('turgeman') ||
+        author.includes('בן עקיבא') ||
+        author.includes('רבי עקיבא') ||
+        author.includes('bnei akiva')
+      ) {
+        return false
+      }
+    }
   }
   return true
 }
@@ -61,6 +75,9 @@ function pickBestTab4uResult(
   const withChords = results.filter((r) => !r.title.includes('ללא אקורדים'))
   const strict = withChords.filter((r) => matchesEntry(r, entry))
   if (strict.length > 0) return strict[0]
+
+  // Artist playlists set authorIncludes — never fall back to a wrong artist.
+  if (entry.authorIncludes) return null
 
   if (entry.titleIncludes) {
     const byTitle = withChords.filter((r) =>
@@ -213,11 +230,13 @@ export const hebrewPlaylistSeedService = (client: SupabaseClient<Database>) => (
       await sleep(REQUEST_DELAY_MS)
     }
 
-    const action = await upsertHebrewPlaylist(client, definition, songIds)
+    // Seed imports may be sparse; membership is the full catalog for this genre.
+    const [rebuild] = await rebuildHebrewPlaylistsFromGenres(client, [definition.slug])
+    const action = rebuild?.action ?? (await upsertHebrewPlaylist(client, definition, songIds))
 
     return {
       slug: definition.slug,
-      songCount: songIds.length,
+      songCount: rebuild?.songCount ?? songIds.length,
       action,
       songs: songResults,
     }

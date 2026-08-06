@@ -87,7 +87,7 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
       <div id="hub-zone-international" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="international" />
         <CuratedPlaylistRow
-          section="genre"
+          hubZone="international"
           publicPlaylists={publicPlaylists}
           showUserShortcutCards={!!userId}
           showSectionTitle={false}

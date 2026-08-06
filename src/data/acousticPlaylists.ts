@@ -1,0 +1,192 @@
+/**
+ * Acoustic / World curated playlist definitions (admin/seed only).
+ * Spotify-style campfire & acoustic guitar staples — membership from catalog matches.
+ */
+
+export type CatalogManualHit = {
+  titleIncludes?: string
+  authorIncludes: string
+}
+
+export type CatalogManualPlaylistDefinition = {
+  slug: string
+  name: string
+  description: string
+  displayOrder: number
+  catalogGenre: string
+  softTagFromGenres: string[]
+  hits: CatalogManualHit[]
+  artistAuthors: string[]
+}
+
+/** Songs you actually play around a fire / acoustic jam — Spotify “Acoustic Hits” vibe. */
+export const ACOUSTIC_PLAYLIST: CatalogManualPlaylistDefinition = {
+  slug: 'acoustic',
+  name: 'Acoustic',
+  description: 'Campfire classics and acoustic guitar staples',
+  displayOrder: 1,
+  catalogGenre: 'acoustic',
+  // Only soft-tag untagged catalog rows — never steal songs from Rock/Pop filters.
+  softTagFromGenres: [],
+  artistAuthors: [
+    'Ed Sheeran',
+    'Vance Joy',
+    'Passenger',
+    'The Lumineers',
+    'George Ezra',
+    'Jason Mraz',
+    'John Mayer',
+    'Jack Johnson',
+    'Ben Howard',
+    'James Bay',
+    'Lewis Capaldi',
+    'Hozier',
+    'Mumford',
+    'Of Monsters and Men',
+    'Plain White',
+    'Tracy Chapman',
+    'Bon Iver',
+    'Israel Kamakawiwo',
+  ],
+  hits: [
+    { titleIncludes: 'Wonderwall', authorIncludes: 'Oasis' },
+    { titleIncludes: 'Hallelujah', authorIncludes: 'Cohen' },
+    { titleIncludes: 'Riptide', authorIncludes: 'Vance' },
+    { titleIncludes: 'Tears In Heaven', authorIncludes: 'Clapton' },
+    { titleIncludes: 'Blackbird', authorIncludes: 'Beatles' },
+    { titleIncludes: 'Wish You Were Here', authorIncludes: 'Pink Floyd' },
+    { titleIncludes: 'Fast Car', authorIncludes: 'Chapman' },
+    { titleIncludes: 'Perfect', authorIncludes: 'Sheeran' },
+    { titleIncludes: 'Photograph', authorIncludes: 'Sheeran' },
+    { titleIncludes: 'Thinking Out Loud', authorIncludes: 'Sheeran' },
+    { titleIncludes: 'The A Team', authorIncludes: 'Sheeran' },
+    { titleIncludes: 'Shape of You', authorIncludes: 'Sheeran' },
+    { titleIncludes: 'Let Her Go', authorIncludes: 'Passenger' },
+    { titleIncludes: 'Someone Like You', authorIncludes: 'Adele' },
+    { titleIncludes: 'Skinny Love', authorIncludes: 'Bon Iver' },
+    { titleIncludes: 'Ho Hey', authorIncludes: 'Lumineers' },
+    { titleIncludes: 'Budapest', authorIncludes: 'Ezra' },
+    { titleIncludes: 'I\'m Yours', authorIncludes: 'Mraz' },
+    { titleIncludes: 'Im Yours', authorIncludes: 'Mraz' },
+    { titleIncludes: 'Hey There Delilah', authorIncludes: 'Plain' },
+    { titleIncludes: 'The Scientist', authorIncludes: 'Coldplay' },
+    { titleIncludes: 'Yellow', authorIncludes: 'Coldplay' },
+    { titleIncludes: 'Fix You', authorIncludes: 'Coldplay' },
+    { titleIncludes: 'Knockin', authorIncludes: 'Dylan' },
+    { titleIncludes: 'Blowin', authorIncludes: 'Dylan' },
+    { titleIncludes: 'House of the Rising', authorIncludes: 'Animals' },
+    { titleIncludes: 'Hotel California', authorIncludes: 'Eagles' },
+    { titleIncludes: 'Landslide', authorIncludes: 'Fleetwood' },
+    { titleIncludes: 'Zombie', authorIncludes: 'Cranberries' },
+    { titleIncludes: 'Creep', authorIncludes: 'Radiohead' },
+    { titleIncludes: 'Iris', authorIncludes: 'Goo' },
+    { titleIncludes: 'Mr. Brightside', authorIncludes: 'Killers' },
+    { titleIncludes: 'Mr Brightside', authorIncludes: 'Killers' },
+    { titleIncludes: 'Africa', authorIncludes: 'Toto' },
+    { titleIncludes: 'Take Me Home, Country Roads', authorIncludes: 'Denver' },
+    { titleIncludes: 'Country Roads', authorIncludes: 'Denver' },
+    { titleIncludes: 'Sweet Home Alabama', authorIncludes: 'Skynyrd' },
+    { titleIncludes: 'Stand By Me', authorIncludes: 'King' },
+    { titleIncludes: 'What A Wonderful', authorIncludes: 'Armstrong' },
+    { titleIncludes: 'Over The Rainbow', authorIncludes: 'Kamakawiwo' },
+    { titleIncludes: 'Over the Rainbow', authorIncludes: 'Israel' },
+    { titleIncludes: 'Can\'t Help Falling', authorIncludes: 'Presley' },
+    { titleIncludes: 'Can\'t Help Falling In Love', authorIncludes: 'Elvis' },
+    { titleIncludes: 'Let It Be', authorIncludes: 'Beatles' },
+    { titleIncludes: 'Yesterday', authorIncludes: 'Beatles' },
+    { titleIncludes: 'Hey Jude', authorIncludes: 'Beatles' },
+    { titleIncludes: 'Imagine', authorIncludes: 'Lennon' },
+    { titleIncludes: 'Knockin on Heaven', authorIncludes: 'Guns' },
+    { titleIncludes: 'Patience', authorIncludes: 'Guns' },
+    { titleIncludes: 'More Than Words', authorIncludes: 'Extreme' },
+    { titleIncludes: 'Dust in the Wind', authorIncludes: 'Kansas' },
+    { titleIncludes: 'Horse With No Name', authorIncludes: 'America' },
+    { titleIncludes: 'Fire and Rain', authorIncludes: 'Taylor' },
+    { titleIncludes: 'Banana Pancakes', authorIncludes: 'Jack Johnson' },
+    { titleIncludes: 'Better Together', authorIncludes: 'Jack Johnson' },
+    { titleIncludes: 'Gravity', authorIncludes: 'John Mayer' },
+    { titleIncludes: 'Daughters', authorIncludes: 'John Mayer' },
+    { titleIncludes: 'Free Fallin', authorIncludes: 'Petty' },
+    { titleIncludes: 'Free Fallin', authorIncludes: 'Mayer' },
+    { titleIncludes: 'Wagon Wheel', authorIncludes: 'Old Crow' },
+    { titleIncludes: 'Take Me To Church', authorIncludes: 'Hozier' },
+    { titleIncludes: 'Someone You Loved', authorIncludes: 'Capaldi' },
+    { titleIncludes: 'Bratislava', authorIncludes: 'Ezra' },
+    { titleIncludes: 'Shotgun', authorIncludes: 'Ezra' },
+    { titleIncludes: 'Ophelia', authorIncludes: 'Lumineers' },
+    { titleIncludes: 'Stubborn Love', authorIncludes: 'Lumineers' },
+    { titleIncludes: 'Little Talks', authorIncludes: 'Monsters' },
+    { titleIncludes: 'The Sound of Silence', authorIncludes: 'Simon' },
+    { titleIncludes: 'Mrs. Robinson', authorIncludes: 'Simon' },
+    { titleIncludes: 'Angie', authorIncludes: 'Rolling Stones' },
+    { titleIncludes: 'Wild World', authorIncludes: 'Stevens' },
+    { titleIncludes: 'Father and Son', authorIncludes: 'Stevens' },
+    { titleIncludes: 'Beau-Papa', authorIncludes: 'Vianney' },
+  ],
+}
+
+/** World / island / global acoustic favorites (beyond UG genre id 195). */
+export const WORLD_MUSIC_PLAYLIST: CatalogManualPlaylistDefinition = {
+  slug: 'world-music',
+  name: 'World Music',
+  description: 'Global sounds, island classics, and acoustic traditions',
+  displayOrder: 4,
+  catalogGenre: 'world-music',
+  // Soft-tag UG world (195) + untagged only — keep Rock/Pop/French shelves intact.
+  softTagFromGenres: ['195'],
+  artistAuthors: [
+    'Israel Kamakawiwo',
+    'Kamakawiwo',
+    'Buena Vista',
+    'Cesaria Evora',
+    'Cesária Évora',
+    'Manu Chao',
+    'Gipsy Kings',
+    'Angélique Kidjo',
+    'Youssou N',
+    'Ravi Shankar',
+    'Anoushka Shankar',
+    'Tinariwen',
+    'Seu Jorge',
+    'Bebel Gilberto',
+    'Tarkan',
+    'Ofra Haza',
+  ],
+  hits: [
+    { titleIncludes: 'Over The Rainbow', authorIncludes: 'Kamakawiwo' },
+    { titleIncludes: 'Over the Rainbow', authorIncludes: 'Israel' },
+    { titleIncludes: 'Somewhere Over', authorIncludes: 'Kamakawiwo' },
+    { titleIncludes: 'What A Wonderful', authorIncludes: 'Armstrong' },
+    { titleIncludes: 'La Vie En Rose', authorIncludes: 'Piaf' },
+    { titleIncludes: 'Besame Mucho', authorIncludes: 'Consuelo' },
+    { titleIncludes: 'Bésame Mucho', authorIncludes: 'Mucho' },
+    { titleIncludes: 'Guantanamera', authorIncludes: 'Sandpipers' },
+    { titleIncludes: 'La Bamba', authorIncludes: 'Valens' },
+    { titleIncludes: 'Bamboleo', authorIncludes: 'Gipsy' },
+    { titleIncludes: 'Volare', authorIncludes: 'Modugno' },
+    { titleIncludes: 'Chanel', authorIncludes: 'Manu Chao' },
+    { titleIncludes: 'Me Gustas Tu', authorIncludes: 'Manu Chao' },
+    { titleIncludes: 'Clandestino', authorIncludes: 'Manu Chao' },
+    { titleIncludes: 'Ai Se Eu Te Pego', authorIncludes: 'Michel' },
+    { titleIncludes: 'Mas Que Nada', authorIncludes: 'Ben' },
+    { titleIncludes: 'The Girl From Ipanema', authorIncludes: 'Gilberto' },
+    { titleIncludes: 'Despacito', authorIncludes: 'Fonsi' },
+    { titleIncludes: 'Havana', authorIncludes: 'Cabello' },
+    { titleIncludes: 'Waka Waka', authorIncludes: 'Shakira' },
+    { titleIncludes: 'Hips Don', authorIncludes: 'Shakira' },
+    { titleIncludes: 'Africa', authorIncludes: 'Toto' },
+    { titleIncludes: 'Redemption Song', authorIncludes: 'Marley' },
+    { titleIncludes: 'Three Little Birds', authorIncludes: 'Marley' },
+    { titleIncludes: 'No Woman', authorIncludes: 'Marley' },
+    { titleIncludes: 'Could You Be Loved', authorIncludes: 'Marley' },
+    { titleIncludes: 'Is This Love', authorIncludes: 'Marley' },
+    { titleIncludes: 'One Love', authorIncludes: 'Marley' },
+    { titleIncludes: 'Jambalaya', authorIncludes: 'Williams' },
+    { titleIncludes: 'Im Nin\'alu', authorIncludes: 'Haza' },
+  ],
+}
+
+export const ACOUSTIC_WORLD_PLAYLISTS: CatalogManualPlaylistDefinition[] = [
+  ACOUSTIC_PLAYLIST,
+  WORLD_MUSIC_PLAYLIST,
+]

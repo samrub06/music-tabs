@@ -37,6 +37,6 @@ export async function getCachedLibraryCatalogSections(): Promise<LibraryCatalogS
       return { trendingSongs, recentSongs, popularSongs, publicPlaylists, featuredCatalogSong }
     },
     ['library-catalog-sections'],
-    { revalidate: 300, tags: [LIBRARY_CATALOG_TAG] }
+    { revalidate: 60, tags: [LIBRARY_CATALOG_TAG] }
   )()
 }
