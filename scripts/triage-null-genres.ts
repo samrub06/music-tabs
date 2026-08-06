@@ -91,7 +91,9 @@ async function run() {
   }
 
   console.log('\n--- By genre ---')
-  for (const [g, n] of [...byGenre.entries()].sort((a, b) => b[1] - a[1])) {
+  const genreRows = Array.from(byGenre.entries()).sort((a, b) => b[1] - a[1])
+  for (let i = 0; i < genreRows.length; i += 1) {
+    const [g, n] = genreRows[i]
     console.log(`  ${String(n).padStart(4)} → ${g}`)
   }
   console.log(`\nDone. applied=${applied} skipped=${skipped} total=${songs.length}`)
