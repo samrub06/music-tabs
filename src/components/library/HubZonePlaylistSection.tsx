@@ -2,11 +2,7 @@
 
 import { ClockIcon, HeartIcon } from '@heroicons/react/24/solid'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import {
-  CURATED_PLAYLISTS,
-  getHubZoneForSlug,
-  type HubZone,
-} from '@/data/curatedPlaylists'
+import { getHubZoneForSlug, type HubZone } from '@/data/curatedPlaylists'
 import { isArtistPlaylistSlug } from '@/data/artistPlaylistSlugs'
 import {
   getLikedSongsCoverUrl,
@@ -14,7 +10,6 @@ import {
 } from '@/data/curatedPlaylistCoverImages'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 import { PlaylistArtistBanner } from '@/components/library/playlistCards/PlaylistArtistBanner'
-import { PlaylistFeaturedCard } from '@/components/library/playlistCards/PlaylistFeaturedCard'
 import { PlaylistListCard } from '@/components/library/playlistCards/PlaylistListCard'
 import { PlaylistSquareCard } from '@/components/library/playlistCards/PlaylistSquareCard'
 import {
@@ -24,12 +19,15 @@ import {
 } from '@/components/library/playlistCards/playlistCardMedia'
 import { SwipeRowHint } from '@/components/library/SwipeRowHint'
 import {
+  extractArtistBannerPair,
+  ISRAELI_LIST_SLOTS,
   partitionHubPlaylists,
   sortPlaylistsByDisplayOrder,
 } from '@/components/library/hubPlaylistPartition'
 import { useAuthContext } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
+import { cn } from '@/lib/utils'
 
 type ShortcutCard = {
   id: string
@@ -37,16 +35,6 @@ type ShortcutCard = {
   title: ReactNode
   media: ReactNode
   coverUrl: string | null
-}
-
-function sanitizePlaylistDescription(description?: string): string | undefined {
-  if (!description) return undefined
-  const cleaned = description
-    .replace(/\s*\((Tab4U|Negina|Ultimate Guitar)[^)]*\)/gi, '')
-    .replace(/\b(Tab4U|Negina\.co\.il|Ultimate Guitar)\b/gi, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-  return cleaned || undefined
 }
 
 interface HubZonePlaylistSectionProps {
@@ -70,6 +58,12 @@ export function HubZonePlaylistSection({
   const squareScrollRef = useRef<HTMLDivElement>(null)
   const peekingRef = useRef(false)
   const [hintActive, setHintActive] = useState(false)
+
+  /** Israeli shows more cards vertically (3-row strip); other hubs stay at 2. */
+  const scrollGridRows = hubZone === 'israeli' ? 3 : 2
+  const scrollGridRowsClass =
+    hubZone === 'israeli' ? 'grid-rows-3' : 'grid-rows-2'
+  const listHintThreshold = scrollGridRows * 2
 
   useEffect(() => {
     if (!showSwipeHint) return
@@ -156,12 +150,15 @@ export function HubZonePlaylistSection({
   const artistBanners = sortPlaylistsByDisplayOrder(
     zonePlaylists.filter((p) => isArtistPlaylistSlug(p.curatedSlug))
   )
+  const { pair: artistBannerPair, rest: artistBannerRest } =
+    extractArtistBannerPair(artistBanners)
   const artistIds = new Set(artistBanners.map((p) => p.id))
   const nonArtistPlaylists = zonePlaylists.filter((p) => !artistIds.has(p.id))
 
   const { list, square, featured } = partitionHubPlaylists(
     nonArtistPlaylists,
-    shortcuts.length
+    shortcuts.length,
+    hubZone === 'israeli' ? { listSlots: ISRAELI_LIST_SLOTS } : undefined
   )
 
   if (
@@ -193,60 +190,82 @@ export function HubZonePlaylistSection({
     })),
   ]
 
+  const scrollGridClass = cn(
+    'grid grid-flow-col gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)]',
+    scrollGridRowsClass
+  )
+  const scrollGridStyle = {
+    scrollbarWidth: 'none' as const,
+    msOverflowStyle: 'none' as const,
+    WebkitOverflowScrolling: 'touch' as const,
+  }
+
+  const renderPairedBanners = (items: typeof artistBanners) => (
+    <div className="grid w-full grid-cols-2 gap-2">
+      {items.map((item) => (
+        <PlaylistArtistBanner
+          key={item.id}
+          href={`/library/${item.id}`}
+          name={item.name}
+          curatedSlug={item.curatedSlug}
+          imageUrl={item.imageUrl}
+          tsnioutFilterEnabled={tsnioutFilterEnabled}
+          pairRow
+          className="min-w-0"
+        />
+      ))}
+    </div>
+  )
+
+  const renderArtistBannerShelf = (items: typeof artistBanners) => {
+    if (items.length === 0) return null
+    if (items.length === 1) {
+      const item = items[0]!
+      return (
+        <PlaylistArtistBanner
+          key={item.id}
+          href={`/library/${item.id}`}
+          name={item.name}
+          curatedSlug={item.curatedSlug}
+          imageUrl={item.imageUrl}
+          tsnioutFilterEnabled={tsnioutFilterEnabled}
+          className="min-w-0 w-full"
+        />
+      )
+    }
+    if (items.length === 2) return renderPairedBanners(items)
+    return (
+      <div className={scrollGridClass} style={scrollGridStyle}>
+        {items.map((item) => (
+          <PlaylistArtistBanner
+            key={item.id}
+            href={`/library/${item.id}`}
+            name={item.name}
+            curatedSlug={item.curatedSlug}
+            imageUrl={item.imageUrl}
+            tsnioutFilterEnabled={tsnioutFilterEnabled}
+            className="min-w-0 snap-start"
+          />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <section className="mb-6 space-y-4">
       {/* Artist banners first so new FR/IL artist shelves are visible without deep scroll.
-          1–2 banners: one mobile row, equal halves (Hassidique | Carlebach).
-          3+: 2-row horizontal scroll like the list strip. */}
-      {artistBanners.length > 0 &&
-        (artistBanners.length <= 2 ? (
-          <div className="flex w-full gap-2">
-            {artistBanners.map((item) => (
-              <PlaylistArtistBanner
-                key={item.id}
-                href={`/library/${item.id}`}
-                name={item.name}
-                curatedSlug={item.curatedSlug}
-                imageUrl={item.imageUrl}
-                tsnioutFilterEnabled={tsnioutFilterEnabled}
-                pairRow
-                className="min-w-0 flex-1 basis-0"
-              />
-            ))}
-          </div>
-        ) : (
-          <div
-            className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)]"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            {artistBanners.map((item) => (
-              <PlaylistArtistBanner
-                key={item.id}
-                href={`/library/${item.id}`}
-                name={item.name}
-                curatedSlug={item.curatedSlug}
-                imageUrl={item.imageUrl}
-                tsnioutFilterEnabled={tsnioutFilterEnabled}
-                className="min-w-0 snap-start"
-              />
-            ))}
-          </div>
-        ))}
+          Hassidique | Carlebach: always one mobile row (explicit pair, grid-cols-2).
+          Other banners: 1 full-width, 2 side-by-side, 3+ multi-row horizontal scroll.
+          Featured full-width (Top Israel, etc.): same PlaylistArtistBanner pattern. */}
+      {artistBannerPair.length === 2 && renderPairedBanners(artistBannerPair)}
+      {renderArtistBannerShelf(artistBannerRest)}
 
       {listItems.length > 0 && (
         <div className="relative">
           <div
             ref={listScrollRef}
-            className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)]"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-            }}
+            className={scrollGridClass}
+            style={scrollGridStyle}
           >
             {listItems.map((item) => (
               <PlaylistListCard
@@ -259,7 +278,9 @@ export function HubZonePlaylistSection({
               />
             ))}
           </div>
-          {hintActive && listItems.length > 4 && <SwipeRowHint />}
+          {hintActive && listItems.length > listHintThreshold && (
+            <SwipeRowHint />
+          )}
         </div>
       )}
 
@@ -291,19 +312,17 @@ export function HubZonePlaylistSection({
 
       {featured.length > 0 && (
         <div className="flex flex-col gap-3">
-          {featured.map((item) => {
-            const def = CURATED_PLAYLISTS.find((p) => p.slug === item.curatedSlug)
-            return (
-              <PlaylistFeaturedCard
-                key={item.id}
-                href={`/library/${item.id}`}
-                title={item.name}
-                description={sanitizePlaylistDescription(def?.description)}
-                media={buildPlaylistCoverMedia(item, mediaOpts)}
-                coverUrl={getPlaylistItemCoverUrl(item, mediaOpts)}
-              />
-            )
-          })}
+          {featured.map((item) => (
+            <PlaylistArtistBanner
+              key={item.id}
+              href={`/library/${item.id}`}
+              name={item.name}
+              curatedSlug={item.curatedSlug}
+              imageUrl={item.imageUrl}
+              tsnioutFilterEnabled={tsnioutFilterEnabled}
+              className="min-w-0 w-full"
+            />
+          ))}
         </div>
       )}
     </section>

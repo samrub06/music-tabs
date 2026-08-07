@@ -1,3 +1,16 @@
+/**
+ * Solid banner backgrounds that skip cover-dominant tinting.
+ * Used when the cover wash fights the brand color (e.g. Top Israel → clean blue).
+ */
+export const CURATED_PLAYLIST_FORCED_BANNER_BG_BY_SLUG: Record<string, string> = {
+  'spotify-top-israel': '#dbeafe', // blue-100 — soft pale blue (was blue-700, too dark)
+}
+
+/** Title classes when forced BG is light — white fails contrast on pale blues. */
+export const CURATED_PLAYLIST_FORCED_BANNER_TITLE_CLASS_BY_SLUG: Record<string, string> = {
+  'spotify-top-israel': 'text-slate-900',
+}
+
 /** Full class strings so Tailwind includes gradient utilities (no dynamic concat). */
 export const CURATED_PLAYLIST_GRADIENT_BY_SLUG: Record<string, string> = {
   rock: 'bg-gradient-to-br from-red-600 to-orange-700',

@@ -202,6 +202,13 @@ const EXTRA_FRENCH_ARTISTS = [
   'sdm',
   'naps',
   'vianney bureau',
+  'okoume',
+  'okoumé',
+  'laura cahen',
+  'emmanuel moire',
+  'nino ferrer',
+  'serge lama',
+  'christophe',
 ]
 
 function collectAllowlist(): string[] {

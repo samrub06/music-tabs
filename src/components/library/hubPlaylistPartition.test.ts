@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { partitionHubPlaylists } from './hubPlaylistPartition'
+import {
+  extractArtistBannerPair,
+  partitionHubPlaylists,
+} from './hubPlaylistPartition'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 
 function item(slug: string, orderName: string, id = slug): PublicPlaylistItem {
@@ -38,13 +41,7 @@ describe('partitionHubPlaylists', () => {
     expect(allIds).toEqual(playlists.map((p) => p.id).sort())
   })
 
-
   it('reduces list slots when shortcuts occupy space', () => {
-    const playlists = Array.from({ length: 10 }, (_, i) =>
-      item(`rock`, `P${i}`, `id-${i}`)
-    ).map((p, i) => ({ ...p, curatedSlug: i === 0 ? 'acoustic' : `pop` }))
-
-    // Use unique slugs so sort is stable enough; just check list budget
     const unique = Array.from({ length: 10 }, (_, i) =>
       item(
         [
@@ -67,5 +64,53 @@ describe('partitionHubPlaylists', () => {
     const { list } = partitionHubPlaylists(unique, 2)
     expect(list.length).toBeLessThanOrEqual(10)
   })
+
+  it('accepts a higher listSlots budget for taller Israeli strips', () => {
+    const playlists = Array.from({ length: 20 }, (_, i) =>
+      item(`slug-${i}`, `P${i}`, `id-${i}`)
+    )
+    const { list } = partitionHubPlaylists(playlists, 0, { listSlots: 18 })
+    expect(list.length).toBeLessThanOrEqual(18)
+    expect(list.length).toBeGreaterThan(12)
+  })
+
+  it('does not promote hassidic into featured when present with other songbook shelves', () => {
+    const playlists = [
+      item('chabad-nigunim', 'Chabad'),
+      item('hassidic', 'Hassidique'),
+      item('carlebach', 'Carlebach'),
+      item('moroccan-piyut', 'Moroccan'),
+      item('tunisian', 'Tunisien'),
+      item('jewish-liturgy', 'Liturgy'),
+      item('yeshiva', 'Yeshiva'),
+      item('jewish-songbook', 'Songbook'),
+      item('tab4u-hassidic-full', 'Tab4U'),
+    ]
+
+    const { featured } = partitionHubPlaylists(playlists, 0)
+    expect(featured.map((p) => p.curatedSlug)).not.toContain('hassidic')
+    expect(featured.map((p) => p.curatedSlug)).not.toContain('carlebach')
+  })
 })
 
+describe('extractArtistBannerPair', () => {
+  it('pulls hassidic and carlebach into a side-by-side pair', () => {
+    const banners = [
+      item('hassidic', 'Hassidique'),
+      item('kendji-girac', 'Kendji'),
+      item('carlebach', 'Carlebach'),
+    ]
+
+    const { pair, rest } = extractArtistBannerPair(banners)
+
+    expect(pair.map((p) => p.curatedSlug)).toEqual(['hassidic', 'carlebach'])
+    expect(rest.map((p) => p.curatedSlug)).toEqual(['kendji-girac'])
+  })
+
+  it('leaves banners alone when only one of the pair is present', () => {
+    const banners = [item('hassidic', 'Hassidique'), item('kendji-girac', 'Kendji')]
+    const { pair, rest } = extractArtistBannerPair(banners)
+    expect(pair).toEqual([])
+    expect(rest).toEqual(banners)
+  })
+})

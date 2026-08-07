@@ -4,11 +4,16 @@
  */
 
 import { FRENCH_PLAYLISTS } from '@/data/frenchPlaylists'
-import { isBlockedNonFrenchArtist } from '@/data/frenchTrackFilter'
+import {
+  isBlockedNonFrenchArtist,
+  isFrenchCatalogTrack,
+} from '@/data/frenchTrackFilter'
 
 export type PlaylistMembershipRule =
   | { kind: 'authorAny'; authors: string[]; frenchOnly?: boolean }
   | { kind: 'authorOnly'; authors: string[]; frenchOnly?: boolean }
+  /** Chart-style FR shelf: francophone filter only (no closed author allowlist). */
+  | { kind: 'francophone' }
 
 function normalize(value: string): string {
   return value
@@ -128,35 +133,10 @@ export const CURATED_PLAYLIST_MEMBERSHIP_RULES: Record<
     frenchOnly: true,
     authors: [...varieteAuthors()],
   },
+  // Daily chart + guitar pad mix many francophone artists; closed allowlists
+  // wrongly strip Okoumé / niche variété while frenchOnly already blocks Bad Bunny etc.
   'spotify-top-france': {
-    kind: 'authorAny',
-    frenchOnly: true,
-    authors: [
-      ...varieteAuthors(),
-      ...rapAuthors(),
-      'Gims',
-      'Maître Gims',
-      'Maitre Gims',
-      'Aya Nakamura',
-      'Tayc',
-      'Santa',
-      'Pierre Garnier',
-      'Helena',
-      'Mentissa',
-      'Naps',
-      'SDM',
-      'Werenoi',
-      'Tiakola',
-      'PLK',
-      'Gambi',
-      'Black M',
-      'Sexion',
-      'Tryo',
-      'Bizet',
-      'Notre-Dame de Paris',
-      'Misc Musicals',
-      'Misc Soundtrack',
-    ],
+    kind: 'francophone',
   },
   'kendji-girac': {
     kind: 'authorOnly',
@@ -308,6 +288,13 @@ export function songAllowedInCuratedPlaylist(
   rule: PlaylistMembershipRule = CURATED_PLAYLIST_MEMBERSHIP_RULES[slug]!
 ): { ok: boolean; reason?: string } {
   if (!rule) return { ok: true }
+
+  if (rule.kind === 'francophone') {
+    if (!isFrenchCatalogTrack(title, author)) {
+      return { ok: false, reason: 'not francophone (blocklist / filter)' }
+    }
+    return { ok: true }
+  }
 
   if (rule.frenchOnly && isBlockedNonFrenchArtist(author)) {
     return { ok: false, reason: 'blocked non-francophone artist' }
