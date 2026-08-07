@@ -34,6 +34,18 @@ const MISSING: Array<{ slug: string; query: string; country?: string }> = [
   { slug: 'patrick-bruel', query: 'Patrick Bruel', country: 'FR' },
   { slug: 'celine-dion', query: 'Celine Dion', country: 'FR' },
   { slug: 'vianney', query: 'Vianney', country: 'FR' },
+  { slug: 'enrico-macias', query: 'Enrico Macias', country: 'FR' },
+  { slug: 'francis-cabrel', query: 'Francis Cabrel', country: 'FR' },
+  { slug: 'johnny-hallyday', query: 'Johnny Hallyday', country: 'FR' },
+  { slug: 'charles-aznavour', query: 'Charles Aznavour', country: 'FR' },
+  { slug: 'jacques-brel', query: 'Jacques Brel', country: 'FR' },
+  { slug: 'michel-sardou', query: 'Michel Sardou', country: 'FR' },
+  { slug: 'pascal-obispo', query: 'Pascal Obispo', country: 'FR' },
+  { slug: 'stromae', query: 'Stromae', country: 'FR' },
+  { slug: 'florent-pagny', query: 'Florent Pagny', country: 'FR' },
+  { slug: 'angele', query: 'Angèle', country: 'FR' },
+  { slug: 'indochine', query: 'Indochine', country: 'FR' },
+  { slug: 'mylene-farmer', query: 'Mylène Farmer', country: 'FR' },
 ]
 
 function sleep(ms: number) {

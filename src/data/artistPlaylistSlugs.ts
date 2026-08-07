@@ -30,6 +30,18 @@ export const ARTIST_PLAYLIST_SLUGS = new Set([
   'patrick-bruel',
   'celine-dion',
   'vianney',
+  'enrico-macias',
+  'francis-cabrel',
+  'johnny-hallyday',
+  'charles-aznavour',
+  'jacques-brel',
+  'michel-sardou',
+  'pascal-obispo',
+  'stromae',
+  'florent-pagny',
+  'angele',
+  'indochine',
+  'mylene-farmer',
 ])
 
 export function isArtistPlaylistSlug(slug?: string | null): boolean {

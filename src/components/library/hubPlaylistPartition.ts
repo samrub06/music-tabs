@@ -6,7 +6,7 @@ export const HUB_FEATURED_SLUG_PRIORITY = [
   'spotify-top-israel',
   'spotify-top-global',
   'spotify-top-france',
-  'hassidic',
+  // hassidic stays with carlebach as half/half artist banners (not featured)
   'ishay-ribo',
   'variete-francaise',
   'rap-fr',

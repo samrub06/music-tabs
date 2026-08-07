@@ -195,29 +195,47 @@ export function HubZonePlaylistSection({
 
   return (
     <section className="mb-6 space-y-4">
-      {/* Artist banners first so new FR/IL artist shelves are visible without deep scroll */}
-      {artistBanners.length > 0 && (
-        <div
-          className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)]"
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {artistBanners.map((item) => (
-            <PlaylistArtistBanner
-              key={item.id}
-              href={`/library/${item.id}`}
-              name={item.name}
-              curatedSlug={item.curatedSlug}
-              imageUrl={item.imageUrl}
-              tsnioutFilterEnabled={tsnioutFilterEnabled}
-              className="min-w-0 snap-start"
-            />
-          ))}
-        </div>
-      )}
+      {/* Artist banners first so new FR/IL artist shelves are visible without deep scroll.
+          1–2 banners: one mobile row, equal halves (Hassidique | Carlebach).
+          3+: 2-row horizontal scroll like the list strip. */}
+      {artistBanners.length > 0 &&
+        (artistBanners.length <= 2 ? (
+          <div className="flex w-full gap-2">
+            {artistBanners.map((item) => (
+              <PlaylistArtistBanner
+                key={item.id}
+                href={`/library/${item.id}`}
+                name={item.name}
+                curatedSlug={item.curatedSlug}
+                imageUrl={item.imageUrl}
+                tsnioutFilterEnabled={tsnioutFilterEnabled}
+                pairRow
+                className="min-w-0 flex-1 basis-0"
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)]"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {artistBanners.map((item) => (
+              <PlaylistArtistBanner
+                key={item.id}
+                href={`/library/${item.id}`}
+                name={item.name}
+                curatedSlug={item.curatedSlug}
+                imageUrl={item.imageUrl}
+                tsnioutFilterEnabled={tsnioutFilterEnabled}
+                className="min-w-0 snap-start"
+              />
+            ))}
+          </div>
+        ))}
 
       {listItems.length > 0 && (
         <div className="relative">

@@ -183,6 +183,66 @@ export const CURATED_PLAYLIST_MEMBERSHIP_RULES: Record<
     frenchOnly: true,
     authors: ['Vianney'],
   },
+  'enrico-macias': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Enrico Macias', 'Macias'],
+  },
+  'francis-cabrel': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Francis Cabrel', 'Cabrel'],
+  },
+  'johnny-hallyday': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Johnny Hallyday', 'Hallyday'],
+  },
+  'charles-aznavour': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Charles Aznavour', 'Aznavour'],
+  },
+  'jacques-brel': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Jacques Brel', 'Brel'],
+  },
+  'michel-sardou': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Michel Sardou', 'Sardou'],
+  },
+  'pascal-obispo': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Pascal Obispo', 'Obispo'],
+  },
+  stromae: {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Stromae'],
+  },
+  'florent-pagny': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Florent Pagny', 'Pagny'],
+  },
+  angele: {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Angèle', 'Angele'],
+  },
+  indochine: {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Indochine'],
+  },
+  'mylene-farmer': {
+    kind: 'authorOnly',
+    frenchOnly: true,
+    authors: ['Mylène Farmer', 'Mylene Farmer'],
+  },
   'ishay-ribo': {
     kind: 'authorOnly',
     authors: ['Ishay Ribo', 'ישי ריבו', 'Ribo'],
