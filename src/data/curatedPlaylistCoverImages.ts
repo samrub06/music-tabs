@@ -43,6 +43,7 @@ export const CURATED_PLAYLIST_COVER_FILES: Record<string, string> = {
   'jewish-songbook': 'religious.jpeg',
   'spotify-top-israel': 'israel.jpeg',
   'spotify-top-global': 'World.jpeg',
+  'spotify-top-france': 'variete-francaise.jpg',
   'variete-francaise': 'variete-francaise.jpg',
   'rap-fr': 'rap-fr.jpg',
   // Decades

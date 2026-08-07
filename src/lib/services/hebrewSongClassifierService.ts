@@ -38,6 +38,10 @@ export type HebrewClassifierCategory =
   | 'idan_raichel'
   | 'shlomo_artzi'
   | 'static_ben_el'
+  | 'noa_kirel'
+  | 'itay_levi'
+  | 'osher_cohen'
+  | 'avi_ohayon'
   | 'carlebach'
   | 'unclassified'
 
@@ -97,6 +101,10 @@ const CATEGORY_TO_GENRE: Record<HebrewClassifierCategory, HebrewCatalogGenre> = 
   idan_raichel: HEBREW_CATALOG_GENRES.idanRaichel,
   shlomo_artzi: HEBREW_CATALOG_GENRES.shlomoArtzi,
   static_ben_el: HEBREW_CATALOG_GENRES.staticBenEl,
+  noa_kirel: HEBREW_CATALOG_GENRES.noaKirel,
+  itay_levi: HEBREW_CATALOG_GENRES.itayLevi,
+  osher_cohen: HEBREW_CATALOG_GENRES.osherCohen,
+  avi_ohayon: HEBREW_CATALOG_GENRES.aviOhayon,
   carlebach: HEBREW_CATALOG_GENRES.carlebach,
   unclassified: HEBREW_CATALOG_GENRES.neginaJewish,
 }
@@ -128,6 +136,10 @@ export const CLASSIFY_GENRE_TO_PLAYLIST_SLUG: Partial<
   [HEBREW_CATALOG_GENRES.idanRaichel]: 'idan-raichel',
   [HEBREW_CATALOG_GENRES.shlomoArtzi]: 'shlomo-artzi',
   [HEBREW_CATALOG_GENRES.staticBenEl]: 'static-ben-el',
+  [HEBREW_CATALOG_GENRES.noaKirel]: 'noa-kirel',
+  [HEBREW_CATALOG_GENRES.itayLevi]: 'itay-levi',
+  [HEBREW_CATALOG_GENRES.osherCohen]: 'osher-cohen',
+  [HEBREW_CATALOG_GENRES.aviOhayon]: 'avi-ohayon',
   [HEBREW_CATALOG_GENRES.carlebach]: 'carlebach',
   [HEBREW_CATALOG_GENRES.songbook]: 'jewish-songbook',
   [HEBREW_CATALOG_GENRES.neginaJewish]: 'negina-jewish-music',
@@ -158,6 +170,10 @@ const VALID_CATEGORIES = new Set<HebrewClassifierCategory>([
   'idan_raichel',
   'shlomo_artzi',
   'static_ben_el',
+  'noa_kirel',
+  'itay_levi',
+  'osher_cohen',
+  'avi_ohayon',
   'carlebach',
   'unclassified',
 ])
@@ -456,6 +472,51 @@ export function classifyHebrewSongHeuristic(
       decade: 2010,
       confidence: 0.9,
       reason: 'Static & Ben El artist match',
+      source: 'heuristic',
+    }
+  }
+
+  if (textIncludesAny(blob, ['נועה קירל', 'noa kirel'])) {
+    return {
+      id: song.id,
+      category: 'noa_kirel',
+      decade: 2020,
+      confidence: 0.92,
+      reason: 'Noa Kirel artist match',
+      source: 'heuristic',
+    }
+  }
+
+  if (textIncludesAny(blob, ['איתי לוי', 'itay levi', 'itai levi'])) {
+    return {
+      id: song.id,
+      category: 'itay_levi',
+      decade: 2010,
+      confidence: 0.92,
+      reason: 'Itay Levi artist match',
+      source: 'heuristic',
+    }
+  }
+
+  if (textIncludesAny(blob, ['אושר כהן', 'osher cohen'])) {
+    return {
+      id: song.id,
+      category: 'osher_cohen',
+      decade: 2020,
+      confidence: 0.92,
+      reason: 'Osher Cohen artist match',
+      source: 'heuristic',
+    }
+  }
+
+  // Songwriter אבי אוחיון — match his name, not random אוחיון family
+  if (textIncludesAny(blob, ['אבי אוחיון', 'avi ohayon', 'avi ochayon'])) {
+    return {
+      id: song.id,
+      category: 'avi_ohayon',
+      decade: 2010,
+      confidence: 0.92,
+      reason: 'Avi Ohayon artist/songwriter match',
       source: 'heuristic',
     }
   }
@@ -765,11 +826,15 @@ Categories (priority order — pick the first that clearly fits):
 21. idan_raichel — ONLY Idan Raichel / עידן רייכל / הפרויקט של עידן רייכל
 22. shlomo_artzi — ONLY Shlomo Artzi / שלמה ארצי (prefer over classic_israeli)
 23. static_ben_el — ONLY Static & Ben El / סטטיק / בן אל תבורי
-24. carlebach — ONLY Shlomo Carlebach / קרליבך
-25. unclassified — not enough signal
+24. noa_kirel — ONLY Noa Kirel / נועה קירל
+25. itay_levi — ONLY Itay Levi / איתי לוי
+26. osher_cohen — ONLY Osher Cohen / אושר כהן
+27. avi_ohayon — ONLY when Avi Ohayon / אבי אוחיון is explicit in author/title (songwriter; rare as performer)
+28. carlebach — ONLY Shlomo Carlebach / קרליבך
+29. unclassified — not enough signal
 
 Hard rules:
-- NEVER tag ribo/karduner/akiva/hanan_ben_ari/aharon_razel/eviatar_banai/shuli_rand/ben_zur/eyal_golan/omer_adam/eden_hason/sarit_hadad/moshe_peretz/nathan_goshen/idan_raichel/shlomo_artzi/static_ben_el/carlebach unless that exact artist appears in author/title.
+- NEVER tag ribo/karduner/akiva/hanan_ben_ari/aharon_razel/eviatar_banai/shuli_rand/ben_zur/eyal_golan/omer_adam/eden_hason/sarit_hadad/moshe_peretz/nathan_goshen/idan_raichel/shlomo_artzi/static_ben_el/noa_kirel/itay_levi/osher_cohen/avi_ohayon/carlebach unless that exact artist appears in author/title.
 - Yonatan Razel → modern (never ribo, never aharon_razel).
 - Aharon Razel → aharon_razel (never ribo).
 - Hanan Ben Ari → hanan_ben_ari (never modern, never ben_zur).
@@ -783,6 +848,10 @@ Hard rules:
 - Idan Raichel → idan_raichel (never modern).
 - Shlomo Artzi → shlomo_artzi (never classic_israeli alone).
 - Static / Ben El Tavori → static_ben_el (never modern).
+- Noa Kirel → noa_kirel (never modern).
+- Itay Levi → itay_levi (never modern).
+- Osher Cohen → osher_cohen (never modern).
+- Avi Ohayon / אבי אוחיון → avi_ohayon only when his name is explicit (do not guess songwriter credits).
 - Akiva Turgeman → modern (never akiva).
 - Prefer chabad over hassidic only when Habad/Lubavitch is clear.
 - Prefer liturgy over hassidic when the piece is clearly a liturgical function song (birkat/havdalah/zemirot), not a concert nigun.
@@ -819,15 +888,19 @@ Categories (priority order):
 18. idan_raichel — ONLY Idan Raichel / עידן רייכל
 19. shlomo_artzi — ONLY Shlomo Artzi / שלמה ארצי
 20. static_ben_el — ONLY Static & Ben El / סטטיק
-21. carlebach — ONLY Shlomo Carlebach
-22. classic_israeli — clear pre-2000 שירי ארץ ישראל classics
-23. modern — clear modern Israeli non-hasidic (Yonatan Razel, Akiva Turgeman, etc.)
-24. hassidic — DEFAULT for this dump: nigunim, Hasidic performers, Yiddish liturgical, Breslov, Shwekey, Fried, Beri Weber, Motty Steinmetz, unknown religious artists
+21. noa_kirel — ONLY Noa Kirel / נועה קירל
+22. itay_levi — ONLY Itay Levi / איתי לוי
+23. osher_cohen — ONLY Osher Cohen / אושר כהן
+24. avi_ohayon — ONLY Avi Ohayon / אבי אוחיון when explicit
+25. carlebach — ONLY Shlomo Carlebach
+26. classic_israeli — clear pre-2000 שירי ארץ ישראל classics
+27. modern — clear modern Israeli non-hasidic (Yonatan Razel, Akiva Turgeman, etc.)
+28. hassidic — DEFAULT for this dump: nigunim, Hasidic performers, Yiddish liturgical, Breslov, Shwekey, Fried, Beri Weber, Motty Steinmetz, unknown religious artists
 
 Hard rules:
 - Prefer hassidic over unclassified. Almost never use unclassified.
 - Prefer liturgy/yeshiva over hassidic when markers are clear.
-- NEVER tag ribo/karduner/akiva/hanan_ben_ari/aharon_razel/eviatar_banai/shuli_rand/ben_zur/eyal_golan/omer_adam/eden_hason/sarit_hadad/moshe_peretz/nathan_goshen/idan_raichel/shlomo_artzi/static_ben_el/carlebach unless that exact artist appears.
+- NEVER tag ribo/karduner/akiva/hanan_ben_ari/aharon_razel/eviatar_banai/shuli_rand/ben_zur/eyal_golan/omer_adam/eden_hason/sarit_hadad/moshe_peretz/nathan_goshen/idan_raichel/shlomo_artzi/static_ben_el/noa_kirel/itay_levi/osher_cohen/avi_ohayon/carlebach unless that exact artist appears.
 - decade: 1960|1970|1980|1990|2000|2010|2020 or null.
 - confidence 0-1; for hassidic default use >= 0.6 when uncertain but still hasidic-flavored.
 

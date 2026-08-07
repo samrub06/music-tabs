@@ -10,10 +10,22 @@
  *   npm run seed:spotify-popular -- --dry-run --limit=5
  *   npm run seed:spotify-popular -- --source=top-israel --limit=20
  *   npm run seed:spotify-popular -- --source=top-global
+ *   npm run seed:spotify-popular -- --source=top-france --limit=30
+ *   npm run seed:spotify-popular -- --source=editorial-acoustic --limit=30
+ *   npm run seed:spotify-popular -- --source=editorial-french-variete --limit=25
+ *   npm run seed:spotify-popular -- --source=editorial-rap-fr --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-hassidic --limit=25
+ *   npm run seed:spotify-popular -- --source=editorial-religious-il --limit=25
  *   npm run seed:spotify-popular -- --source=editorial-ribo --limit=15
  *   npm run seed:spotify-popular -- --source=editorial-ben-zur --limit=20
  *   npm run seed:spotify-popular -- --source=editorial-eyal-golan --limit=20
  *   npm run seed:spotify-popular -- --source=editorial-omer-adam --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-noa-kirel --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-itay-levi --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-osher-cohen --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-avi-ohayon --limit=20
+ *
+ * Agent workflow: .cursor/skills/trendy-guitar-catalog/SKILL.md
  */
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'

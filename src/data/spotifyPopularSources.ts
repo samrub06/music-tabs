@@ -54,6 +54,16 @@ export const SPOTIFY_POPULAR_SOURCES: SpotifyPopularSource[] = [
     chartUrl: 'https://kworb.net/spotify/country/global_daily.html',
   },
   {
+    key: 'top-france',
+    name: 'Top 50 — France',
+    marketHint: 'INTL',
+    targetSlug: 'spotify-top-france',
+    catalogGenre: 'spotify-top-france',
+    description: 'Spotify daily France (public chart) → Ultimate Guitar',
+    researchMode: 'chart',
+    chartUrl: 'https://kworb.net/spotify/country/fr_daily.html',
+  },
+  {
     key: 'editorial-hassidic',
     name: 'Hassidic hits (popular)',
     marketHint: 'IL',
@@ -63,6 +73,51 @@ export const SPOTIFY_POPULAR_SOURCES: SpotifyPopularSource[] = [
     researchMode: 'ai',
     aiPrompt:
       'Popular Hassidic / חסידי Jewish songs that people stream a lot (Shwekey, Fried, Motty Steinmetz, Beri Weber, Miami Boys Choir, Zanvil Weinberger, Breslov nigunim, etc.). Prefer well-known hits with chords/tabs. Titles and artists in Hebrew when that is how they are known.',
+  },
+  {
+    key: 'editorial-religious-il',
+    name: 'Israeli religious / faith-pop (popular)',
+    marketHint: 'IL',
+    targetSlug: 'hassidic',
+    catalogGenre: 'hebrew-hassidic',
+    description:
+      'AI research of popular Israeli Jewish religious & faith-pop hits → hassidic shelf (complements editorial-hassidic)',
+    researchMode: 'ai',
+    aiPrompt:
+      'Popular Israeli Jewish religious, liturgical, and faith-pop songs people stream and play on guitar — NOT Christian worship. Include Hassidic/חסידי staples plus modern faith-pop (Ishay Ribo, Hanan Ben Ari, Ben Zur, Akiva, Yosef Karduner, Shwekey, Carlebach-style nigunim, wedding/Shabbat favorites). Prefer Hebrew titles as commonly written. Favor songs that typically have Tab4U/Negina chords.',
+  },
+  {
+    key: 'editorial-acoustic',
+    name: 'Acoustic guitar staples (popular)',
+    marketHint: 'INTL',
+    targetSlug: 'acoustic',
+    catalogGenre: 'acoustic',
+    description: 'AI research of popular acoustic / campfire guitar hits → acoustic shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'The most popular acoustic / campfire / singer-songwriter songs people play on guitar (Spotify “Acoustic Hits” vibe). Prefer Ed Sheeran, Vance Joy, Passenger, The Lumineers, George Ezra, Jason Mraz, John Mayer, Jack Johnson, Lewis Capaldi, Hozier, Tracy Chapman, Bon Iver, Oasis Wonderwall, Hallelujah, Riptide, Perfect, Photograph, Thinking Out Loud, Let Her Go, Ho Hey, I’m Yours, Fast Car, and similar staples. English titles. Favor songs that commonly have Ultimate Guitar chord sheets. Exclude heavy electronic/rap without acoustic guitar arrangements.',
+  },
+  {
+    key: 'editorial-french-variete',
+    name: 'Variété française (popular)',
+    marketHint: 'INTL',
+    targetSlug: 'variete-francaise',
+    catalogGenre: 'french-variete',
+    description: 'AI research of popular French variété / chanson → variete-francaise shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'The most popular French variété / chanson / pop songs for guitar: Vianney, Kendji Girac, Angèle, Stromae, Francis Cabrel, Jean-Jacques Goldman, Gims (crossover pop), Louane, Calogero, Zazie, Indochine, classics (Brel, Aznavour, Brassens) that still get played. French titles as commonly written. Prefer tracks with Ultimate Guitar chords. Exclude pure trap with no chord sheets.',
+  },
+  {
+    key: 'editorial-rap-fr',
+    name: 'Rap FR (popular, guitar-playable)',
+    marketHint: 'INTL',
+    targetSlug: 'rap-fr',
+    catalogGenre: 'french-rap',
+    description: 'AI research of popular French rap with playable chords → rap-fr shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'Popular French rap / urban hits that guitarists actually look up on Ultimate Guitar (melodic hooks, widely covered): Maître Gims / Gims, PNL (accessible hits), Damso, Nekfeu, Bigflo & Oli, Stromae crossover, Jul (biggest melodic hits), Lomepal. Prefer French titles. Strongly prefer songs known to have chord sheets; skip obscure underground tracks with no tabs.',
   },
   {
     key: 'editorial-ribo',
@@ -184,6 +239,50 @@ export const SPOTIFY_POPULAR_SOURCES: SpotifyPopularSource[] = [
     researchMode: 'ai',
     aiPrompt:
       'The most popular / streamed Static & Ben El (סטטיק ובן אל תבורי) songs. Include: סלסולים, זהב, טודו בום, ברבי, אפס מאמץ, הכל לטובה, נמסטה, גומיגם, etc. Artist must be סטטיק / בן אל תבורי / Static & Ben El. Prefer Hebrew titles.',
+  },
+  {
+    key: 'editorial-noa-kirel',
+    name: 'Noa Kirel (popular)',
+    marketHint: 'IL',
+    targetSlug: 'noa-kirel',
+    catalogGenre: 'hebrew-noa-kirel',
+    description: 'AI research of popular Noa Kirel tracks → noa-kirel shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'The most popular / streamed Noa Kirel (נועה קירל) songs. Include: פנתרה, מיליון דולר, פאוץ, בנות כמוני לא בוכות, Unicorn, אם אתה גבר, או לה פופה, כל מה שאני רוצה, בריידזילה, אמבולנס, פרובוקטיבית, טרילילי טרללה, יהלומים. Artist must be נועה קירל / Noa Kirel. Prefer Hebrew titles.',
+  },
+  {
+    key: 'editorial-itay-levi',
+    name: 'Itay Levi (popular)',
+    marketHint: 'IL',
+    targetSlug: 'itay-levi',
+    catalogGenre: 'hebrew-itay-levi',
+    description: 'AI research of popular Itay Levi tracks → itay-levi shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'The most popular / streamed Itay Levi (איתי לוי) songs. Include: מערב ראשון, קירות, אין לי מקום אחר, שתישרף האהבה, נחלת בנימין, הטעות הכי יפה, חולה ירח, מרכז תל אביב, חתונת השנה, פרח בשממה, חצי בשבילי. Artist must be איתי לוי / Itay Levi. Prefer Hebrew titles.',
+  },
+  {
+    key: 'editorial-osher-cohen',
+    name: 'Osher Cohen (popular)',
+    marketHint: 'IL',
+    targetSlug: 'osher-cohen',
+    catalogGenre: 'hebrew-osher-cohen',
+    description: 'AI research of popular Osher Cohen tracks → osher-cohen shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'The most popular / streamed Osher Cohen (אושר כהן) songs. Include: אהבה, פלסטרים, מנגן ושר, אין אותי, ככה וככה, אני פה, לופ, כולם גנבים, ברגעים שאת הולכת, באמת של האמת, תרקדי, גיטרה ולנשום. Artist must be אושר כהן / Osher Cohen. Prefer Hebrew titles.',
+  },
+  {
+    key: 'editorial-avi-ohayon',
+    name: 'Avi Ohayon (popular songwriter)',
+    marketHint: 'IL',
+    targetSlug: 'avi-ohayon',
+    catalogGenre: 'hebrew-avi-ohayon',
+    description: 'AI research of popular Avi Ohayon–written hits → avi-ohayon shelf',
+    researchMode: 'ai',
+    aiPrompt:
+      'Popular Israeli hits written/composed by Avi Ohayon (אבי אוחיון) — he is primarily a songwriter, not a front-line singer. Prefer well-known streamed tracks he wrote: דרך השלום (פאר טסי), תבואי היום (אייל גולן), רסיסים (רביב כנר), קירות (איתי לוי), תפסת לי מקום (בניה ברבי), תל אביב בלילה (עדן בן זקן), מביט מהצד / אז הלכתי / חצי דפוק (עומר אדם), מה עבר עליי (עדן חסון), קו הדממה / שירים וחלומות (his own). Titles in Hebrew; artist field may be the performer.',
   },
 ]
 

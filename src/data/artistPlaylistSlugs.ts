@@ -19,6 +19,10 @@ export const ARTIST_PLAYLIST_SLUGS = new Set([
   'idan-raichel',
   'shlomo-artzi',
   'static-ben-el',
+  'noa-kirel',
+  'itay-levi',
+  'osher-cohen',
+  'avi-ohayon',
   'carlebach',
 ])
 

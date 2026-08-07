@@ -34,6 +34,10 @@ const ARTIST_GENRES = [
   HEBREW_CATALOG_GENRES.idanRaichel,
   HEBREW_CATALOG_GENRES.shlomoArtzi,
   HEBREW_CATALOG_GENRES.staticBenEl,
+  HEBREW_CATALOG_GENRES.noaKirel,
+  HEBREW_CATALOG_GENRES.itayLevi,
+  HEBREW_CATALOG_GENRES.osherCohen,
+  // avi-ohayon is a songwriter shelf (performer authors) — do not demote via author heuristic
 ] as const
 
 async function run() {

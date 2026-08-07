@@ -25,6 +25,11 @@ export const HEBREW_CATALOG_GENRES = {
   idanRaichel: 'hebrew-idan-raichel',
   shlomoArtzi: 'hebrew-shlomo-artzi',
   staticBenEl: 'hebrew-static-ben-el',
+  noaKirel: 'hebrew-noa-kirel',
+  itayLevi: 'hebrew-itay-levi',
+  osherCohen: 'hebrew-osher-cohen',
+  /** אבי אוחיון — songwriter shelf (להיטים שכתב/הלחין) */
+  aviOhayon: 'hebrew-avi-ohayon',
   /** Liturgy / litani (zemirot, birkat, havdalah, etc.) */
   liturgy: 'hebrew-liturgy',
   /** Yeshiva / yeshivish choirs & style */

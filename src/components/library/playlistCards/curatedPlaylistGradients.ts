@@ -56,9 +56,14 @@ export const CURATED_PLAYLIST_GRADIENT_BY_SLUG: Record<string, string> = {
   'idan-raichel': 'bg-gradient-to-br from-lime-600 to-emerald-900',
   'shlomo-artzi': 'bg-gradient-to-br from-yellow-600 to-amber-900',
   'static-ben-el': 'bg-gradient-to-br from-pink-600 to-violet-900',
+  'noa-kirel': 'bg-gradient-to-br from-violet-500 to-fuchsia-800',
+  'itay-levi': 'bg-gradient-to-br from-orange-500 to-red-900',
+  'osher-cohen': 'bg-gradient-to-br from-teal-500 to-cyan-900',
+  'avi-ohayon': 'bg-gradient-to-br from-stone-500 to-amber-900',
   'jewish-songbook': 'bg-gradient-to-br from-teal-700 to-cyan-900',
   'spotify-top-israel': 'bg-gradient-to-br from-blue-600 to-sky-800',
   'spotify-top-global': 'bg-gradient-to-br from-teal-600 to-emerald-800',
+  'spotify-top-france': 'bg-gradient-to-br from-blue-600 to-indigo-800',
 }
 
 export function getCuratedPlaylistGradientClass(slug?: string | null): string {

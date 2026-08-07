@@ -138,6 +138,34 @@ describe('classifyHebrewSongHeuristic', () => {
         author: 'סטטיק ובן אל תבורי',
       })?.category
     ).toBe('static_ben_el')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'nk',
+        title: 'פנתרה',
+        author: 'נועה קירל',
+      })?.category
+    ).toBe('noa_kirel')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'il',
+        title: 'קירות',
+        author: 'איתי לוי',
+      })?.category
+    ).toBe('itay_levi')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'oc',
+        title: 'אהבה',
+        author: 'אושר כהן',
+      })?.category
+    ).toBe('osher_cohen')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'ao',
+        title: 'שירים וחלומות',
+        author: 'אבי אוחיון',
+      })?.category
+    ).toBe('avi_ohayon')
   })
 
   it('detects Aharon Razel as own bucket (not Yonatan)', () => {
