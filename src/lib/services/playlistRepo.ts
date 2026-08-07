@@ -192,7 +192,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
         .select('id, title')
         .in('id', previewIds)
       if (songsError) throw songsError
-      for (const song of songs ?? []) {
+      for (const song of (songs ?? []) as Array<{ id: string; title: string }>) {
         titleById.set(song.id, song.title)
       }
     }

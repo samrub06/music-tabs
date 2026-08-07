@@ -54,13 +54,17 @@ function upscaleArtwork(url: string): string {
     .replace(/\/\d+x\d+bb\.webp$/i, '/600x600bb.webp')
 }
 
+/** Letters/digits across Latin + Hebrew (+ common extended) — avoid \\p{} (es5 target). */
+const LETTER_OR_DIGIT_RE =
+  /[^a-z0-9\u00c0-\u024f\u0400-\u04ff\u0590-\u05ff\u0600-\u06ff\s]/gi
+
 function normalizeForMatch(input: string): string {
   return input
     .normalize('NFC')
     .toLowerCase()
-    .replace(/[''`ʹʻʼ]/g, '')
+    .replace(/[''`ʹʻʼ']/g, '')
     .replace(/&/g, ' and ')
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(LETTER_OR_DIGIT_RE, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -113,7 +117,10 @@ function hasUsableAuthor(author: string): boolean {
 
 /** Hebrew artist names rarely match Latin iTunes artistName; don't hard-reject those. */
 function isMostlyHebrew(input: string): boolean {
-  const letters = input.replace(/[^\p{L}]/gu, '')
+  const letters = input.replace(
+    /[^a-zA-Z\u00C0-\u024F\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF]/g,
+    ''
+  )
   if (!letters) return false
   const hebrew = (letters.match(/[\u05D0-\u05EA]/g) || []).length
   return hebrew / letters.length >= 0.5
@@ -272,17 +279,19 @@ async function findCover(
     return true
   })
 
-  let best: {
+  type CoverMatch = {
     artwork: string
     track: string
     artist: string
     album: string
     score: number
-  } | null = null
+  }
+  let best: CoverMatch | null = null
+  let bestScore = -1
 
   for (const q of unique) {
     // Once we already have a usable match, only keep trying if score is weak.
-    if (best && best.score >= 70) break
+    if (bestScore >= 70) break
 
     const results = await searchItunes(q.term, q.country)
 
@@ -290,7 +299,8 @@ async function findCover(
       const score = scoreResult(r, cleanTitle, authorPart, q.withAuthor)
       if (score < 0) continue
       if (!r.artworkUrl100) continue
-      if (!best || score > best.score) {
+      if (score > bestScore) {
+        bestScore = score
         best = {
           artwork: upscaleArtwork(r.artworkUrl100),
           track: r.trackName ?? '',
@@ -301,7 +311,7 @@ async function findCover(
       }
     }
 
-    if (best && best.score >= 75) break
+    if (bestScore >= 75) break
   }
 
   return best

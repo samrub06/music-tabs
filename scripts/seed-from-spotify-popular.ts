@@ -107,7 +107,7 @@ async function run() {
           console.log(
             `  ${r.status === 'added' ? '+' : '↻'} [${r.locale}/${r.source}] ${r.title} — ${r.artist}`
           )
-        } else {
+        } else if (r.status === 'skipped' || r.status === 'error') {
           console.log(`  ⚠ ${r.status} ${r.title} — ${r.artist}: ${r.reason}`)
         }
       },
