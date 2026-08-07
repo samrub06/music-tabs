@@ -32,13 +32,13 @@ export function PlaylistListCard({
     <Link
       href={href}
       className={cn(
-        'group flex min-h-[3.5rem] items-center gap-2.5 overflow-hidden rounded-lg transition-opacity hover:opacity-90',
+        'group flex min-h-[3rem] items-center gap-2 overflow-hidden rounded-lg transition-opacity hover:opacity-90 sm:min-h-[3.5rem] sm:gap-2.5',
         !tinted && 'bg-muted/80 hover:bg-muted',
         className
       )}
       style={tinted ? { backgroundColor: bg } : undefined}
     >
-      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-black/20 sm:h-16 sm:w-16">
+      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-black/20 sm:h-16 sm:w-16">
         {media}
       </div>
       <span

@@ -40,7 +40,7 @@ export function PlaylistFeaturedCard({
       )}
       style={tinted ? { backgroundColor: bg } : undefined}
     >
-      <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-black/20 sm:h-32 sm:w-32">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-black/20 sm:h-32 sm:w-32">
         {media}
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-center py-1 pr-1">

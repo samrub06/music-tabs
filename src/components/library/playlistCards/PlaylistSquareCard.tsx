@@ -38,8 +38,8 @@ export function PlaylistSquareCard({
         'group relative flex flex-col transition-colors',
         layout === 'scroll' &&
           cn(
-            'w-28 flex-shrink-0 snap-start gap-1 sm:w-32',
-            compact && 'w-24 gap-0.5 sm:w-24'
+            'w-24 flex-shrink-0 snap-start gap-1 sm:w-32',
+            compact && 'w-20 gap-0.5 sm:w-24'
           ),
         layout === 'landscape' && 'w-full gap-1.5',
         layout === 'grid' && 'w-full gap-1',
@@ -51,7 +51,7 @@ export function PlaylistSquareCard({
         className={cn(
           'relative aspect-square w-full overflow-hidden p-1.5',
           layout === 'scroll' ? 'rounded-lg' : 'rounded-xl',
-          compact && 'max-h-24',
+          compact && 'max-h-20 sm:max-h-24',
           !tinted && 'bg-muted'
         )}
         style={tinted ? { backgroundColor: bg } : undefined}
