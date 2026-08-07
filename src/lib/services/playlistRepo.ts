@@ -149,7 +149,18 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
     }))
   },
 
-  async getPublicPlaylistsLightweight(): Promise<Array<{ id: string; name: string; imageUrl?: string; songCount: number; createdAt: Date; curatedSlug?: string; displayOrder: number }>> {
+  async getPublicPlaylistsLightweight(): Promise<
+    Array<{
+      id: string
+      name: string
+      imageUrl?: string
+      songCount: number
+      createdAt: Date
+      curatedSlug?: string
+      displayOrder: number
+      previewSongTitles?: string[]
+    }>
+  > {
     const { data, error } = await client
       .from('playlists')
       .select('id, name, image_url, song_ids, created_at, curated_slug, display_order')
@@ -160,7 +171,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
 
-    return ((data || []) as Array<{
+    const rows = (data || []) as Array<{
       id: string
       name: string
       image_url: string | null
@@ -168,18 +179,43 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
       created_at: string
       curated_slug: string | null
       display_order: number | null
-    }>).map(p => ({
-      id: p.id,
-      name: p.name,
-      imageUrl:
-        p.image_url ??
-        (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
-        undefined,
-      songCount: (p.song_ids as string[] || []).length,
-      createdAt: new Date(p.created_at),
-      curatedSlug: p.curated_slug || undefined,
-      displayOrder: p.display_order ?? 0,
-    }))
+    }>
+
+    const previewIds = Array.from(
+      new Set(rows.flatMap((p) => (p.song_ids ?? []).slice(0, 3)))
+    )
+
+    const titleById = new Map<string, string>()
+    if (previewIds.length > 0) {
+      const { data: songs, error: songsError } = await client
+        .from('songs')
+        .select('id, title')
+        .in('id', previewIds)
+      if (songsError) throw songsError
+      for (const song of songs ?? []) {
+        titleById.set(song.id, song.title)
+      }
+    }
+
+    return rows.map((p) => {
+      const songIds = (p.song_ids as string[] | null) || []
+      return {
+        id: p.id,
+        name: p.name,
+        imageUrl:
+          p.image_url ??
+          (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
+          undefined,
+        songCount: songIds.length,
+        createdAt: new Date(p.created_at),
+        curatedSlug: p.curated_slug || undefined,
+        displayOrder: p.display_order ?? 0,
+        previewSongTitles: songIds
+          .slice(0, 3)
+          .map((id) => titleById.get(id))
+          .filter((title): title is string => !!title),
+      }
+    })
   },
 
   async getPublicPlaylist(id: string): Promise<Playlist> {

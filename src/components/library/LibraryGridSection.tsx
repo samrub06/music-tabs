@@ -9,6 +9,8 @@ export interface PublicPlaylistItem {
   imageUrl?: string
   songCount: number
   curatedSlug?: string
+  /** First few song titles for artist banners (explorer). */
+  previewSongTitles?: string[]
 }
 
 interface LibraryGridSectionProps {

@@ -1,81 +1,28 @@
 'use client'
 
-import { ClockIcon, HeartIcon, SparklesIcon } from '@heroicons/react/24/solid'
-import Link from 'next/link'
+import { ClockIcon, HeartIcon } from '@heroicons/react/24/solid'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import {
   CURATED_PLAYLISTS,
   curatedPlaylistSectionBySlug,
-  getHubZoneForSlug,
   type CuratedPlaylistSection,
-  type HubZone,
 } from '@/data/curatedPlaylists'
 import {
   getLikedSongsCoverUrl,
   getRecentSongsCoverUrl,
 } from '@/data/curatedPlaylistCoverImages'
-import { DifficultyGauge } from '@/components/library/DifficultyGauge'
-import { getDifficultyThemeBySlug } from '@/lib/constants/difficultyTheme'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
+import { PlaylistSquareCard } from '@/components/library/playlistCards/PlaylistSquareCard'
+import {
+  buildCoverOrFallback,
+  buildPlaylistCoverMedia,
+  getPlaylistItemCoverUrl,
+} from '@/components/library/playlistCards/playlistCardMedia'
 import { useAuthContext } from '@/context/AuthContext'
-import { resolvePlaylistCoverUrl } from '@/utils/playlistCover'
 import { SwipeRowHint } from '@/components/library/SwipeRowHint'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-
-/** Full class strings so Tailwind includes gradient utilities (no dynamic concat). */
-const curatedGradientBySlug: Record<string, string> = {
-  rock: 'bg-gradient-to-br from-red-600 to-orange-700',
-  pop: 'bg-gradient-to-br from-pink-500 to-purple-600',
-  metal: 'bg-gradient-to-br from-zinc-700 to-neutral-900',
-  folk: 'bg-gradient-to-br from-amber-600 to-yellow-700',
-  country: 'bg-gradient-to-br from-amber-700 to-orange-800',
-  soundtrack: 'bg-gradient-to-br from-violet-600 to-indigo-800',
-  'rnb-funk-soul': 'bg-gradient-to-br from-purple-600 to-fuchsia-800',
-  religious: 'bg-gradient-to-br from-sky-600 to-blue-800',
-  'hip-hop': 'bg-gradient-to-br from-stone-700 to-gray-900',
-  electronic: 'bg-gradient-to-br from-cyan-600 to-blue-700',
-  acoustic: 'bg-gradient-to-br from-amber-500 to-orange-700',
-  'world-music': 'bg-gradient-to-br from-teal-600 to-emerald-800',
-  classical: 'bg-gradient-to-br from-slate-600 to-slate-900',
-  jazz: 'bg-gradient-to-br from-blue-700 to-indigo-900',
-  reggae: 'bg-gradient-to-br from-green-600 to-emerald-800',
-  blues: 'bg-gradient-to-br from-blue-800 to-indigo-950',
-  disco: 'bg-gradient-to-br from-pink-600 to-rose-700',
-  'rap-fr': 'bg-gradient-to-br from-zinc-800 to-neutral-950',
-  'variete-francaise': 'bg-gradient-to-br from-blue-600 to-indigo-800',
-  '60s': 'bg-gradient-to-br from-orange-700 to-red-900',
-  '70s': 'bg-gradient-to-br from-rose-700 to-orange-900',
-  '80s': 'bg-gradient-to-br from-fuchsia-700 to-purple-900',
-  '90s': 'bg-gradient-to-br from-indigo-600 to-violet-700',
-  '2000s': 'bg-gradient-to-br from-sky-600 to-blue-800',
-  '2010s': 'bg-gradient-to-br from-cyan-600 to-teal-800',
-  '2020s': 'bg-gradient-to-br from-fuchsia-600 to-pink-700',
-  'absolute-beginner': 'bg-gradient-to-br from-lime-500 to-green-600',
-  beginner: 'bg-gradient-to-br from-emerald-600 to-teal-700',
-  intermediate: 'bg-gradient-to-br from-amber-500 to-orange-600',
-  advanced: 'bg-gradient-to-br from-rose-600 to-red-800',
-  'chabad-nigunim': 'bg-gradient-to-br from-blue-700 to-indigo-900',
-  hassidic: 'bg-gradient-to-br from-amber-700 to-orange-900',
-  'jewish-liturgy': 'bg-gradient-to-br from-slate-600 to-blue-900',
-  yeshiva: 'bg-gradient-to-br from-stone-700 to-amber-900',
-  carlebach: 'bg-gradient-to-br from-emerald-700 to-green-900',
-  'moroccan-piyut': 'bg-gradient-to-br from-red-700 to-rose-900',
-  tunisian: 'bg-gradient-to-br from-yellow-600 to-amber-800',
-  'classic-israeli': 'bg-gradient-to-br from-amber-600 to-yellow-800',
-  'modern-israeli': 'bg-gradient-to-br from-violet-600 to-fuchsia-800',
-  'hanan-ben-ari': 'bg-gradient-to-br from-rose-600 to-pink-800',
-  'aharon-razel': 'bg-gradient-to-br from-teal-600 to-cyan-900',
-  'eviatar-banai': 'bg-gradient-to-br from-stone-600 to-neutral-900',
-  'shuli-rand': 'bg-gradient-to-br from-amber-700 to-yellow-900',
-  'ishay-ribo': 'bg-gradient-to-br from-indigo-600 to-violet-800',
-  'yosef-karduner': 'bg-gradient-to-br from-sky-600 to-blue-900',
-  akiva: 'bg-gradient-to-br from-orange-600 to-red-800',
-  'jewish-songbook': 'bg-gradient-to-br from-teal-700 to-cyan-900',
-  'spotify-top-israel': 'bg-gradient-to-br from-blue-600 to-sky-800',
-  'spotify-top-global': 'bg-gradient-to-br from-teal-600 to-emerald-800',
-}
 
 const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
   genre: 'library.curatedGenres',
@@ -84,140 +31,18 @@ const sectionTitleKey: Record<CuratedPlaylistSection, string> = {
   difficulty: 'library.curatedDifficulty',
 }
 
-interface GridCardProps {
-  href: string
-  layout?: 'scroll' | 'landscape' | 'grid'
-  compact?: boolean
-  title: ReactNode
-  children: ReactNode
-}
-
-interface PlaylistCardData {
-  id: string
-  href: string
-  content: ReactNode
-  title: ReactNode
-}
-
-function GridCard({
-  href,
-  layout = 'scroll',
-  compact = false,
-  title,
-  children,
-}: GridCardProps) {
-  return (
-    <div
-      className={cn(
-        'group relative flex flex-col transition-colors',
-        layout === 'scroll' &&
-          cn(
-            'w-28 flex-shrink-0 snap-start gap-1 sm:w-32',
-            compact && 'w-24 gap-0.5 sm:w-24'
-          ),
-        layout === 'landscape' && 'w-full gap-1.5',
-        layout === 'grid' && 'w-full gap-1'
-      )}
-    >
-      <Link
-        href={href}
-        className={cn(
-          'relative aspect-square w-full overflow-hidden bg-muted',
-          layout === 'scroll' ? 'rounded-lg' : 'rounded-xl',
-          compact && 'max-h-24'
-        )}
-      >
-        {children}
-      </Link>
-      <Link
-        href={href}
-        className={cn(
-          'min-w-0 truncate font-medium leading-tight text-foreground transition-colors group-hover:text-primary',
-          compact ? 'text-[10px]' : 'text-xs sm:text-sm'
-        )}
-      >
-        {title}
-      </Link>
-    </div>
-  )
-}
-
-function buildPlaylistCard(
-  item: PublicPlaylistItem,
-  options?: { gaugeSize?: number; tsnioutFilterEnabled?: boolean }
-): PlaylistCardData {
-  const title = item.name
-
-  const difficultyTheme = item.curatedSlug ? getDifficultyThemeBySlug(item.curatedSlug) : undefined
-
-  const gradientClass =
-    difficultyTheme?.gradientClass ||
-    (item.curatedSlug && curatedGradientBySlug[item.curatedSlug]) ||
-    'bg-gradient-to-br from-purple-500 to-pink-500'
-
-  const isDifficultyBanner =
-    !!item.curatedSlug && curatedPlaylistSectionBySlug[item.curatedSlug] === 'difficulty'
-
-  const coverUrl = resolvePlaylistCoverUrl({
-    name: item.name,
-    imageUrl: item.imageUrl,
-    curatedSlug: item.curatedSlug,
-    tsnioutFilterEnabled: options?.tsnioutFilterEnabled ?? false,
-  })
-
-  const content =
-    !isDifficultyBanner && coverUrl ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={coverUrl}
-        alt={item.name}
-        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-      />
-    ) : isDifficultyBanner && difficultyTheme ? (
-      <div className="absolute inset-0" style={{ backgroundColor: difficultyTheme.bannerBg }}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <DifficultyGauge level={difficultyTheme.level} size={options?.gaugeSize ?? 72} />
-        </div>
-      </div>
-    ) : (
-      <div className={cn('absolute inset-0', gradientClass)}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <SparklesIcon className="h-10 w-10 text-white sm:h-12 sm:w-12" />
-        </div>
-      </div>
-    )
-
-  return { id: item.id, href: `/library/${item.id}`, content, title }
-}
-
 interface ShortcutCardData {
   id: string
   href: string
-  content: ReactNode
+  media: ReactNode
   title: ReactNode
-}
-
-function buildCoverCardContent(coverUrl: string | null, fallback: ReactNode): ReactNode {
-  if (coverUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={coverUrl}
-        alt=""
-        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-      />
-    )
-  }
-
-  return fallback
+  coverUrl: string | null
 }
 
 interface CuratedPlaylistRowProps {
-  section?: CuratedPlaylistSection
-  hubZone?: HubZone
+  section: CuratedPlaylistSection
   publicPlaylists: PublicPlaylistItem[]
   showUserShortcutCards?: boolean
-  /** When false, only the card row is rendered (parent supplies HubZoneHeader). */
   showSectionTitle?: boolean
   /** Mobile-only finger swipe overlay teaching horizontal scroll (first row). */
   showSwipeHint?: boolean
@@ -225,7 +50,6 @@ interface CuratedPlaylistRowProps {
 
 export default function CuratedPlaylistRow({
   section,
-  hubZone,
   publicPlaylists,
   showUserShortcutCards = false,
   showSectionTitle = true,
@@ -239,7 +63,6 @@ export default function CuratedPlaylistRow({
   const peekingRef = useRef(false)
   const [hintActive, setHintActive] = useState(false)
 
-  // Show hint shortly after mount. Dismisses on user scroll or after a few seconds.
   useEffect(() => {
     if (!showSwipeHint) return
     const start = window.setTimeout(() => setHintActive(true), 300)
@@ -280,16 +103,13 @@ export default function CuratedPlaylistRow({
     }
   }, [showSwipeHint, hintActive, isRtl])
 
-  if (!section && !hubZone) {
-    throw new Error('CuratedPlaylistRow requires section or hubZone')
-  }
-
   const userShortcutCards: ShortcutCardData[] = showUserShortcutCards
     ? [
         {
           id: 'liked-songs',
           href: '/songs?filter=liked',
-          content: buildCoverCardContent(
+          coverUrl: tsnioutFilterEnabled ? null : getLikedSongsCoverUrl(),
+          media: buildCoverOrFallback(
             tsnioutFilterEnabled ? null : getLikedSongsCoverUrl(),
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500" />
@@ -303,7 +123,8 @@ export default function CuratedPlaylistRow({
         {
           id: 'recent-songs',
           href: '/songs?tab=recent',
-          content: buildCoverCardContent(
+          coverUrl: tsnioutFilterEnabled ? null : getRecentSongsCoverUrl(),
+          media: buildCoverOrFallback(
             tsnioutFilterEnabled ? null : getRecentSongsCoverUrl(),
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-blue-700" />
@@ -322,9 +143,7 @@ export default function CuratedPlaylistRow({
   const filteredPlaylists = publicPlaylists
     .filter((item) => {
       if (item.songCount <= 0 || !item.curatedSlug) return false
-      if (hubZone) return getHubZoneForSlug(item.curatedSlug) === hubZone
-      if (section) return curatedPlaylistSectionBySlug[item.curatedSlug] === section
-      return false
+      return curatedPlaylistSectionBySlug[item.curatedSlug] === section
     })
     .sort((a, b) => {
       const orderA = CURATED_PLAYLISTS.find((p) => p.slug === a.curatedSlug)?.displayOrder ?? 0
@@ -332,57 +151,49 @@ export default function CuratedPlaylistRow({
       return orderA - orderB
     })
 
-  const buildCards = (options?: { gaugeSize?: number }) =>
-    filteredPlaylists.map((item) =>
-      buildPlaylistCard(item, { ...options, tsnioutFilterEnabled })
-    )
+  if (filteredPlaylists.length === 0 && userShortcutCards.length === 0) return null
 
-  const cards = buildCards()
-  const mobileGridCards = isDifficultySection ? buildCards({ gaugeSize: isLandscapeMobile ? 48 : 56 }) : cards
+  const mediaOpts = {
+    tsnioutFilterEnabled,
+    gaugeSize: isDifficultySection ? (isLandscapeMobile ? 48 : 56) : 72,
+  }
 
-  if (cards.length === 0 && userShortcutCards.length === 0) return null
-
-  type CardLayout = NonNullable<GridCardProps['layout']>
-
-  const renderCards = (
-    layout: CardLayout,
-    playlistCards: PlaylistCardData[] = layout === 'grid' ? mobileGridCards : cards,
+  const renderSquareCards = (
+    layout: 'scroll' | 'landscape' | 'grid',
     compact = false
-  ) => {
-    return (
-      <>
-        {layout === 'scroll' &&
-          userShortcutCards.map((item) => (
-            <GridCard
-              key={item.id}
-              href={item.href}
-              layout={layout}
-              compact={compact}
-              title={item.title}
-            >
-              {item.content}
-            </GridCard>
-          ))}
-        {playlistCards.map((item) => (
-          <GridCard
+  ) => (
+    <>
+      {layout === 'scroll' &&
+        userShortcutCards.map((item) => (
+          <PlaylistSquareCard
             key={item.id}
             href={item.href}
             layout={layout}
             compact={compact}
             title={item.title}
-          >
-            {item.content}
-          </GridCard>
+            media={item.media}
+            coverUrl={item.coverUrl}
+          />
         ))}
-      </>
-    )
-  }
+      {filteredPlaylists.map((item) => (
+        <PlaylistSquareCard
+          key={item.id}
+          href={`/library/${item.id}`}
+          layout={layout}
+          compact={compact}
+          title={item.name}
+          media={buildPlaylistCoverMedia(item, mediaOpts)}
+          coverUrl={getPlaylistItemCoverUrl(item, mediaOpts)}
+        />
+      ))}
+    </>
+  )
 
   const useMobileCarousel = !isDifficultySection || isLandscapeMobile
 
   return (
     <section className="mb-6">
-      {showSectionTitle && section && (
+      {showSectionTitle && (
         <h3 className="mb-3 text-lg font-bold tracking-tight text-foreground sm:text-xl">
           {t(sectionTitleKey[section])}
         </h3>
@@ -398,17 +209,19 @@ export default function CuratedPlaylistRow({
               WebkitOverflowScrolling: 'touch',
             }}
           >
-            {renderCards('scroll', cards, isLandscapeMobile)}
+            {renderSquareCards('scroll', isLandscapeMobile)}
           </div>
           {hintActive && <SwipeRowHint />}
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-2 lg:hidden">
-          {renderCards('grid')}
-        </div>
+        <div className="grid grid-cols-4 gap-2 lg:hidden">{renderSquareCards('grid')}</div>
       )}
-      <div className="hidden gap-3 lg:grid lg:grid-cols-[repeat(auto-fill,minmax(7.5rem,8.5rem))]">
-        {renderCards('landscape', cards)}
+      <div
+        className={cn(
+          'hidden gap-3 lg:grid lg:grid-cols-[repeat(auto-fill,minmax(7.5rem,8.5rem))]'
+        )}
+      >
+        {renderSquareCards('landscape')}
       </div>
     </section>
   )

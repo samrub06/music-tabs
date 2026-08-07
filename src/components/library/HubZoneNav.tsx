@@ -12,6 +12,8 @@ export const HUB_ZONE_SECTION_IDS: Record<HubZone, string> = {
   international: 'hub-zone-international',
 }
 
+const EXPLORER_TOP_ID = 'explorer-top'
+
 const HUB_ZONES: HubZone[] = ['israeli', 'songbook', 'international']
 
 const zoneTitleKey: Record<HubZone, string> = {
@@ -20,6 +22,8 @@ const zoneTitleKey: Record<HubZone, string> = {
   international: 'library.hubInternationalTab',
 }
 
+type ActiveChip = 'all' | HubZone
+
 interface HubZoneNavProps {
   scrollContainerRef: RefObject<HTMLElement | null>
   className?: string
@@ -27,7 +31,7 @@ interface HubZoneNavProps {
 
 export function HubZoneNav({ scrollContainerRef, className }: HubZoneNavProps) {
   const { t } = useLanguage()
-  const [activeZone, setActiveZone] = useState<HubZone>('israeli')
+  const [activeChip, setActiveChip] = useState<ActiveChip>('all')
 
   useEffect(() => {
     const root = scrollContainerRef.current
@@ -39,6 +43,8 @@ export function HubZoneNav({ scrollContainerRef, className }: HubZoneNavProps) {
 
     if (sectionElements.length === 0) return
 
+    const firstZone = sectionElements[0]
+
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -46,10 +52,16 @@ export function HubZoneNav({ scrollContainerRef, className }: HubZoneNavProps) {
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
 
         const topEntry = visible[0]
-        if (!topEntry) return
+        if (!topEntry) {
+          // Above first zone → Tout
+          if (firstZone && root.scrollTop < firstZone.offsetTop - 40) {
+            setActiveChip('all')
+          }
+          return
+        }
 
         const zone = HUB_ZONES.find((z) => topEntry.target.id === HUB_ZONE_SECTION_IDS[z])
-        if (zone) setActiveZone(zone)
+        if (zone) setActiveChip(zone)
       },
       {
         root,
@@ -59,14 +71,37 @@ export function HubZoneNav({ scrollContainerRef, className }: HubZoneNavProps) {
     )
 
     sectionElements.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
+
+    const onScroll = () => {
+      if (!firstZone) return
+      if (root.scrollTop < firstZone.offsetTop - 48) {
+        setActiveChip('all')
+      }
+    }
+    root.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+
+    return () => {
+      observer.disconnect()
+      root.removeEventListener('scroll', onScroll)
+    }
   }, [scrollContainerRef])
+
+  const scrollToTop = () => {
+    const top = document.getElementById(EXPLORER_TOP_ID)
+    setActiveChip('all')
+    if (top) {
+      top.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const scrollToZone = (zone: HubZone) => {
     const section = document.getElementById(HUB_ZONE_SECTION_IDS[zone])
     if (!section) return
 
-    setActiveZone(zone)
+    setActiveChip(zone)
     section.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -76,10 +111,13 @@ export function HubZoneNav({ scrollContainerRef, className }: HubZoneNavProps) {
       className={cn('mb-3', className)}
     >
       <FilterChipRow>
+        <FilterChip active={activeChip === 'all'} onClick={scrollToTop}>
+          {t('library.hubAllTab')}
+        </FilterChip>
         {HUB_ZONES.map((zone) => (
           <FilterChip
             key={zone}
-            active={activeZone === zone}
+            active={activeChip === zone}
             onClick={() => scrollToZone(zone)}
           >
             {t(zoneTitleKey[zone])}

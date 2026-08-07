@@ -59,6 +59,87 @@ describe('classifyHebrewSongHeuristic', () => {
     )
   })
 
+  it('detects Ben Zur as own bucket (not Hanan Ben Ari)', () => {
+    const result = classifyHebrewSongHeuristic({
+      id: '3bz',
+      title: 'אבא',
+      author: 'בן צור',
+    })
+    expect(result?.category).toBe('ben_zur')
+    expect(categoryToCatalogGenre(result!.category)).toBe(
+      HEBREW_CATALOG_GENRES.benZur
+    )
+  })
+
+  it('detects Eyal Golan and Omer Adam as own buckets', () => {
+    expect(
+      classifyHebrewSongHeuristic({
+        id: '3eg',
+        title: 'עם ישראל חי',
+        author: 'אייל גולן',
+      })?.category
+    ).toBe('eyal_golan')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: '3oa',
+        title: 'תל אביב',
+        author: 'עומר אדם',
+      })?.category
+    ).toBe('omer_adam')
+  })
+
+  it('detects new Israeli artist shelves', () => {
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'eh',
+        title: 'שקיעות אדומות',
+        author: 'עדן חסון',
+      })?.category
+    ).toBe('eden_hason')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'sh',
+        title: 'הייתי בגן עדן',
+        author: 'שרית חדד',
+      })?.category
+    ).toBe('sarit_hadad')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'mp',
+        title: 'אש',
+        author: 'משה פרץ',
+      })?.category
+    ).toBe('moshe_peretz')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'ng',
+        title: 'כל מה שיש לי',
+        author: 'נתן גושן',
+      })?.category
+    ).toBe('nathan_goshen')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'ir',
+        title: 'ממעמקים',
+        author: 'הפרוייקט של עידן רייכל',
+      })?.category
+    ).toBe('idan_raichel')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'sa',
+        title: 'ירח',
+        author: 'שלמה ארצי',
+      })?.category
+    ).toBe('shlomo_artzi')
+    expect(
+      classifyHebrewSongHeuristic({
+        id: 'sbe',
+        title: 'סלסולים',
+        author: 'סטטיק ובן אל תבורי',
+      })?.category
+    ).toBe('static_ben_el')
+  })
+
   it('detects Aharon Razel as own bucket (not Yonatan)', () => {
     expect(
       classifyHebrewSongHeuristic({

@@ -6,6 +6,7 @@ import { songRepo } from '@/lib/services/songRepo'
 import { findUserSongMatch } from '@/lib/utils/songLibraryMatch'
 import ForYouArtistSection from '@/components/library/ForYouArtistSection'
 import CuratedPlaylistRow from '@/components/library/CuratedPlaylistRow'
+import { HubZonePlaylistSection } from '@/components/library/HubZonePlaylistSection'
 import { ExploreHubCta } from '@/components/library/ExploreHubCta'
 import { HubZoneHeader } from '@/components/library/HubZoneHeader'
 import FeaturedSongSection from '../library/FeaturedSongSection'
@@ -59,12 +60,12 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
   return (
     <>
+      <div id="explorer-top" className="h-0 scroll-mt-24" aria-hidden />
       <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="israeli" />
-        <CuratedPlaylistRow
+        <HubZonePlaylistSection
           hubZone="israeli"
           publicPlaylists={publicPlaylists}
-          showSectionTitle={false}
           showSwipeHint
         />
       </div>
@@ -75,10 +76,9 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
       <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="songbook" />
-        <CuratedPlaylistRow
+        <HubZonePlaylistSection
           hubZone="songbook"
           publicPlaylists={publicPlaylists}
-          showSectionTitle={false}
         />
       </div>
 
@@ -86,11 +86,10 @@ export default async function LibrarySections({ userId }: LibrarySectionsProps) 
 
       <div id="hub-zone-international" className="mb-2 scroll-mt-24">
         <HubZoneHeader zone="international" />
-        <CuratedPlaylistRow
+        <HubZonePlaylistSection
           hubZone="international"
           publicPlaylists={publicPlaylists}
           showUserShortcutCards={!!userId}
-          showSectionTitle={false}
         />
       </div>
 

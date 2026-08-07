@@ -11,6 +11,9 @@
  *   npm run seed:spotify-popular -- --source=top-israel --limit=20
  *   npm run seed:spotify-popular -- --source=top-global
  *   npm run seed:spotify-popular -- --source=editorial-ribo --limit=15
+ *   npm run seed:spotify-popular -- --source=editorial-ben-zur --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-eyal-golan --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-omer-adam --limit=20
  */
 import { createClient } from '@supabase/supabase-js'
 import * as dotenv from 'dotenv'

@@ -14,6 +14,17 @@ export const HEBREW_CATALOG_GENRES = {
   aharonRazel: 'hebrew-aharon-razel',
   eviatarBanai: 'hebrew-eviatar-banai',
   shuliRand: 'hebrew-shuli-rand',
+  /** בן צור — contemporary faith-pop (not Hanan Ben Ari) */
+  benZur: 'hebrew-ben-zur',
+  eyalGolan: 'hebrew-eyal-golan',
+  omerAdam: 'hebrew-omer-adam',
+  edenHason: 'hebrew-eden-hason',
+  saritHadad: 'hebrew-sarit-hadad',
+  moshePeretz: 'hebrew-moshe-peretz',
+  nathanGoshen: 'hebrew-nathan-goshen',
+  idanRaichel: 'hebrew-idan-raichel',
+  shlomoArtzi: 'hebrew-shlomo-artzi',
+  staticBenEl: 'hebrew-static-ben-el',
   /** Liturgy / litani (zemirot, birkat, havdalah, etc.) */
   liturgy: 'hebrew-liturgy',
   /** Yeshiva / yeshivish choirs & style */

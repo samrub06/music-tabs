@@ -64,6 +64,18 @@ function matchesEntry(result: SearchResult, entry: HebrewPlaylistSongEntry): boo
         return false
       }
     }
+    // Ben Zur / בן צור — exclude Even Tzur / אבן צור family names
+    if (needle === 'בן צור' || needle === 'ben zur' || needle === 'ben tzur') {
+      if (
+        author.includes('אבן צור') ||
+        author.includes('even tzur') ||
+        author.includes('שחר אבן') ||
+        author.includes('אפרת בן צור') ||
+        author.includes('אייל אבן')
+      ) {
+        return false
+      }
+    }
   }
   return true
 }
