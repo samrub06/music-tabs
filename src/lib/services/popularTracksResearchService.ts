@@ -5,6 +5,7 @@
  */
 import { AI_CONFIG, isAIAvailable } from '@/lib/config/ai'
 import type { SpotifyPopularSource } from '@/data/spotifyPopularSources'
+import { filterFrenchOnlyTracks } from '@/data/frenchTrackFilter'
 
 export type ResearchedTrack = {
   title: string
@@ -169,6 +170,50 @@ Return ONLY valid JSON:
   return tracks
 }
 
+async function applyFrenchOnlyFilter(
+  source: SpotifyPopularSource,
+  tracks: ResearchedTrack[],
+  limit: number,
+  method: 'chart' | 'ai'
+): Promise<{ tracks: ResearchedTrack[]; method: 'chart' | 'ai' }> {
+  if (!source.frenchOnly) {
+    return { tracks: tracks.slice(0, limit), method }
+  }
+
+  let filtered = filterFrenchOnlyTracks(tracks)
+  const dropped = tracks.length - filtered.length
+  if (dropped > 0) {
+    console.warn(
+      `[popularTracksResearch] ${source.key}: dropped ${dropped} non-francophone track(s)`
+    )
+  }
+
+  // FR charts / AI lists are often thin after frenchOnly — pad to the requested limit.
+  if (filtered.length < limit && isAIAvailable()) {
+    const need = limit - filtered.length
+    console.warn(
+      `[popularTracksResearch] ${source.key}: only ${filtered.length} francophone — padding +${need} via AI`
+    )
+    const padPrompt =
+      source.aiPrompt?.trim() ||
+      `${source.description ?? source.name}. ONLY francophone French-language songs. NEVER Bad Bunny, Drake, Taylor Swift, Latin reggaeton, or US/UK English hits.`
+    const pad = await researchPopularTracksWithAi(padPrompt, need + 5)
+    const seen = new Set(
+      filtered.map((t) => `${t.title.toLowerCase()}::${t.artist.toLowerCase()}`)
+    )
+    for (const t of filterFrenchOnlyTracks(pad)) {
+      const key = `${t.title.toLowerCase()}::${t.artist.toLowerCase()}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      filtered.push(t)
+      if (filtered.length >= limit) break
+    }
+    return { tracks: filtered.slice(0, limit), method: 'ai' }
+  }
+
+  return { tracks: filtered.slice(0, limit), method }
+}
+
 /**
  * Resolve a popularity source to a track list (web chart or AI research).
  * No Spotify API.
@@ -182,8 +227,10 @@ export async function researchPopularTracksForSource(
       throw new Error(`Source "${source.key}" missing chartUrl`)
     }
     try {
-      const tracks = await fetchPublicChartTracks(source.chartUrl, limit)
-      return { tracks, method: 'chart' }
+      // Fetch extra rows so frenchOnly filtering still fills the limit.
+      const fetchLimit = source.frenchOnly ? Math.max(limit * 2, 50) : limit
+      const tracks = await fetchPublicChartTracks(source.chartUrl, fetchLimit)
+      return applyFrenchOnlyFilter(source, tracks, limit, 'chart')
     } catch (error) {
       // Fallback: AI research of the same chart concept
       if (!isAIAvailable()) throw error
@@ -192,10 +239,12 @@ export async function researchPopularTracksForSource(
         `[popularTracksResearch] chart fetch failed for ${source.key} (${reason}) — falling back to AI`
       )
       const tracks = await researchPopularTracksWithAi(
-        `Current Spotify Top tracks for: ${source.name}. ${source.description ?? ''}`,
+        source.frenchOnly
+          ? `Current popular FRENCH-LANGUAGE / francophone tracks for: ${source.name}. ${source.description ?? ''}. NEVER Bad Bunny, Drake, Latin reggaeton, or US/UK English hits.`
+          : `Current Spotify Top tracks for: ${source.name}. ${source.description ?? ''}`,
         limit
       )
-      return { tracks, method: 'ai' }
+      return applyFrenchOnlyFilter(source, tracks, limit, 'ai')
     }
   }
 
@@ -203,5 +252,5 @@ export async function researchPopularTracksForSource(
     throw new Error(`Source "${source.key}" missing aiPrompt`)
   }
   const tracks = await researchPopularTracksWithAi(source.aiPrompt, limit)
-  return { tracks, method: 'ai' }
+  return applyFrenchOnlyFilter(source, tracks, limit, 'ai')
 }

@@ -13,7 +13,13 @@
  *   npm run seed:spotify-popular -- --source=top-france --limit=30
  *   npm run seed:spotify-popular -- --source=editorial-acoustic --limit=30
  *   npm run seed:spotify-popular -- --source=editorial-french-variete --limit=25
+ *   npm run seed:spotify-popular -- --source=editorial-french-classics --limit=25
  *   npm run seed:spotify-popular -- --source=editorial-rap-fr --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-kendji --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-goldman --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-bruel --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-celine-dion --limit=20
+ *   npm run seed:spotify-popular -- --source=editorial-vianney --limit=20
  *   npm run seed:spotify-popular -- --source=editorial-hassidic --limit=25
  *   npm run seed:spotify-popular -- --source=editorial-religious-il --limit=25
  *   npm run seed:spotify-popular -- --source=editorial-ribo --limit=15

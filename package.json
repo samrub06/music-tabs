@@ -24,6 +24,8 @@
     "seed:negina-playlist": "npx tsx scripts/seed-negina-playlist.ts",
     "classify:hebrew-playlists": "npx tsx scripts/classify-hebrew-playlists.ts",
     "seed:french-playlists": "npx tsx scripts/seed-catalog-manual-playlists.ts --only=variete-francaise,rap-fr",
+    "verify:playlist-membership": "npx tsx scripts/verify-curated-playlist-membership.ts",
+    "sync:curated-playlist-meta": "npx tsx scripts/sync-curated-playlist-meta.ts",
     "seed:catalog-manual-playlists": "npx tsx scripts/seed-catalog-manual-playlists.ts",
     "seed:acoustic-playlists": "npx tsx scripts/seed-catalog-manual-playlists.ts --only=acoustic,world-music",
     "triage:null-genres": "npx tsx scripts/triage-null-genres.ts",

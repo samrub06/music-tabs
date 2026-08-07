@@ -17,12 +17,19 @@ Entrypoint: `npm run seed:spotify-popular` → `scripts/seed-from-spotify-popula
 |-----|------|------------|------------|--------|
 | `top-israel` | chart `il_daily` | `spotify-top-israel` | IL | Tab4U/Negina |
 | `top-global` | chart `global_daily` | `spotify-top-global` | INTL | UG |
-| `top-france` | chart `fr_daily` | `spotify-top-france` | INTL | UG |
+| `top-france` | chart `fr_daily` + `frenchOnly` | `spotify-top-france` | INTL | UG |
+| `editorial-top-france-guitar` | AI + `frenchOnly` | `spotify-top-france` | INTL | UG |
 | `editorial-hassidic` | AI | `hassidic` | IL | Tab4U/Negina |
 | `editorial-religious-il` | AI | `hassidic` | IL | Tab4U/Negina |
 | `editorial-acoustic` | AI | `acoustic` | INTL | UG |
-| `editorial-french-variete` | AI | `variete-francaise` | INTL | UG |
-| `editorial-rap-fr` | AI | `rap-fr` | INTL | UG |
+| `editorial-french-variete` | AI + `frenchOnly` | `variete-francaise` | INTL | UG |
+| `editorial-french-classics` | AI + `frenchOnly` | `variete-francaise` | INTL | UG |
+| `editorial-rap-fr` | AI + `frenchOnly` | `rap-fr` | INTL | UG |
+| `editorial-kendji` | AI + `frenchOnly` | `kendji-girac` | INTL | UG |
+| `editorial-goldman` | AI + `frenchOnly` | `jean-jacques-goldman` | INTL | UG |
+| `editorial-bruel` | AI + `frenchOnly` | `patrick-bruel` | INTL | UG |
+| `editorial-celine-dion` | AI + `frenchOnly` | `celine-dion` | INTL | UG |
+| `editorial-vianney` | AI + `frenchOnly` | `vianney` | INTL | UG |
 | `editorial-ribo` | AI | `ishay-ribo` | IL | Tab4U/Negina |
 | `editorial-ben-zur` | AI | `ben-zur` | IL | Tab4U/Negina |
 | `editorial-eyal-golan` | AI | `eyal-golan` | IL | Tab4U/Negina |
@@ -50,7 +57,11 @@ Full definitions: `src/data/spotifyPopularSources.ts`.
 ## CLI cheat sheet
 
 ```bash
-# Dry-run
+# After any FR / artist seed — verify membership (removes Hallyday from Rap FR, etc.)
+npm run verify:playlist-membership -- --dry-run
+npm run verify:playlist-membership
+
+# Dry-run popular seed
 npm run seed:spotify-popular -- --source=top-israel --dry-run --limit=5
 
 # Charts
@@ -115,14 +126,20 @@ Source of truth: `src/data/artistPlaylistSlugs.ts`.
 
 Ed Sheeran, Vance Joy, Passenger, The Lumineers, George Ezra, Jason Mraz, John Mayer, Jack Johnson, Lewis Capaldi, Hozier, Tracy Chapman, Bon Iver, … — see `src/data/acousticPlaylists.ts`.
 
-### French (genre shelves)
+### French (genre + artist shelves)
 
 | Style | slug | example artists |
 |-------|------|-----------------|
-| Variété | `variete-francaise` | Vianney, Kendji Girac, Angèle, Stromae, Cabrel, Goldman, Gims (crossover) |
+| Top France | `spotify-top-france` | francophone chart only (`frenchTrackFilter`) |
+| Variété | `variete-francaise` | Vianney, Kendji, Bruel, Goldman, Céline (FR), Cabrel… |
+| Kendji | `kendji-girac` | Kendji only |
+| Goldman | `jean-jacques-goldman` | JJ Goldman only |
+| Bruel | `patrick-bruel` | Patrick Bruel only |
+| Céline | `celine-dion` | French-language Céline only |
+| Vianney | `vianney` | Vianney only |
 | Rap FR | `rap-fr` | Gims, PNL, Damso, Booba, Nekfeu, … |
 
-Author lists: `src/data/frenchPlaylists.ts`.
+Filter helper: `src/data/frenchTrackFilter.ts`. Author lists: `src/data/frenchPlaylists.ts`.
 
 ## Decision tree: new trendy song → playlist(s)
 

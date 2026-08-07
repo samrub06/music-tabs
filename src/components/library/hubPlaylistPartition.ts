@@ -5,9 +5,12 @@ import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection
 export const HUB_FEATURED_SLUG_PRIORITY = [
   'spotify-top-israel',
   'spotify-top-global',
+  'spotify-top-france',
   'hassidic',
   'ishay-ribo',
   'variete-francaise',
+  'rap-fr',
+  'acoustic',
 ] as const
 
 /** Enough for a 2-row horizontal strip that scrolls past the first viewport. */

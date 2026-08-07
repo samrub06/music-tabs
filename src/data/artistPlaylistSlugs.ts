@@ -24,6 +24,12 @@ export const ARTIST_PLAYLIST_SLUGS = new Set([
   'osher-cohen',
   'avi-ohayon',
   'carlebach',
+  'hassidic',
+  'kendji-girac',
+  'jean-jacques-goldman',
+  'patrick-bruel',
+  'celine-dion',
+  'vianney',
 ])
 
 export function isArtistPlaylistSlug(slug?: string | null): boolean {

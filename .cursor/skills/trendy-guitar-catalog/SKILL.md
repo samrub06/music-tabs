@@ -99,24 +99,44 @@ npm run seed:spotify-popular -- --source=editorial-acoustic --limit=30
 
 Targets `acoustic` (Ed Sheeran, Vance Joy, campfire staples). Optional: skim `top-global` for acoustic-friendly guitar hits and merge via acoustic editorial — do not dump the whole global chart into Acoustic.
 
-### D — French
+### D — French (francophone only)
+
+**Hard rule:** FR shelves must be **French-language / francophone artists only**. Drop Bad Bunny, Drake, Latin reggaeton, US/UK English chart invaders. Sources use `frenchOnly: true` + `frenchTrackFilter`.
 
 ```bash
 npm run seed:spotify-popular -- --source=top-france --limit=30
+npm run seed:spotify-popular -- --source=editorial-top-france-guitar --limit=30
 npm run seed:spotify-popular -- --source=editorial-french-variete --limit=25
+npm run seed:spotify-popular -- --source=editorial-french-classics --limit=25
 npm run seed:spotify-popular -- --source=editorial-rap-fr --limit=20
+# Artist-only shelves:
+npm run seed:spotify-popular -- --source=editorial-kendji --limit=20
+npm run seed:spotify-popular -- --source=editorial-goldman --limit=20
+npm run seed:spotify-popular -- --source=editorial-bruel --limit=20
+npm run seed:spotify-popular -- --source=editorial-celine-dion --limit=20
+npm run seed:spotify-popular -- --source=editorial-vianney --limit=20
 ```
 
-`top-france` → `spotify-top-france`. Variété / rap merge into `variete-francaise` / `rap-fr`. Artists: Vianney, Kendji Girac, Gims, Angèle, Stromae, Cabrel, etc. Market hint `INTL` → UG.
+- `top-france` + `editorial-top-france-guitar` → `spotify-top-france` (francophone filter; chart + guitar AI **merge**)
+- Variété / classics → `variete-francaise`
+- Artist shelves: `kendji-girac`, `jean-jacques-goldman`, `patrick-bruel`, `celine-dion` (French songs only), `vianney`
+- Market hint `INTL` → UG
+- Filter: `src/data/frenchTrackFilter.ts` (`frenchOnly` on sources)
 
 ## 4. Ops checklist
 
 1. Confirm `.env.local` has `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY` (AI sources).
 2. Optional dry-run: `npm run seed:spotify-popular -- --source=<key> --dry-run --limit=5`.
 3. Run seeds (prefer multitask per market).
-4. Report per source: researched count, added/updated/skipped/errors, Tab4U/UG misses.
-5. Hard-refresh explorer (`/` / library) if shelves look stale.
-6. Optional covers: `npm run backfill:song-covers` or `npx tsx scripts/backfill-playlist-song-covers.ts`.
+4. **Always verify membership** after FR / artist seeds (Rap FR must not contain Johnny Hallyday, Goldman, etc.):
+   ```bash
+   npm run verify:playlist-membership -- --dry-run
+   npm run verify:playlist-membership
+   ```
+   Rules live in `src/data/curatedPlaylistMembership.ts`. Popular seed also guards with the same rules before scrape.
+5. Report per source: researched count, added/updated/skipped/errors, Tab4U/UG misses + verify removals.
+6. Hard-refresh explorer (`/` / library) if shelves look stale.
+7. Optional covers: `npm run backfill:song-covers` or `npx tsx scripts/backfill-playlist-song-covers.ts`.
 
 ## 5. Hard rules
 

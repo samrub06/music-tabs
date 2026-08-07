@@ -27,6 +27,11 @@ export type SpotifyPopularSource = {
   chartUrl?: string
   /** Research brief when researchMode === 'ai' */
   aiPrompt?: string
+  /**
+   * When true, drop non-francophone artists (Bad Bunny, Drake, …) from researched
+   * tracks. Chart FR shelves should set this — Spotify France daily mixes global hits.
+   */
+  frenchOnly?: boolean
 }
 
 /**
@@ -55,13 +60,30 @@ export const SPOTIFY_POPULAR_SOURCES: SpotifyPopularSource[] = [
   },
   {
     key: 'top-france',
-    name: 'Top 50 — France',
+    name: 'Top 50 — France (francophone only)',
     marketHint: 'INTL',
     targetSlug: 'spotify-top-france',
     catalogGenre: 'spotify-top-france',
-    description: 'Spotify daily France (public chart) → Ultimate Guitar',
+    description:
+      'Spotify daily France chart filtered to francophone artists only (no Bad Bunny / US-Latin) → UG',
     researchMode: 'chart',
     chartUrl: 'https://kworb.net/spotify/country/fr_daily.html',
+    frenchOnly: true,
+    aiPrompt:
+      'Current popular FRENCH-LANGUAGE songs by francophone artists charting or radio-hot in France (variété + melodic French rap). NEVER Bad Bunny, Drake, Karol G, Taylor Swift, Ed Sheeran, or any US/Latin English/Spanish global hit. Prefer guitar-friendly titles with Ultimate Guitar chords.',
+  },
+  {
+    key: 'editorial-top-france-guitar',
+    name: 'Top France — guitar staples (francophone)',
+    marketHint: 'INTL',
+    targetSlug: 'spotify-top-france',
+    catalogGenre: 'spotify-top-france',
+    description:
+      'AI list of popular francophone tracks that actually have UG chords (fills Top France when the daily chart is tab-thin)',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'Popular FRENCH-LANGUAGE songs by francophone artists that guitarists look up on Ultimate Guitar — a “Top France for guitar” mix. Include Kendji Girac, Vianney, Patrick Bruel, Jean-Jacques Goldman, Céline Dion (French only), Angèle, Stromae, Cabrel, Gims melodic hits, Louane, Calogero. Prefer evergreen + current radio hits WITH known chord sheets. NEVER Bad Bunny, Drake, Latin reggaeton, US/UK English pop. French titles.',
   },
   {
     key: 'editorial-hassidic',
@@ -105,8 +127,21 @@ export const SPOTIFY_POPULAR_SOURCES: SpotifyPopularSource[] = [
     catalogGenre: 'french-variete',
     description: 'AI research of popular French variété / chanson → variete-francaise shelf',
     researchMode: 'ai',
+    frenchOnly: true,
     aiPrompt:
-      'The most popular French variété / chanson / pop songs for guitar: Vianney, Kendji Girac, Angèle, Stromae, Francis Cabrel, Jean-Jacques Goldman, Gims (crossover pop), Louane, Calogero, Zazie, Indochine, classics (Brel, Aznavour, Brassens) that still get played. French titles as commonly written. Prefer tracks with Ultimate Guitar chords. Exclude pure trap with no chord sheets.',
+      'ONLY francophone artists (France / Belgium / Quebec / Switzerland) singing in French. NEVER include Bad Bunny, Drake, Taylor Swift, Latin reggaeton, US/UK pop, or English-only hits. Popular French variété / chanson for guitar: Patrick Bruel, Jean-Jacques Goldman, Céline Dion (French songs: Pour que tu m\'aimes encore, S\'il suffisait d\'aimer, Ziggy, All by Myself ONLY if French version — prefer French titles), Kendji Girac, Vianney, Francis Cabrel, Angèle, Stromae, Louane, Calogero, Zazie, Indochine, Brel, Aznavour, Brassens, Johnny Hallyday, Mylène Farmer, Pascal Obispo, Florent Pagny. French titles as commonly written. Prefer Ultimate Guitar chord staples.',
+  },
+  {
+    key: 'editorial-french-classics',
+    name: 'Variété classics (Bruel / Goldman / Céline…)',
+    marketHint: 'INTL',
+    targetSlug: 'variete-francaise',
+    catalogGenre: 'french-variete',
+    description: 'AI research of French classics → variete-francaise (second source)',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'ONLY French-language songs by francophone artists. Focus on guitar-friendly classics and radio staples: Patrick Bruel (Casser la voix, Place des grands hommes, Qui a le droit, J\'te l\'dis quand même), Jean-Jacques Goldman (Je te donne, Encore un matin, Je marche seul, Là-bas, Puisque tu pars, Il y a, On ira, Envole-moi), Céline Dion French catalogue (Pour que tu m\'aimes encore, S\'il suffisait d\'aimer, Ziggy, Destin, Je sais pas, On ne change pas), Francis Cabrel, Michel Sardou, Pascal Obispo, Florent Pagny, Daniel Balavoine. NO English Céline hits like My Heart Will Go On. NO Bad Bunny / US / Latin. French titles only.',
   },
   {
     key: 'editorial-rap-fr',
@@ -116,8 +151,69 @@ export const SPOTIFY_POPULAR_SOURCES: SpotifyPopularSource[] = [
     catalogGenre: 'french-rap',
     description: 'AI research of popular French rap with playable chords → rap-fr shelf',
     researchMode: 'ai',
+    frenchOnly: true,
     aiPrompt:
-      'Popular French rap / urban hits that guitarists actually look up on Ultimate Guitar (melodic hooks, widely covered): Maître Gims / Gims, PNL (accessible hits), Damso, Nekfeu, Bigflo & Oli, Stromae crossover, Jul (biggest melodic hits), Lomepal. Prefer French titles. Strongly prefer songs known to have chord sheets; skip obscure underground tracks with no tabs.',
+      'ONLY French-language rap / urban by francophone artists. NEVER Bad Bunny, Drake, or US hip-hop. Guitar-playable melodic hits: Gims / Maître Gims, PNL, Damso, Nekfeu, Orelsan, Bigflo & Oli, Jul, Lomepal, Soprano. French titles. Prefer songs with Ultimate Guitar chords.',
+  },
+  {
+    key: 'editorial-kendji',
+    name: 'Kendji Girac (popular)',
+    marketHint: 'INTL',
+    targetSlug: 'kendji-girac',
+    catalogGenre: 'french-kendji',
+    description: 'AI research of Kendji Girac hits → kendji-girac shelf',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'The most popular Kendji Girac songs in French for guitar. Artist must be Kendji Girac / Kendji. Include: Andalouse, Color Gitano, Cool, Me Quemo, Les yeux de la mama, No Me Mires Más, Conmigo, Tu y Yo, Bebete, Tiago, Maria Maria, Dans mes bras, Habibi. Prefer French titles; exclude other artists.',
+  },
+  {
+    key: 'editorial-goldman',
+    name: 'Jean-Jacques Goldman (popular)',
+    marketHint: 'INTL',
+    targetSlug: 'jean-jacques-goldman',
+    catalogGenre: 'french-goldman',
+    description: 'AI research of JJ Goldman hits → jean-jacques-goldman shelf',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'The most popular Jean-Jacques Goldman songs for guitar. Artist must be Jean-Jacques Goldman. Include: Je te donne, Encore un matin, Je marche seul, Là-bas, Puisque tu pars, Il changeait la vie, Envole-moi, On ira, Au bout de mes rêves, Elle a fait un bébé toute seule, Quand la musique est bonne, Confidentiel, Tourne en rond. French titles only. No other artists.',
+  },
+  {
+    key: 'editorial-bruel',
+    name: 'Patrick Bruel (popular)',
+    marketHint: 'INTL',
+    targetSlug: 'patrick-bruel',
+    catalogGenre: 'french-bruel',
+    description: 'AI research of Patrick Bruel hits → patrick-bruel shelf',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'The most popular Patrick Bruel songs for guitar. Artist must be Patrick Bruel. Include: Casser la voix, Place des grands hommes, Qui a le droit, J\'te l\'dis quand même, Alors regarde, Combien de murs, Pour exister, Au Café des délices, J\'m\'attendais pas à toi. French titles only. No other artists.',
+  },
+  {
+    key: 'editorial-celine-dion',
+    name: 'Céline Dion (French songs)',
+    marketHint: 'INTL',
+    targetSlug: 'celine-dion',
+    catalogGenre: 'french-celine-dion',
+    description: 'AI research of Céline Dion French hits → celine-dion shelf',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'The most popular Céline Dion songs IN FRENCH for guitar. Artist must be Céline Dion / Celine Dion. Include ONLY French-language tracks: Pour que tu m\'aimes encore, S\'il suffisait d\'aimer, Ziggy, Destin, Je sais pas, On ne change pas, Encore un soir, Immensité, Dans un autre monde, Les yeux au ciel, Parler à mon père. NEVER include My Heart Will Go On, The Power of Love, All by Myself, or other English hits.',
+  },
+  {
+    key: 'editorial-vianney',
+    name: 'Vianney (popular)',
+    marketHint: 'INTL',
+    targetSlug: 'vianney',
+    catalogGenre: 'french-vianney',
+    description: 'AI research of Vianney hits → vianney shelf',
+    researchMode: 'ai',
+    frenchOnly: true,
+    aiPrompt:
+      'The most popular Vianney songs for guitar. Artist must be Vianney. Include: Je m\'en vais, Pas là, Moi aimer toi, Dumbo, La fille du sud, Beau-papa, N\'avoue pas, Call on Me, J\'espère, Les gens sont fous. French titles. No other artists.',
   },
   {
     key: 'editorial-ribo',

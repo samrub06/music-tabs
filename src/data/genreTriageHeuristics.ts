@@ -84,6 +84,8 @@ export const GENRE_TRIAGE_AUTHOR_RULES: Rule[] = [
       'claude françois',
       'eddy mitchell',
       'patrick bruel',
+      'kendji',
+      'kendji girac',
       'enrico macias',
       'vanessa paradis',
       'slimane',
@@ -93,6 +95,9 @@ export const GENRE_TRIAGE_AUTHOR_RULES: Rule[] = [
       'celine dion',
       'céline dion',
       'axel bauer',
+      'pascal obispo',
+      'florent pagny',
+      'daniel balavoine',
     ],
   },
   {

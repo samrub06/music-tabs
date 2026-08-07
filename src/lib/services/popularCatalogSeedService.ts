@@ -11,6 +11,7 @@ import {
 } from '@/data/spotifyPopularSources'
 import { CURATED_PLAYLISTS } from '@/data/curatedPlaylists'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
+import { researchedTrackAllowedForSource } from '@/data/curatedPlaylistMembership'
 import { researchPopularTracksForSource } from '@/lib/services/popularTracksResearchService'
 import { searchTabsByLocale } from '@/lib/services/localeScrapeRouter'
 import {
@@ -94,9 +95,12 @@ async function upsertPlaylistSongIds(
   if (existingError) throw existingError
 
   // Chart shelves: replace with researched popularity order.
-  // Editorial shelves (hassidic/ribo): merge to avoid wiping seed lists.
+  // Exception: Top France keeps a merge — daily FR chart is tab-thin / mixed, and
+  // guitar AI pads (`editorial-top-france-guitar`) must not wipe each other.
+  // Editorial shelves (hassidic/ribo/FR artists): merge to avoid wiping seed lists.
   const isChartShelf =
-    source.targetSlug.startsWith('spotify-') || source.key.startsWith('top-')
+    (source.targetSlug.startsWith('spotify-') || source.key.startsWith('top-')) &&
+    source.targetSlug !== 'spotify-top-france'
   const song_ids = isChartShelf
     ? songIds
     : Array.from(new Set([...(existing?.song_ids ?? []), ...songIds]))
@@ -219,6 +223,24 @@ export const popularCatalogSeedService = (client: SupabaseClient<Database>) => (
       const songIds: string[] = []
 
       for (const track of limited) {
+        if (
+          !researchedTrackAllowedForSource(
+            source.targetSlug,
+            track.title,
+            track.artist
+          )
+        ) {
+          const skipped: PopularSeedTrackResult = {
+            status: 'skipped',
+            title: track.title,
+            artist: track.artist,
+            reason: `membership rule rejected for ${source.targetSlug}`,
+          }
+          results.push(skipped)
+          options.onTrack?.(skipped)
+          continue
+        }
+
         const result = await seedOneTrack(
           client,
           track.title,
