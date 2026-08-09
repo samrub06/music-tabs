@@ -1,27 +1,26 @@
 'use client'
 
-import SongTable from '@/components/SongTable'
-import SongGallery from '@/components/SongGallery'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import { cn } from '@/lib/utils'
-import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, Squares2X2Icon, TableCellsIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import { usePageHeader } from '@/context/PageHeaderContext'
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Song, Folder } from '@/types'
-import { updateSongFolderAction, deleteSongsAction, deleteAllSongsAction } from '@/app/(protected)/dashboard/actions'
 import { fetchUserSongsListAction } from '@/app/(protected)/songs/actions'
 import { useInfiniteScrollLoadMore } from '@/lib/hooks/useInfiniteScrollLoadMore'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
-import DragDropOverlay from '@/components/DragDropOverlay'
-import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { SortField, SortDirection } from '@/components/SortSelectionModal'
+import {
+  PlaylistSwitcherStrip,
+  type PlaylistStripItem,
+} from '@/components/playlists/PlaylistSwitcherStrip'
+import { FolderSongList } from '@/components/playlists/FolderSongList'
 
 interface FolderSongsClientProps {
   folder: Folder
@@ -29,12 +28,14 @@ interface FolderSongsClientProps {
   total: number
   page: number
   limit: number
-  initialView?: 'gallery' | 'table'
   initialQuery?: string
   initialSortOrder?: 'asc' | 'desc'
+  siblingPlaylists?: PlaylistStripItem[]
 }
 
 const FOLDER_SORT_FIELDS: SortField[] = ['title', 'author', 'updatedAt', 'viewCount']
+const SCROLL_THRESHOLD = 8
+const TOP_REVEAL_OFFSET = 24
 
 export default function FolderSongsClient({
   folder,
@@ -42,9 +43,9 @@ export default function FolderSongsClient({
   total,
   page,
   limit,
-  initialView = 'gallery',
   initialQuery = '',
   initialSortOrder = 'asc',
+  siblingPlaylists = [],
 }: FolderSongsClientProps) {
   const { t } = useLanguage()
   const router = useRouter()
@@ -55,6 +56,8 @@ export default function FolderSongsClient({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   useHideHeaderOnScroll(scrollContainerRef, true)
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const [stripCollapsed, setStripCollapsed] = useState(false)
+  const lastScrollTopRef = useRef(0)
 
   const sortFieldLabels: Record<SortField, string> = {
     title: t('songs.title'),
@@ -69,28 +72,22 @@ export default function FolderSongsClient({
     createdAt: t('songs.createdAt'),
   }
 
-  // Search state
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
   const [searchQuery, setSearchQuery] = useState(initialQuery)
-
-  // Filter state
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSortOrder)
-
-  const hasActiveFilters = sortField !== 'title' || sortDirection !== 'asc'
-
-  // Other state
-  const [currentFolder, setCurrentFolder] = useState<string | null>(folder.id)
-  const [currentPlaylistId, setCurrentPlaylistId] = useState<string | null>(null)
   const [displaySongs, setDisplaySongs] = useState(songs)
   const [displayTotal, setDisplayTotal] = useState(total)
   const [listPage, setListPage] = useState(page)
   const [isListLoading, setIsListLoading] = useState(false)
 
+  const hasActiveFilters = sortField !== 'title' || sortDirection !== 'asc'
   const folderFilterKey = `${folder.id}:${searchQuery}:${limit}`
   const prevFolderFilterKeyRef = useRef(folderFilterKey)
   const folderLoadingLockRef = useRef(false)
+
+  usePageHeader(folder.name, '/playlists')
 
   useEffect(() => {
     const filtersChanged = prevFolderFilterKeyRef.current !== folderFilterKey
@@ -102,6 +99,11 @@ export default function FolderSongsClient({
       folderLoadingLockRef.current = false
     }
   }, [songs, total, folderFilterKey, listPage])
+
+  useEffect(() => {
+    setStripCollapsed(false)
+    lastScrollTopRef.current = 0
+  }, [folder.id])
 
   const hasMoreSongs = displaySongs.length < displayTotal
   const handleLoadMore = useCallback(() => {
@@ -129,7 +131,6 @@ export default function FolderSongsClient({
         })
         setDisplayTotal(result.total)
         setListPage(nextPage)
-        // Do not write `page` into the URL — that remounts RSC and wipes appends.
       })
       .catch(console.error)
       .finally(() => {
@@ -145,25 +146,11 @@ export default function FolderSongsClient({
     onLoadMore: handleLoadMore,
   })
 
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [draggedSong, setDraggedSong] = useState<Song | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
-  const [view, setView] = useState<'gallery' | 'table'>(() => {
-    if (initialView === 'gallery' || initialView === 'table') return initialView
-    return total < 10 ? 'table' : 'gallery'
-  })
-
-  usePageHeader(folder.name, '/playlists')
-
-  // Sync local search from URL
   useEffect(() => {
     setLocalSearchValue(initialQuery)
     setSearchQuery(initialQuery)
   }, [initialQuery])
 
-  // Debounced search - update URL with q
   useEffect(() => {
     const timer = setTimeout(() => {
       const trimmed = localSearchValue.trim()
@@ -176,12 +163,12 @@ export default function FolderSongsClient({
         params.delete('q')
         params.delete('page')
       }
+      params.delete('view')
       router.push(`${pathname}?${params.toString()}`)
     }, 300)
     return () => clearTimeout(timer)
   }, [localSearchValue, pathname, router, searchParams])
 
-  // Sync sortOrder from URL
   useEffect(() => {
     const sortOrderFromUrl = searchParams?.get('sortOrder')
     if (sortOrderFromUrl === 'desc' || sortOrderFromUrl === 'asc') {
@@ -189,73 +176,22 @@ export default function FolderSongsClient({
     }
   }, [searchParams])
 
-  // Mouse only — touch drag on song vignettes breaks scrolling on phone
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: { distance: 8 },
-    })
-  )
+  const handleScroll = useCallback(() => {
+    const element = scrollContainerRef.current
+    if (!element) return
+    const scrollTop = element.scrollTop
+    const delta = scrollTop - lastScrollTopRef.current
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event
-    setActiveId(active.id as string)
-    const song = songs.find((s) => s.id === active.id)
-    setDraggedSong(song || null)
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveId(null)
-    setDraggedSong(null)
-    setError(null)
-    if (!over) return
-    const songId = active.id as string
-    const dropTarget = over.id as string
-    if (typeof dropTarget === 'string' && dropTarget.startsWith('folder-')) {
-      const folderId = dropTarget.replace('folder-', '') || undefined
-      try {
-        await updateSongFolderAction(songId, folderId)
-        const folderName = folderId ? folder.name : t('songs.unorganized')
-        const songTitle = draggedSong?.title || t('songs.theSong')
-        setSuccessMessage(`"${songTitle}" ${t('songs.songMoved')} ${t('songs.inFolder')} ${folderName}`)
-        router.refresh()
-      } catch (err) {
-        console.error('Error moving song to folder:', err)
-        setError(t('songs.moveError'))
-      }
+    if (scrollTop <= TOP_REVEAL_OFFSET) {
+      setStripCollapsed(false)
+    } else if (delta > SCROLL_THRESHOLD) {
+      setStripCollapsed(true)
+    } else if (delta < -SCROLL_THRESHOLD) {
+      setStripCollapsed(false)
     }
-  }
 
-  const applyQuery = (next: { q?: string; page?: number; limit?: number; sortOrder?: 'asc' | 'desc' }) => {
-    const params = new URLSearchParams(searchParams?.toString() || '')
-    if (next.q !== undefined) {
-      if (next.q) params.set('q', next.q)
-      else params.delete('q')
-    }
-    if (view === 'table') params.set('view', 'table')
-    else params.delete('view')
-    if (next.page) params.set('page', String(next.page))
-    if (next.limit) params.set('limit', String(next.limit))
-    else if (!params.has('limit')) params.set('limit', String(limit))
-    if (next.sortOrder !== undefined) {
-      if (next.sortOrder) params.set('sortOrder', next.sortOrder)
-      else params.delete('sortOrder')
-    }
-    router.push(`${pathname}?${params.toString()}`)
-  }
-
-  const handleViewChange = useCallback(
-    (next: 'gallery' | 'table') => {
-      if (next === view) return
-      setView(next)
-      const params = new URLSearchParams(searchParams?.toString() || '')
-      if (next === 'gallery') params.delete('view')
-      else params.set('view', next)
-      const query = params.toString()
-      window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
-    },
-    [view, searchParams, pathname]
-  )
+    lastScrollTopRef.current = scrollTop
+  }, [])
 
   const replaceSortParams = useCallback(
     (direction: SortDirection) => {
@@ -263,6 +199,7 @@ export default function FolderSongsClient({
       if (direction === 'desc') params.set('sortOrder', 'desc')
       else params.delete('sortOrder')
       params.set('page', '1')
+      params.delete('view')
       const query = params.toString()
       window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
     },
@@ -283,7 +220,11 @@ export default function FolderSongsClient({
   const handleClearSearch = () => {
     setLocalSearchValue('')
     setSearchQuery('')
-    applyQuery({ q: '', page: 1 })
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    params.delete('q')
+    params.delete('page')
+    params.delete('view')
+    router.push(`${pathname}?${params.toString()}`)
   }
 
   const handleClearFilters = () => {
@@ -292,13 +233,6 @@ export default function FolderSongsClient({
     replaceSortParams('asc')
   }
 
-  const handleSortChange = (field: SortField, direction: SortDirection) => {
-    setSortField(field)
-    setSortDirection(direction)
-    replaceSortParams(direction)
-  }
-
-  // Client-side sort and search filter (search is server-side via q; we filter displayed list for consistency)
   const sortedSongs = useMemo(() => {
     let list = [...displaySongs]
     const q = searchQuery.toLowerCase().trim()
@@ -310,8 +244,8 @@ export default function FolderSongsClient({
       )
     }
     list.sort((a, b) => {
-      let aVal: string | number | Date | undefined
-      let bVal: string | number | Date | undefined
+      let aVal: string | number
+      let bVal: string | number
       switch (sortField) {
         case 'title':
           aVal = (a.title || '').toLowerCase()
@@ -339,235 +273,155 @@ export default function FolderSongsClient({
     return list
   }, [displaySongs, searchQuery, sortField, sortDirection])
 
+  const showStrip = !isInputFocused && !stripCollapsed && siblingPlaylists.length >= 2
+
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <div
+      className={cn(
+        'flex min-h-0 flex-1 flex-col overflow-hidden bg-background',
+        isLandscapeMobile ? 'p-1.5' : 'p-4 sm:p-6'
+      )}
+    >
       <div
         className={cn(
-          'flex min-h-0 flex-1 flex-col overflow-hidden bg-background',
-          isLandscapeMobile ? 'p-1.5' : 'p-4 sm:p-6'
+          'relative z-20 shrink-0 bg-background/95 backdrop-blur-md',
+          isLandscapeMobile ? 'pb-1.5' : 'pb-3',
+          isInputFocused && 'z-30'
         )}
       >
         <div
           className={cn(
-            'relative shrink-0',
-            isLandscapeMobile ? 'pb-1.5' : 'pb-4',
-            isInputFocused && 'z-30'
+            'grid transition-[grid-template-rows,opacity,margin] duration-200 ease-out',
+            showStrip
+              ? 'mb-3 grid-rows-[1fr] opacity-100'
+              : 'pointer-events-none mb-0 grid-rows-[0fr] opacity-0'
           )}
+          aria-hidden={!showStrip}
         >
-          <div
-            className={cn(
-              'flex items-stretch max-lg:transition-[gap] max-lg:duration-200',
-              isLandscapeMobile ? 'gap-1.5' : 'gap-2'
-            )}
-          >
-            <div
-              className={cn(
-                'relative min-w-0 transition-[flex] duration-200',
-                isInputFocused ? 'flex-1 max-lg:flex-[1_1_100%]' : 'flex-1'
-              )}
-            >
-              <div className="relative">
-                <div
-                  className={cn(
-                    'pointer-events-none absolute inset-y-0 left-0 flex items-center',
-                    isLandscapeMobile ? 'pl-2.5' : 'pl-4'
-                  )}
-                >
-                  <MagnifyingGlassIcon
-                    className={cn(
-                      'text-muted-foreground',
-                      isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
-                    )}
-                  />
-                </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={localSearchValue}
-                  onChange={(e) => setLocalSearchValue(e.target.value)}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
-                  placeholder={t('songs.search')}
-                  className={cn(
-                    'block w-full border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30',
-                    isLandscapeMobile
-                      ? 'h-8 rounded-lg py-1 pl-8 pr-8 text-sm'
-                      : 'rounded-xl py-3 pl-12 pr-12 text-base sm:py-4'
-                  )}
-                />
-                {localSearchValue && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className={cn(
-                      'absolute inset-y-0 right-0 flex items-center justify-center text-muted-foreground hover:text-foreground',
-                      isLandscapeMobile
-                        ? 'min-h-8 min-w-8 pr-1.5'
-                        : 'min-h-[44px] min-w-[44px] pr-4'
-                    )}
-                    aria-label={t('common.clear')}
-                  >
-                    <XMarkIcon className={cn(isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')} />
-                  </button>
-                )}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsFilterSheetOpen(true)}
-              className={cn(
-                'relative flex shrink-0 items-center justify-center border border-border bg-background text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
-                isLandscapeMobile
-                  ? 'h-8 w-8 rounded-lg p-0'
-                  : 'min-h-[44px] min-w-[44px] rounded-xl p-3',
-                hasActiveFilters && 'border-primary/40 text-primary',
-                isInputFocused &&
-                  'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
-              )}
-              aria-label={t('songs.advancedFilters')}
-            >
-              <AdjustmentsHorizontalIcon
-                className={cn(
-                  'max-lg:shrink-0',
-                  isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
-                )}
-              />
-              {hasActiveFilters && (
-                <span
-                  className={cn(
-                    'absolute rounded-full bg-primary',
-                    isLandscapeMobile
-                      ? 'right-1 top-1 h-1.5 w-1.5'
-                      : 'right-1.5 top-1.5 h-2 w-2'
-                  )}
-                />
-              )}
-            </button>
-            <div
-              className={cn(
-                'flex shrink-0 items-center gap-1 rounded-full bg-muted/80 p-0.5 dark:bg-gray-800',
-                (isInputFocused || isLandscapeMobile) &&
-                  'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:opacity-0'
-              )}
-            >
-            <button
-              type="button"
-              className={cn(
-                'flex items-center justify-center gap-1.5 rounded-full font-medium transition-all duration-200',
-                isLandscapeMobile
-                  ? 'h-7 px-2 text-xs'
-                  : 'min-h-[44px] px-3 py-2 text-sm sm:px-4',
-                view === 'gallery'
-                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => handleViewChange('gallery')}
-              title={t('songs.galleryView')}
-            >
-              <Squares2X2Icon className={cn(isLandscapeMobile ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5')} />
-              <span className="hidden sm:inline">{t('songs.galleryView')}</span>
-            </button>
-            <button
-              type="button"
-              className={cn(
-                'flex items-center justify-center gap-1.5 rounded-full font-medium transition-all duration-200',
-                isLandscapeMobile
-                  ? 'h-7 px-2 text-xs'
-                  : 'min-h-[44px] px-3 py-2 text-sm sm:px-4',
-                view === 'table'
-                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => handleViewChange('table')}
-              title={t('songs.tableView')}
-            >
-              <TableCellsIcon className={cn(isLandscapeMobile ? 'h-3.5 w-3.5' : 'h-4 w-4 sm:h-5 sm:w-5')} />
-              <span className="hidden sm:inline">{t('songs.tableView')}</span>
-            </button>
-          </div>
+          <div className="overflow-hidden">
+            <PlaylistSwitcherStrip
+              playlists={siblingPlaylists}
+              activePlaylistId={folder.id}
+              compact={isLandscapeMobile}
+            />
           </div>
         </div>
 
         <div
-          ref={scrollContainerRef}
-          data-main-scroll
           className={cn(
-            'relative z-0 min-h-0 flex-1 overscroll-contain',
-            isLandscapeMobile
-              ? 'flex flex-col overflow-hidden'
-              : 'overflow-y-auto'
+            'flex items-stretch max-lg:transition-[gap] max-lg:duration-200',
+            isLandscapeMobile ? 'gap-1.5' : 'gap-2'
           )}
         >
-        {sortedSongs && sortedSongs.length > 0 ? (
-          view === 'table' && !isLandscapeMobile ? (
-            <>
-              <SongTable
-                songs={sortedSongs}
-                folders={[folder]}
-                playlists={[]}
-                currentFolder={currentFolder}
-                currentPlaylistId={currentPlaylistId}
-                searchQuery={searchQuery}
-                hasUser={true}
-                onFolderChange={updateSongFolderAction}
-                onDeleteSongs={deleteSongsAction}
-                onDeleteAllSongs={deleteAllSongsAction}
-                onCurrentFolderChange={setCurrentFolder}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSortChange={handleSortChange}
+          <div
+            className={cn(
+              'relative min-w-0 transition-[flex] duration-200',
+              isInputFocused ? 'flex-1 max-lg:flex-[1_1_100%]' : 'flex-1'
+            )}
+          >
+            <div className="relative">
+              <div
+                className={cn(
+                  'pointer-events-none absolute inset-y-0 left-0 flex items-center',
+                  isLandscapeMobile ? 'pl-2.5' : 'pl-4'
+                )}
+              >
+                <MagnifyingGlassIcon
+                  className={cn(
+                    'text-muted-foreground',
+                    isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
+                  )}
+                />
+              </div>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={localSearchValue}
+                onChange={(e) => setLocalSearchValue(e.target.value)}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
+                placeholder={t('songs.search')}
+                className={cn(
+                  'block w-full border border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30',
+                  isLandscapeMobile
+                    ? 'h-8 rounded-lg py-1 pl-8 pr-8 text-sm'
+                    : 'min-h-[44px] rounded-xl py-2.5 pl-12 pr-12 text-sm sm:text-base'
+                )}
               />
-              <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
-              {isListLoading && hasMoreSongs ? (
-                <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <SongGallery songs={sortedSongs} variant="folder" hasUser diskRackOnLandscape />
-              <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
-              {isListLoading && hasMoreSongs ? (
-                <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
-              ) : null}
-            </>
-          )
+              {localSearchValue && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className={cn(
+                    'absolute inset-y-0 right-0 flex items-center justify-center text-muted-foreground hover:text-foreground',
+                    isLandscapeMobile
+                      ? 'min-h-8 min-w-8 pr-1.5'
+                      : 'min-h-[44px] min-w-[44px] pr-4'
+                  )}
+                  aria-label={t('common.clear')}
+                >
+                  <XMarkIcon className={cn(isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5')} />
+                </button>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsFilterSheetOpen(true)}
+            className={cn(
+              'relative flex shrink-0 items-center justify-center border border-border bg-background text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+              isLandscapeMobile
+                ? 'h-8 w-8 rounded-lg p-0'
+                : 'min-h-[44px] min-w-[44px] rounded-xl p-3',
+              hasActiveFilters && 'border-primary/40 text-primary',
+              isInputFocused &&
+                'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+            )}
+            aria-label={t('songs.advancedFilters')}
+          >
+            <AdjustmentsHorizontalIcon
+              className={cn(
+                'max-lg:shrink-0',
+                isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
+              )}
+            />
+            {hasActiveFilters && (
+              <span
+                className={cn(
+                  'absolute rounded-full bg-primary',
+                  isLandscapeMobile
+                    ? 'right-1 top-1 h-1.5 w-1.5'
+                    : 'right-1.5 top-1.5 h-2 w-2'
+                )}
+              />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={scrollContainerRef}
+        data-main-scroll
+        onScroll={handleScroll}
+        className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+        {sortedSongs.length > 0 ? (
+          <>
+            <FolderSongList songs={sortedSongs} />
+            <div ref={loadMoreSentinelRef} className="h-8 w-full" aria-hidden />
+            {isListLoading && hasMoreSongs ? (
+              <p className="py-3 text-center text-sm text-muted-foreground">{t('common.loading')}</p>
+            ) : null}
+          </>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400">
+          <div className="py-12 text-center">
+            <p className="text-muted-foreground">
               {searchQuery.trim() ? t('songs.noResults') : t('folders.noSongsInFolder')}
             </p>
           </div>
         )}
-        </div>
       </div>
 
-      <DragOverlay>
-        {draggedSong ? (
-          <div className="opacity-90 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-blue-500 p-3 max-w-[200px]">
-            <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{draggedSong.title}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{draggedSong.author}</div>
-          </div>
-        ) : null}
-      </DragOverlay>
-
-      <DragDropOverlay folders={[folder]} isDragging={activeId !== null} />
-
-      <Snackbar
-        message={successMessage || ''}
-        isOpen={!!successMessage}
-        onClose={() => setSuccessMessage(null)}
-        type="success"
-        duration={3000}
-      />
-      <Snackbar
-        message={error || ''}
-        isOpen={!!error}
-        onClose={() => setError(null)}
-        type="error"
-        duration={5000}
-      />
-
-      {/* Filter Sheet — live preview (list stays visible behind) */}
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent
           side="bottom"
@@ -626,7 +480,7 @@ export default function FolderSongsClient({
                 </SelectContent>
               </Select>
               <div
-                className="flex rounded-full bg-muted/80 p-0.5 gap-0.5"
+                className="flex gap-0.5 rounded-full bg-muted/80 p-0.5"
                 role="group"
                 aria-label={t('songs.sortOrder')}
               >
@@ -634,7 +488,7 @@ export default function FolderSongsClient({
                   type="button"
                   onClick={() => updateSortFilters({ sortDirection: 'asc' })}
                   className={cn(
-                    'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+                    'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
                     sortDirection === 'asc'
                       ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                       : 'text-muted-foreground hover:text-foreground'
@@ -646,7 +500,7 @@ export default function FolderSongsClient({
                   type="button"
                   onClick={() => updateSortFilters({ sortDirection: 'desc' })}
                   className={cn(
-                    'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 min-h-[40px]',
+                    'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
                     sortDirection === 'desc'
                       ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
                       : 'text-muted-foreground hover:text-foreground'
@@ -676,6 +530,6 @@ export default function FolderSongsClient({
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </DndContext>
+    </div>
   )
 }

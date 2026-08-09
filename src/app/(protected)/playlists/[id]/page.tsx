@@ -13,7 +13,6 @@ export default async function FolderSongsPage({
   params: Promise<{ id: string }>
   searchParams: Promise<{
     page?: string
-    view?: string
     limit?: string
     q?: string
     sortOrder?: string
@@ -41,10 +40,6 @@ export default async function FolderSongsPage({
   }
 
   const limit = Math.max(1, Number(searchParamsResolved?.limit) || 50)
-  const view =
-    searchParamsResolved?.view === 'table' || searchParamsResolved?.view === 'gallery'
-      ? searchParamsResolved.view
-      : 'gallery'
   const q = searchParamsResolved?.q || searchParamsResolved?.searchQuery || ''
   const sortOrder =
     searchParamsResolved?.sortOrder === 'desc' || searchParamsResolved?.sortOrder === 'asc'
@@ -57,7 +52,6 @@ export default async function FolderSongsPage({
         folder={folder}
         page={1}
         limit={limit}
-        view={view}
         q={q}
         sortOrder={sortOrder}
         userId={user.id}

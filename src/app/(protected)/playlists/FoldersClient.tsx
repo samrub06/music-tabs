@@ -5,40 +5,62 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
 import { cn } from '@/lib/utils'
-import { FolderIcon, PlusIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon, Bars3Icon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import {
+  FolderIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  AdjustmentsHorizontalIcon,
+} from '@heroicons/react/24/outline'
 import { FolderCover } from '@/components/presentational/FolderCover'
+import { PlaylistListCard } from '@/components/library/playlistCards/PlaylistListCard'
+import { HubZoneHeader } from '@/components/library/HubZoneHeader'
+import { HubZonePlaylistSection } from '@/components/library/HubZonePlaylistSection'
+import CuratedPlaylistRow from '@/components/library/CuratedPlaylistRow'
+import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 import { Folder } from '@/types'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { updateFolderOrderAction } from './actions'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Bars3Icon } from '@heroicons/react/24/outline'
+
+type PlaylistScope = 'all' | 'mine'
 
 interface FoldersClientProps {
   folders: Folder[]
   folderSongCounts: Map<string, number>
+  explorerPlaylists: PublicPlaylistItem[]
 }
 
-interface SortableFolderItemProps {
+function MineFolderCard({
+  folder,
+  songCount,
+  isDragMode,
+}: {
   folder: Folder
   songCount: number
-  onFolderClick: (folderId: string) => void
   isDragMode: boolean
-}
-
-interface SortableFolderTableRowProps {
-  folder: Folder
-  songCount: number
-  onFolderClick: (folderId: string) => void
-  isDragMode: boolean
-}
-
-function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: SortableFolderTableRowProps) {
-  const { t } = useLanguage()
+}) {
   const {
     attributes,
     listeners,
@@ -53,102 +75,50 @@ function FolderListRow({ folder, songCount, onFolderClick, isDragMode }: Sortabl
     transition,
   }
 
-  return (
-    <li ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50')}>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onFolderClick(folder.id)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            onFolderClick(folder.id)
-          }
-        }}
-        className="flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/50 sm:py-3"
-      >
-        {isDragMode && (
-          <div
-            {...attributes}
-            {...listeners}
-            className="shrink-0 cursor-grab touch-none rounded-md p-1 active:cursor-grabbing"
-            style={{ touchAction: 'none' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Bars3Icon className="h-4 w-4 text-muted-foreground" />
-          </div>
-        )}
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-          <FolderCover imageUrl={folder.imageUrl} name={folder.name} songCount={songCount} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">{folder.name}</p>
-          <p className="truncate text-xs text-muted-foreground tabular-nums">
-            {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
-          </p>
-        </div>
-      </div>
-    </li>
+  const cover = (
+    <FolderCover
+      imageUrl={folder.imageUrl}
+      name={folder.name}
+      songCount={songCount}
+      className="h-full w-full rounded-md"
+      shapeClassName="h-full w-full"
+    />
   )
-}
-
-function SortableFolderItem({ folder, songCount, onFolderClick, isDragMode }: SortableFolderItemProps) {
-  const { t } = useLanguage()
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: folder.id, disabled: !isDragMode })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        'group flex min-w-0 cursor-pointer flex-col gap-1.5',
-        isDragging && 'opacity-50'
-      )}
-      onClick={() => onFolderClick(folder.id)}
+      className={cn('relative min-w-0 snap-start', isDragging && 'opacity-50')}
     >
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl">
-        <FolderCover
-          imageUrl={folder.imageUrl}
-          name={folder.name}
-          songCount={songCount}
-          shapeClassName="transition-transform duration-200 group-hover:scale-105"
-          className="transition-transform duration-200 group-hover:scale-105"
-        />
-        {isDragMode && (
-          <div
-            {...attributes}
-            {...listeners}
-            className="absolute bottom-1.5 right-1.5 touch-none rounded-md bg-background/90 p-1 shadow-sm backdrop-blur-sm"
-            style={{ touchAction: 'none' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Bars3Icon className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
-        )}
-      </div>
-      <div className="min-w-0">
-        <h3 className="truncate text-xs font-medium text-foreground">{folder.name}</h3>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground tabular-nums">
-          {songCount} {songCount === 1 ? t('songs.songCount') : t('songs.songCountPlural')}
-        </p>
-      </div>
+      <PlaylistListCard
+        href={`/playlists/${folder.id}`}
+        title={folder.name}
+        media={cover}
+        coverUrl={folder.imageUrl}
+      />
+      {isDragMode && (
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="absolute bottom-1.5 right-1.5 z-10 touch-none rounded-md bg-background/90 p-1 shadow-sm backdrop-blur-sm"
+          style={{ touchAction: 'none' }}
+          onClick={(e) => e.preventDefault()}
+          aria-label="Reorder"
+        >
+          <Bars3Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      )}
     </div>
   )
 }
 
-export default function FoldersClient({ folders: initialFolders, folderSongCounts }: FoldersClientProps) {
+export default function FoldersClient({
+  folders: initialFolders,
+  folderSongCounts,
+  explorerPlaylists,
+}: FoldersClientProps) {
   const router = useRouter()
   const { t } = useLanguage()
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -156,11 +126,10 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
   useHideHeaderOnScroll(scrollContainerRef, true)
 
   const [folders, setFolders] = useState(initialFolders)
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [scope, setScope] = useState<PlaylistScope>('all')
   const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [view, setView] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
   const [localSearchValue, setLocalSearchValue] = useState('')
   const [isInputFocused, setIsInputFocused] = useState(false)
@@ -175,126 +144,48 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
     setFolders(initialFolders)
   }, [initialFolders])
 
+  useEffect(() => {
+    if (scope !== 'mine') setIsDragMode(false)
+  }, [scope])
+
   const hasActiveFilters = sortBy !== 'songCount' || sortDirection !== 'desc'
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint: { distance: 8 },
     })
   )
-
-  // Only enable sensors when drag mode is on
   const activeSensors = isDragMode ? sensors : []
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event
-    setActiveId(active.id as string)
-    const folder = folders.find(f => f.id === active.id)
-    setDraggedFolder(folder || null)
-  }
+  const getSongCount = useCallback(
+    (folderId: string) => folderSongCounts.get(folderId) || 0,
+    [folderSongCounts]
+  )
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-
-    setActiveId(null)
-    setDraggedFolder(null)
-    setError(null)
-
-    if (!over || active.id === over.id) {
-      return
-    }
-
-    const oldIndex = folders.findIndex(f => f.id === active.id)
-    const newIndex = folders.findIndex(f => f.id === over.id)
-
-    if (oldIndex === -1 || newIndex === -1) {
-      return
-    }
-
-    // Calculate new display_order using decimal values
-    const movedFolder = folders[oldIndex]
-    let newOrder: number
-
-    // Create a temporary array with the new order to calculate positions correctly
-    const tempFolders = arrayMove([...folders], oldIndex, newIndex)
-
-    if (newIndex === 0) {
-      // Moved to the beginning
-      const firstOrder = tempFolders[1]?.displayOrder
-      newOrder = firstOrder !== undefined ? firstOrder - 1.0 : 0.0
-    } else if (newIndex === folders.length - 1) {
-      // Moved to the end
-      const prevOrder = tempFolders[newIndex - 1]?.displayOrder
-      newOrder = prevOrder !== undefined ? prevOrder + 1.0 : folders.length
-    } else {
-      // Moved between two items
-      const prevOrder = tempFolders[newIndex - 1]?.displayOrder
-      const nextOrder = tempFolders[newIndex + 1]?.displayOrder
-      
-      if (prevOrder !== undefined && nextOrder !== undefined) {
-        newOrder = (prevOrder + nextOrder) / 2
-      } else if (prevOrder !== undefined) {
-        newOrder = prevOrder + 1.0
-      } else if (nextOrder !== undefined) {
-        newOrder = nextOrder - 1.0
-      } else {
-        newOrder = newIndex + 1.0
-      }
-    }
-
-    // Optimistically update UI
-    const newFolders = arrayMove(folders, oldIndex, newIndex)
-    setFolders(newFolders)
-
-    try {
-      await updateFolderOrderAction(movedFolder.id, newOrder)
-      setSuccessMessage(`"${movedFolder.name}" réorganisé avec succès`)
-      // Refresh to update sidebar
-      router.refresh()
-    } catch (error) {
-      console.error('Error updating folder order:', error)
-      setError(t('folders.reorganizeError'))
-      // Revert on error
-      setFolders(folders)
-    }
-  }
-
-  const handleFolderClick = (folderId: string) => {
-    router.push(`/playlists/${folderId}`)
-  }
-
-  const getSongCount = useCallback((folderId: string) => {
-    return folderSongCounts.get(folderId) || 0
-  }, [folderSongCounts])
-
-  // Debounced search - update searchQuery after user stops typing
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(localSearchValue)
-    }, 300)
+    const timer = setTimeout(() => setSearchQuery(localSearchValue), 300)
     return () => clearTimeout(timer)
   }, [localSearchValue])
 
-  // Filter and sort folders
+  const filteredExplorer = useMemo(() => {
+    let list = [...explorerPlaylists]
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter((p) => p.name.toLowerCase().includes(q))
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name))
+    return list
+  }, [explorerPlaylists, searchQuery])
+
   const filteredFolders = useMemo(() => {
     let filtered = [...folders]
-    
-    // Apply search query
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim()
-      filtered = filtered.filter(folder => 
-        folder.name.toLowerCase().includes(query)
-      )
+      const q = searchQuery.toLowerCase().trim()
+      filtered = filtered.filter((folder) => folder.name.toLowerCase().includes(q))
     }
-    
-    // Apply sorting (manual order while dragging)
     if (isDragMode) {
       const orderMap = new Map(folders.map((folder, index) => [folder.id, index]))
-      filtered.sort(
-        (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
-      )
+      filtered.sort((a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0))
     } else {
       filtered.sort((a, b) => {
         let compareA: string | number
@@ -316,27 +207,80 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
             compareA = a.name.toLowerCase()
             compareB = b.name.toLowerCase()
         }
-
         let result: number
         if (typeof compareA === 'string' && typeof compareB === 'string') {
-          result = sortDirection === 'asc' ? compareA.localeCompare(compareB) : compareB.localeCompare(compareA)
+          result =
+            sortDirection === 'asc'
+              ? compareA.localeCompare(compareB)
+              : compareB.localeCompare(compareA)
         } else {
-          result = sortDirection === 'asc' ? (compareA as number) - (compareB as number) : (compareB as number) - (compareA as number)
+          result =
+            sortDirection === 'asc'
+              ? (compareA as number) - (compareB as number)
+              : (compareB as number) - (compareA as number)
         }
-
         if (result !== 0) return result
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       })
     }
-    
     return filtered
   }, [folders, searchQuery, sortBy, sortDirection, getSongCount, isDragMode])
-  
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggedFolder(folders.find((f) => f.id === event.active.id) || null)
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    setDraggedFolder(null)
+    setError(null)
+    if (!over || active.id === over.id) return
+
+    const oldIndex = folders.findIndex((f) => f.id === active.id)
+    const newIndex = folders.findIndex((f) => f.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const movedFolder = folders[oldIndex]
+    const tempFolders = arrayMove([...folders], oldIndex, newIndex)
+    let newOrder: number
+
+    if (newIndex === 0) {
+      const firstOrder = tempFolders[1]?.displayOrder
+      newOrder = firstOrder !== undefined ? firstOrder - 1.0 : 0.0
+    } else if (newIndex === folders.length - 1) {
+      const prevOrder = tempFolders[newIndex - 1]?.displayOrder
+      newOrder = prevOrder !== undefined ? prevOrder + 1.0 : folders.length
+    } else {
+      const prevOrder = tempFolders[newIndex - 1]?.displayOrder
+      const nextOrder = tempFolders[newIndex + 1]?.displayOrder
+      if (prevOrder !== undefined && nextOrder !== undefined) {
+        newOrder = (prevOrder + nextOrder) / 2
+      } else if (prevOrder !== undefined) {
+        newOrder = prevOrder + 1.0
+      } else if (nextOrder !== undefined) {
+        newOrder = nextOrder - 1.0
+      } else {
+        newOrder = newIndex + 1.0
+      }
+    }
+
+    setFolders(arrayMove(folders, oldIndex, newIndex))
+    try {
+      await updateFolderOrderAction(movedFolder.id, newOrder)
+      setSuccessMessage(`"${movedFolder.name}" réorganisé avec succès`)
+      router.refresh()
+    } catch (err) {
+      console.error('Error updating folder order:', err)
+      setError(t('folders.reorganizeError'))
+      setFolders(folders)
+    }
+  }
+
   const handleClearSearch = () => {
     setLocalSearchValue('')
     setSearchQuery('')
   }
-  
+
   const handleApplyFilters = () => {
     setSortBy(draftSortBy)
     setSortDirection(draftSortDirection)
@@ -357,6 +301,17 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
     setIsFilterSheetOpen(true)
   }
 
+  const scrollGridClass =
+    'grid grid-flow-col grid-rows-3 gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)] sm:auto-cols-[calc((100%-1rem)/3)] lg:auto-cols-[calc((100%-1.5rem)/4)]'
+  const scrollGridStyle = {
+    scrollbarWidth: 'none' as const,
+    msOverflowStyle: 'none' as const,
+    WebkitOverflowScrolling: 'touch' as const,
+  }
+
+  const emptyExplorer = filteredExplorer.length === 0
+  const emptyMine = filteredFolders.length === 0
+
   return (
     <DndContext
       sensors={activeSensors}
@@ -364,8 +319,35 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-background p-4 sm:p-6">
-        <div className={cn('relative shrink-0 pb-4', isInputFocused && 'z-30')}>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-4 sm:p-6">
+        <div className={cn('relative shrink-0 pb-3', isInputFocused && 'z-30')}>
+          <div className="mb-3 flex rounded-full bg-muted/80 p-0.5">
+            <button
+              type="button"
+              onClick={() => setScope('all')}
+              className={cn(
+                'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+                scope === 'all'
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {t('folders.filterAll')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope('mine')}
+              className={cn(
+                'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+                scope === 'mine'
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {t('folders.filterMine')}
+            </button>
+          </div>
+
           <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
             <div
               className={cn(
@@ -399,21 +381,26 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                 )}
               </div>
             </div>
-            <button
-              type="button"
-              onClick={openFilterSheet}
-              className={cn(
-                'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
-                hasActiveFilters && 'border-primary/40 text-primary',
-                isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
-              )}
-              aria-label={t('songs.advancedFilters')}
-            >
-              <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
-              {hasActiveFilters && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-              )}
-            </button>
+
+            {scope === 'mine' && (
+              <button
+                type="button"
+                onClick={openFilterSheet}
+                className={cn(
+                  'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                  hasActiveFilters && 'border-primary/40 text-primary',
+                  isInputFocused &&
+                    'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+                )}
+                aria-label={t('songs.advancedFilters')}
+              >
+                <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
+                {hasActiveFilters && (
+                  <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
+                )}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => router.push('/playlists/new')}
@@ -421,23 +408,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
               aria-label={t('folders.newFolder')}
             >
               <PlusIcon className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setView((current) => (current === 'grid' ? 'list' : 'grid'))}
-              className={cn(
-                'flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
-                isInputFocused && 'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
-              )}
-              title={view === 'grid' ? t('folders.listView') : t('folders.gridView')}
-              aria-label={view === 'grid' ? t('folders.listView') : t('folders.gridView')}
-              aria-pressed={view === 'list'}
-            >
-              {view === 'grid' ? (
-                <ListBulletIcon className="h-5 w-5" />
-              ) : (
-                <Squares2X2Icon className="h-5 w-5" />
-              )}
             </button>
           </div>
         </div>
@@ -447,92 +417,80 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
           data-main-scroll
           className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
-        {filteredFolders.length > 0 ? (
-          view === 'grid' ? (
-            isDragMode ? (
-              <SortableContext
-                items={filteredFolders.map((f) => f.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {filteredFolders.map((folder) => (
-                    <SortableFolderItem
-                      key={folder.id}
-                      folder={folder}
-                      songCount={getSongCount(folder.id)}
-                      onFolderClick={handleFolderClick}
-                      isDragMode={isDragMode}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
+          {scope === 'all' ? (
+            emptyExplorer ? (
+              <div className="py-12 text-center">
+                <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mt-2 text-sm font-medium text-foreground">
+                  {explorerPlaylists.length > 0
+                    ? t('folders.noFoldersFound')
+                    : t('folders.noExplorerPlaylists')}
+                </h3>
+                {explorerPlaylists.length > 0 ? (
+                  <p className="mt-1 text-sm text-muted-foreground">{t('folders.noFoldersMatch')}</p>
+                ) : null}
+              </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {filteredFolders.map((folder) => (
-                  <SortableFolderItem
-                    key={folder.id}
-                    folder={folder}
-                    songCount={getSongCount(folder.id)}
-                    onFolderClick={handleFolderClick}
-                    isDragMode={isDragMode}
+              <div className="space-y-2 pb-4">
+                <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
+                  <HubZoneHeader zone="israeli" />
+                  <HubZonePlaylistSection
+                    hubZone="israeli"
+                    publicPlaylists={filteredExplorer}
+                    showSwipeHint={!searchQuery.trim()}
                   />
-                ))}
+                </div>
+                <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
+                  <HubZoneHeader zone="songbook" />
+                  <HubZonePlaylistSection
+                    hubZone="songbook"
+                    publicPlaylists={filteredExplorer}
+                  />
+                </div>
+                <div id="hub-zone-international" className="mb-2 scroll-mt-24">
+                  <HubZoneHeader zone="international" />
+                  <HubZonePlaylistSection
+                    hubZone="international"
+                    publicPlaylists={filteredExplorer}
+                  />
+                </div>
+                <CuratedPlaylistRow section="decade" publicPlaylists={filteredExplorer} />
+                <CuratedPlaylistRow section="difficulty" publicPlaylists={filteredExplorer} />
               </div>
             )
-          ) : isDragMode ? (
+          ) : emptyMine ? (
+            <div className="py-12 text-center">
+              <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-2 text-sm font-medium text-foreground">
+                {folders.length > 0 ? t('folders.noFoldersFound') : t('folders.noFolders')}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {folders.length > 0 ? t('folders.noFoldersMatch') : t('folders.startCreating')}
+              </p>
+            </div>
+          ) : (
             <SortableContext
               items={filteredFolders.map((f) => f.id)}
               strategy={verticalListSortingStrategy}
             >
-              <ul>
+              <div className={scrollGridClass} style={scrollGridStyle}>
                 {filteredFolders.map((folder) => (
-                  <FolderListRow
+                  <MineFolderCard
                     key={folder.id}
                     folder={folder}
                     songCount={getSongCount(folder.id)}
-                    onFolderClick={handleFolderClick}
                     isDragMode={isDragMode}
                   />
                 ))}
-              </ul>
+              </div>
             </SortableContext>
-          ) : (
-            <ul>
-              {filteredFolders.map((folder) => (
-                <FolderListRow
-                  key={folder.id}
-                  folder={folder}
-                  songCount={getSongCount(folder.id)}
-                  onFolderClick={handleFolderClick}
-                  isDragMode={isDragMode}
-                />
-              ))}
-            </ul>
-          )
-        ) : folders.length > 0 ? (
-          <div className="text-center py-12">
-            <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('folders.noFoldersFound')}</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {t('folders.noFoldersMatch')}
-            </p>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('folders.noFolders')}</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {t('folders.startCreating')}
-            </p>
-          </div>
-        )}
+          )}
         </div>
       </div>
 
-      {/* Drag Overlay */}
       <DragOverlay>
         {draggedFolder ? (
-          <div className="bg-background/95 rounded-lg p-3 shadow-lg backdrop-blur-sm">
+          <div className="rounded-lg bg-background/95 p-3 shadow-lg backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <div className="w-12 shrink-0">
                 <FolderCover
@@ -541,15 +499,14 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
                   songCount={getSongCount(draggedFolder.id)}
                 />
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-foreground">{draggedFolder.name}</div>
+              <div className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                {draggedFolder.name}
               </div>
             </div>
           </div>
         ) : null}
       </DragOverlay>
 
-      {/* Success Snackbar */}
       <Snackbar
         message={successMessage || ''}
         isOpen={!!successMessage}
@@ -557,8 +514,6 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         type="success"
         duration={3000}
       />
-
-      {/* Error Snackbar */}
       <Snackbar
         message={error || ''}
         isOpen={!!error}
@@ -567,84 +522,89 @@ export default function FoldersClient({ folders: initialFolders, folderSongCount
         duration={5000}
       />
 
-      {/* Filter Sheet - bottom sheet like songs page */}
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
         <SheetContent
           side="bottom"
           showCloseButton={false}
-          className="flex h-[85vh] max-h-[640px] flex-col rounded-t-[1.75rem] border-0 bg-background shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)] overflow-hidden"
+          overlayClassName="bg-black/35 dark:bg-black/50"
+          className="flex h-auto max-h-[min(48vh,380px)] flex-col gap-0 overflow-hidden rounded-t-[1.75rem] border border-b-0 border-black/[0.06] bg-background/95 p-0 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-background/98 dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
         >
-          <div className="shrink-0 flex items-center py-1.5 -mt-1">
+          <div className="flex shrink-0 items-center px-4 py-1.5">
             <div className="flex-1" aria-hidden />
-            <div className="w-14 h-1 rounded-full bg-muted-foreground/25 cursor-ns-resize touch-none shrink-0" />
+            <div className="h-1 w-14 shrink-0 touch-none rounded-full bg-muted-foreground/25" />
             <div className="flex flex-1 justify-end">
-              <SheetClose className="flex min-w-[24px] min-h-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+              <SheetClose className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-sm opacity-70">
                 <XMarkIcon className="h-5 w-5" />
                 <span className="sr-only">{t('common.close')}</span>
               </SheetClose>
             </div>
           </div>
-
-          <SheetHeader className="shrink-0 px-1 pb-2">
+          <SheetHeader className="shrink-0 space-y-1 px-5 pb-2 text-start">
             <SheetTitle className="text-xl font-semibold">{t('songs.advancedFilters')}</SheetTitle>
           </SheetHeader>
-
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-5 pb-4 px-1">
-            <div className="space-y-2 py-1">
-              <Label htmlFor="sort-by" className="text-[11px] font-medium text-muted-foreground block">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pb-3">
+            <div className="space-y-2">
+              <Label htmlFor="sortBy" className="block text-[11px] font-medium text-muted-foreground">
                 {t('folders.sortBy')}
               </Label>
               <Select
                 value={draftSortBy}
-                onValueChange={(value: 'name' | 'createdAt' | 'songCount') => setDraftSortBy(value)}
+                onValueChange={(value) =>
+                  setDraftSortBy(value as 'name' | 'createdAt' | 'songCount')
+                }
               >
                 <SelectTrigger
-                  id="sort-by"
-                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+                  id="sortBy"
+                  className="h-11 w-full rounded-xl border-border/70 bg-muted/40 px-3 shadow-none focus:ring-0"
                 >
-                  <SelectValue placeholder={t('folders.sortBy')} />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name">{t('sidebar.folderName')}</SelectItem>
-                  <SelectItem value="createdAt">{t('songs.createdAt')}</SelectItem>
                   <SelectItem value="songCount">{t('folders.songCount')}</SelectItem>
+                  <SelectItem value="name">{t('songs.title')}</SelectItem>
+                  <SelectItem value="createdAt">{t('songs.createdAt')}</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2 py-1">
-              <Label htmlFor="sort-direction" className="text-[11px] font-medium text-muted-foreground block">
-                {t('songs.sortOrder')}
-              </Label>
-              <Select
-                value={draftSortDirection}
-                onValueChange={(value: 'asc' | 'desc') => setDraftSortDirection(value)}
-              >
-                <SelectTrigger
-                  id="sort-direction"
-                  className="h-11 rounded-none border-0 border-b border-border/70 bg-transparent px-0 shadow-none focus:ring-0"
+              <div className="flex gap-0.5 rounded-full bg-muted/80 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setDraftSortDirection('asc')}
+                  className={cn(
+                    'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+                    draftSortDirection === 'asc'
+                      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
                 >
-                  <SelectValue placeholder={t('songs.sortOrder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="asc">{t('songs.ascending')}</SelectItem>
-                  <SelectItem value="desc">{t('songs.descending')}</SelectItem>
-                </SelectContent>
-              </Select>
+                  {t('songs.ascending')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDraftSortDirection('desc')}
+                  className={cn(
+                    'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+                    draftSortDirection === 'desc'
+                      ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {t('songs.descending')}
+                </button>
+              </div>
             </div>
           </div>
-
-          <SheetFooter className="shrink-0 flex flex-row gap-3 px-6 py-4 pt-4 pb-8 safe-area-inset-bottom">
+          <SheetFooter className="safe-area-inset-bottom flex shrink-0 flex-row gap-3 border-t border-black/[0.06] px-5 py-3 pb-6 dark:border-white/[0.08]">
             <Button
               variant="outline"
               onClick={handleClearFilters}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+              disabled={!hasActiveFilters}
+              className="h-10 min-h-[44px] flex-1 rounded-xl font-medium"
             >
               {t('common.clear')}
             </Button>
             <Button
               onClick={handleApplyFilters}
-              className="flex-1 h-10 rounded-xl font-medium min-h-[44px] sm:flex-initial"
+              className="h-10 min-h-[44px] flex-1 rounded-xl font-medium"
             >
               {t('common.apply')}
             </Button>
