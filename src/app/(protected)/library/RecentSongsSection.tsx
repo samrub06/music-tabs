@@ -19,7 +19,7 @@ interface RecentSongsSectionProps {
   limit?: number
 }
 
-export default function RecentSongsSection({ songs, userId, limit = 10 }: RecentSongsSectionProps) {
+export default function RecentSongsSection({ songs, userId, limit = 3 }: RecentSongsSectionProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const [cloningId, setCloningId] = useState<string | null>(null)
@@ -49,20 +49,14 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
   }
 
   const displaySongs = songs.slice(0, limit)
+  const hasMore = songs.length > limit
+  const seeMoreHref = '/search/recent-songs'
 
   return (
     <section className="mb-6">
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <h2 className="text-lg font-bold text-foreground sm:text-xl">
-          {t('library.recentlyAdded')}
-        </h2>
-        <Link
-          href="/search/recent-songs"
-          className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {t('library.viewAll')}
-        </Link>
-      </div>
+      <h2 className="mb-2 text-lg font-bold text-foreground sm:text-xl">
+        {t('library.recentlyAdded')}
+      </h2>
       <ul className="space-y-1.5">
         {displaySongs.map((song) => {
           const href =
@@ -135,6 +129,16 @@ export default function RecentSongsSection({ songs, userId, limit = 10 }: Recent
           )
         })}
       </ul>
+      {hasMore ? (
+        <div className="mt-2">
+          <Link
+            href={seeMoreHref}
+            className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
+          >
+            {t('songEnd.seeMoreSongs')}
+          </Link>
+        </div>
+      ) : null}
     </section>
   )
 }

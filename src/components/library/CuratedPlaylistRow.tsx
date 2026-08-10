@@ -155,7 +155,7 @@ export default function CuratedPlaylistRow({
 
   const mediaOpts = {
     tsnioutFilterEnabled,
-    gaugeSize: isDifficultySection ? (isLandscapeMobile ? 48 : 56) : 72,
+    gaugeSize: isDifficultySection ? (isLandscapeMobile ? 64 : 76) : 72,
   }
 
   const renderSquareCards = (
@@ -184,6 +184,7 @@ export default function CuratedPlaylistRow({
           title={item.name}
           media={buildPlaylistCoverMedia(item, mediaOpts)}
           coverUrl={getPlaylistItemCoverUrl(item, mediaOpts)}
+          titlePlacement={isDifficultySection ? 'below' : 'overlay'}
         />
       ))}
     </>

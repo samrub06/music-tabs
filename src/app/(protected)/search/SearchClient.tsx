@@ -81,7 +81,8 @@ export default function SearchClient({
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null)
   useHideHeaderOnScroll(scrollContainerRef, true)
   const initialQueryApplied = useRef(false)
-  
+  const searchClosedByUserRef = useRef(false)
+
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [existingSongs, setExistingSongs] = useState<Map<number, string>>(new Map()) // resultIndex -> songId
@@ -95,6 +96,8 @@ export default function SearchClient({
   const [isLoadingMoreAi, setIsLoadingMoreAi] = useState(false)
   const [canLoadMoreAi, setCanLoadMoreAi] = useState(false)
   const [aiExcludeSongs, setAiExcludeSongs] = useState<AiExcludeSong[]>([])
+  /** Home explorer: full search only at scroll top (playlist-page pattern). */
+  const [searchExpanded, setSearchExpanded] = useState(true)
 
   useEffect(() => {
     setRecentSearches(loadRecentSearches())
@@ -385,7 +388,43 @@ export default function SearchClient({
     setExistingSongs(new Map())
     setMessage(null)
     setHasSearched(false)
+    setCanLoadMoreAi(false)
+    setAiExcludeSongs([])
   }
+
+  const closeSearch = useCallback(() => {
+    searchClosedByUserRef.current = true
+    setSearchExpanded(false)
+    searchInputRef.current?.blur()
+    aiTextareaRef.current?.blur()
+  }, [])
+
+  const handleScrollChrome = useCallback(() => {
+    if (isSearchTab) return
+    const el = scrollContainerRef.current
+    if (!el) return
+
+    const activelySearching =
+      isAIMode ||
+      isSearching ||
+      hasSearched ||
+      searchQuery.trim().length > 0
+
+    if (activelySearching) {
+      setSearchExpanded(true)
+      return
+    }
+
+    const atTop = el.scrollTop <= 24
+    if (atTop) {
+      if (!searchClosedByUserRef.current) {
+        setSearchExpanded(true)
+      }
+    } else {
+      searchClosedByUserRef.current = false
+      setSearchExpanded(false)
+    }
+  }, [isSearchTab, isAIMode, isSearching, hasSearched, searchQuery])
 
   // Handle view song (without adding)
   const handleViewSong = async (result: SearchResult) => {
@@ -427,16 +466,28 @@ export default function SearchClient({
   const showSearchTabEmpty =
     isSearchTab && !isAIMode && isIdle && recentSearches.length === 0
   const showAISuggestions = isAIMode && !searchQuery.trim() && !isSearching && !hasSearchResults
+  /** Collapse search only while browsing explorer hubs (playlist-page pattern). */
+  const searchVisible = isSearchTab || !showLibrarySections || searchExpanded
+  const showSearchClose = showLibrarySections && searchVisible
 
   return (
-    <div
-      ref={scrollContainerRef}
-      data-main-scroll
-      className={cn(
-        'flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-background',
-        'p-4 pt-4 sm:p-6 sm:pt-6 lg:px-0 lg:py-8 lg:min-h-screen'
-      )}
-    >
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
+      {showLibrarySections ? (
+        <div className="relative z-20 shrink-0 bg-background/95 px-4 pb-3 pt-4 backdrop-blur-md sm:px-6 sm:pt-6 lg:px-0 lg:pt-8">
+          <HubZoneNav scrollContainerRef={scrollContainerRef} className="mb-0" />
+        </div>
+      ) : null}
+
+      <div
+        ref={scrollContainerRef}
+        data-main-scroll
+        onScroll={isSearchTab ? undefined : handleScrollChrome}
+        className={cn(
+          'relative z-0 min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain',
+          'px-4 pb-4 sm:px-6 sm:pb-6 lg:px-0 lg:pb-8',
+          showLibrarySections ? 'pt-0' : 'pt-4 sm:pt-6 lg:pt-8'
+        )}
+      >
         {isSearchTab && (
           <header className="mb-4">
             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
@@ -445,152 +496,185 @@ export default function SearchClient({
           </header>
         )}
 
-        <div className="mb-6">
-          <div
-            className={cn(
-              'relative rounded-xl border bg-card transition-all duration-300 ease-in-out',
-              isAIMode
-                ? 'border-primary/40 ring-2 ring-primary/15 shadow-sm'
-                : 'min-h-[3.5rem] border-border'
-            )}
-          >
-            {isAIMode ? (
-              <div className="flex min-h-[3.5rem] items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3 sm:py-2.5">
-                <SparklesIcon
-                  className="h-5 w-5 shrink-0 text-muted-foreground"
-                  aria-hidden
-                />
-                <textarea
-                  ref={aiTextareaRef}
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={t('search.aiPlaceholder')}
-                  rows={1}
-                  className="min-h-[1.5rem] max-h-[7.5rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-1 text-base leading-snug text-foreground placeholder:text-muted-foreground focus:outline-none sm:leading-normal"
-                />
-                <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-                  <button
-                    type="button"
-                    onClick={handleSubmitSearch}
-                    disabled={!queryTrimmed || isSearching}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-                    aria-label={t('search.askWithAI')}
-                  >
-                    {isSearching ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    ) : (
-                      <SparklesIcon className="h-5 w-5" />
-                    )}
-                  </button>
-                  {showAIModeToggle && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setIsAIMode(false)
-                      }}
-                      className="flex min-h-[40px] shrink-0 items-center gap-1 rounded-lg px-1.5 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:max-w-none sm:gap-1.5 sm:px-2 sm:py-1.5"
-                      aria-label={t('search.backToNormalSearch')}
-                      type="button"
-                    >
-                      <MagnifyingGlassIcon className="h-4 w-4 shrink-0" />
-                      <span className="truncate text-xs font-medium sm:whitespace-nowrap">
-                        {t('search.backToNormalSearch')}
-                      </span>
-                    </button>
-                  )}
-                  {searchQuery && !isSearching && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      type="button"
-                      aria-label={t('common.clear')}
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  )}
+        <div
+          className={cn(
+            showLibrarySections
+              ? 'grid transition-[grid-template-rows,opacity,margin] duration-200 ease-out'
+              : 'mb-6',
+            showLibrarySections &&
+              (searchVisible
+                ? 'mb-3 grid-rows-[1fr] opacity-100'
+                : 'pointer-events-none mb-0 grid-rows-[0fr] opacity-0')
+          )}
+          aria-hidden={showLibrarySections && !searchVisible}
+        >
+          <div className={cn(showLibrarySections && 'overflow-hidden')}>
+            <div className={cn('flex items-stretch gap-2', !showLibrarySections && 'mb-0')}>
+              <div
+                className={cn(
+                  'relative min-w-0 flex-1 rounded-xl border bg-card transition-all duration-300 ease-in-out',
+                  isAIMode
+                    ? 'border-primary/40 ring-2 ring-primary/15 shadow-sm'
+                    : 'min-h-[3.5rem] border-border'
+                )}
+              >
+                {isAIMode ? (
+                  <div className="flex min-h-[3.5rem] items-center gap-2 px-2 py-2 sm:gap-3 sm:px-3 sm:py-2.5">
+                    <SparklesIcon
+                      className="h-5 w-5 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <textarea
+                      ref={aiTextareaRef}
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={t('search.aiPlaceholder')}
+                      rows={1}
+                      tabIndex={searchVisible ? 0 : -1}
+                      className="min-h-[1.5rem] max-h-[7.5rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-1 text-base leading-snug text-foreground placeholder:text-muted-foreground focus:outline-none sm:leading-normal"
+                    />
+                    <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+                      <button
+                        type="button"
+                        onClick={handleSubmitSearch}
+                        disabled={!queryTrimmed || isSearching}
+                        tabIndex={searchVisible ? 0 : -1}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                        aria-label={t('search.askWithAI')}
+                      >
+                        {isSearching ? (
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        ) : (
+                          <SparklesIcon className="h-5 w-5" />
+                        )}
+                      </button>
+                      {showAIModeToggle && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setIsAIMode(false)
+                          }}
+                          tabIndex={searchVisible ? 0 : -1}
+                          className="flex min-h-[40px] shrink-0 items-center gap-1 rounded-lg px-1.5 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:max-w-none sm:gap-1.5 sm:px-2 sm:py-1.5"
+                          aria-label={t('search.backToNormalSearch')}
+                          type="button"
+                        >
+                          <MagnifyingGlassIcon className="h-4 w-4 shrink-0" />
+                          <span className="truncate text-xs font-medium sm:whitespace-nowrap">
+                            {t('search.backToNormalSearch')}
+                          </span>
+                        </button>
+                      )}
+                      {searchQuery && !isSearching && (
+                        <button
+                          onClick={handleClearSearch}
+                          tabIndex={searchVisible ? 0 : -1}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          type="button"
+                          aria-label={t('common.clear')}
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+                      <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
+                    </div>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={t('search.searchPlaceholder')}
+                      tabIndex={searchVisible ? 0 : -1}
+                      className={cn(
+                        'block h-14 w-full border-0 bg-transparent py-4 pl-10 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none sm:pl-12',
+                        !showAIModeToggle
+                          ? queryTrimmed
+                            ? 'pr-10 sm:pr-12'
+                            : 'pr-3 sm:pr-4'
+                          : searchQuery
+                            ? 'pr-36 sm:pr-44'
+                            : 'pr-32 sm:pr-40'
+                      )}
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2 sm:pr-3">
+                      {showAIModeToggle && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            setIsAIMode(true)
+                          }}
+                          tabIndex={searchVisible ? 0 : -1}
+                          className="flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          aria-label={t('search.enableAIStyleSearch')}
+                          aria-pressed={false}
+                          type="button"
+                        >
+                          <SparklesIcon className="h-4 w-4 shrink-0" />
+                          <span className="hidden text-xs font-medium whitespace-nowrap sm:inline">
+                            {t('search.askWithAI')}
+                          </span>
+                        </button>
+                      )}
+                      {searchQuery && !isSearching && (
+                        <button
+                          onClick={handleClearSearch}
+                          tabIndex={searchVisible ? 0 : -1}
+                          className="flex items-center p-1 text-muted-foreground hover:text-foreground"
+                          type="button"
+                          aria-label={t('common.clear')}
+                        >
+                          <XMarkIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              {showSearchClose ? (
+                <button
+                  type="button"
+                  onClick={closeSearch}
+                  tabIndex={searchVisible ? 0 : -1}
+                  className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label={t('common.close')}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              ) : null}
+            </div>
+
+            {showAISuggestions && searchVisible && (
+              <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                <p className="text-xs font-medium text-muted-foreground">{t('search.aiSuggestions')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {AI_SUGGESTION_KEYS.map((key) => {
+                    const suggestion = t(key)
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-3 py-1.5 text-xs sm:text-sm rounded-full border border-border bg-card text-foreground hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors text-left"
+                      >
+                        {suggestion}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
-            ) : (
-              <>
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
-                  <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-                </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={t('search.searchPlaceholder')}
-                  className={cn(
-                    'block h-14 w-full border-0 bg-transparent py-4 pl-10 text-base leading-5 text-foreground transition-all duration-300 placeholder:text-muted-foreground focus:outline-none sm:pl-12',
-                    !showAIModeToggle
-                      ? queryTrimmed
-                        ? 'pr-10 sm:pr-12'
-                        : 'pr-3 sm:pr-4'
-                      : searchQuery
-                        ? 'pr-36 sm:pr-44'
-                        : 'pr-32 sm:pr-40'
-                  )}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2 sm:pr-3">
-                  {showAIModeToggle && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setIsAIMode(true)
-                      }}
-                      className="flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label={t('search.enableAIStyleSearch')}
-                      aria-pressed={false}
-                      type="button"
-                    >
-                      <SparklesIcon className="h-4 w-4 shrink-0" />
-                      <span className="hidden text-xs font-medium whitespace-nowrap sm:inline">
-                        {t('search.askWithAI')}
-                      </span>
-                    </button>
-                  )}
-                  {searchQuery && !isSearching && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="flex items-center p-1 text-muted-foreground hover:text-foreground"
-                      type="button"
-                      aria-label={t('common.clear')}
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-              </>
             )}
           </div>
-
-          {showAISuggestions && (
-            <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
-              <p className="text-xs font-medium text-muted-foreground">{t('search.aiSuggestions')}</p>
-              <div className="flex flex-wrap gap-2">
-                {AI_SUGGESTION_KEYS.map((key) => {
-                  const suggestion = t(key)
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                      className="px-3 py-1.5 text-xs sm:text-sm rounded-full border border-border bg-card text-foreground hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors text-left"
-                    >
-                      {suggestion}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Recent searches — below search bar with vignettes */}
-        {showRecentSearches && (
+        {showRecentSearches && searchVisible && (
           <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -801,10 +885,10 @@ export default function SearchClient({
 
         {/* Library sections — always mounted, hidden via CSS to avoid RSC reload flash */}
         <div className={cn(!showLibrarySections && 'hidden')}>
-          {showLibrarySections && <HubZoneNav scrollContainerRef={scrollContainerRef} />}
           {children}
           {showLibrarySections && <FloatingGuitar />}
         </div>
+      </div>
     </div>
   )
 }

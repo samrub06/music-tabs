@@ -13,16 +13,38 @@ const zoneTitleKey: Record<HubZone, string> = {
 interface HubZoneHeaderProps {
   zone: HubZone
   className?: string
+  /** When set, shows a See all / Show less control next to the title. */
+  seeAll?: boolean
+  onSeeAllToggle?: () => void
 }
 
-export function HubZoneHeader({ zone, className }: HubZoneHeaderProps) {
+export function HubZoneHeader({
+  zone,
+  className,
+  seeAll,
+  onSeeAllToggle,
+}: HubZoneHeaderProps) {
   const { t } = useLanguage()
 
   return (
-    <header className={cn('mb-4', className)}>
-      <h2 className="text-lg font-bold tracking-tight sm:text-xl">
+    <header
+      className={cn(
+        'mb-4 flex items-baseline justify-between gap-3',
+        className
+      )}
+    >
+      <h2 className="min-w-0 text-lg font-bold tracking-tight sm:text-xl">
         {t(zoneTitleKey[zone])}
       </h2>
+      {onSeeAllToggle ? (
+        <button
+          type="button"
+          onClick={onSeeAllToggle}
+          className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+        >
+          {seeAll ? t('folders.showLess') : t('library.viewAll')}
+        </button>
+      ) : null}
     </header>
   )
 }

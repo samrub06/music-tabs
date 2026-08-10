@@ -455,7 +455,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     name: 'Yeshiva',
     description: 'ישיבה — choeurs yeshiva et style yeshivish',
     section: 'jewish',
-    displayOrder: 26,
+    displayOrder: 4,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.yeshiva },
     gradientFrom: 'from-stone-700',
     gradientTo: 'to-amber-900',
@@ -477,7 +477,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     name: 'Piyutim Marocains',
     description: 'פיוטים מרוקאים — liturgie judéo-marocaine',
     section: 'jewish',
-    displayOrder: 4,
+    displayOrder: 5,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.moroccan },
     gradientFrom: 'from-red-700',
     gradientTo: 'to-rose-900',
@@ -488,7 +488,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     name: 'Tunisien',
     description: 'תוניסאי — piyutim et chants judéo-tunisiens',
     section: 'jewish',
-    displayOrder: 5,
+    displayOrder: 6,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.tunisian },
     gradientFrom: 'from-yellow-600',
     gradientTo: 'to-amber-800',
@@ -543,7 +543,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     name: 'Eviatar Banai',
     description: 'אביתר בנאי — hits et discographie',
     section: 'jewish',
-    displayOrder: 10,
+    displayOrder: 19,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.eviatarBanai },
     gradientFrom: 'from-stone-600',
     gradientTo: 'to-neutral-900',
@@ -598,7 +598,7 @@ export const CURATED_PLAYLISTS: CuratedPlaylistDefinition[] = [
     name: 'Ben Zur',
     description: 'בן צור — hits et discographie (פופ אמוני)',
     section: 'jewish',
-    displayOrder: 19,
+    displayOrder: 10,
     filter: { type: 'hebrewCatalog', value: HEBREW_CATALOG_GENRES.benZur },
     gradientFrom: 'from-emerald-600',
     gradientTo: 'to-teal-900',
@@ -952,12 +952,12 @@ const ISRAELI_HUB_SLUGS = new Set([
   'modern-israeli',
   'hanan-ben-ari',
   'aharon-razel',
-  'eviatar-banai',
+  'ben-zur',
   'shuli-rand',
   'ishay-ribo',
   'yosef-karduner',
   'akiva',
-  'ben-zur',
+  'eviatar-banai',
   'eyal-golan',
   'omer-adam',
   'eden-hason',
@@ -1008,4 +1008,12 @@ export function getHubZoneForSlug(slug: string): HubZone | undefined {
   }
   if (slug === 'spotify-top-israel') return 'israeli'
   return undefined
+}
+
+/** French artist / chart / genre shelves (subset of the international hub). */
+export function isFrenchCatalogSlug(slug: string): boolean {
+  if (INTERNATIONAL_ARTIST_SLUGS.has(slug)) return true
+  if (slug === 'spotify-top-france') return true
+  if (slug.startsWith('french-')) return true
+  return false
 }

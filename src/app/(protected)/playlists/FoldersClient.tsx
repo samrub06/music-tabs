@@ -20,6 +20,7 @@ import CuratedPlaylistRow from '@/components/library/CuratedPlaylistRow'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
 import { Folder } from '@/types'
 import { updateFolderOrderAction } from './actions'
+import { CreateFolderSheet } from '@/components/playlists/CreateFolderSheet'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -43,8 +44,13 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Bars3Icon } from '@heroicons/react/24/outline'
+import { getHubZoneForSlug, isFrenchCatalogSlug } from '@/data/curatedPlaylists'
+import {
+  loadPlaylistsHubSeeAllPref,
+  savePlaylistsHubSeeAllPref,
+} from '@/utils/playlistHubSeeAllPref'
 
-type PlaylistScope = 'all' | 'mine'
+type PlaylistScope = 'all' | 'mine' | 'religious' | 'international' | 'french'
 
 interface FoldersClientProps {
   folders: Folder[]
@@ -132,17 +138,32 @@ export default function FoldersClient({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [localSearchValue, setLocalSearchValue] = useState('')
-  const [isInputFocused, setIsInputFocused] = useState(false)
+  const [searchExpanded, setSearchExpanded] = useState(true)
+  const searchClosedByUserRef = useRef(false)
   const [isDragMode, setIsDragMode] = useState(false)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'songCount'>('songCount')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [draftSortBy, setDraftSortBy] = useState<'name' | 'createdAt' | 'songCount'>('songCount')
   const [draftSortDirection, setDraftSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [hubSeeAll, setHubSeeAll] = useState(false)
 
   useEffect(() => {
     setFolders(initialFolders)
   }, [initialFolders])
+
+  useEffect(() => {
+    setHubSeeAll(loadPlaylistsHubSeeAllPref())
+  }, [])
+
+  const toggleHubSeeAll = useCallback(() => {
+    setHubSeeAll((prev) => {
+      const next = !prev
+      savePlaylistsHubSeeAllPref(next)
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     if (scope !== 'mine') setIsDragMode(false)
@@ -167,15 +188,51 @@ export default function FoldersClient({
     return () => clearTimeout(timer)
   }, [localSearchValue])
 
+  const handleScrollChrome = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const atTop = el.scrollTop <= 24
+    if (atTop) {
+      if (!searchClosedByUserRef.current) {
+        setSearchExpanded(true)
+      }
+    } else {
+      searchClosedByUserRef.current = false
+      setSearchExpanded(false)
+    }
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    searchClosedByUserRef.current = true
+    setSearchExpanded(false)
+    searchInputRef.current?.blur()
+  }, [])
+
+  const handleClearSearch = () => {
+    setLocalSearchValue('')
+    setSearchQuery('')
+  }
+
   const filteredExplorer = useMemo(() => {
     let list = [...explorerPlaylists]
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
       list = list.filter((p) => p.name.toLowerCase().includes(q))
     }
+    if (scope === 'religious') {
+      list = list.filter(
+        (p) => !!p.curatedSlug && getHubZoneForSlug(p.curatedSlug) === 'songbook'
+      )
+    } else if (scope === 'international') {
+      list = list.filter(
+        (p) => !!p.curatedSlug && getHubZoneForSlug(p.curatedSlug) === 'international'
+      )
+    } else if (scope === 'french') {
+      list = list.filter((p) => !!p.curatedSlug && isFrenchCatalogSlug(p.curatedSlug))
+    }
     list.sort((a, b) => a.name.localeCompare(b.name))
     return list
-  }, [explorerPlaylists, searchQuery])
+  }, [explorerPlaylists, searchQuery, scope])
 
   const filteredFolders = useMemo(() => {
     let filtered = [...folders]
@@ -276,11 +333,6 @@ export default function FoldersClient({
     }
   }
 
-  const handleClearSearch = () => {
-    setLocalSearchValue('')
-    setSearchQuery('')
-  }
-
   const handleApplyFilters = () => {
     setSortBy(draftSortBy)
     setSortDirection(draftSortDirection)
@@ -311,6 +363,15 @@ export default function FoldersClient({
 
   const emptyExplorer = filteredExplorer.length === 0
   const emptyMine = filteredFolders.length === 0
+  const showExplorer = scope !== 'mine'
+
+  const scopeChips: { id: PlaylistScope; label: string }[] = [
+    { id: 'all', label: t('folders.filterAll') },
+    { id: 'mine', label: t('folders.filterMine') },
+    { id: 'religious', label: t('library.hubSongbookTab') },
+    { id: 'international', label: t('library.hubInternationalTab') },
+    { id: 'french', label: t('folders.filterFrench') },
+  ]
 
   return (
     <DndContext
@@ -320,66 +381,25 @@ export default function FoldersClient({
       onDragEnd={handleDragEnd}
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-4 sm:p-6">
-        <div className={cn('relative shrink-0 pb-3', isInputFocused && 'z-30')}>
-          <div className="mb-3 flex rounded-full bg-muted/80 p-0.5">
-            <button
-              type="button"
-              onClick={() => setScope('all')}
-              className={cn(
-                'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
-                scope === 'all'
-                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {t('folders.filterAll')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setScope('mine')}
-              className={cn(
-                'min-h-[40px] flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
-                scope === 'mine'
-                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {t('folders.filterMine')}
-            </button>
-          </div>
-
-          <div className="flex items-stretch gap-2 max-lg:transition-[gap] max-lg:duration-200">
-            <div
-              className={cn(
-                'relative min-w-0 transition-[flex] duration-200',
-                isInputFocused ? 'flex-1 max-lg:flex-[1_1_100%]' : 'flex-1'
-              )}
-            >
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
-                  <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
-                </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={localSearchValue}
-                  onChange={(e) => setLocalSearchValue(e.target.value)}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => window.setTimeout(() => setIsInputFocused(false), 150)}
-                  placeholder={t('folders.searchPlaceholder')}
-                  className="block min-h-[44px] w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:pl-12 sm:pr-12"
-                />
-                {localSearchValue && (
-                  <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-4 text-muted-foreground hover:text-foreground"
-                    aria-label={t('common.clear')}
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
+        <div className="relative z-20 shrink-0 bg-background/95 pb-3 backdrop-blur-md">
+          {/* Chips / actions stay sticky; full search sits above content in scroll. */}
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-hide">
+              {scopeChips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setScope(chip.id)}
+                  className={cn(
+                    'shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200',
+                    scope === chip.id
+                      ? 'bg-foreground text-background'
+                      : 'bg-muted/80 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {chip.label}
+                </button>
+              ))}
             </div>
 
             {scope === 'mine' && (
@@ -388,13 +408,11 @@ export default function FoldersClient({
                 onClick={openFilterSheet}
                 className={cn(
                   'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
-                  hasActiveFilters && 'border-primary/40 text-primary',
-                  isInputFocused &&
-                    'max-lg:pointer-events-none max-lg:w-0 max-lg:min-w-0 max-lg:overflow-hidden max-lg:p-0 max-lg:opacity-0'
+                  hasActiveFilters && 'border-primary/40 text-primary'
                 )}
                 aria-label={t('songs.advancedFilters')}
               >
-                <AdjustmentsHorizontalIcon className="h-5 w-5 max-lg:shrink-0" />
+                <AdjustmentsHorizontalIcon className="h-5 w-5" />
                 {hasActiveFilters && (
                   <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
                 )}
@@ -403,7 +421,7 @@ export default function FoldersClient({
 
             <button
               type="button"
-              onClick={() => router.push('/playlists/new')}
+              onClick={() => setIsCreateSheetOpen(true)}
               className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90"
               aria-label={t('folders.newFolder')}
             >
@@ -415,9 +433,60 @@ export default function FoldersClient({
         <div
           ref={scrollContainerRef}
           data-main-scroll
+          onScroll={handleScrollChrome}
           className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
-          {scope === 'all' ? (
+          {/* Full search lives in the scroll flow above Israeli / mine content. */}
+          <div
+            className={cn(
+              'grid transition-[grid-template-rows,opacity,margin] duration-200 ease-out',
+              searchExpanded
+                ? 'mb-3 grid-rows-[1fr] opacity-100'
+                : 'pointer-events-none mb-0 grid-rows-[0fr] opacity-0'
+            )}
+            aria-hidden={!searchExpanded}
+          >
+            <div className="overflow-hidden">
+              <div className="flex items-stretch gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
+                    <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
+                  </div>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={localSearchValue}
+                    onChange={(e) => setLocalSearchValue(e.target.value)}
+                    placeholder={t('folders.searchPlaceholder')}
+                    tabIndex={searchExpanded ? 0 : -1}
+                    className="block min-h-[44px] w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-10 text-sm leading-normal text-foreground placeholder:text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 sm:pl-12 sm:pr-12"
+                  />
+                  {localSearchValue ? (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute inset-y-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center pr-3 text-muted-foreground hover:text-foreground"
+                      aria-label={t('common.clear')}
+                      tabIndex={searchExpanded ? 0 : -1}
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  ) : null}
+                </div>
+                <button
+                  type="button"
+                  onClick={closeSearch}
+                  className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label={t('common.close')}
+                  tabIndex={searchExpanded ? 0 : -1}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {showExplorer ? (
             emptyExplorer ? (
               <div className="py-12 text-center">
                 <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -432,30 +501,56 @@ export default function FoldersClient({
               </div>
             ) : (
               <div className="space-y-2 pb-4">
-                <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
-                  <HubZoneHeader zone="israeli" />
-                  <HubZonePlaylistSection
-                    hubZone="israeli"
-                    publicPlaylists={filteredExplorer}
-                    showSwipeHint={!searchQuery.trim()}
-                  />
-                </div>
-                <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
-                  <HubZoneHeader zone="songbook" />
-                  <HubZonePlaylistSection
-                    hubZone="songbook"
-                    publicPlaylists={filteredExplorer}
-                  />
-                </div>
-                <div id="hub-zone-international" className="mb-2 scroll-mt-24">
-                  <HubZoneHeader zone="international" />
-                  <HubZonePlaylistSection
-                    hubZone="international"
-                    publicPlaylists={filteredExplorer}
-                  />
-                </div>
-                <CuratedPlaylistRow section="decade" publicPlaylists={filteredExplorer} />
-                <CuratedPlaylistRow section="difficulty" publicPlaylists={filteredExplorer} />
+                {(scope === 'all' || scope === 'religious') && (
+                  <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
+                    <HubZoneHeader
+                      zone="songbook"
+                      seeAll={hubSeeAll}
+                      onSeeAllToggle={toggleHubSeeAll}
+                    />
+                    <HubZonePlaylistSection
+                      hubZone="songbook"
+                      publicPlaylists={filteredExplorer}
+                      showSwipeHint={scope === 'all' && !searchQuery.trim() && !hubSeeAll}
+                      seeAll={hubSeeAll}
+                    />
+                  </div>
+                )}
+                {scope === 'all' && (
+                  <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
+                    <HubZoneHeader
+                      zone="israeli"
+                      seeAll={hubSeeAll}
+                      onSeeAllToggle={toggleHubSeeAll}
+                    />
+                    <HubZonePlaylistSection
+                      hubZone="israeli"
+                      publicPlaylists={filteredExplorer}
+                      showSwipeHint={!searchQuery.trim() && !hubSeeAll}
+                      seeAll={hubSeeAll}
+                    />
+                  </div>
+                )}
+                {(scope === 'all' || scope === 'international' || scope === 'french') && (
+                  <div id="hub-zone-international" className="mb-2 scroll-mt-24">
+                    <HubZoneHeader
+                      zone="international"
+                      seeAll={hubSeeAll}
+                      onSeeAllToggle={toggleHubSeeAll}
+                    />
+                    <HubZonePlaylistSection
+                      hubZone="international"
+                      publicPlaylists={filteredExplorer}
+                      seeAll={hubSeeAll}
+                    />
+                  </div>
+                )}
+                {scope === 'all' && (
+                  <>
+                    <CuratedPlaylistRow section="decade" publicPlaylists={filteredExplorer} />
+                    <CuratedPlaylistRow section="difficulty" publicPlaylists={filteredExplorer} />
+                  </>
+                )}
               </div>
             )
           ) : emptyMine ? (
@@ -520,6 +615,33 @@ export default function FoldersClient({
         onClose={() => setError(null)}
         type="error"
         duration={5000}
+      />
+
+      <CreateFolderSheet
+        open={isCreateSheetOpen}
+        onOpenChange={setIsCreateSheetOpen}
+        existingNames={folders.map((folder) => folder.name)}
+        onCreated={(created) => {
+          setScope('mine')
+          setFolders((prev) => {
+            if (prev.some((f) => f.id === created.id)) return prev
+            return [
+              {
+                id: created.id,
+                name: created.name,
+                displayOrder: created.displayOrder,
+                imageUrl: created.imageUrl,
+                parentId: created.parentId,
+                createdAt: created.createdAt,
+                updatedAt: created.updatedAt,
+              },
+              ...prev,
+            ]
+          })
+          setSuccessMessage(`"${created.name}"`)
+          scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+          router.refresh()
+        }}
       />
 
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>

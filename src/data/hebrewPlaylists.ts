@@ -245,7 +245,7 @@ export const HEBREW_PLAYLISTS: HebrewPlaylistDefinition[] = [
     name: 'Eviatar Banai',
     description: 'אביתר בנאי — hits et discographie',
     catalogGenre: HEBREW_CATALOG_GENRES.eviatarBanai,
-    displayOrder: 10,
+    displayOrder: 19,
     gradientFrom: 'from-stone-600',
     gradientTo: 'to-neutral-900',
     songs: [
@@ -377,7 +377,7 @@ export const HEBREW_PLAYLISTS: HebrewPlaylistDefinition[] = [
     name: 'Ben Zur',
     description: 'בן צור — hits et discographie (פופ אמוני)',
     catalogGenre: HEBREW_CATALOG_GENRES.benZur,
-    displayOrder: 19,
+    displayOrder: 10,
     gradientFrom: 'from-emerald-600',
     gradientTo: 'to-teal-900',
     songs: [

@@ -13,6 +13,8 @@ import { useLanguage } from '@/context/LanguageContext'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import type { ForYouArtistSong } from '@/types/forYou'
 
+const PREVIEW_LIMIT = 3
+
 interface ForYouArtistSectionProps {
   artistName: string
   songs: ForYouArtistSong[]
@@ -57,11 +59,15 @@ export default function ForYouArtistSection({
     return null
   }
 
+  const displaySongs = songs.slice(0, PREVIEW_LIMIT)
+  const hasMore = songs.length > PREVIEW_LIMIT
+  const seeMoreHref = `/?q=${encodeURIComponent(artistName)}`
+
   return (
     <section className="mb-6">
       <h2 className="mb-2 text-lg font-bold text-foreground sm:text-xl">{sectionTitle}</h2>
       <ul className="space-y-1.5">
-        {songs.map((song) => {
+        {displaySongs.map((song) => {
           const href = song.inUserLibrary && song.userSongId
             ? `/song/${song.userSongId}`
             : `/song/${song.id}`
@@ -124,6 +130,16 @@ export default function ForYouArtistSection({
           )
         })}
       </ul>
+      {hasMore ? (
+        <div className="mt-2">
+          <Link
+            href={seeMoreHref}
+            className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/60"
+          >
+            {t('songEnd.seeMoreSongs')}
+          </Link>
+        </div>
+      ) : null}
     </section>
   )
 }

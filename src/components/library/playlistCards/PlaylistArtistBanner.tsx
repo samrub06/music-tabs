@@ -20,7 +20,7 @@ export type PlaylistArtistBannerProps = {
   className?: string
 }
 
-/** Spotify-style artist playlist banner: tinted bg, name left, rotated cover right. */
+/** Artist playlist banner: tinted bg, name left, rotated cover filling the right side. */
 export function PlaylistArtistBanner({
   href,
   name,
@@ -55,8 +55,8 @@ export function PlaylistArtistBanner({
         // Avoid `w-full` in pairRow: two 100%-width flex children can stack/wrap
         // on mobile instead of sharing one row.
         pairRow
-          ? 'min-h-[5.25rem] min-w-0 sm:min-h-[7rem]'
-          : 'min-h-[6.5rem] w-full sm:min-h-[8.25rem]',
+          ? 'min-h-[4.5rem] min-w-0 sm:min-h-[6rem]'
+          : 'min-h-[5.5rem] w-full sm:min-h-[7rem]',
         className
       )}
       style={{ backgroundColor: bg }}
@@ -65,8 +65,8 @@ export function PlaylistArtistBanner({
         className={cn(
           'relative z-10 flex min-w-0 flex-col justify-center',
           pairRow
-            ? 'max-w-[62%] p-2 sm:max-w-[55%] sm:p-3'
-            : 'max-w-[50%] p-2.5 sm:max-w-[50%] sm:p-3.5'
+            ? 'max-w-[68%] p-2 sm:max-w-[60%] sm:p-3'
+            : 'max-w-[58%] p-2.5 sm:max-w-[55%] sm:p-3.5'
         )}
       >
         <h3
@@ -83,16 +83,17 @@ export function PlaylistArtistBanner({
       <div
         className={cn(
           'pointer-events-none absolute inset-y-0 end-0 overflow-hidden',
-          pairRow ? 'w-[48%]' : 'w-[50%]'
+          pairRow ? 'w-[40%]' : 'w-[42%]'
         )}
         aria-hidden
       >
         <div
           className={cn(
-            'absolute',
+            // Anchored bottom-end; hangs slightly below for a grounded look.
+            'absolute bottom-0 end-0 translate-x-[10%] translate-y-[22%]',
             pairRow
-              ? '-bottom-4 -end-3 sm:-bottom-6 sm:-end-2'
-              : '-bottom-7 -end-4 sm:-bottom-11 sm:-end-5'
+              ? 'h-[145%] w-[110%] rotate-[22deg] sm:rotate-[24deg]'
+              : 'h-[150%] w-[115%] rotate-[20deg] sm:rotate-[22deg]'
           )}
         >
           {coverUrl ? (
@@ -100,24 +101,19 @@ export function PlaylistArtistBanner({
             <img
               src={coverUrl}
               alt=""
-              className={cn(
-                'rounded-lg object-cover shadow-lg ring-1 ring-white/15',
-                pairRow
-                  ? 'h-16 w-16 rotate-[18deg] sm:h-24 sm:w-24 sm:rotate-[22deg]'
-                  : 'h-32 w-32 rotate-[10deg] sm:h-44 sm:w-44 sm:rotate-[12deg]'
-              )}
+              className="h-full w-full rounded-sm object-cover shadow-md transition-transform duration-200 group-hover:scale-[1.03]"
             />
           ) : (
-            <div
-              className={cn(
-                'rounded-lg bg-white/10',
-                pairRow
-                  ? 'h-16 w-16 rotate-[18deg] sm:h-24 sm:w-24 sm:rotate-[22deg]'
-                  : 'h-32 w-32 rotate-[10deg] sm:h-44 sm:w-44 sm:rotate-[12deg]'
-              )}
-            />
+            <div className="h-full w-full rounded-sm bg-white/10" />
           )}
         </div>
+        {/* Soft blend into the tinted title side */}
+        <div
+          className="absolute inset-y-0 start-0 w-2/5"
+          style={{
+            backgroundImage: `linear-gradient(to right, ${bg}, transparent)`,
+          }}
+        />
       </div>
     </Link>
   )

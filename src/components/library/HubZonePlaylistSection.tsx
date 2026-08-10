@@ -42,6 +42,8 @@ interface HubZonePlaylistSectionProps {
   publicPlaylists: PublicPlaylistItem[]
   showUserShortcutCards?: boolean
   showSwipeHint?: boolean
+  /** Expand list/square shelves into a wrapping grid below banners. */
+  seeAll?: boolean
 }
 
 export function HubZonePlaylistSection({
@@ -49,6 +51,7 @@ export function HubZonePlaylistSection({
   publicPlaylists,
   showUserShortcutCards = false,
   showSwipeHint = false,
+  seeAll = false,
 }: HubZonePlaylistSectionProps) {
   const { t, isRtl } = useLanguage()
   const isLandscapeMobile = useLandscapeMobile()
@@ -66,17 +69,17 @@ export function HubZonePlaylistSection({
   const listHintThreshold = scrollGridRows * 2
 
   useEffect(() => {
-    if (!showSwipeHint) return
+    if (!showSwipeHint || seeAll) return
     const start = window.setTimeout(() => setHintActive(true), 300)
     const autoHide = window.setTimeout(() => setHintActive(false), 6500)
     return () => {
       window.clearTimeout(start)
       window.clearTimeout(autoHide)
     }
-  }, [showSwipeHint])
+  }, [showSwipeHint, seeAll])
 
   useEffect(() => {
-    if (!showSwipeHint || !hintActive) return
+    if (!showSwipeHint || !hintActive || seeAll) return
     const el = listScrollRef.current
     if (!el) return
 
@@ -103,7 +106,7 @@ export function HubZonePlaylistSection({
       window.clearTimeout(peekStart)
       peekingRef.current = false
     }
-  }, [showSwipeHint, hintActive, isRtl])
+  }, [showSwipeHint, hintActive, isRtl, seeAll])
 
   const shortcuts: ShortcutCard[] = showUserShortcutCards
     ? [
@@ -191,9 +194,14 @@ export function HubZonePlaylistSection({
   ]
 
   const scrollGridClass = cn(
-    'grid grid-flow-col gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory auto-cols-[calc((100%-0.5rem)/2)]',
+    'grid grid-flow-col gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory',
+    // Israeli: slightly narrower so the next page peeks. Other hubs: exact 50% pairs.
+    hubZone === 'israeli'
+      ? 'auto-cols-[calc((100%-1rem)/2.35)]'
+      : 'auto-cols-[calc((100%-0.5rem)/2)]',
     scrollGridRowsClass
   )
+  const seeAllListGridClass = 'grid grid-cols-2 gap-2'
   const scrollGridStyle = {
     scrollbarWidth: 'none' as const,
     msOverflowStyle: 'none' as const,
@@ -234,6 +242,24 @@ export function HubZonePlaylistSection({
       )
     }
     if (items.length === 2) return renderPairedBanners(items)
+    if (seeAll) {
+      return (
+        <div className="grid w-full grid-cols-2 gap-2">
+          {items.map((item) => (
+            <PlaylistArtistBanner
+              key={item.id}
+              href={`/library/${item.id}`}
+              name={item.name}
+              curatedSlug={item.curatedSlug}
+              imageUrl={item.imageUrl}
+              tsnioutFilterEnabled={tsnioutFilterEnabled}
+              pairRow
+              className="min-w-0"
+            />
+          ))}
+        </div>
+      )
+    }
     return (
       <div className={scrollGridClass} style={scrollGridStyle}>
         {items.map((item) => (
@@ -263,9 +289,9 @@ export function HubZonePlaylistSection({
       {listItems.length > 0 && (
         <div className="relative">
           <div
-            ref={listScrollRef}
-            className={scrollGridClass}
-            style={scrollGridStyle}
+            ref={seeAll ? undefined : listScrollRef}
+            className={seeAll ? seeAllListGridClass : scrollGridClass}
+            style={seeAll ? undefined : scrollGridStyle}
           >
             {listItems.map((item) => (
               <PlaylistListCard
@@ -274,11 +300,11 @@ export function HubZonePlaylistSection({
                 title={item.title}
                 media={item.media}
                 coverUrl={item.coverUrl}
-                className="min-w-0 snap-start"
+                className={cn('min-w-0', !seeAll && 'snap-start')}
               />
             ))}
           </div>
-          {hintActive && listItems.length > listHintThreshold && (
+          {!seeAll && hintActive && listItems.length > listHintThreshold && (
             <SwipeRowHint />
           )}
         </div>
@@ -287,20 +313,28 @@ export function HubZonePlaylistSection({
       {square.length > 0 && (
         <div className="relative">
           <div
-            ref={squareScrollRef}
-            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch',
-            }}
+            ref={seeAll ? undefined : squareScrollRef}
+            className={
+              seeAll
+                ? 'grid grid-cols-2 gap-3 sm:grid-cols-3'
+                : 'flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory'
+            }
+            style={
+              seeAll
+                ? undefined
+                : {
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch',
+                  }
+            }
           >
             {square.map((item) => (
               <PlaylistSquareCard
                 key={item.id}
                 href={`/library/${item.id}`}
                 title={item.name}
-                layout="scroll"
+                layout={seeAll ? 'grid' : 'scroll'}
                 compact={isLandscapeMobile}
                 media={buildPlaylistCoverMedia(item, mediaOpts)}
                 coverUrl={getPlaylistItemCoverUrl(item, mediaOpts)}
