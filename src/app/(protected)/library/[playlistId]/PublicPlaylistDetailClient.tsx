@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { useAuthContext } from '@/context/AuthContext'
+import { usePageHeader } from '@/context/PageHeaderContext'
 import { Playlist, Song } from '@/types'
 import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
 import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/actions'
@@ -93,9 +94,12 @@ function storePlaylistNavigation(
 
 export function PublicPlaylistSearchProvider({
   playlist,
+  backHref = '/',
   children,
 }: {
   playlist: Playlist
+  /** Where the header back button should go (e.g. /playlists when opened from that hub). */
+  backHref?: string
   children: ReactNode
 }) {
   const router = useRouter()
@@ -110,6 +114,8 @@ export function PublicPlaylistSearchProvider({
     setShowSnackbar,
     handleSaveToFolders,
   } = useSavePublicPlaylistToFolders(playlist)
+
+  usePageHeader(playlist.name, backHref)
 
   useEffect(() => {
     if (!isLandscapeMobile) setPreferListView(false)

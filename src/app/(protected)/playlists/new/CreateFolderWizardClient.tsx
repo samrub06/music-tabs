@@ -22,19 +22,15 @@ import {
   MAX_FOLDER_SONGS_ON_CREATE,
 } from '@/lib/validation/schemas'
 import { cn } from '@/lib/utils'
+import type { CreateFolderSongOption } from '@/components/playlists/CreateFolderSheet'
+
+export type { CreateFolderSongOption as WizardSongOption }
 
 type WizardStep = 1 | 2 | 3
 
-export interface WizardSongOption {
-  id: string
-  title: string
-  author: string
-  genre: string | null
-}
-
 interface CreateFolderWizardClientProps {
   existingNames: string[]
-  songs: WizardSongOption[]
+  songs: CreateFolderSongOption[]
 }
 
 function normalizeFolderName(name: string): string {

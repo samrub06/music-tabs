@@ -34,18 +34,22 @@ export async function generateMetadata({
 
 export default async function PublicPlaylistDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ playlistId: string }>
+  searchParams: Promise<{ from?: string }>
 }) {
   const { playlistId } = await params
+  const { from } = await searchParams
   const supabase = await createSafeServerClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const backHref = from === 'playlists' ? '/playlists' : '/'
 
   try {
     const playlist = await getCachedPublicPlaylist(playlistId)
 
     return (
-      <PublicPlaylistSearchProvider playlist={playlist}>
+      <PublicPlaylistSearchProvider playlist={playlist} backHref={backHref}>
         <PublicPlaylistPageFrame>
           <PublicPlaylistDetailShell
             playlist={playlist}

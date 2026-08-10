@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/LanguageContext'
 import { useHideHeaderOnScroll } from '@/lib/hooks/useHideHeaderOnScroll'
@@ -21,6 +21,7 @@ import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection
 import { Folder } from '@/types'
 import { updateFolderOrderAction } from './actions'
 import { CreateFolderSheet } from '@/components/playlists/CreateFolderSheet'
+import type { CreateFolderSongOption } from '@/components/playlists/CreateFolderSheet'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -56,6 +57,7 @@ interface FoldersClientProps {
   folders: Folder[]
   folderSongCounts: Map<string, number>
   explorerPlaylists: PublicPlaylistItem[]
+  librarySongs: CreateFolderSongOption[]
 }
 
 function MineFolderCard({
@@ -124,6 +126,7 @@ export default function FoldersClient({
   folders: initialFolders,
   folderSongCounts,
   explorerPlaylists,
+  librarySongs,
 }: FoldersClientProps) {
   const router = useRouter()
   const { t } = useLanguage()
@@ -233,6 +236,26 @@ export default function FoldersClient({
     list.sort((a, b) => a.name.localeCompare(b.name))
     return list
   }, [explorerPlaylists, searchQuery, scope])
+
+  /** Search-only list for hub sections kept mounted (zone filter is local to each hub). */
+  const searchFilteredExplorer = useMemo(() => {
+    if (!searchQuery.trim()) return explorerPlaylists
+    const q = searchQuery.toLowerCase().trim()
+    return explorerPlaylists.filter((p) => p.name.toLowerCase().includes(q))
+  }, [explorerPlaylists, searchQuery])
+
+  const frenchExplorer = useMemo(
+    () =>
+      searchFilteredExplorer.filter(
+        (p) => !!p.curatedSlug && isFrenchCatalogSlug(p.curatedSlug)
+      ),
+    [searchFilteredExplorer]
+  )
+
+  const selectScope = useCallback((next: PlaylistScope) => {
+    startTransition(() => setScope(next))
+    scrollContainerRef.current?.scrollTo({ top: 0 })
+  }, [])
 
   const filteredFolders = useMemo(() => {
     let filtered = [...folders]
@@ -363,7 +386,6 @@ export default function FoldersClient({
 
   const emptyExplorer = filteredExplorer.length === 0
   const emptyMine = filteredFolders.length === 0
-  const showExplorer = scope !== 'mine'
 
   const scopeChips: { id: PlaylistScope; label: string }[] = [
     { id: 'all', label: t('folders.filterAll') },
@@ -389,7 +411,7 @@ export default function FoldersClient({
                 <button
                   key={chip.id}
                   type="button"
-                  onClick={() => setScope(chip.id)}
+                  onClick={() => selectScope(chip.id)}
                   className={cn(
                     'shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200',
                     scope === chip.id
@@ -486,8 +508,9 @@ export default function FoldersClient({
             </div>
           </div>
 
-          {showExplorer ? (
-            emptyExplorer ? (
+          {/* Keep explorer + mine mounted; only toggle visibility so chips don’t remount the page. */}
+          <div className={cn(scope === 'mine' && 'hidden')} aria-hidden={scope === 'mine'}>
+            {emptyExplorer ? (
               <div className="py-12 text-center">
                 <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mt-2 text-sm font-medium text-foreground">
@@ -501,85 +524,115 @@ export default function FoldersClient({
               </div>
             ) : (
               <div className="space-y-2 pb-4">
-                {(scope === 'all' || scope === 'religious') && (
-                  <div id="hub-zone-songbook" className="mb-2 scroll-mt-24">
-                    <HubZoneHeader
-                      zone="songbook"
-                      seeAll={hubSeeAll}
-                      onSeeAllToggle={toggleHubSeeAll}
-                    />
-                    <HubZonePlaylistSection
-                      hubZone="songbook"
-                      publicPlaylists={filteredExplorer}
-                      showSwipeHint={scope === 'all' && !searchQuery.trim() && !hubSeeAll}
-                      seeAll={hubSeeAll}
-                    />
-                  </div>
-                )}
-                {scope === 'all' && (
-                  <div id="hub-zone-israeli" className="mb-2 scroll-mt-24">
-                    <HubZoneHeader
-                      zone="israeli"
-                      seeAll={hubSeeAll}
-                      onSeeAllToggle={toggleHubSeeAll}
-                    />
-                    <HubZonePlaylistSection
-                      hubZone="israeli"
-                      publicPlaylists={filteredExplorer}
-                      showSwipeHint={!searchQuery.trim() && !hubSeeAll}
-                      seeAll={hubSeeAll}
-                    />
-                  </div>
-                )}
-                {(scope === 'all' || scope === 'international' || scope === 'french') && (
-                  <div id="hub-zone-international" className="mb-2 scroll-mt-24">
-                    <HubZoneHeader
-                      zone="international"
-                      seeAll={hubSeeAll}
-                      onSeeAllToggle={toggleHubSeeAll}
-                    />
-                    <HubZonePlaylistSection
-                      hubZone="international"
-                      publicPlaylists={filteredExplorer}
-                      seeAll={hubSeeAll}
-                    />
-                  </div>
-                )}
-                {scope === 'all' && (
-                  <>
-                    <CuratedPlaylistRow section="decade" publicPlaylists={filteredExplorer} />
-                    <CuratedPlaylistRow section="difficulty" publicPlaylists={filteredExplorer} />
-                  </>
-                )}
-              </div>
-            )
-          ) : emptyMine ? (
-            <div className="py-12 text-center">
-              <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-2 text-sm font-medium text-foreground">
-                {folders.length > 0 ? t('folders.noFoldersFound') : t('folders.noFolders')}
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {folders.length > 0 ? t('folders.noFoldersMatch') : t('folders.startCreating')}
-              </p>
-            </div>
-          ) : (
-            <SortableContext
-              items={filteredFolders.map((f) => f.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className={scrollGridClass} style={scrollGridStyle}>
-                {filteredFolders.map((folder) => (
-                  <MineFolderCard
-                    key={folder.id}
-                    folder={folder}
-                    songCount={getSongCount(folder.id)}
-                    isDragMode={isDragMode}
+                <div
+                  id="hub-zone-songbook"
+                  className={cn(
+                    'mb-2 scroll-mt-24',
+                    !(scope === 'all' || scope === 'religious') && 'hidden'
+                  )}
+                  aria-hidden={!(scope === 'all' || scope === 'religious')}
+                >
+                  <HubZoneHeader
+                    zone="songbook"
+                    seeAll={hubSeeAll}
+                    onSeeAllToggle={toggleHubSeeAll}
                   />
-                ))}
+                  <HubZonePlaylistSection
+                    hubZone="songbook"
+                    publicPlaylists={searchFilteredExplorer}
+                    showSwipeHint={!searchQuery.trim() && !hubSeeAll}
+                    seeAll={hubSeeAll}
+                    libraryFrom="playlists"
+                  />
+                </div>
+                <div
+                  id="hub-zone-israeli"
+                  className={cn('mb-2 scroll-mt-24', scope !== 'all' && 'hidden')}
+                  aria-hidden={scope !== 'all'}
+                >
+                  <HubZoneHeader
+                    zone="israeli"
+                    seeAll={hubSeeAll}
+                    onSeeAllToggle={toggleHubSeeAll}
+                  />
+                  <HubZonePlaylistSection
+                    hubZone="israeli"
+                    publicPlaylists={searchFilteredExplorer}
+                    showSwipeHint={!searchQuery.trim() && !hubSeeAll}
+                    seeAll={hubSeeAll}
+                    libraryFrom="playlists"
+                  />
+                </div>
+                <div
+                  id="hub-zone-international"
+                  className={cn(
+                    'mb-2 scroll-mt-24',
+                    !(scope === 'all' || scope === 'international' || scope === 'french') &&
+                      'hidden'
+                  )}
+                  aria-hidden={
+                    !(scope === 'all' || scope === 'international' || scope === 'french')
+                  }
+                >
+                  <HubZoneHeader
+                    zone="international"
+                    seeAll={hubSeeAll}
+                    onSeeAllToggle={toggleHubSeeAll}
+                  />
+                  <HubZonePlaylistSection
+                    hubZone="international"
+                    publicPlaylists={
+                      scope === 'french' ? frenchExplorer : searchFilteredExplorer
+                    }
+                    seeAll={hubSeeAll}
+                    libraryFrom="playlists"
+                  />
+                </div>
+                <div className={cn(scope !== 'all' && 'hidden')} aria-hidden={scope !== 'all'}>
+                  <CuratedPlaylistRow
+                    section="decade"
+                    publicPlaylists={searchFilteredExplorer}
+                    libraryFrom="playlists"
+                  />
+                  <CuratedPlaylistRow
+                    section="difficulty"
+                    publicPlaylists={searchFilteredExplorer}
+                    libraryFrom="playlists"
+                  />
+                </div>
               </div>
-            </SortableContext>
-          )}
+            )}
+          </div>
+
+          <div className={cn(scope !== 'mine' && 'hidden')} aria-hidden={scope !== 'mine'}>
+            {emptyMine ? (
+              <div className="py-12 text-center">
+                <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mt-2 text-sm font-medium text-foreground">
+                  {folders.length > 0 ? t('folders.noFoldersFound') : t('folders.noFolders')}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {folders.length > 0 ? t('folders.noFoldersMatch') : t('folders.startCreating')}
+                </p>
+              </div>
+            ) : (
+              <SortableContext
+                items={filteredFolders.map((f) => f.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className={scrollGridClass} style={scrollGridStyle}>
+                  {filteredFolders.map((folder) => (
+                    <MineFolderCard
+                      key={folder.id}
+                      folder={folder}
+                      songCount={getSongCount(folder.id)}
+                      isDragMode={isDragMode}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            )}
+          </div>
         </div>
       </div>
 
@@ -621,6 +674,7 @@ export default function FoldersClient({
         open={isCreateSheetOpen}
         onOpenChange={setIsCreateSheetOpen}
         existingNames={folders.map((folder) => folder.name)}
+        songs={librarySongs}
         onCreated={(created) => {
           setScope('mine')
           setFolders((prev) => {

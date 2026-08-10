@@ -46,6 +46,8 @@ interface CuratedPlaylistRowProps {
   showSectionTitle?: boolean
   /** Mobile-only finger swipe overlay teaching horizontal scroll (first row). */
   showSwipeHint?: boolean
+  /** When set, library detail links include ?from=… for correct back navigation. */
+  libraryFrom?: string
 }
 
 export default function CuratedPlaylistRow({
@@ -54,6 +56,7 @@ export default function CuratedPlaylistRow({
   showUserShortcutCards = false,
   showSectionTitle = true,
   showSwipeHint = false,
+  libraryFrom,
 }: CuratedPlaylistRowProps) {
   const { t, isRtl } = useLanguage()
   const isLandscapeMobile = useLandscapeMobile()
@@ -178,7 +181,11 @@ export default function CuratedPlaylistRow({
       {filteredPlaylists.map((item) => (
         <PlaylistSquareCard
           key={item.id}
-          href={`/library/${item.id}`}
+          href={
+            libraryFrom
+              ? `/library/${item.id}?from=${encodeURIComponent(libraryFrom)}`
+              : `/library/${item.id}`
+          }
           layout={layout}
           compact={compact}
           title={item.name}

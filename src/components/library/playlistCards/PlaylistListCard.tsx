@@ -24,7 +24,7 @@ export function PlaylistListCard({
 }: PlaylistListCardProps) {
   const bg = useCoverDominantColor(coverUrl, {
     fallback: 'hsl(var(--muted))',
-    mix: 0.55,
+    mix: 0.4,
   })
   const tinted = !!coverUrl
 
@@ -32,7 +32,7 @@ export function PlaylistListCard({
     <Link
       href={href}
       className={cn(
-        'group relative flex min-h-[3rem] items-center overflow-hidden rounded-lg transition-opacity hover:opacity-90 sm:min-h-[3.5rem]',
+        'group relative flex min-h-[2.75rem] items-center overflow-hidden rounded-lg transition-opacity hover:opacity-90 sm:min-h-[3.5rem]',
         !tinted && 'bg-muted/80 hover:bg-muted',
         className
       )}
@@ -66,7 +66,7 @@ export function PlaylistListCard({
           className="pointer-events-none absolute inset-y-0 end-0 w-[22%] overflow-hidden sm:w-[24%]"
           aria-hidden
         >
-          <div className="absolute bottom-0 end-0 h-[185%] w-[145%] translate-x-[6%] translate-y-[28%] rotate-[22deg] sm:rotate-[24deg]">
+          <div className="absolute bottom-0 end-0 h-[145%] w-[130%] translate-x-[8%] translate-y-[26%] rotate-[22deg] sm:h-[185%] sm:w-[145%] sm:translate-x-[6%] sm:translate-y-[28%] sm:rotate-[24deg]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={coverUrl}

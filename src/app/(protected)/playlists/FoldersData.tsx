@@ -1,5 +1,6 @@
 import { createSafeServerClient } from '@/lib/supabase/server'
 import { folderRepo } from '@/lib/services/folderRepo'
+import { songRepo } from '@/lib/services/songRepo'
 import { getCachedLibraryCatalogSections } from '@/lib/services/libraryCatalogCache'
 import FoldersClient from './FoldersClient'
 import type { PublicPlaylistItem } from '@/components/library/LibraryGridSection'
@@ -12,11 +13,13 @@ interface FoldersDataProps {
 export default async function FoldersData({ userId }: FoldersDataProps) {
   const supabase = await createSafeServerClient()
   const repo = folderRepo(supabase)
+  const songsRepo = songRepo(supabase)
 
-  const [foldersLightweight, folderSongCounts, catalog] = await Promise.all([
+  const [foldersLightweight, folderSongCounts, catalog, librarySongs] = await Promise.all([
     repo.getAllFoldersLightweight(userId),
     repo.getSongCountsByFolder(userId),
     getCachedLibraryCatalogSections(),
+    songsRepo.getAllSongsForPlaylist(),
   ])
 
   const folders: Folder[] = foldersLightweight.map((f) => ({
@@ -39,11 +42,19 @@ export default async function FoldersData({ userId }: FoldersDataProps) {
       curatedSlug: p.curatedSlug,
     }))
 
+  const createSheetSongs = librarySongs.map((song) => ({
+    id: song.id,
+    title: song.title,
+    author: song.author,
+    genre: song.genre ?? null,
+  }))
+
   return (
     <FoldersClient
       folders={folders}
       folderSongCounts={folderSongCounts}
       explorerPlaylists={explorerPlaylists}
+      librarySongs={createSheetSongs}
     />
   )
 }

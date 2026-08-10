@@ -44,6 +44,8 @@ interface HubZonePlaylistSectionProps {
   showSwipeHint?: boolean
   /** Expand list/square shelves into a wrapping grid below banners. */
   seeAll?: boolean
+  /** When set, library detail links include ?from=… for correct back navigation. */
+  libraryFrom?: string
 }
 
 export function HubZonePlaylistSection({
@@ -52,6 +54,7 @@ export function HubZonePlaylistSection({
   showUserShortcutCards = false,
   showSwipeHint = false,
   seeAll = false,
+  libraryFrom,
 }: HubZonePlaylistSectionProps) {
   const { t, isRtl } = useLanguage()
   const isLandscapeMobile = useLandscapeMobile()
@@ -175,6 +178,10 @@ export function HubZonePlaylistSection({
   }
 
   const mediaOpts = { tsnioutFilterEnabled }
+  const libraryHref = (id: string) =>
+    libraryFrom
+      ? `/library/${id}?from=${encodeURIComponent(libraryFrom)}`
+      : `/library/${id}`
 
   const listItems = [
     ...shortcuts.map((item) => ({
@@ -186,7 +193,7 @@ export function HubZonePlaylistSection({
     })),
     ...list.map((item) => ({
       key: item.id,
-      href: `/library/${item.id}`,
+      href: libraryHref(item.id),
       title: item.name,
       media: buildPlaylistCoverMedia(item, mediaOpts),
       coverUrl: getPlaylistItemCoverUrl(item, mediaOpts),
@@ -213,7 +220,7 @@ export function HubZonePlaylistSection({
       {items.map((item) => (
         <PlaylistArtistBanner
           key={item.id}
-          href={`/library/${item.id}`}
+          href={libraryHref(item.id)}
           name={item.name}
           curatedSlug={item.curatedSlug}
           imageUrl={item.imageUrl}
@@ -232,7 +239,7 @@ export function HubZonePlaylistSection({
       return (
         <PlaylistArtistBanner
           key={item.id}
-          href={`/library/${item.id}`}
+          href={libraryHref(item.id)}
           name={item.name}
           curatedSlug={item.curatedSlug}
           imageUrl={item.imageUrl}
@@ -248,7 +255,7 @@ export function HubZonePlaylistSection({
           {items.map((item) => (
             <PlaylistArtistBanner
               key={item.id}
-              href={`/library/${item.id}`}
+              href={libraryHref(item.id)}
               name={item.name}
               curatedSlug={item.curatedSlug}
               imageUrl={item.imageUrl}
@@ -265,7 +272,7 @@ export function HubZonePlaylistSection({
         {items.map((item) => (
           <PlaylistArtistBanner
             key={item.id}
-            href={`/library/${item.id}`}
+            href={libraryHref(item.id)}
             name={item.name}
             curatedSlug={item.curatedSlug}
             imageUrl={item.imageUrl}
@@ -332,7 +339,7 @@ export function HubZonePlaylistSection({
             {square.map((item) => (
               <PlaylistSquareCard
                 key={item.id}
-                href={`/library/${item.id}`}
+                href={libraryHref(item.id)}
                 title={item.name}
                 layout={seeAll ? 'grid' : 'scroll'}
                 compact={isLandscapeMobile}
@@ -349,7 +356,7 @@ export function HubZonePlaylistSection({
           {featured.map((item) => (
             <PlaylistArtistBanner
               key={item.id}
-              href={`/library/${item.id}`}
+              href={libraryHref(item.id)}
               name={item.name}
               curatedSlug={item.curatedSlug}
               imageUrl={item.imageUrl}

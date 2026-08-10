@@ -182,6 +182,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
       return
     }
     if (isLibraryPlaylistDetail) {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back()
+        return
+      }
       router.push('/')
       return
     }

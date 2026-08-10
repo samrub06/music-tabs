@@ -55,8 +55,8 @@ export function PlaylistArtistBanner({
         // Avoid `w-full` in pairRow: two 100%-width flex children can stack/wrap
         // on mobile instead of sharing one row.
         pairRow
-          ? 'min-h-[4.5rem] min-w-0 sm:min-h-[6rem]'
-          : 'min-h-[5.5rem] w-full sm:min-h-[7rem]',
+          ? 'min-h-[3.75rem] min-w-0 sm:min-h-[6rem]'
+          : 'min-h-[4.5rem] w-full sm:min-h-[7rem]',
         className
       )}
       style={{ backgroundColor: bg }}
@@ -92,8 +92,8 @@ export function PlaylistArtistBanner({
             // Anchored bottom-end; hangs slightly below for a grounded look.
             'absolute bottom-0 end-0 translate-x-[10%] translate-y-[22%]',
             pairRow
-              ? 'h-[145%] w-[110%] rotate-[22deg] sm:rotate-[24deg]'
-              : 'h-[150%] w-[115%] rotate-[20deg] sm:rotate-[22deg]'
+              ? 'h-[125%] w-[105%] rotate-[20deg] sm:h-[145%] sm:w-[110%] sm:rotate-[24deg]'
+              : 'h-[130%] w-[108%] rotate-[18deg] sm:h-[150%] sm:w-[115%] sm:rotate-[22deg]'
           )}
         >
           {coverUrl ? (
