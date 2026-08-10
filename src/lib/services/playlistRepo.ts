@@ -158,9 +158,41 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
       createdAt: Date
       curatedSlug?: string
       displayOrder: number
-      previewSongTitles?: string[]
     }>
   > {
+    type LightweightRow = {
+      id: string
+      name: string
+      image_url: string | null
+      created_at: string
+      curated_slug: string | null
+      display_order: number | null
+      song_count: number
+    }
+
+    const mapRow = (p: LightweightRow) => ({
+      id: p.id,
+      name: p.name,
+      imageUrl:
+        p.image_url ??
+        (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
+        undefined,
+      songCount: Number(p.song_count),
+      createdAt: new Date(p.created_at),
+      curatedSlug: p.curated_slug || undefined,
+      displayOrder: p.display_order ?? 0,
+    })
+
+    // Prefer RPC: song_count without transferring full song_ids arrays (explorer / playlists hub).
+    const { data: rpcData, error: rpcError } = await (client as any).rpc(
+      'get_public_playlist_list_lightweight'
+    )
+
+    if (!rpcError && rpcData) {
+      return (rpcData as LightweightRow[]).map(mapRow)
+    }
+
+    // Fallback if RPC is missing: still avoid a second songs query; song_ids used only for counts.
     const { data, error } = await client
       .from('playlists')
       .select('id, name, image_url, song_ids, created_at, curated_slug, display_order')
@@ -171,7 +203,7 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
 
     if (error) throw error
 
-    const rows = (data || []) as Array<{
+    return ((data || []) as Array<{
       id: string
       name: string
       image_url: string | null
@@ -179,43 +211,17 @@ export const playlistRepo = (client: SupabaseClient<Database>) => ({
       created_at: string
       curated_slug: string | null
       display_order: number | null
-    }>
-
-    const previewIds = Array.from(
-      new Set(rows.flatMap((p) => (p.song_ids ?? []).slice(0, 3)))
-    )
-
-    const titleById = new Map<string, string>()
-    if (previewIds.length > 0) {
-      const { data: songs, error: songsError } = await client
-        .from('songs')
-        .select('id, title')
-        .in('id', previewIds)
-      if (songsError) throw songsError
-      for (const song of (songs ?? []) as Array<{ id: string; title: string }>) {
-        titleById.set(song.id, song.title)
-      }
-    }
-
-    return rows.map((p) => {
-      const songIds = (p.song_ids as string[] | null) || []
-      return {
+    }>).map((p) =>
+      mapRow({
         id: p.id,
         name: p.name,
-        imageUrl:
-          p.image_url ??
-          (p.curated_slug ? getCuratedPlaylistCoverUrl(p.curated_slug) : null) ??
-          undefined,
-        songCount: songIds.length,
-        createdAt: new Date(p.created_at),
-        curatedSlug: p.curated_slug || undefined,
-        displayOrder: p.display_order ?? 0,
-        previewSongTitles: songIds
-          .slice(0, 3)
-          .map((id) => titleById.get(id))
-          .filter((title): title is string => !!title),
-      }
-    })
+        image_url: p.image_url,
+        created_at: p.created_at,
+        curated_slug: p.curated_slug,
+        display_order: p.display_order,
+        song_count: (p.song_ids as string[] | null)?.length ?? 0,
+      })
+    )
   },
 
   async getPublicPlaylist(id: string): Promise<Playlist> {

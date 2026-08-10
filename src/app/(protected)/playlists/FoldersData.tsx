@@ -37,7 +37,6 @@ export default async function FoldersData({ userId }: FoldersDataProps) {
       imageUrl: p.imageUrl,
       songCount: p.songCount,
       curatedSlug: p.curatedSlug,
-      previewSongTitles: p.previewSongTitles,
     }))
 
   return (

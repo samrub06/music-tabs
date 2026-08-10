@@ -795,6 +795,28 @@ export interface Database {
           id: string
         }[]
       }
+      get_playlist_list_lightweight: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          name: string
+          created_at: string
+          image_url: string | null
+          song_count: number
+        }[]
+      }
+      get_public_playlist_list_lightweight: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          name: string
+          image_url: string | null
+          created_at: string
+          curated_slug: string | null
+          display_order: number
+          song_count: number
+        }[]
+      }
       award_xp: {
         Args: {
           p_user_id: string
