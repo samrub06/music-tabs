@@ -9,11 +9,35 @@ import { songRepo } from '@/lib/services/songRepo'
 import { findUserSongMatch } from '@/lib/utils/songLibraryMatch'
 import { renderStructuredSong } from '@/utils/structuredSong'
 import { getCuratedPlaylistCoverUrl } from '@/data/curatedPlaylistCoverImages'
-import type { NewSongData } from '@/types'
+import { getCachedPublicPlaylistSongs } from '@/app/(protected)/library/[playlistId]/loadPublicPlaylist'
+import type { NewSongData, Playlist, Song } from '@/types'
 
 const savePublicPlaylistAsFolderSchema = z.object({
   playlistId: z.string().uuid(),
 })
+
+const publicPlaylistIdSchema = z.string().uuid()
+
+/** Soft playlist switch from /playlists hub — load playlist + songs without a full RSC remount. */
+export async function fetchPublicPlaylistBundleAction(
+  playlistId: unknown
+): Promise<{ playlist: Playlist; songs: Song[]; libraryCatalogIds: string[] }> {
+  const id = publicPlaylistIdSchema.parse(playlistId)
+  const supabase = await createActionServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const playlist = await playlistRepo(supabase).getPublicPlaylist(id)
+  const songs = await getCachedPublicPlaylistSongs(playlist.id, playlist.songIds)
+
+  let libraryCatalogIds: string[] = []
+  if (user) {
+    libraryCatalogIds = await songRepo(supabase).getUserLibraryCatalogSongIds()
+  }
+
+  return { playlist, songs, libraryCatalogIds }
+}
 
 const MAX_SONGS_TO_IMPORT = 80
 

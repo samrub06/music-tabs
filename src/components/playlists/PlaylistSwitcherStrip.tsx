@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { FolderCover } from '@/components/presentational/FolderCover'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -19,6 +18,11 @@ interface PlaylistSwitcherStripProps {
   className?: string
   /** Compact sizing for landscape / tight headers */
   compact?: boolean
+  /**
+   * Soft switch: parent loads songs without a full page navigation.
+   * Required so the strip stays mounted while only the song list updates.
+   */
+  onSelectPlaylist: (id: string) => void
 }
 
 /** Horizontal playlist covers — tap to switch without leaving the detail page. */
@@ -27,9 +31,9 @@ export function PlaylistSwitcherStrip({
   activePlaylistId,
   className,
   compact = false,
+  onSelectPlaylist,
 }: PlaylistSwitcherStripProps) {
   const { t } = useLanguage()
-  const router = useRouter()
   const activeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -44,12 +48,7 @@ export function PlaylistSwitcherStrip({
 
   const handleSelect = (id: string) => {
     if (id === activePlaylistId) return
-    router.push(`/playlists/${id}`)
-  }
-
-  const handlePrefetch = (id: string) => {
-    if (id === activePlaylistId) return
-    router.prefetch(`/playlists/${id}`)
+    onSelectPlaylist(id)
   }
 
   return (
@@ -73,8 +72,6 @@ export function PlaylistSwitcherStrip({
               ref={active ? activeRef : undefined}
               type="button"
               onClick={() => handleSelect(playlist.id)}
-              onPointerEnter={() => handlePrefetch(playlist.id)}
-              onFocus={() => handlePrefetch(playlist.id)}
               aria-current={active ? 'true' : undefined}
               aria-label={playlist.name}
               title={playlist.name}

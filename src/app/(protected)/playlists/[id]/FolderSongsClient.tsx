@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Song, Folder } from '@/types'
 import { fetchUserSongsListAction } from '@/app/(protected)/songs/actions'
 import { useInfiniteScrollLoadMore } from '@/lib/hooks/useInfiniteScrollLoadMore'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -48,10 +48,8 @@ export default function FolderSongsClient({
   siblingPlaylists = [],
 }: FolderSongsClientProps) {
   const { t } = useLanguage()
-  const router = useRouter()
   const isLandscapeMobile = useLandscapeMobile()
   const searchParams = useSearchParams()
-  const pathname = usePathname()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   useHideHeaderOnScroll(scrollContainerRef, true)
@@ -72,6 +70,10 @@ export default function FolderSongsClient({
     createdAt: t('songs.createdAt'),
   }
 
+  const [activeFolder, setActiveFolder] = useState(folder)
+  const activeFolderIdRef = useRef(folder.id)
+  activeFolderIdRef.current = activeFolder.id
+
   const [localSearchValue, setLocalSearchValue] = useState(initialQuery)
   const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
@@ -81,43 +83,140 @@ export default function FolderSongsClient({
   const [displayTotal, setDisplayTotal] = useState(total)
   const [listPage, setListPage] = useState(page)
   const [isListLoading, setIsListLoading] = useState(false)
+  const skipSearchFetchRef = useRef(true)
+  const folderLoadingLockRef = useRef(false)
+  const switchRequestIdRef = useRef(0)
 
   const hasActiveFilters = sortField !== 'title' || sortDirection !== 'asc'
-  const folderFilterKey = `${folder.id}:${searchQuery}:${limit}`
-  const prevFolderFilterKeyRef = useRef(folderFilterKey)
-  const folderLoadingLockRef = useRef(false)
 
-  usePageHeader(folder.name, '/playlists')
+  usePageHeader(activeFolder.name, '/playlists')
 
-  useEffect(() => {
-    const filtersChanged = prevFolderFilterKeyRef.current !== folderFilterKey
-    prevFolderFilterKeyRef.current = folderFilterKey
-    if (filtersChanged || listPage <= 1) {
-      setDisplaySongs(songs)
-      setDisplayTotal(total)
+  const playlistPath = useCallback((folderId: string, params?: URLSearchParams) => {
+    const query = params?.toString()
+    return query ? `/playlists/${folderId}?${query}` : `/playlists/${folderId}`
+  }, [])
+
+  const replaceListUrl = useCallback(
+    (folderId: string, mutate?: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(
+        typeof window !== 'undefined'
+          ? window.location.search.replace(/^\?/, '')
+          : searchParams?.toString() || ''
+      )
+      mutate?.(params)
+      params.delete('view')
+      window.history.replaceState(
+        window.history.state,
+        '',
+        playlistPath(folderId, params)
+      )
+    },
+    [playlistPath, searchParams]
+  )
+
+  const fetchFolderSongs = useCallback(
+    async (folderId: string, query: string, pageNum: number) => {
+      return fetchUserSongsListAction({
+        page: pageNum,
+        limit,
+        searchQuery: query.trim() || undefined,
+        folder: folderId,
+      })
+    },
+    [limit]
+  )
+
+  /** Soft playlist switch: keep strip mounted; only reload songs + sync URL. */
+  const softSwitchPlaylist = useCallback(
+    async (nextId: string, options?: { history?: 'push' | 'none' }) => {
+      if (nextId === activeFolderIdRef.current) return
+      const item = siblingPlaylists.find((p) => p.id === nextId)
+      if (!item) return
+
+      const requestId = ++switchRequestIdRef.current
+      const historyMode = options?.history ?? 'push'
+      const query = searchQuery.trim()
+
+      setActiveFolder((prev) => ({
+        ...prev,
+        id: item.id,
+        name: item.name,
+        imageUrl: item.imageUrl,
+        updatedAt: new Date(),
+      }))
+      activeFolderIdRef.current = item.id
+      setDisplaySongs([])
+      setDisplayTotal(0)
       setListPage(1)
-      folderLoadingLockRef.current = false
-    }
-  }, [songs, total, folderFilterKey, listPage])
+      setStripCollapsed(false)
+      lastScrollTopRef.current = 0
+      scrollContainerRef.current?.scrollTo({ top: 0 })
 
+      if (historyMode === 'push') {
+        const params = new URLSearchParams(window.location.search.replace(/^\?/, ''))
+        params.delete('page')
+        params.delete('view')
+        window.history.pushState(
+          { softPlaylistId: item.id },
+          '',
+          playlistPath(item.id, params)
+        )
+      }
+
+      folderLoadingLockRef.current = true
+      setIsListLoading(true)
+      try {
+        const result = await fetchFolderSongs(item.id, query, 1)
+        if (requestId !== switchRequestIdRef.current) return
+        setDisplaySongs(result.songs)
+        setDisplayTotal(result.total)
+        setListPage(1)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        if (requestId === switchRequestIdRef.current) {
+          folderLoadingLockRef.current = false
+          setIsListLoading(false)
+        }
+      }
+    },
+    [siblingPlaylists, searchQuery, playlistPath, fetchFolderSongs]
+  )
+
+  // Full Next.js navigation into this page (or back to SSR folder) — resync props.
   useEffect(() => {
+    setActiveFolder(folder)
+    activeFolderIdRef.current = folder.id
+    setDisplaySongs(songs)
+    setDisplayTotal(total)
+    setListPage(page)
+    folderLoadingLockRef.current = false
     setStripCollapsed(false)
     lastScrollTopRef.current = 0
-  }, [folder.id])
+  }, [folder.id]) // eslint-disable-line react-hooks/exhaustive-deps -- intentional: only when server folder changes
+
+  // Browser back/forward after soft pushState.
+  useEffect(() => {
+    const onPopState = () => {
+      const match = window.location.pathname.match(/\/playlists\/([^/?#]+)/)
+      const id = match?.[1]
+      if (!id || id === activeFolderIdRef.current) return
+      void softSwitchPlaylist(id, { history: 'none' })
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [softSwitchPlaylist])
 
   const hasMoreSongs = displaySongs.length < displayTotal
   const handleLoadMore = useCallback(() => {
     if (folderLoadingLockRef.current || isListLoading || !hasMoreSongs) return
     folderLoadingLockRef.current = true
     const nextPage = listPage + 1
+    const folderId = activeFolderIdRef.current
     setIsListLoading(true)
-    void fetchUserSongsListAction({
-      page: nextPage,
-      limit,
-      searchQuery: searchQuery.trim() || undefined,
-      folder: folder.id,
-    })
+    void fetchFolderSongs(folderId, searchQuery, nextPage)
       .then((result) => {
+        if (folderId !== activeFolderIdRef.current) return
         setDisplaySongs((prev) => {
           const seen = new Set(prev.map((s) => s.id))
           const merged = [...prev]
@@ -137,7 +236,7 @@ export default function FolderSongsClient({
         folderLoadingLockRef.current = false
         setIsListLoading(false)
       })
-  }, [isListLoading, hasMoreSongs, listPage, limit, searchQuery, folder.id])
+  }, [isListLoading, hasMoreSongs, listPage, searchQuery, fetchFolderSongs])
 
   const loadMoreSentinelRef = useInfiniteScrollLoadMore({
     enabled: displaySongs.length > 0,
@@ -151,23 +250,43 @@ export default function FolderSongsClient({
     setSearchQuery(initialQuery)
   }, [initialQuery])
 
+  // Debounced search: update URL + refetch songs without remounting the page/strip.
   useEffect(() => {
+    if (skipSearchFetchRef.current) {
+      skipSearchFetchRef.current = false
+      return
+    }
     const timer = setTimeout(() => {
       const trimmed = localSearchValue.trim()
       setSearchQuery(trimmed)
-      const params = new URLSearchParams(searchParams?.toString() || '')
-      if (trimmed) {
-        params.set('q', trimmed)
-        params.set('page', '1')
-      } else {
-        params.delete('q')
-        params.delete('page')
-      }
-      params.delete('view')
-      router.push(`${pathname}?${params.toString()}`)
+      const folderId = activeFolderIdRef.current
+      replaceListUrl(folderId, (params) => {
+        if (trimmed) {
+          params.set('q', trimmed)
+          params.set('page', '1')
+        } else {
+          params.delete('q')
+          params.delete('page')
+        }
+      })
+
+      folderLoadingLockRef.current = true
+      setIsListLoading(true)
+      void fetchFolderSongs(folderId, trimmed, 1)
+        .then((result) => {
+          if (folderId !== activeFolderIdRef.current) return
+          setDisplaySongs(result.songs)
+          setDisplayTotal(result.total)
+          setListPage(1)
+        })
+        .catch(console.error)
+        .finally(() => {
+          folderLoadingLockRef.current = false
+          setIsListLoading(false)
+        })
     }, 300)
     return () => clearTimeout(timer)
-  }, [localSearchValue, pathname, router, searchParams])
+  }, [localSearchValue, replaceListUrl, fetchFolderSongs])
 
   useEffect(() => {
     const sortOrderFromUrl = searchParams?.get('sortOrder')
@@ -195,15 +314,13 @@ export default function FolderSongsClient({
 
   const replaceSortParams = useCallback(
     (direction: SortDirection) => {
-      const params = new URLSearchParams(searchParams?.toString() || '')
-      if (direction === 'desc') params.set('sortOrder', 'desc')
-      else params.delete('sortOrder')
-      params.set('page', '1')
-      params.delete('view')
-      const query = params.toString()
-      window.history.replaceState(null, '', query ? `${pathname}?${query}` : pathname)
+      replaceListUrl(activeFolderIdRef.current, (params) => {
+        if (direction === 'desc') params.set('sortOrder', 'desc')
+        else params.delete('sortOrder')
+        params.set('page', '1')
+      })
     },
-    [pathname, searchParams]
+    [replaceListUrl]
   )
 
   const updateSortFilters = useCallback(
@@ -219,12 +336,6 @@ export default function FolderSongsClient({
 
   const handleClearSearch = () => {
     setLocalSearchValue('')
-    setSearchQuery('')
-    const params = new URLSearchParams(searchParams?.toString() || '')
-    params.delete('q')
-    params.delete('page')
-    params.delete('view')
-    router.push(`${pathname}?${params.toString()}`)
   }
 
   const handleClearFilters = () => {
@@ -301,8 +412,11 @@ export default function FolderSongsClient({
           <div className="overflow-hidden">
             <PlaylistSwitcherStrip
               playlists={siblingPlaylists}
-              activePlaylistId={folder.id}
+              activePlaylistId={activeFolder.id}
               compact={isLandscapeMobile}
+              onSelectPlaylist={(id) => {
+                void softSwitchPlaylist(id)
+              }}
             />
           </div>
         </div>
@@ -416,7 +530,11 @@ export default function FolderSongsClient({
         ) : (
           <div className="py-12 text-center">
             <p className="text-muted-foreground">
-              {searchQuery.trim() ? t('songs.noResults') : t('folders.noSongsInFolder')}
+              {isListLoading
+                ? t('common.loading')
+                : searchQuery.trim()
+                  ? t('songs.noResults')
+                  : t('folders.noSongsInFolder')}
             </p>
           </div>
         )}

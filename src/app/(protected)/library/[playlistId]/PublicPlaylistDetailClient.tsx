@@ -11,7 +11,10 @@ import { useAuthContext } from '@/context/AuthContext'
 import { usePageHeader } from '@/context/PageHeaderContext'
 import { Playlist, Song } from '@/types'
 import { addSongToLibraryAction } from '@/app/(protected)/dashboard/actions'
-import { savePublicPlaylistAsFolderAction } from '@/app/(protected)/library/actions'
+import {
+  fetchPublicPlaylistBundleAction,
+  savePublicPlaylistAsFolderAction,
+} from '@/app/(protected)/library/actions'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
@@ -19,6 +22,10 @@ import { usePlaylistCover } from '@/lib/hooks/usePlaylistCover'
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile'
 import SongGallery from '@/components/SongGallery'
 import { PlaylistGlassHeader } from '@/components/library/PlaylistGlassHeader'
+import {
+  PlaylistSwitcherStrip,
+  type PlaylistStripItem,
+} from '@/components/playlists/PlaylistSwitcherStrip'
 import { UI_TEXT_ALIGN } from '@/utils/rtl'
 import Snackbar from '@/components/Snackbar'
 import {
@@ -28,12 +35,20 @@ import {
   useContext,
   useMemo,
   useEffect,
+  useRef,
   type ReactNode,
 } from 'react'
 
 interface PublicPlaylistSearchContextValue {
+  playlist: Playlist
   songs: Song[]
   setSongs: (songs: Song[]) => void
+  libraryCatalogIds: string[]
+  setLibraryCatalogIds: (ids: string[]) => void
+  siblingPlaylists: PlaylistStripItem[]
+  softSwitchEnabled: boolean
+  isSwitchingPlaylist: boolean
+  softSwitchPlaylist: (id: string, options?: { history?: 'push' | 'none' }) => Promise<void>
   handleStartPlaylist: () => void
   preferListView: boolean
   setPreferListView: (value: boolean) => void
@@ -92,19 +107,34 @@ function storePlaylistNavigation(
   sessionStorage.removeItem('hasUsedNext')
 }
 
+function libraryDetailPath(playlistId: string, fromPlaylists: boolean) {
+  return fromPlaylists ? `/library/${playlistId}?from=playlists` : `/library/${playlistId}`
+}
+
 export function PublicPlaylistSearchProvider({
-  playlist,
+  playlist: initialPlaylist,
   backHref = '/',
+  siblingPlaylists = [],
+  softSwitchEnabled = false,
   children,
 }: {
   playlist: Playlist
   /** Where the header back button should go (e.g. /playlists when opened from that hub). */
   backHref?: string
+  siblingPlaylists?: PlaylistStripItem[]
+  /** Soft strip switch — only when opened from /playlists. */
+  softSwitchEnabled?: boolean
   children: ReactNode
 }) {
   const router = useRouter()
+  const [playlist, setPlaylist] = useState(initialPlaylist)
+  const playlistIdRef = useRef(initialPlaylist.id)
+  playlistIdRef.current = playlist.id
   const [songs, setSongs] = useState<Song[]>([])
+  const [libraryCatalogIds, setLibraryCatalogIds] = useState<string[]>([])
+  const [isSwitchingPlaylist, setIsSwitchingPlaylist] = useState(false)
   const [preferListView, setPreferListView] = useState(false)
+  const switchRequestIdRef = useRef(0)
   const isLandscapeMobile = useLandscapeMobile()
   const {
     isSaving,
@@ -118,19 +148,94 @@ export function PublicPlaylistSearchProvider({
   usePageHeader(playlist.name, backHref)
 
   useEffect(() => {
+    setPlaylist(initialPlaylist)
+    playlistIdRef.current = initialPlaylist.id
+  }, [initialPlaylist.id]) // eslint-disable-line react-hooks/exhaustive-deps -- sync only on full RSC navigation
+
+  useEffect(() => {
     if (!isLandscapeMobile) setPreferListView(false)
   }, [isLandscapeMobile])
 
+  const softSwitchPlaylist = useCallback(
+    async (nextId: string, options?: { history?: 'push' | 'none' }) => {
+      if (!softSwitchEnabled || nextId === playlistIdRef.current) return
+      const requestId = ++switchRequestIdRef.current
+      const historyMode = options?.history ?? 'push'
+      const stripItem = siblingPlaylists.find((p) => p.id === nextId)
+
+      setIsSwitchingPlaylist(true)
+      setSongs([])
+      if (stripItem) {
+        setPlaylist((prev) => ({
+          ...prev,
+          id: stripItem.id,
+          name: stripItem.name,
+          imageUrl: stripItem.imageUrl,
+          songIds: [],
+        }))
+      }
+      playlistIdRef.current = nextId
+
+      if (historyMode === 'push') {
+        window.history.pushState(
+          { softPublicPlaylistId: nextId },
+          '',
+          libraryDetailPath(nextId, true)
+        )
+      }
+
+      try {
+        const bundle = await fetchPublicPlaylistBundleAction(nextId)
+        if (requestId !== switchRequestIdRef.current) return
+        setPlaylist(bundle.playlist)
+        playlistIdRef.current = bundle.playlist.id
+        setSongs(bundle.songs)
+        setLibraryCatalogIds(bundle.libraryCatalogIds)
+      } catch (error) {
+        console.error(error)
+      } finally {
+        if (requestId === switchRequestIdRef.current) {
+          setIsSwitchingPlaylist(false)
+        }
+      }
+    },
+    [softSwitchEnabled, siblingPlaylists]
+  )
+
+  useEffect(() => {
+    if (!softSwitchEnabled) return
+    const onPopState = () => {
+      const match = window.location.pathname.match(/\/library\/([^/?#]+)/)
+      const id = match?.[1]
+      if (!id || id === playlistIdRef.current) return
+      void softSwitchPlaylist(id, { history: 'none' })
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [softSwitchEnabled, softSwitchPlaylist])
+
   const handleStartPlaylist = useCallback(() => {
     if (songs.length === 0) return
-    storePlaylistNavigation(playlist, songs, songs[0].id, `/library/${playlist.id}`)
+    storePlaylistNavigation(
+      playlist,
+      songs,
+      songs[0].id,
+      libraryDetailPath(playlist.id, softSwitchEnabled)
+    )
     router.push(`/song/${songs[0].id}`)
-  }, [songs, playlist, router])
+  }, [songs, playlist, router, softSwitchEnabled])
 
   const value = useMemo(
     () => ({
+      playlist,
       songs,
       setSongs,
+      libraryCatalogIds,
+      setLibraryCatalogIds,
+      siblingPlaylists,
+      softSwitchEnabled,
+      isSwitchingPlaylist,
+      softSwitchPlaylist,
       handleStartPlaylist,
       preferListView,
       setPreferListView,
@@ -142,7 +247,13 @@ export function PublicPlaylistSearchProvider({
       setShowSnackbar,
     }),
     [
+      playlist,
       songs,
+      libraryCatalogIds,
+      siblingPlaylists,
+      softSwitchEnabled,
+      isSwitchingPlaylist,
+      softSwitchPlaylist,
       handleStartPlaylist,
       preferListView,
       isSaving,
@@ -231,6 +342,10 @@ function PublicPlaylistHeader({
     snackbarType,
     showSnackbar,
     setShowSnackbar,
+    siblingPlaylists,
+    softSwitchEnabled,
+    softSwitchPlaylist,
+    isSwitchingPlaylist,
   } = usePublicPlaylistSearch()
 
   const handleAdd = () => {
@@ -238,13 +353,28 @@ function PublicPlaylistHeader({
       void handleSaveToFolders()
       return
     }
-    void signInWithGoogle(`/library/${playlist.id}`)
+    void signInWithGoogle(libraryDetailPath(playlist.id, softSwitchEnabled))
   }
 
   const hideGlassHeader = isLandscapeMobile && !preferListView
+  const showStrip =
+    softSwitchEnabled && !hideGlassHeader && siblingPlaylists.length >= 2
 
   return (
     <>
+      {showStrip ? (
+        <div className="shrink-0 px-4 pb-2 pt-1 sm:px-6">
+          <PlaylistSwitcherStrip
+            playlists={siblingPlaylists}
+            activePlaylistId={playlist.id}
+            compact={isLandscapeMobile}
+            onSelectPlaylist={(id) => {
+              void softSwitchPlaylist(id)
+            }}
+          />
+        </div>
+      ) : null}
+
       {hideGlassHeader ? null : (
         <PlaylistGlassHeader
           coverUrl={coverUrl}
@@ -254,7 +384,7 @@ function PublicPlaylistHeader({
           onPlay={handleStartPlaylist}
           onAdd={handleAdd}
           canAdd={!isSavingPlaylist && (canSaveToFolders ? songCount > 0 : true)}
-          isAdding={isSavingPlaylist}
+          isAdding={isSavingPlaylist || isSwitchingPlaylist}
           addLabel={
             canSaveToFolders
               ? isSavingPlaylist
@@ -287,15 +417,21 @@ interface PublicPlaylistDetailShellProps {
 }
 
 export function PublicPlaylistDetailShell({
-  playlist,
-  songCount,
+  playlist: initialPlaylist,
+  songCount: initialSongCount,
   canSaveToFolders = false,
 }: PublicPlaylistDetailShellProps) {
-  const coverUrl = usePlaylistCover(playlist)
+  const { playlist, songs, isSwitchingPlaylist } = usePublicPlaylistSearch()
+  const active = playlist.id === initialPlaylist.id ? initialPlaylist : playlist
+  const coverUrl = usePlaylistCover(active)
+  const songCount =
+    playlist.id === initialPlaylist.id && songs.length === 0 && !isSwitchingPlaylist
+      ? initialSongCount
+      : songs.length
 
   return (
     <PublicPlaylistHeader
-      playlist={playlist}
+      playlist={active}
       songCount={songCount}
       canSaveToFolders={canSaveToFolders}
       coverUrl={coverUrl}
@@ -345,31 +481,43 @@ interface PublicPlaylistSongListProps {
 }
 
 export function PublicPlaylistSongList({
-  playlist,
-  songs,
+  playlist: initialPlaylist,
+  songs: initialSongs,
   userId,
-  libraryCatalogIds = [],
+  libraryCatalogIds: initialLibraryCatalogIds = [],
 }: PublicPlaylistSongListProps) {
   const { t } = useLanguage()
   const router = useRouter()
   const { signInWithGoogle } = useAuthContext()
   const isLandscapeMobile = useLandscapeMobile()
-  const coverUrl = usePlaylistCover(playlist)
-  const [addingId, setAddingId] = useState<string | null>(null)
   const {
+    playlist,
+    songs,
     setSongs,
+    libraryCatalogIds,
+    setLibraryCatalogIds,
+    softSwitchEnabled,
+    isSwitchingPlaylist,
     handleStartPlaylist,
     preferListView,
     setPreferListView,
     isSavingPlaylist,
     handleSaveToFolders,
   } = usePublicPlaylistSearch()
+  const coverUrl = usePlaylistCover(playlist)
+  const [addingId, setAddingId] = useState<string | null>(null)
   const libraryIdSet = useMemo(() => new Set(libraryCatalogIds), [libraryCatalogIds])
 
+  // Seed from RSC once per mounted playlist identity; soft switch updates context directly.
   useEffect(() => {
-    setSongs(songs)
-    return () => setSongs([])
-  }, [songs, setSongs])
+    setSongs(initialSongs)
+    setLibraryCatalogIds(initialLibraryCatalogIds)
+    return () => {
+      setSongs([])
+      setLibraryCatalogIds([])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid overwriting soft-fetched songs
+  }, [initialPlaylist.id])
 
   const handleAddToLibrary = useCallback(
     async (song: Song) => {
@@ -393,10 +541,15 @@ export function PublicPlaylistSongList({
 
   const navigateToSong = useCallback(
     (songId: string) => {
-      storePlaylistNavigation(playlist, songs, songId, `/library/${playlist.id}`)
+      storePlaylistNavigation(
+        playlist,
+        songs,
+        songId,
+        libraryDetailPath(playlist.id, softSwitchEnabled)
+      )
       router.push(`/song/${songId}`)
     },
-    [songs, playlist, router]
+    [songs, playlist, router, softSwitchEnabled]
   )
 
   const handleAddPlaylist = useCallback(() => {
@@ -404,10 +557,14 @@ export function PublicPlaylistSongList({
       void handleSaveToFolders()
       return
     }
-    void signInWithGoogle(`/library/${playlist.id}`)
-  }, [userId, handleSaveToFolders, signInWithGoogle, playlist.id])
+    void signInWithGoogle(libraryDetailPath(playlist.id, softSwitchEnabled))
+  }, [userId, handleSaveToFolders, signInWithGoogle, playlist.id, softSwitchEnabled])
 
   const showCarousel = isLandscapeMobile && !preferListView
+
+  if (isSwitchingPlaylist && songs.length === 0) {
+    return <PublicPlaylistSongListSkeleton />
+  }
 
   if (songs.length === 0) {
     return (
@@ -486,50 +643,49 @@ export function PublicPlaylistSongList({
                   />
                 </button>
 
-
-              <button
-                type="button"
-                onClick={() => navigateToSong(song.id)}
-                className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
-              >
-                <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
-                {song.author ? (
-                  <p className="truncate text-xs text-muted-foreground">{song.author}</p>
-                ) : null}
-              </button>
-
-              <div className="flex shrink-0 items-center gap-1.5">
-                {!isInLibrary ? (
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
-                    onClick={() => handleAddToLibrary(song)}
-                    disabled={isAdding || !userId}
-                    aria-label={t('library.addToLibrary')}
-                    title={t('library.addToLibrary')}
-                  >
-                    {isAdding ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    ) : (
-                      <PlusIcon className="h-4 w-4" />
-                    )}
-                  </Button>
-                ) : null}
                 <button
                   type="button"
                   onClick={() => navigateToSong(song.id)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 sm:h-10 sm:w-10"
-                  aria-label={t('search.viewSong')}
+                  className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}
                 >
-                  <PlayIcon className="h-5 w-5" />
+                  <p className="truncate text-sm font-medium text-foreground">{song.title}</p>
+                  {song.author ? (
+                    <p className="truncate text-xs text-muted-foreground">{song.author}</p>
+                  ) : null}
                 </button>
+
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {!isInLibrary ? (
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="h-9 w-9 rounded-full sm:h-10 sm:w-10"
+                      onClick={() => handleAddToLibrary(song)}
+                      disabled={isAdding || !userId}
+                      aria-label={t('library.addToLibrary')}
+                      title={t('library.addToLibrary')}
+                    >
+                      {isAdding ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      ) : (
+                        <PlusIcon className="h-4 w-4" />
+                      )}
+                    </Button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => navigateToSong(song.id)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10 sm:h-10 sm:w-10"
+                    aria-label={t('search.viewSong')}
+                  >
+                    <PlayIcon className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-            </div>
-          </li>
-        )
-      })}
-    </ul>
+            </li>
+          )
+        })}
+      </ul>
     </>
   )
 }
