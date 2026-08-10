@@ -488,14 +488,6 @@ export default function SearchClient({
           showLibrarySections ? 'pt-0' : 'pt-4 sm:pt-6 lg:pt-8'
         )}
       >
-        {isSearchTab && (
-          <header className="mb-4">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-              {t('navigation.search')}
-            </h1>
-          </header>
-        )}
-
         <div
           className={cn(
             showLibrarySections
