@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/inactive-users",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/migrate-song-covers",
+      "schedule": "0 * * * *"
     }
   ]
 }
