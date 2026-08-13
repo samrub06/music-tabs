@@ -1,0 +1,16 @@
+SUBTITLE (30 chars)
+Chords, tabs & practice
+
+PROMOTIONAL TEXT
+Search chords, transpose, and practice with YouTube — TABasco on iPhone.
+
+DESCRIPTION
+TABasco is the mobile shell for tabascomusic.com: guitar chords and tabs, playlists, transpose tools, and YouTube/audio practice.
+
+Privacy: https://www.tabascomusic.com/privacy
+
+KEYWORDS
+guitar,chords,tabs,transpose,practice,youtube,music
+
+REVIEW NOTES
+This app is a Capacitor WebView shell that loads our production site https://www.tabascomusic.com (Next.js on Vercel). It includes a native splash screen, status bar styling, Universal Links for song URLs, and Android/iOS deep links. Account features use Supabase Auth on the same origin. Demo: create an account with any email on the sign-in screen, or use the shared test credentials we provide in App Review Information if requested.

@@ -62,7 +62,7 @@ const nextConfig = {
     optimizePackageImports: ['@heroicons/react'],
   },
   
-  // Headers pour le cache
+  // Headers pour le cache + Universal Links / App Links
   async headers() {
     return [
       {
@@ -72,6 +72,18 @@ const nextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'on'
           },
+        ],
+      },
+      {
+        source: '/.well-known/apple-app-site-association',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
+        ],
+      },
+      {
+        source: '/.well-known/assetlinks.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/json' },
         ],
       },
     ]

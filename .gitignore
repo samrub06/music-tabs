@@ -122,6 +122,19 @@ yaarat_dvash.png
 *.sln
 *.sw?
 
+# Capacitor / mobile shell
+mobile/node_modules/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/keystore.properties
+mobile/android/*.jks
+mobile/android/*.keystore
+mobile/ios/App/Pods/
+mobile/ios/App/build/
+mobile/ios/DerivedData/
+mobile/ios/App/App/public/
+
 # Beau Papa lyrics-sync experiment (local only)
 experiments/beau-papa/.venv/
 experiments/beau-papa/bin/

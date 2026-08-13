@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="viewport-fit=cover, width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>TABasco</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0a0a0a;
+        color: #fafafa;
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 1.5rem;
+      }
+      p {
+        opacity: 0.75;
+        max-width: 22rem;
+        line-height: 1.45;
+      }
+      a {
+        color: #fbbf24;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1 style="font-size: 1.25rem; font-weight: 600; margin: 0 0 0.75rem">
+        TABasco
+      </h1>
+      <p>
+        Opening the live app…
+        <br />
+        If nothing loads,
+        <a href="https://www.tabascomusic.com">open tabascomusic.com</a>.
+      </p>
+    </div>
+    <script>
+      // Fallback if Capacitor server.url is not applied (local debug without remote).
+      if (!window.Capacitor) {
+        window.location.replace('https://www.tabascomusic.com')
+      }
+    </script>
+  </body>
+</html>

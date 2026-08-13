@@ -1,0 +1,22 @@
+SHORT DESCRIPTION (80 chars max)
+Guitar chords & tabs — search, transpose, and practice with YouTube.
+
+FULL DESCRIPTION
+TABasco brings chords and tabs to your pocket. Search songs, save them to playlists, transpose to your key, and practice along with YouTube or audio — the same experience as tabascomusic.com, tuned for mobile.
+
+• Search a large public catalog plus your library
+• Transpose and tools while you play
+• YouTube / audio practice player
+• Folders & playlists synced with your account
+
+Privacy policy: https://www.tabascomusic.com/privacy
+Website: https://www.tabascomusic.com
+
+CATEGORY
+Music & Audio
+
+SUPPORT / CONTACT
+Use the email on your Play Console developer account (or support@ your domain).
+
+CONTENT RATING
+Complete the Music questionnaire; no social messaging required for v1.

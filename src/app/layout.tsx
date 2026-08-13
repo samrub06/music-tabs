@@ -3,13 +3,24 @@ import { defaultMetadata } from '@/lib/seo/site'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Inter, Heebo } from 'next/font/google'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 const heebo = Heebo({ subsets: ['latin', 'hebrew'], variable: '--font-heebo' })
 
 export const metadata: Metadata = defaultMetadata
+
+/** Theme color for mobile browser chrome / PWA standalone status bar. */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
 
 export default function RootLayout({
   children,
