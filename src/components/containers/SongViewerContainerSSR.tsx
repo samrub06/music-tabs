@@ -444,7 +444,8 @@ export default function SongViewerContainerSSR({
     isActive: autoScroll.isActive, 
     speed: autoScroll.speed, 
     toggleAutoScroll: () => setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive })),
-    contentRef
+    contentRef,
+    pauseOnInterlude: true,
   });
 
   // Metronome functionality

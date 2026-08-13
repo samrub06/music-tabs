@@ -26,6 +26,7 @@ import ChordOverLyricsLine from '@/components/presentational/ChordOverLyricsLine
 import SongStructuredEditor from '@/components/presentational/SongStructuredEditor';
 import { getOptimalLineHeight, getResponsiveFontSize } from '@/utils/textMeasurement';
 import { getSongChordFontFamily, getSongLyricsFontFamily } from '@/utils/songFonts';
+import { isInterludeLine } from '@/utils/interludeLine';
 import type { ChordInstrument } from '@/components/chords/InstrumentToggle';
 import type { Chord, Folder, SongLine, SongSection, SongRecording } from '@/types';
 import FolderDropdown from '@/components/FolderDropdown';
@@ -1740,6 +1741,7 @@ function StructuredSongContent({
         key={lineIndex}
         data-practice-line={globalLineIndex}
         data-lyric-key={lyricKey ?? undefined}
+        data-interlude={isInterludeLine(line) ? '1' : undefined}
         className={cn(
           'rounded-md transition-[background-color,opacity] duration-200',
           isPracticeActive && 'w-full rounded-lg bg-muted/35 py-1 dark:bg-muted/25',

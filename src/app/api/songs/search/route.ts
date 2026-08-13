@@ -15,6 +15,9 @@ export const runtime = 'nodejs';
  * GET /api/songs/search?q=titre&source=ultimate-guitar
  * GET /api/songs/search?q=titre&source=tab4u
  * GET /api/songs/search?q=titre&source=negina
+ *
+ * Catalog (public library) is always searched first with fuzzy matching and
+ * ranked above scraper hits; duplicates by tabId/url/title+author are dropped.
  */
 function isHebrewQuery(query: string): boolean {
   return /[\u0590-\u05FF]/.test(query);
@@ -90,19 +93,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ song });
     }
 
-    // Catalog first + external, merged/deduped by source identity
+    // Catalog first (fuzzy) + external, merged/deduped by source identity
     if (query) {
       let catalogResults: Awaited<ReturnType<typeof searchCatalogSongs>> = [];
-      try {
-        const catalogClient = createServiceRoleClient();
-        catalogResults = await searchCatalogSongs(catalogClient, query, {
-          limit: 10,
-        });
-      } catch (catalogError) {
-        console.warn('Catalog search failed, continuing with external only:', catalogError);
-      }
+      let externalResults: Awaited<ReturnType<typeof searchExternal>> = [];
+      let externalError: string | null = null;
 
-      const externalResults = await searchExternal(query, source);
+      const catalogPromise = (async () => {
+        try {
+          const catalogClient = createServiceRoleClient();
+          return await searchCatalogSongs(catalogClient, query, { limit: 20 });
+        } catch (catalogError) {
+          console.warn('Catalog search failed, continuing with external only:', catalogError);
+          return [];
+        }
+      })();
+
+      const externalPromise = (async () => {
+        try {
+          return await searchExternal(query, source);
+        } catch (err) {
+          console.warn('External search failed:', err);
+          externalError = err instanceof Error ? err.message : 'external search failed';
+          return [];
+        }
+      })();
+
+      ;[catalogResults, externalResults] = await Promise.all([
+        catalogPromise,
+        externalPromise,
+      ]);
+
       const results = mergeCatalogAndExternalResults(
         catalogResults,
         externalResults
@@ -119,6 +140,7 @@ export async function GET(request: NextRequest) {
                 : 'Aucun résultat trouvé',
             results: [],
             blocked,
+            ...(externalError ? { externalError } : {}),
             ...(meta
               ? {
                   debug: {
@@ -138,6 +160,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         results,
         catalogCount: catalogResults.length,
+        externalCount: externalResults.length,
+        ...(externalError ? { externalError } : {}),
       });
     }
 

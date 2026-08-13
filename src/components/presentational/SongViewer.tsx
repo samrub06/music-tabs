@@ -209,6 +209,7 @@ export default function SongViewer({
   const youtubePlayerApiRef = useRef<YoutubePlayerHandle | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [youtubePlayerReady, setYoutubePlayerReady] = useState(false);
+  const [youtubePlaying, setYoutubePlaying] = useState(false);
   const [lyricSync, setLyricSync] = useState<SongLyricSync | null>(null);
   const [lyricSyncLoading, setLyricSyncLoading] = useState(false);
   const [activeLyricKey, setActiveLyricKey] = useState<string | null>(null);
@@ -283,10 +284,14 @@ export default function SongViewer({
 
   const headerAutoScrollFallbackRef = useRef(false);
 
-  // Lyric follow when sync exists; otherwise enable header autoscroll once.
+  // Continuous header autoscroll follows YouTube play/pause when lyric-sync
+  // timing is unavailable (fallback). With timed sync, lyric-follow scrolls instead.
   useEffect(() => {
     if (!practiceLyricSyncEnabled) {
-      headerAutoScrollFallbackRef.current = false;
+      if (headerAutoScrollFallbackRef.current) {
+        onSetAutoScrollActive?.(false);
+        headerAutoScrollFallbackRef.current = false;
+      }
       return;
     }
     if (lyricSyncLoading) return;
@@ -306,19 +311,18 @@ export default function SongViewer({
       (Boolean(youtubeVideoId) && !lyricSyncLoading && lyricSync == null);
 
     if (!syncUnavailable) return;
-    if (headerAutoScrollFallbackRef.current || autoScroll.isActive) return;
 
-    onSetAutoScrollActive?.(true);
     headerAutoScrollFallbackRef.current = true;
+    onSetAutoScrollActive?.(youtubePlaying);
   }, [
     practiceLyricSyncEnabled,
     lyricSyncLoading,
     syncHasTimedLines,
     youtubePlayerReady,
+    youtubePlaying,
     hasLyricPractice,
     lyricSync,
     youtubeVideoId,
-    autoScroll.isActive,
     onSetAutoScrollActive,
   ]);
 
@@ -381,7 +385,8 @@ export default function SongViewer({
     return () => window.clearInterval(id);
   }, [lyricSyncLoading, song?.id, youtubeVideoId]);
 
-  // Highlight current line from YouTube time (paused during line-step coachmark)
+  // Highlight current line from YouTube time (paused during line-step coachmark;
+  // frozen while the video is paused so scroll/highlight stop with playback).
   useEffect(() => {
     if (practiceTutorialStep === 'line' && practiceTutorialLineKey) {
       setActiveLyricKey(practiceTutorialLineKey);
@@ -389,6 +394,10 @@ export default function SongViewer({
     }
     if (!practiceLyricSyncEnabled || lyricSync?.status !== 'ready' || !youtubePlayerReady) {
       setActiveLyricKey(null);
+      return;
+    }
+    if (!youtubePlaying) {
+      // Keep last highlight while paused — do not advance.
       return;
     }
     const timed = lyricSync.lines.filter((l) => l.startSec != null);
@@ -414,6 +423,7 @@ export default function SongViewer({
     practiceLyricSyncEnabled,
     lyricSync,
     youtubePlayerReady,
+    youtubePlaying,
     practiceTutorialStep,
     practiceTutorialLineKey,
   ]);
@@ -742,11 +752,13 @@ export default function SongViewer({
         videoMode={youtubeVideoMode}
         onClose={() => {
           setYoutubeTutorialOpen(false);
+          setYoutubePlaying(false);
           endPracticeTutorial();
         }}
         playerApiRef={youtubePlayerApiRef}
         onVideoIdChange={setYoutubeVideoId}
         onPlayerReadyChange={setYoutubePlayerReady}
+        onPlayingChange={setYoutubePlaying}
         syncBanner={syncBanner}
       />
 

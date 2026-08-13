@@ -59,7 +59,33 @@ describe('mergeCatalogAndExternalResults', () => {
     expect(merged[0]?.catalogSongId).toBe('cat-1')
   })
 
-  it('keeps UG and Negina same title when urls differ', () => {
+  it('dedupes scraper hit with same title+author as catalog', () => {
+    const merged = mergeCatalogAndExternalResults(
+      [
+        {
+          title: 'Wonderwall',
+          author: 'Oasis',
+          url: ugUrl,
+          source: 'Ultimate Guitar',
+          tabId: '111',
+          catalogSongId: 'cat-w',
+        },
+      ],
+      [
+        {
+          title: 'Wonderwall',
+          author: 'Oasis',
+          url: 'https://tabs.ultimate-guitar.com/tab/oasis/wonderwall-chords-999',
+          source: 'Ultimate Guitar',
+          tabId: '999',
+        },
+      ]
+    )
+    expect(merged).toHaveLength(1)
+    expect(merged[0]?.catalogSongId).toBe('cat-w')
+  })
+
+  it('prefers catalog over Negina/UG scraper when title+author match', () => {
     const merged = mergeCatalogAndExternalResults(
       [
         {
@@ -81,6 +107,7 @@ describe('mergeCatalogAndExternalResults', () => {
         },
       ]
     )
-    expect(merged).toHaveLength(2)
+    expect(merged).toHaveLength(1)
+    expect(merged[0]?.catalogSongId).toBe('cat-ug')
   })
 })
