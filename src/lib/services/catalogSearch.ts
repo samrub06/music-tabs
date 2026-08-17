@@ -11,6 +11,7 @@ export type CatalogSearchResult = SearchResult & {
   fromCatalog: true
   tabId?: string
   score?: number
+  sourceSite?: string
 }
 
 export type MergeableSearchResult = SearchResult & {
