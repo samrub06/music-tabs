@@ -47,7 +47,7 @@ function loadFailedIds(): Set<string> {
 
 function saveFailedIds(ids: Set<string>) {
   fs.mkdirSync(path.dirname(FAIL_FILE), { recursive: true })
-  fs.writeFileSync(FAIL_FILE, JSON.stringify([...ids], null, 2))
+  fs.writeFileSync(FAIL_FILE, JSON.stringify(Array.from(ids), null, 2))
 }
 
 async function main() {
