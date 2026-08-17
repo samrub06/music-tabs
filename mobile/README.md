@@ -11,7 +11,7 @@ npm run copy:icons
 npx cap sync
 ```
 
-- Android: `npm run open:android` (Android Studio)
+- Android: open **`mobile/android`** in Android Studio (`npm run open:android`). See [ANDROID_RUN.md](./ANDROID_RUN.md) if you see “Please select Android SDK”.
 - iOS: needs full Xcode. Project uses Swift Package Manager under `ios/App`. `npm run open:ios`
 
 ## Config
