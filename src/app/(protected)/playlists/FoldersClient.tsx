@@ -523,11 +523,11 @@ export default function FoldersClient({
                 ) : null}
               </div>
             ) : (
-              <div className="space-y-2 pb-4">
+              <div className="flex flex-col gap-6 pb-4">
                 <div
                   id="hub-zone-songbook"
                   className={cn(
-                    'mb-2 scroll-mt-24',
+                    'scroll-mt-24',
                     !(scope === 'all' || scope === 'religious') && 'hidden'
                   )}
                   aria-hidden={!(scope === 'all' || scope === 'religious')}
@@ -547,7 +547,7 @@ export default function FoldersClient({
                 </div>
                 <div
                   id="hub-zone-israeli"
-                  className={cn('mb-2 scroll-mt-24', scope !== 'all' && 'hidden')}
+                  className={cn('scroll-mt-24', scope !== 'all' && 'hidden')}
                   aria-hidden={scope !== 'all'}
                 >
                   <HubZoneHeader
@@ -566,7 +566,7 @@ export default function FoldersClient({
                 <div
                   id="hub-zone-international"
                   className={cn(
-                    'mb-2 scroll-mt-24',
+                    'scroll-mt-24',
                     !(scope === 'all' || scope === 'international' || scope === 'french') &&
                       'hidden'
                   )}
@@ -588,7 +588,13 @@ export default function FoldersClient({
                     libraryFrom="playlists"
                   />
                 </div>
-                <div className={cn(scope !== 'all' && 'hidden')} aria-hidden={scope !== 'all'}>
+                <div
+                  className={cn(
+                    'flex flex-col gap-6',
+                    scope !== 'all' && 'hidden'
+                  )}
+                  aria-hidden={scope !== 'all'}
+                >
                   <CuratedPlaylistRow
                     section="decade"
                     publicPlaylists={searchFilteredExplorer}

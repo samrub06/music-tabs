@@ -16,7 +16,7 @@ export default function ExploreCatalogSkeleton({ view = 'gallery' }: ExploreCata
 
   return (
     <div className="pb-6">
-      <div className="grid grid-cols-5 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+      <div className="grid grid-cols-5 gap-2 sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
         {Array.from({ length: 15 }).map((_, i) => (
           <div key={i} className="space-y-1">
             <div className="aspect-square animate-pulse rounded-lg bg-muted" />

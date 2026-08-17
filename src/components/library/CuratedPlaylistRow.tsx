@@ -200,7 +200,7 @@ export default function CuratedPlaylistRow({
   const useMobileCarousel = !isDifficultySection || isLandscapeMobile
 
   return (
-    <section className="mb-6">
+    <section>
       {showSectionTitle && (
         <h3 className="mb-3 text-lg font-bold tracking-tight text-foreground sm:text-xl">
           {t(sectionTitleKey[section])}
@@ -210,7 +210,7 @@ export default function CuratedPlaylistRow({
         <div className="relative lg:hidden">
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+            className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -226,7 +226,7 @@ export default function CuratedPlaylistRow({
       )}
       <div
         className={cn(
-          'hidden gap-3 lg:grid lg:grid-cols-[repeat(auto-fill,minmax(7.5rem,8.5rem))]'
+          'hidden gap-2 lg:grid lg:grid-cols-[repeat(auto-fill,minmax(7.5rem,8.5rem))]'
         )}
       >
         {renderSquareCards('landscape')}

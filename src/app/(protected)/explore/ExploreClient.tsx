@@ -123,13 +123,13 @@ export default function ExploreClient({
   }
 
   const viewToggle = (
-    <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-muted/80 p-0.5">
+    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-white/25 bg-white/25 p-0.5 backdrop-blur-md dark:border-white/[0.12] dark:bg-white/[0.08]">
       <button
         type="button"
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'gallery'
-            ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+            ? 'bg-white/50 text-foreground shadow-sm dark:bg-white/15'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('gallery')}
@@ -143,7 +143,7 @@ export default function ExploreClient({
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'table'
-            ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+            ? 'bg-white/50 text-foreground shadow-sm dark:bg-white/15'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('table')}
@@ -230,8 +230,9 @@ export default function ExploreClient({
         data-main-scroll
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <div className="space-y-3 pb-4">
-          <div className="flex items-stretch gap-2">
+        <div className="flex flex-col gap-4 pb-6">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-stretch gap-2">
             <div className="relative min-w-0 flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <MagnifyingGlassIcon className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
@@ -278,13 +279,14 @@ export default function ExploreClient({
             </button>
 
             {viewToggle}
+            </div>
+
+            {genreFilters}
+            {allFilterSections}
           </div>
 
-          {genreFilters}
-          {allFilterSections}
+          <div>{children}</div>
         </div>
-
-        <div className="pb-6">{children}</div>
       </div>
 
       <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>

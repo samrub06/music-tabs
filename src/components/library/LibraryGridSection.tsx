@@ -22,7 +22,7 @@ export default function LibraryGridSection({
   showUserShortcutCards = true,
 }: LibraryGridSectionProps) {
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {CURATED_PLAYLIST_SECTION_ORDER.map((section, index) => (
         <CuratedPlaylistRow
           key={section}
@@ -31,6 +31,6 @@ export default function LibraryGridSection({
           showUserShortcutCards={index === 0 && showUserShortcutCards}
         />
       ))}
-    </>
+    </div>
   )
 }

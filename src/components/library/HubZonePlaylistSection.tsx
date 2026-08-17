@@ -285,7 +285,7 @@ export function HubZonePlaylistSection({
   }
 
   return (
-    <section className="mb-6 space-y-4">
+    <section className="space-y-3">
       {/* Artist banners first so new FR/IL artist shelves are visible without deep scroll.
           Hassidique | Carlebach: always one mobile row (explicit pair, grid-cols-2).
           Other banners: 1 full-width, 2 side-by-side, 3+ multi-row horizontal scroll.
@@ -323,8 +323,8 @@ export function HubZonePlaylistSection({
             ref={seeAll ? undefined : squareScrollRef}
             className={
               seeAll
-                ? 'grid grid-cols-2 gap-3 sm:grid-cols-3'
-                : 'flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory'
+                ? 'grid grid-cols-2 gap-2 sm:grid-cols-3'
+                : 'flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory'
             }
             style={
               seeAll
@@ -352,7 +352,7 @@ export function HubZonePlaylistSection({
       )}
 
       {featured.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {featured.map((item) => (
             <PlaylistArtistBanner
               key={item.id}

@@ -106,8 +106,8 @@ export default function BottomNavigation() {
           className={cn(
             'pointer-events-none absolute inset-x-5 bottom-[max(0.35rem,env(safe-area-inset-bottom,0px))]',
             isLandscapeMobile ? 'h-9' : 'h-14',
-            'rounded-[1.55rem] bg-white/40 dark:bg-white/[0.04]',
-            'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+            'rounded-[1.55rem] bg-white/15 dark:bg-white/[0.03]',
+            'ring-1 ring-black/[0.03] dark:ring-white/[0.05]',
             'translate-y-1.5 scale-[0.97] blur-[0.3px]'
           )}
         />
@@ -116,8 +116,8 @@ export default function BottomNavigation() {
           className={cn(
             'pointer-events-none absolute inset-x-4 bottom-[max(0.45rem,env(safe-area-inset-bottom,0px))]',
             isLandscapeMobile ? 'h-10' : 'h-[3.75rem]',
-            'rounded-[1.65rem] bg-white/55 dark:bg-white/[0.055]',
-            'ring-1 ring-black/[0.05] dark:ring-white/[0.07]',
+            'rounded-[1.65rem] bg-white/20 dark:bg-white/[0.04]',
+            'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
             'translate-y-0.5 scale-[0.985]'
           )}
         />
@@ -125,15 +125,15 @@ export default function BottomNavigation() {
         <div
           className={cn(
             'relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',
-            'border border-black/[0.07] bg-background/85 text-foreground backdrop-blur-2xl',
-            'dark:border-white/[0.10] dark:bg-zinc-950/78',
-            'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.14),0_10px_28px_-12px_rgba(0,0,0,0.18)]',
-            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.55),0_12px_32px_-14px_rgba(0,0,0,0.65)]'
+            'border border-white/25 bg-white/25 text-foreground backdrop-blur-2xl',
+            'dark:border-white/[0.12] dark:bg-white/[0.08]',
+            'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.10),0_10px_28px_-12px_rgba(0,0,0,0.12)]',
+            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.35),0_12px_32px_-14px_rgba(0,0,0,0.4)]'
           )}
         >
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent dark:via-white/15"
           />
           <div
             className={cn(

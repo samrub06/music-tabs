@@ -29,7 +29,7 @@ export function HubZoneHeader({
   return (
     <header
       className={cn(
-        'mb-4 flex items-baseline justify-between gap-3',
+        'mb-3 flex items-baseline justify-between gap-3',
         className
       )}
     >
