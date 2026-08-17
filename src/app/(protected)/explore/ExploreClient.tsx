@@ -123,13 +123,13 @@ export default function ExploreClient({
   }
 
   const viewToggle = (
-    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-white/25 bg-white/25 p-0.5 backdrop-blur-md dark:border-white/[0.12] dark:bg-white/[0.08]">
+    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-border/60 bg-transparent p-0.5">
       <button
         type="button"
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'gallery'
-            ? 'bg-white/50 text-foreground shadow-sm dark:bg-white/15'
+            ? 'border border-primary/40 text-primary'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('gallery')}
@@ -143,7 +143,7 @@ export default function ExploreClient({
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'table'
-            ? 'bg-white/50 text-foreground shadow-sm dark:bg-white/15'
+            ? 'border border-primary/40 text-primary'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('table')}

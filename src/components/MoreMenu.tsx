@@ -89,8 +89,18 @@ export default function MoreMenu({ isOpen, onClose }: MoreMenuProps) {
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        overlayClassName="backdrop-blur-sm"
-        className="z-[60] flex max-h-[85vh] flex-col gap-0 overflow-hidden rounded-t-[1.75rem] border-0 border-t border-border bg-background p-0 shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]"
+        overlayClassName={cn(
+          'backdrop-blur-sm lg:!bottom-0',
+          // Keep the floating bottom nav uncovered; sheet slides up from its top edge.
+          '![bottom:var(--bottom-nav-offset,4.9rem)]'
+        )}
+        className={cn(
+          'z-[60] flex max-h-[min(85vh,calc(100dvh-var(--bottom-nav-offset,4.9rem)))] flex-col gap-0 overflow-hidden',
+          'rounded-t-[1.75rem] border-0 border-t border-border bg-background p-0',
+          'shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]',
+          // Anchor above the bottom nav so enter/exit animation starts at the nav top.
+          '![bottom:var(--bottom-nav-offset,4.9rem)] lg:![bottom:var(--bottom-nav-offset,4.9rem)]'
+        )}
       >
         <div className="mx-3 mt-2 flex shrink-0 justify-center">
           <div className="h-1 w-14 rounded-full bg-muted-foreground/25" />

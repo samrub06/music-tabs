@@ -324,7 +324,6 @@ export default function SongContent({
       ? transposedSong.sheetImageUrl.trim()
       : null;
   const [showTransposeControls, setShowTransposeControls] = useState(false);
-  const [chordToolsOpen, setChordToolsOpen] = useState(false);
   const [metaDetailsOpen, setMetaDetailsOpen] = useState(!isAuthenticated);
   const [practiceMode, setPracticeMode] = useState(false);
   const [practiceLineIndex, setPracticeLineIndex] = useState(0);
@@ -1269,28 +1268,6 @@ export default function SongContent({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setChordToolsOpen((open) => !open)}
-                    className={cn(
-                      'inline-flex h-11 items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-3.5 text-sm font-medium text-foreground transition-colors duration-200',
-                      'hover:bg-muted/70',
-                      chordToolsOpen && 'bg-muted ring-1 ring-border/80'
-                    )}
-                    aria-expanded={chordToolsOpen}
-                  >
-                    <MusicalNoteIcon className="h-4 w-4 shrink-0" />
-                    <span>{t('songHeader.musicSettings')}</span>
-                    <ChevronDownIcon
-                      className={cn(
-                        'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
-                        chordToolsOpen && 'rotate-180'
-                      )}
-                    />
-                  </button>
-
-                  {chordToolsOpen ? (
-                    <>
                   {/* Fixed height so expand/collapse does not shift sibling controls */}
                   <div className="flex h-12 shrink-0 items-center sm:h-11">
                   <div
@@ -1372,8 +1349,6 @@ export default function SongContent({
                       {t('songHeader.easyChords')}
                     </button>
                   )}
-                    </>
-                  ) : null}
 
                   <PracticeComingSoonChip
                     visible={hasLyricPractice}
@@ -1474,20 +1449,18 @@ export default function SongContent({
 
           {/* Song Content — portrait practice chrome; landscape uses fullscreen overlay */}
           {!landscapePracticeActive ? (
-            <StackedRoundedSection surfaceClassName="px-3 py-3 sm:px-3.5 sm:py-3.5">
-              <StructuredSongContent
-                song={transposedSong}
-                onChordClick={onChordClick}
-                fontSize={fontSize}
-                practiceMode={practiceMode}
-                practiceLineIndex={practiceLineIndex}
-                youtubeLyricSeekEnabled={youtubeLyricSeekEnabled}
-                youtubeLyricSyncLookup={youtubeLyricSyncLookup}
-                youtubeActiveLyricKey={youtubeActiveLyricKey}
-                onYoutubeLyricLineClick={onYoutubeLyricLineClick}
-                autoScrollIsActive={autoScrollIsActive}
-              />
-            </StackedRoundedSection>
+            <StructuredSongContent
+              song={transposedSong}
+              onChordClick={onChordClick}
+              fontSize={fontSize}
+              practiceMode={practiceMode}
+              practiceLineIndex={practiceLineIndex}
+              youtubeLyricSeekEnabled={youtubeLyricSeekEnabled}
+              youtubeLyricSyncLookup={youtubeLyricSyncLookup}
+              youtubeActiveLyricKey={youtubeActiveLyricKey}
+              onYoutubeLyricLineClick={onYoutubeLyricLineClick}
+              autoScrollIsActive={autoScrollIsActive}
+            />
           ) : null}
 
           {landscapePracticeActive ? (
@@ -1976,7 +1949,7 @@ function StructuredSongContent({
   const songHasHebrew = songTextDirection === 'rtl';
 
   return (
-    <div className="leading-relaxed space-y-2 w-full overflow-x-hidden" style={{ 
+    <div className="leading-relaxed space-y-1 w-full overflow-x-hidden" style={{ 
       fontSize: `${optimalFontSize}px`,
       lineHeight: optimalLineHeight,
       fontFamily: getSongLyricsFontFamily(songHasHebrew),
@@ -2002,18 +1975,15 @@ function StructuredSongContent({
             key={sectionIndex}
             open={isOpen}
             onOpenChange={(open) => toggleSection(sectionIndex, open)}
-            className="w-full overflow-hidden rounded-2xl border border-black/[0.05] bg-muted/25 dark:border-white/[0.06] dark:bg-white/[0.03]"
-            style={{ maxWidth: '100%' }}
+            className="w-full"
+            style={{ maxWidth: '100%', overflow: 'hidden' }}
           >
             <CollapsibleTrigger asChild>
               <div
                 role="button"
                 tabIndex={0}
                 dir={getTextDirection(section.name)}
-                className={cn(
-                  stackedSectionTriggerClassName,
-                  'min-h-[44px] rounded-2xl px-3 py-2.5 font-medium'
-                )}
+                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-muted px-3 py-2.5 text-start font-medium text-foreground hover:bg-muted/80"
                 style={{
                   fontSize: `${Math.min(optimalFontSize + 2, 16)}px`,
                   fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -2026,7 +1996,7 @@ function StructuredSongContent({
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="space-y-1 w-full px-3 pb-3 pt-1" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+              <div className="space-y-1 w-full pt-2" style={{ maxWidth: '100%', overflow: 'hidden' }}>
                 {renderSectionLines(section.lines, sectionStartOffsets[sectionIndex] ?? 0, sectionIndex)}
               </div>
             </CollapsibleContent>

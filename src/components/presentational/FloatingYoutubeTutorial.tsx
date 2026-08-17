@@ -697,26 +697,6 @@ export default function FloatingYoutubeTutorial({
           onPointerDown={stopPanelEvent}
           onClick={stopPanelEvent}
         >
-          {/* Stacked plates behind the main card */}
-          <div
-            aria-hidden
-            className={cn(
-              'pointer-events-none absolute inset-x-5 bottom-[max(0.55rem,env(safe-area-inset-bottom,0px))] h-14',
-              'rounded-[1.65rem] bg-white/40 dark:bg-white/[0.04]',
-              'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
-              'translate-y-2 scale-[0.97] blur-[0.3px]'
-            )}
-          />
-          <div
-            aria-hidden
-            className={cn(
-              'pointer-events-none absolute inset-x-4 bottom-[max(0.65rem,env(safe-area-inset-bottom,0px))] h-16',
-              'rounded-[1.75rem] bg-white/55 dark:bg-white/[0.06]',
-              'ring-1 ring-black/[0.05] dark:ring-white/[0.07]',
-              'translate-y-1 scale-[0.985]'
-            )}
-          />
-
           <div
             className={cn(
               'relative mx-auto max-w-lg overflow-hidden rounded-[1.85rem]',

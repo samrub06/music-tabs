@@ -22,6 +22,7 @@ import { Folder } from '@/types'
 import { updateFolderOrderAction } from './actions'
 import { CreateFolderSheet } from '@/components/playlists/CreateFolderSheet'
 import type { CreateFolderSongOption } from '@/components/playlists/CreateFolderSheet'
+import { FilterChip } from '@/components/ui/filter-chip'
 import Snackbar from '@/components/Snackbar'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -408,19 +409,13 @@ export default function FoldersClient({
           <div className="flex items-center gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-hide">
               {scopeChips.map((chip) => (
-                <button
+                <FilterChip
                   key={chip.id}
-                  type="button"
+                  active={scope === chip.id}
                   onClick={() => selectScope(chip.id)}
-                  className={cn(
-                    'shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition-all duration-200',
-                    scope === chip.id
-                      ? 'bg-foreground text-background'
-                      : 'bg-muted/80 text-muted-foreground hover:text-foreground'
-                  )}
                 >
                   {chip.label}
-                </button>
+                </FilterChip>
               ))}
             </div>
 

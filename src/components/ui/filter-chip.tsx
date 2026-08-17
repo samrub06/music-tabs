@@ -37,8 +37,8 @@ export function FilterChip({
           ? 'min-h-[28px] px-2 py-0.5 text-xs'
           : 'min-h-[36px] px-3.5 py-2 text-sm',
         active
-          ? 'border border-primary/25 bg-primary/15 text-primary backdrop-blur-md dark:border-primary/30 dark:bg-primary/20'
-          : 'border border-white/25 bg-white/25 text-muted-foreground backdrop-blur-md hover:bg-white/40 hover:text-foreground dark:border-white/[0.12] dark:bg-white/[0.08] dark:hover:bg-white/[0.14]',
+          ? 'border border-primary/40 bg-transparent text-primary dark:border-primary/50'
+          : 'border border-border/60 bg-transparent text-muted-foreground hover:border-border hover:text-foreground',
         className
       )}
     >

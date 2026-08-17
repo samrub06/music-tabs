@@ -40,6 +40,20 @@ export default function BottomNavigation() {
     setMounted(true);
   }, []);
 
+  // Expose clearance so sheets (e.g. More) can sit/animate above the floating nav.
+  useEffect(() => {
+    if (!user) return;
+    const root = document.documentElement;
+    const pill = isLandscapeMobile ? '2.5rem' : '4rem';
+    root.style.setProperty(
+      '--bottom-nav-offset',
+      `calc(${pill} + max(0.55rem, env(safe-area-inset-bottom, 0px)) + 0.35rem)`
+    );
+    return () => {
+      root.style.removeProperty('--bottom-nav-offset');
+    };
+  }, [user, isLandscapeMobile]);
+
   if (!user) {
     return null;
   }
@@ -100,28 +114,6 @@ export default function BottomNavigation() {
           'px-3 pb-[max(0.55rem,env(safe-area-inset-bottom,0px))]'
         )}
       >
-        {/* Stacked plates behind the main pill */}
-        <div
-          aria-hidden
-          className={cn(
-            'pointer-events-none absolute inset-x-5 bottom-[max(0.35rem,env(safe-area-inset-bottom,0px))]',
-            isLandscapeMobile ? 'h-9' : 'h-14',
-            'rounded-[1.55rem] bg-white/15 dark:bg-white/[0.03]',
-            'ring-1 ring-black/[0.03] dark:ring-white/[0.05]',
-            'translate-y-1.5 scale-[0.97] blur-[0.3px]'
-          )}
-        />
-        <div
-          aria-hidden
-          className={cn(
-            'pointer-events-none absolute inset-x-4 bottom-[max(0.45rem,env(safe-area-inset-bottom,0px))]',
-            isLandscapeMobile ? 'h-10' : 'h-[3.75rem]',
-            'rounded-[1.65rem] bg-white/20 dark:bg-white/[0.04]',
-            'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
-            'translate-y-0.5 scale-[0.985]'
-          )}
-        />
-
         <div
           className={cn(
             'relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',

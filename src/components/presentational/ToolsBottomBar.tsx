@@ -11,8 +11,9 @@ import {
   XMarkIcon,
   LinkIcon,
   CheckIcon,
-  ChevronDownIcon,
   MusicalNoteIcon,
+  UserPlusIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { generateAllKeys } from '@/utils/chords';
@@ -29,7 +30,6 @@ import { Piano, Guitar } from 'lucide-react';
 import { shareOrCopyLink } from '@/utils/shareLink';
 import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
 import { useAuthContext } from '@/context/AuthContext';
-import { UserPlusIcon } from '@heroicons/react/24/outline';
 import { absoluteSongShareUrl, songPath } from '@/lib/seo/songPath';
 import { cn } from '@/lib/utils';
 import {
@@ -48,13 +48,22 @@ function interpolate(template: string, vars: Record<string, string>) {
 const BAR_MIN_HEIGHT = 48;
 const BAR_MAX_HEIGHT_PERCENT = 92;
 
-/** Default open height — compact so lyrics stay visible behind. */
+type ToolId =
+  | 'font'
+  | 'instrument'
+  | 'key'
+  | 'easy'
+  | 'capo'
+  | 'chordPref'
+  | 'share'
+  | 'friend';
+
+/** Default open height — enough for icon row + one expanded panel. */
 export function getDefaultToolsBarHeight(): number {
-  if (typeof window === 'undefined') return 360;
+  if (typeof window === 'undefined') return 320;
   const viewportHeight = window.innerHeight;
   const maxH = viewportHeight * (BAR_MAX_HEIGHT_PERCENT / 100);
-  // ~45% on phones; never taller than ~520 unless the viewport is huge.
-  return Math.round(Math.min(maxH, Math.max(300, viewportHeight * 0.45)));
+  return Math.round(Math.min(maxH, Math.max(280, viewportHeight * 0.42)));
 }
 
 interface ToolsBottomBarProps {
@@ -76,6 +85,39 @@ interface ToolsBottomBarProps {
   onToggleEasyChordMode: () => void;
   onToggleEdit?: () => void;
   onDelete?: () => void;
+}
+
+function ToolIconButton({
+  active,
+  label,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
+      className={cn(
+        'flex min-w-[3.25rem] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1.5 py-2 transition-all duration-200',
+        active
+          ? 'bg-primary/15 text-primary ring-1 ring-primary/25'
+          : 'bg-white/25 text-muted-foreground backdrop-blur-md hover:bg-white/40 hover:text-foreground dark:bg-white/[0.08] dark:hover:bg-white/[0.14]'
+      )}
+    >
+      {children}
+      <span className="max-w-full truncate text-[10px] font-medium leading-tight">
+        {label}
+      </span>
+    </button>
+  );
 }
 
 export default function ToolsBottomBar({
@@ -102,7 +144,7 @@ export default function ToolsBottomBar({
   const { user } = useAuthContext();
   const [linkCopied, setLinkCopied] = useState(false);
   const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false);
-  const [musicSettingsOpen, setMusicSettingsOpen] = useState(false);
+  const [expandedTool, setExpandedTool] = useState<ToolId | null>('font');
   const [chordSectionPref, setChordSectionPref] = useState<ChordSectionPref>('auto');
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -169,7 +211,10 @@ export default function ToolsBottomBar({
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     const onPointerMove = (moveEvent: PointerEvent) => {
       const deltaY = startY - moveEvent.clientY;
-      const maxH = typeof window !== 'undefined' ? window.innerHeight * (BAR_MAX_HEIGHT_PERCENT / 100) : 400;
+      const maxH =
+        typeof window !== 'undefined'
+          ? window.innerHeight * (BAR_MAX_HEIGHT_PERCENT / 100)
+          : 400;
       const next = Math.round(Math.min(maxH, Math.max(BAR_MIN_HEIGHT, startH + deltaY)));
       onHeightChange(next);
     };
@@ -183,15 +228,25 @@ export default function ToolsBottomBar({
   };
 
   const hasOnlyEasyChords = songHasOnlyEasyChords(song.allChords);
+  const hasCapo = song.capo !== undefined && song.capo !== null;
+  const hasKey = Boolean(song.firstChord || song.key);
   const currentKey = getCurrentKey();
   const availableKeys = getAvailableKeys();
 
-  const cardClass =
+  const toggleTool = (id: ToolId) => {
+    setExpandedTool((prev) => (prev === id ? null : id));
+  };
+
+  const panelClass =
     'rounded-2xl border border-border bg-card/80 p-3.5 backdrop-blur-md dark:bg-card/50';
   const labelClass = 'text-[11px] font-medium text-muted-foreground mb-2.5';
   const segmentClass = 'flex rounded-full bg-muted/80 p-0.5 gap-0.5';
   const segmentOptionClass = (active: boolean) =>
-    `flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 ${active ? 'bg-background dark:bg-white/10 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`;
+    `flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
+      active
+        ? 'bg-background dark:bg-white/10 text-foreground shadow-sm'
+        : 'text-muted-foreground hover:text-foreground'
+    }`;
 
   return (
     <div
@@ -202,7 +257,7 @@ export default function ToolsBottomBar({
         role="separator"
         aria-label={t('songHeader.resize')}
         onPointerDown={onPointerDown}
-        className="relative flex shrink-0 cursor-ns-resize touch-none items-center justify-center py-3 min-h-11"
+        className="relative flex min-h-11 shrink-0 cursor-ns-resize touch-none items-center justify-center py-3"
       >
         <div className="h-1 w-14 rounded-full bg-muted-foreground/25" />
         <Button
@@ -210,8 +265,8 @@ export default function ToolsBottomBar({
           size="icon"
           className="absolute right-2 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           onClick={(e) => {
-            e.stopPropagation()
-            onClose()
+            e.stopPropagation();
+            onClose();
           }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={t('songHeader.close')}
@@ -220,235 +275,296 @@ export default function ToolsBottomBar({
         </Button>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3.5 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3">
-        {/* Chords & text — one control, expands on demand to save first-view space */}
-        <div className={cardClass}>
-          <button
-            type="button"
-            onClick={() => setMusicSettingsOpen((open) => !open)}
-            className="flex w-full items-center gap-3 text-start transition-colors duration-200"
-            aria-expanded={musicSettingsOpen}
+      <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3">
+        {/* All functions visible as icons; tap one to expand its controls */}
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+          <ToolIconButton
+            active={expandedTool === 'font'}
+            label={t('songHeader.fontSize')}
+            onClick={() => toggleTool('font')}
           >
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/70 text-foreground">
-              <MusicalNoteIcon className="h-5 w-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-foreground">
-                {t('songHeader.musicSettings')}
+            <span className="text-sm font-bold leading-none">Aa</span>
+          </ToolIconButton>
+
+          <ToolIconButton
+            active={expandedTool === 'instrument'}
+            label={t('songHeader.instrument')}
+            onClick={() => toggleTool('instrument')}
+          >
+            {selectedInstrument === 'guitar' ? (
+              <Guitar className="h-5 w-5" />
+            ) : (
+              <Piano className="h-5 w-5" />
+            )}
+          </ToolIconButton>
+
+          {hasKey ? (
+            <ToolIconButton
+              active={expandedTool === 'key'}
+              label={t('songHeader.keyTranspose')}
+              onClick={() => toggleTool('key')}
+            >
+              <span className="text-sm font-bold tabular-nums leading-none">
+                {currentKey || getBaseChord()}
               </span>
-              <span className="block text-[11px] text-muted-foreground">
-                {t('songHeader.fontSize')} · {t('songHeader.instrument')} · {t('songHeader.keyTranspose')}
-              </span>
-            </span>
-            <ChevronDownIcon
-              className={cn(
-                'h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200',
-                musicSettingsOpen && 'rotate-180'
-              )}
-            />
-          </button>
+            </ToolIconButton>
+          ) : null}
 
-          {musicSettingsOpen ? (
-            <div className="mt-3.5 space-y-3.5 border-t border-border/60 pt-3.5">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="min-w-[160px] flex-1">
-                  <p className={labelClass}>{t('songHeader.fontSize')}</p>
-                  <div className="flex items-center justify-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onDecreaseFontSize}
-                      disabled={fontSize <= 10}
-                      className="h-9 w-9 shrink-0 rounded-xl"
-                    >
-                      <MinusIcon className="h-4 w-4" />
-                    </Button>
-                    <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                      {fontSize}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={onIncreaseFontSize}
-                      disabled={fontSize >= 24}
-                      className="h-9 w-9 shrink-0 rounded-xl"
-                    >
-                      <PlusIcon className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={onResetFontSize}
-                      className="h-9 w-9 shrink-0 rounded-xl"
-                    >
-                      <EyeIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                {!hasOnlyEasyChords && (
-                  <div className="min-w-[150px] flex-shrink-0">
-                    <p className={labelClass}>{t('songHeader.easyChords')}</p>
-                    <button
-                      type="button"
-                      onClick={onToggleEasyChordMode}
-                      className={`min-h-[2.5rem] w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
-                        easyChordMode
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-                      }`}
-                    >
-                      {t('songHeader.easyChords')}
-                    </button>
-                  </div>
-                )}
-              </div>
+          {!hasOnlyEasyChords ? (
+            <ToolIconButton
+              active={expandedTool === 'easy'}
+              label={t('songHeader.easyChords')}
+              onClick={() => toggleTool('easy')}
+            >
+              <MusicalNoteIcon className={cn('h-5 w-5', easyChordMode && 'text-primary')} />
+            </ToolIconButton>
+          ) : null}
 
-              {(song.firstChord || song.key) && (
-                <div>
-                  <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
-                  <div className="flex items-center gap-2">
-                    <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
-                      <SelectTrigger className="h-10 flex-1 rounded-xl border border-amber-200/80 bg-background/50 focus:ring-amber-500/20 dark:border-amber-700/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableKeys.map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {key}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-none"
-                        onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))}
-                        disabled={transposeValue <= -11}
-                      >
-                        <MinusIcon className="h-4 w-4" />
-                      </Button>
-                      <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
-                        {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-none"
-                        onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))}
-                        disabled={transposeValue >= 11}
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
+          {hasCapo ? (
+            <ToolIconButton
+              active={expandedTool === 'capo'}
+              label={t('songHeader.capo')}
+              onClick={() => toggleTool('capo')}
+            >
+              <span className="text-xs font-bold leading-none">C{song.capo}</span>
+            </ToolIconButton>
+          ) : null}
 
-              {song.capo !== undefined && song.capo !== null && (
-                <div>
-                  <p className={labelClass}>{t('songHeader.capo')}</p>
-                  <div className={segmentClass}>
-                    <button
-                      type="button"
-                      onClick={() => onToggleCapo(true)}
-                      className={segmentOptionClass(useCapo)}
-                    >
-                      Capo {song.capo}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onToggleCapo(false)}
-                      className={segmentOptionClass(!useCapo)}
-                    >
-                      {t('songHeader.noCapo')}
-                    </button>
-                  </div>
-                </div>
-              )}
+          <ToolIconButton
+            active={expandedTool === 'chordPref'}
+            label={t('songContent.chordSectionPref')}
+            onClick={() => toggleTool('chordPref')}
+          >
+            <Squares2X2Icon className="h-5 w-5" />
+          </ToolIconButton>
 
-              <div>
-                <p className={labelClass}>{t('songHeader.instrument')}</p>
-                <div className={segmentClass}>
-                  <button
-                    type="button"
-                    onClick={() => onSetSelectedInstrument('piano')}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
-                      selectedInstrument === 'piano'
-                        ? 'bg-blue-500/15 text-blue-700 shadow-sm dark:text-blue-400'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Piano className="h-4 w-4 shrink-0" /> {t('songHeader.piano')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onSetSelectedInstrument('guitar')}
-                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
-                      selectedInstrument === 'guitar'
-                        ? 'bg-amber-500/15 text-amber-700 shadow-sm dark:text-amber-400'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
-                  </button>
-                </div>
-              </div>
+          <ToolIconButton
+            active={expandedTool === 'share'}
+            label={t('songHeader.shareLink')}
+            onClick={() => toggleTool('share')}
+          >
+            {linkCopied ? (
+              <CheckIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
+            ) : (
+              <LinkIcon className="h-5 w-5" />
+            )}
+          </ToolIconButton>
 
-              <div>
-                <p className={labelClass}>{t('songContent.chordSectionPref')}</p>
-                <div className={segmentClass}>
-                  {(
-                    [
-                      ['auto', 'chordSectionPrefAuto'],
-                      ['always_open', 'chordSectionPrefOpen'],
-                      ['always_collapsed', 'chordSectionPrefCollapsed'],
-                    ] as const
-                  ).map(([value, labelKey]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => handleChordSectionPref(value)}
-                      className={segmentOptionClass(chordSectionPref === value)}
-                    >
-                      {t(`songContent.${labelKey}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {user ? (
+            <ToolIconButton
+              active={expandedTool === 'friend'}
+              label={t('friends.shareAction')}
+              onClick={() => toggleTool('friend')}
+            >
+              <UserPlusIcon className="h-5 w-5" />
+            </ToolIconButton>
           ) : null}
         </div>
 
-        <div className={cardClass}>
-          <p className={labelClass}>{t('songHeader.shareLink')}</p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleShareLink}
-            className={`h-10 w-full rounded-xl font-medium transition-colors ${
-              linkCopied
-                ? 'border-green-600/40 bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:border-green-400/40 dark:text-green-400'
-                : ''
-            }`}
-            aria-live="polite"
-          >
-            {linkCopied ? (
-              <>
-                <CheckIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-                {t('songHeader.linkCopied')}
-              </>
-            ) : (
-              <>
-                <LinkIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-                {t('songHeader.shareLink')}
-              </>
-            )}
-          </Button>
-        </div>
-        {user && (
-          <div className={cardClass}>
+        {expandedTool === 'font' ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songHeader.fontSize')}</p>
+            <div className="flex items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onDecreaseFontSize}
+                disabled={fontSize <= 10}
+                className="h-10 w-10 shrink-0 rounded-xl"
+              >
+                <MinusIcon className="h-4 w-4" />
+              </Button>
+              <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                {fontSize}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onIncreaseFontSize}
+                disabled={fontSize >= 24}
+                className="h-10 w-10 shrink-0 rounded-xl"
+              >
+                <PlusIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onResetFontSize}
+                className="h-10 w-10 shrink-0 rounded-xl"
+              >
+                <EyeIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {expandedTool === 'instrument' ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songHeader.instrument')}</p>
+            <div className={segmentClass}>
+              <button
+                type="button"
+                onClick={() => onSetSelectedInstrument('piano')}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-medium transition-all duration-200 ${
+                  selectedInstrument === 'piano'
+                    ? 'bg-blue-500/15 text-blue-700 shadow-sm dark:text-blue-400'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Piano className="h-4 w-4 shrink-0" /> {t('songHeader.piano')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetSelectedInstrument('guitar')}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-medium transition-all duration-200 ${
+                  selectedInstrument === 'guitar'
+                    ? 'bg-amber-500/15 text-amber-700 shadow-sm dark:text-amber-400'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {expandedTool === 'key' && hasKey ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
+            <div className="flex items-center gap-2">
+              <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
+                <SelectTrigger className="h-10 flex-1 rounded-xl border border-amber-200/80 bg-background/50 focus:ring-amber-500/20 dark:border-amber-700/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableKeys.map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {key}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-none"
+                  onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))}
+                  disabled={transposeValue <= -11}
+                >
+                  <MinusIcon className="h-4 w-4" />
+                </Button>
+                <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+                  {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-none"
+                  onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))}
+                  disabled={transposeValue >= 11}
+                >
+                  <PlusIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {expandedTool === 'easy' && !hasOnlyEasyChords ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songHeader.easyChords')}</p>
+            <button
+              type="button"
+              onClick={onToggleEasyChordMode}
+              className={`min-h-[2.75rem] w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
+                easyChordMode
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {t('songHeader.easyChords')}
+            </button>
+          </div>
+        ) : null}
+
+        {expandedTool === 'capo' && hasCapo ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songHeader.capo')}</p>
+            <div className={segmentClass}>
+              <button
+                type="button"
+                onClick={() => onToggleCapo(true)}
+                className={segmentOptionClass(useCapo)}
+              >
+                Capo {song.capo}
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleCapo(false)}
+                className={segmentOptionClass(!useCapo)}
+              >
+                {t('songHeader.noCapo')}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {expandedTool === 'chordPref' ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songContent.chordSectionPref')}</p>
+            <div className={segmentClass}>
+              {(
+                [
+                  ['auto', 'chordSectionPrefAuto'],
+                  ['always_open', 'chordSectionPrefOpen'],
+                  ['always_collapsed', 'chordSectionPrefCollapsed'],
+                ] as const
+              ).map(([value, labelKey]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handleChordSectionPref(value)}
+                  className={segmentOptionClass(chordSectionPref === value)}
+                >
+                  {t(`songContent.${labelKey}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {expandedTool === 'share' ? (
+          <div className={panelClass}>
+            <p className={labelClass}>{t('songHeader.shareLink')}</p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleShareLink}
+              className={`h-10 w-full rounded-xl font-medium transition-colors ${
+                linkCopied
+                  ? 'border-green-600/40 bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:border-green-400/40 dark:text-green-400'
+                  : ''
+              }`}
+              aria-live="polite"
+            >
+              {linkCopied ? (
+                <>
+                  <CheckIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                  {t('songHeader.linkCopied')}
+                </>
+              ) : (
+                <>
+                  <LinkIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                  {t('songHeader.shareLink')}
+                </>
+              )}
+            </Button>
+          </div>
+        ) : null}
+
+        {expandedTool === 'friend' && user ? (
+          <div className={panelClass}>
             <p className={labelClass}>{t('friends.shareWithFriend')}</p>
             <Button
               type="button"
@@ -460,7 +576,7 @@ export default function ToolsBottomBar({
               {t('friends.shareAction')}
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
 
       {(onToggleEdit || onDelete) && (
@@ -499,5 +615,5 @@ export default function ToolsBottomBar({
         />
       )}
     </div>
-  )
+  );
 }
