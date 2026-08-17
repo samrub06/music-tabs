@@ -8,16 +8,16 @@ import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  RectangleStackIcon, 
+import {
+  RectangleStackIcon,
   HomeIcon,
   EllipsisHorizontalIcon,
   FolderIcon,
   MusicalNoteIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
-import { 
-  RectangleStackIcon as RectangleStackIconSolid, 
+import {
+  RectangleStackIcon as RectangleStackIconSolid,
   HomeIcon as HomeIconSolid,
   EllipsisHorizontalIcon as EllipsisHorizontalIconSolid,
   FolderIcon as FolderIconSolid,
@@ -95,71 +95,110 @@ export default function BottomNavigation() {
     <>
       <nav
         aria-label={t('navigation.MENU')}
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background lg:hidden safe-area-inset-bottom"
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-50 lg:hidden',
+          'px-3 pb-[max(0.55rem,env(safe-area-inset-bottom,0px))]'
+        )}
       >
+        {/* Stacked plates behind the main pill */}
+        <div
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-x-5 bottom-[max(0.35rem,env(safe-area-inset-bottom,0px))]',
+            isLandscapeMobile ? 'h-9' : 'h-14',
+            'rounded-[1.55rem] bg-white/40 dark:bg-white/[0.04]',
+            'ring-1 ring-black/[0.04] dark:ring-white/[0.06]',
+            'translate-y-1.5 scale-[0.97] blur-[0.3px]'
+          )}
+        />
+        <div
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-x-4 bottom-[max(0.45rem,env(safe-area-inset-bottom,0px))]',
+            isLandscapeMobile ? 'h-10' : 'h-[3.75rem]',
+            'rounded-[1.65rem] bg-white/55 dark:bg-white/[0.055]',
+            'ring-1 ring-black/[0.05] dark:ring-white/[0.07]',
+            'translate-y-0.5 scale-[0.985]'
+          )}
+        />
+
         <div
           className={cn(
-            'flex items-stretch px-0.5',
-            isLandscapeMobile ? 'h-10' : 'h-16'
+            'relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',
+            'border border-black/[0.07] bg-background/85 text-foreground backdrop-blur-2xl',
+            'dark:border-white/[0.10] dark:bg-zinc-950/78',
+            'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.14),0_10px_28px_-12px_rgba(0,0,0,0.18)]',
+            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.55),0_12px_32px_-14px_rgba(0,0,0,0.65)]'
           )}
         >
-          {navItems.map((item) => {
-            const IconComponent = item.isActive ? item.iconSolid : item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                className={cn(
-                  'flex flex-1 min-w-0 flex-col items-center justify-center rounded-lg px-0.5 transition-all duration-150 active:scale-95',
-                  isLandscapeMobile ? 'py-0' : 'py-1',
-                  item.isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <IconComponent className={iconClass} />
-                {!isLandscapeMobile ? (
-                  <span
-                    className={cn(
-                      'mt-0.5 w-full truncate text-center text-[10px] sm:text-xs',
-                      item.isActive ? 'font-semibold' : 'font-medium'
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setIsMoreMenuOpen((open) => !open)}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20"
+          />
+          <div
             className={cn(
-              'flex flex-1 min-w-0 flex-col items-center justify-center rounded-lg px-0.5 transition-all duration-150 active:scale-95',
-              isLandscapeMobile ? 'py-0' : 'py-1',
-              isMoreActive || isMoreMenuOpen
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              'relative flex items-stretch px-1',
+              isLandscapeMobile ? 'h-10' : 'h-16'
             )}
-            aria-label={t('navigation.more')}
           >
-            {isMoreActive || isMoreMenuOpen ? (
-              <EllipsisHorizontalIconSolid className={iconClass} />
-            ) : (
-              <EllipsisHorizontalIcon className={iconClass} />
-            )}
-            {!isLandscapeMobile ? (
-              <span
-                className={cn(
-                  'mt-0.5 w-full truncate text-center text-[10px] sm:text-xs',
-                  isMoreActive || isMoreMenuOpen ? 'font-semibold' : 'font-medium'
-                )}
-              >
-                {t('navigation.more')}
-              </span>
-            ) : null}
-          </button>
+            {navItems.map((item) => {
+              const IconComponent = item.isActive ? item.iconSolid : item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch={true}
+                  className={cn(
+                    'flex min-w-0 flex-1 flex-col items-center justify-center rounded-2xl px-0.5 transition-all duration-200 active:scale-95',
+                    isLandscapeMobile ? 'py-0' : 'py-1',
+                    item.isActive
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <IconComponent className={iconClass} />
+                  {!isLandscapeMobile ? (
+                    <span
+                      className={cn(
+                        'mt-0.5 w-full truncate text-center text-[10px] sm:text-xs',
+                        item.isActive ? 'font-semibold' : 'font-medium'
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  ) : null}
+                </Link>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setIsMoreMenuOpen((open) => !open)}
+              className={cn(
+                'flex min-w-0 flex-1 flex-col items-center justify-center rounded-2xl px-0.5 transition-all duration-200 active:scale-95',
+                isLandscapeMobile ? 'py-0' : 'py-1',
+                isMoreActive || isMoreMenuOpen
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-label={t('navigation.more')}
+            >
+              {isMoreActive || isMoreMenuOpen ? (
+                <EllipsisHorizontalIconSolid className={iconClass} />
+              ) : (
+                <EllipsisHorizontalIcon className={iconClass} />
+              )}
+              {!isLandscapeMobile ? (
+                <span
+                  className={cn(
+                    'mt-0.5 w-full truncate text-center text-[10px] sm:text-xs',
+                    isMoreActive || isMoreMenuOpen ? 'font-semibold' : 'font-medium'
+                  )}
+                >
+                  {t('navigation.more')}
+                </span>
+              ) : null}
+            </button>
+          </div>
         </div>
       </nav>
       <MoreMenu

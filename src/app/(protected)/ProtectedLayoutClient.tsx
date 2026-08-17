@@ -73,7 +73,7 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               'flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden',
-              user && !isOnboardingRoute ? 'pb-16 lg:pb-0' : ''
+              user && !isOnboardingRoute ? 'pb-20 lg:pb-0' : ''
             )}
           >
             {children}
