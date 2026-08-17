@@ -247,6 +247,7 @@ export default function SongViewer({
     setSongQueueOpen(false);
     setYoutubeVideoId(null);
     setYoutubePlayerReady(false);
+    setYoutubePlaying(false);
     setLyricSync(null);
     setActiveLyricKey(null);
     setHasLyricPractice(false);
@@ -282,47 +283,57 @@ export default function SongViewer({
     youtubePlayerReady &&
     !autoScroll.isActive;
 
-  const headerAutoScrollFallbackRef = useRef(false);
+  const prevMediaPlayingRef = useRef(false);
 
-  // Continuous header autoscroll follows YouTube play/pause when lyric-sync
-  // timing is unavailable (fallback). With timed sync, lyric-follow scrolls instead.
+  // One-way media → autoscroll only (never the reverse):
+  // - YouTube/audio pause → pause continuous autoscroll
+  // - YouTube/audio play → start continuous autoscroll when lyric-timed follow isn't driving
+  // Header autoscroll play/pause never controls the media player.
   useEffect(() => {
-    if (!practiceLyricSyncEnabled) {
-      if (headerAutoScrollFallbackRef.current) {
-        onSetAutoScrollActive?.(false);
-        headerAutoScrollFallbackRef.current = false;
-      }
-      return;
-    }
-    if (lyricSyncLoading) return;
-
-    if (syncHasTimedLines && youtubePlayerReady) {
-      if (headerAutoScrollFallbackRef.current) {
-        onSetAutoScrollActive?.(false);
-        headerAutoScrollFallbackRef.current = false;
-      }
+    if (!youtubeTutorialOpen) {
+      prevMediaPlayingRef.current = false;
       return;
     }
 
-    const syncUnavailable =
-      !hasLyricPractice ||
-      lyricSync?.status === 'failed' ||
-      (lyricSync?.status === 'ready' && !syncHasTimedLines) ||
-      (Boolean(youtubeVideoId) && !lyricSyncLoading && lyricSync == null);
+    const wasPlaying = prevMediaPlayingRef.current;
+    prevMediaPlayingRef.current = youtubePlaying;
 
-    if (!syncUnavailable) return;
+    if (wasPlaying === youtubePlaying) return;
 
-    headerAutoScrollFallbackRef.current = true;
-    onSetAutoScrollActive?.(youtubePlaying);
+    if (!youtubePlaying) {
+      onSetAutoScrollActive?.(false);
+      return;
+    }
+
+    // Media started: suggest continuous scroll only when timed lyric-follow isn't active.
+    if (!syncHasTimedLines) {
+      onSetAutoScrollActive?.(true);
+    }
+  }, [
+    youtubeTutorialOpen,
+    youtubePlaying,
+    syncHasTimedLines,
+    onSetAutoScrollActive,
+  ]);
+
+  // Timed lyric-sync takes over scroll; stop continuous header autoscroll once when it becomes ready.
+  const hadTimedLyricFollowRef = useRef(false);
+  useEffect(() => {
+    const timedFollowReady =
+      practiceLyricSyncEnabled &&
+      !lyricSyncLoading &&
+      syncHasTimedLines &&
+      youtubePlayerReady;
+
+    if (timedFollowReady && !hadTimedLyricFollowRef.current) {
+      onSetAutoScrollActive?.(false);
+    }
+    hadTimedLyricFollowRef.current = timedFollowReady;
   }, [
     practiceLyricSyncEnabled,
     lyricSyncLoading,
     syncHasTimedLines,
     youtubePlayerReady,
-    youtubePlaying,
-    hasLyricPractice,
-    lyricSync,
-    youtubeVideoId,
     onSetAutoScrollActive,
   ]);
 

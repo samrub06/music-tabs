@@ -102,8 +102,6 @@ export default function FloatingYoutubeTutorial({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [scrubbing, setScrubbing] = useState(false)
-  const [hoverScrubber, setHoverScrubber] = useState(false)
   const dragStateRef = useRef<{
     pointerId: number
     startX: number
@@ -183,8 +181,7 @@ export default function FloatingYoutubeTutorial({
     setCurrentTime(0)
     setDuration(0)
     setIsPlaying(false)
-    setScrubbing(false)
-    setHoverScrubber(false)
+    scrubbingRef.current = false
     ytPlayerRef.current?.destroy()
     ytPlayerRef.current = null
     if (playerApiRef) playerApiRef.current = null
@@ -541,13 +538,11 @@ export default function FloatingYoutubeTutorial({
 
   const onScrubChange = (value: number) => {
     scrubbingRef.current = true
-    setScrubbing(true)
     setCurrentTime(value)
   }
 
   const onScrubCommit = (value: number) => {
     scrubbingRef.current = false
-    setScrubbing(false)
     seekToSeconds(value, { play: true })
   }
 
@@ -557,7 +552,6 @@ export default function FloatingYoutubeTutorial({
   const controlsDisabled = !playerReady
   const progressPct =
     duration > 0 ? (clamp(currentTime, 0, duration) / duration) * 100 : 0
-  const showTimeTooltip = hoverScrubber || scrubbing
 
   const cornerHandle = (corner: ResizeCorner, cursor: string, className: string) => (
     <div
@@ -738,29 +732,55 @@ export default function FloatingYoutubeTutorial({
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20"
             />
 
-            {/* Scrubber — extra padding above the track */}
-            <div
-              className="relative mx-3.5 mt-4 h-6 pt-3"
-              onPointerEnter={() => setHoverScrubber(true)}
-              onPointerLeave={() => setHoverScrubber(false)}
-            >
-              {showTimeTooltip && (
+            {/* Top row — audio clock top-right */}
+            <div className="relative z-10 flex items-center justify-end gap-2 px-3.5 pt-3">
+              {playerReady && (
                 <div
-                  className={cn(
-                    'pointer-events-none absolute bottom-full z-10 mb-2 -translate-x-1/2',
-                    'rounded-full border border-black/[0.06] bg-foreground/90 px-2 py-0.5',
-                    'text-[10px] font-medium tabular-nums text-background shadow-md backdrop-blur-md',
-                    'dark:border-white/10'
-                  )}
-                  style={{ left: `${progressPct}%` }}
-                  role="tooltip"
+                  className="min-w-0 truncate text-right text-[12px] font-semibold tabular-nums tracking-tight text-foreground"
+                  aria-live="polite"
                 >
-                  {formatClock(currentTime)}
-                  <span className="text-background/60"> / </span>
-                  {formatClock(duration)}
+                  <span>{formatClock(currentTime)}</span>
+                  <span className="mx-0.5 font-medium text-muted-foreground/55">/</span>
+                  <span className="font-medium text-muted-foreground/80">{formatClock(duration)}</span>
                 </div>
               )}
-              <div className="pointer-events-none absolute inset-x-0 top-[calc(50%+4px)] h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-black/[0.07] dark:bg-white/12">
+              <button
+                type="button"
+                onClick={() => onClose()}
+                className={cn(
+                  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                  'border border-black/[0.06] bg-white/55 text-muted-foreground shadow-sm backdrop-blur-md',
+                  'transition-all duration-200 hover:bg-white/80 hover:text-foreground hover:shadow',
+                  'dark:border-white/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14]'
+                )}
+                aria-label={t('songHeader.close')}
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Scrubber — position figure follows the thumb */}
+            <div className="relative mx-3.5 mt-1 h-10">
+              <div
+                className={cn(
+                  'pointer-events-none absolute bottom-[1.35rem] z-10 -translate-x-1/2',
+                  'rounded-md border border-black/[0.08] bg-foreground px-1.5 py-0.5',
+                  'text-[10px] font-semibold tabular-nums text-background shadow-md',
+                  'dark:border-white/15',
+                  !playerReady && 'opacity-0'
+                )}
+                style={{ left: `${progressPct}%` }}
+                aria-hidden
+              >
+                {formatClock(currentTime)}
+                <span
+                  className={cn(
+                    'absolute left-1/2 top-full h-0 w-0 -translate-x-1/2',
+                    'border-x-[4px] border-t-[5px] border-x-transparent border-t-foreground'
+                  )}
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-2.5 h-1.5 overflow-hidden rounded-full bg-black/[0.07] dark:bg-white/12">
                 <div
                   className="h-full rounded-full bg-primary/90"
                   style={{ width: `${progressPct}%` }}
@@ -776,25 +796,19 @@ export default function FloatingYoutubeTutorial({
                 aria-label={t('youtubeTutorial.audioPlayer')}
                 aria-valuetext={`${formatClock(currentTime)} / ${formatClock(duration)}`}
                 onChange={(e) => onScrubChange(Number(e.target.value))}
-                onPointerDown={() => {
-                  setScrubbing(true)
-                  setHoverScrubber(true)
-                }}
                 onPointerUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
                 onPointerCancel={(e) => {
                   onScrubCommit(Number((e.target as HTMLInputElement).value))
-                  setHoverScrubber(false)
                 }}
                 onMouseUp={(e) => onScrubCommit(Number((e.target as HTMLInputElement).value))}
                 onTouchEnd={(e) => {
                   onScrubCommit(Number((e.target as HTMLInputElement).value))
-                  setHoverScrubber(false)
                 }}
                 onBlur={(e) => onScrubCommit(Number(e.target.value))}
                 className={cn(
-                  'absolute inset-x-0 top-1 h-6 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
+                  'absolute inset-x-0 bottom-0 h-8 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
                   '[&::-webkit-slider-runnable-track]:h-1.5 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-transparent',
-                  '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:-mt-1 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4',
+                  '[&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4',
                   '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full',
                   '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(255,255,255,0.85),0_2px_8px_rgba(0,0,0,0.22)]',
                   'dark:[&::-webkit-slider-thumb]:shadow-[0_0_0_3px_rgba(24,24,27,0.9),0_2px_8px_rgba(0,0,0,0.55)]',
@@ -805,16 +819,8 @@ export default function FloatingYoutubeTutorial({
               />
             </div>
 
-            {/* Controls — glass icon chips, play dead-center */}
-            <div className="relative mx-auto flex h-[3.75rem] max-w-lg items-center justify-center px-2.5 pb-3 pt-1">
-              {playerReady && (
-                <div className="pointer-events-none absolute inset-y-0 start-3 z-10 flex max-w-[28%] items-center truncate text-[11px] font-medium tabular-nums text-muted-foreground/90">
-                  <span>{formatClock(currentTime)}</span>
-                  <span className="text-muted-foreground/45"> / </span>
-                  <span>{formatClock(duration)}</span>
-                </div>
-              )}
-
+            {/* Controls — play dead-center */}
+            <div className="relative mx-auto flex h-[3.5rem] max-w-lg items-center justify-center px-2.5 pb-3 pt-0.5">
               <div className="flex items-center justify-center gap-1.5">
                 <button
                   type="button"
@@ -888,22 +894,6 @@ export default function FloatingYoutubeTutorial({
                 </button>
                 {/* Balance restart so play stays geometrically centered */}
                 <div className="h-11 w-11 shrink-0" aria-hidden />
-              </div>
-
-              <div className="absolute inset-y-0 end-2.5 z-10 flex items-center">
-                <button
-                  type="button"
-                  onClick={() => onClose()}
-                  className={cn(
-                    'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
-                    'border border-black/[0.06] bg-white/55 text-muted-foreground shadow-sm backdrop-blur-md',
-                    'transition-all duration-200 hover:bg-white/80 hover:text-foreground hover:shadow',
-                    'dark:border-white/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14]'
-                  )}
-                  aria-label={t('songHeader.close')}
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
               </div>
             </div>
           </div>

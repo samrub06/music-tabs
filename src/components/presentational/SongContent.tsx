@@ -71,6 +71,10 @@ import { SignInPromoBanner } from '@/components/auth/SignInPromoBanner';
 import { SONG_RECORDING_ENABLED } from '@/lib/featureFlags';
 import { usePracticeAudio } from '@/lib/hooks/usePracticeAudio';
 import { SongStoryCard } from './SongStoryCard';
+import {
+  StackedRoundedSection,
+  stackedSectionTriggerClassName,
+} from './StackedRoundedSection';
 import { StarRatingDisplay } from './StarRatingDisplay';
 import { useSongCover } from '@/lib/hooks/useSongCover';
 import { useLandscapePractice } from '@/lib/hooks/useLandscapePractice';
@@ -1085,7 +1089,7 @@ export default function SongContent({
       onTouchStart={handleTouchStart}
     >
       <div className="bg-background px-3 py-4 sm:px-4 md:px-6">
-        <div className="max-w-4xl mx-auto w-full space-y-4" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+        <div className="max-w-4xl mx-auto w-full space-y-5" style={{ maxWidth: '100%', overflow: 'hidden' }}>
           <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card px-4 py-3 sm:gap-2.5">
             {/* Row 1: cover (+ title/badges collapse when vignette expanded full width) */}
             <div className="flex w-full items-start gap-2">
@@ -1195,191 +1199,194 @@ export default function SongContent({
           />
 
           {/* Chord Diagrams Section - accordion */}
-          <Collapsible
-            open={chordSectionOpen}
-            onOpenChange={handleChordSectionOpenChange}
-            className="w-full"
-          >
-            <CollapsibleTrigger asChild>
-              <div
-                role="button"
-                tabIndex={0}
-                className={cn(
-                  'flex w-full min-h-[48px] cursor-pointer select-none items-center justify-between gap-3 rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground touch-manipulation hover:bg-muted/80',
-                  chordCollapseHint && 'ring-2 ring-primary/50 animate-pulse'
-                )}
-              >
-                <div className="flex min-w-0 flex-col items-start gap-0.5">
-                  <div className="flex min-w-0 items-center">
-                    <MusicalNoteIcon className="me-2 h-5 w-5 shrink-0" />
-                    <span className="truncate">{t('songContent.CHORDS_USED_TITLE')}</span>
-                  </div>
-                  {chordCollapseHint ? (
-                    <span className="ps-7 text-xs font-normal text-muted-foreground">
-                      {t('songContent.chordsSectionCollapsedHint')}
-                    </span>
-                  ) : null}
-                </div>
-                {onSetSelectedInstrument ? (
-                  <div
-                    className="shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  >
-                    <InstrumentToggle
-                      key={transposedSong.id}
-                      value={selectedInstrument}
-                      onChange={onSetSelectedInstrument}
-                      compact
-                      showLabels
-                      className="shrink-0"
-                    />
-                  </div>
-                ) : null}
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="pt-4 space-y-2.5">
-                <div className="relative">
-                  {chordSectionOpen && (
-                  <ChordDiagramsGrid
-                    song={transposedSong}
-                    onChordClick={onChordClick}
-                    fontSize={fontSize}
-                    selectedInstrument={selectedInstrument}
-                    knownChordIds={knownChordIds}
-                    chordNameToIdMap={chordNameToIdMap}
-                    chords={chords}
-                  />
-                  )}
-
-                  {onSetSelectedInstrument ? (
-                    <InstrumentSwitchHint
-                      className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 justify-center px-2"
-                    />
-                  ) : null}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                {/* Fixed height so expand/collapse does not shift sibling controls */}
-                <div className="flex h-12 shrink-0 items-center sm:h-11">
+          <StackedRoundedSection>
+            <Collapsible
+              open={chordSectionOpen}
+              onOpenChange={handleChordSectionOpenChange}
+              className="w-full"
+            >
+              <CollapsibleTrigger asChild>
                 <div
-                  onClick={() => {
-                    if (!showTransposeControls) setShowTransposeControls(true);
-                  }}
+                  role="button"
+                  tabIndex={0}
                   className={cn(
-                    'flex h-full items-center overflow-hidden border border-border/80 bg-muted/40 text-foreground',
-                    'transition-[width,border-radius,padding] duration-300 ease-out',
-                    showTransposeControls
-                      ? 'rounded-xl px-2 sm:px-2'
-                      : 'cursor-pointer rounded-full px-4 hover:bg-muted/70 sm:px-4'
+                    stackedSectionTriggerClassName,
+                    'justify-between',
+                    chordCollapseHint && 'ring-2 ring-inset ring-primary/50 animate-pulse'
                   )}
                 >
-                  {!showTransposeControls ? (
-                    <div className="text-sm font-medium whitespace-nowrap sm:text-sm">{t('songContent.TRANSPOSE_LABEL')}</div>
-                  ) : (
-                    <div
-                      className="flex h-full flex-nowrap items-center gap-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                    <Select value={currentKey} onValueChange={handleKeySelect}>
-                      <SelectTrigger className="h-10 w-[3.75rem] shrink-0 gap-0.5 rounded-xl border border-amber-200/80 bg-background/50 px-2 text-sm font-medium shadow-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 [&>svg]:h-4 [&>svg]:w-4 sm:h-11 sm:w-[4.5rem] sm:gap-1 sm:px-2 sm:text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableKeys.map((key) => (
-                          <SelectItem key={key} value={key}>
-                            {key}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40 sm:rounded-xl">
-                      <button
-                        type="button"
-                        className="flex h-10 w-10 items-center justify-center text-base text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9 sm:text-sm"
-                        onClick={() => onSetTransposeValue?.(Math.max(-11, transposeValue - 1))}
-                        disabled={transposeValue <= -11}
-                        aria-label="-"
-                      >
-                        −
-                      </button>
-                      <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400 sm:min-w-[2.4rem] sm:text-sm">
-                        {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                  <div className="flex min-w-0 flex-col items-start gap-0.5">
+                    <div className="flex min-w-0 items-center">
+                      <MusicalNoteIcon className="me-2 h-5 w-5 shrink-0" />
+                      <span className="truncate">{t('songContent.CHORDS_USED_TITLE')}</span>
+                    </div>
+                    {chordCollapseHint ? (
+                      <span className="ps-7 text-xs font-normal text-muted-foreground">
+                        {t('songContent.chordsSectionCollapsedHint')}
                       </span>
+                    ) : null}
+                  </div>
+                  {onSetSelectedInstrument ? (
+                    <div
+                      className="shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <InstrumentToggle
+                        key={transposedSong.id}
+                        value={selectedInstrument}
+                        onChange={onSetSelectedInstrument}
+                        compact
+                        showLabels
+                        className="shrink-0"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-2.5 border-t border-black/[0.05] px-3.5 py-4 dark:border-white/[0.07]">
+                  <div className="relative">
+                    {chordSectionOpen && (
+                    <ChordDiagramsGrid
+                      song={transposedSong}
+                      onChordClick={onChordClick}
+                      fontSize={fontSize}
+                      selectedInstrument={selectedInstrument}
+                      knownChordIds={knownChordIds}
+                      chordNameToIdMap={chordNameToIdMap}
+                      chords={chords}
+                    />
+                    )}
+
+                    {onSetSelectedInstrument ? (
+                      <InstrumentSwitchHint
+                        className="pointer-events-none absolute inset-x-0 top-1/2 z-10 flex -translate-y-1/2 justify-center px-2"
+                      />
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  {/* Fixed height so expand/collapse does not shift sibling controls */}
+                  <div className="flex h-12 shrink-0 items-center sm:h-11">
+                  <div
+                    onClick={() => {
+                      if (!showTransposeControls) setShowTransposeControls(true);
+                    }}
+                    className={cn(
+                      'flex h-full items-center overflow-hidden border border-border/80 bg-muted/40 text-foreground',
+                      'transition-[width,border-radius,padding] duration-300 ease-out',
+                      showTransposeControls
+                        ? 'rounded-xl px-2 sm:px-2'
+                        : 'cursor-pointer rounded-full px-4 hover:bg-muted/70 sm:px-4'
+                    )}
+                  >
+                    {!showTransposeControls ? (
+                      <div className="text-sm font-medium whitespace-nowrap sm:text-sm">{t('songContent.TRANSPOSE_LABEL')}</div>
+                    ) : (
+                      <div
+                        className="flex h-full flex-nowrap items-center gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                      <Select value={currentKey} onValueChange={handleKeySelect}>
+                        <SelectTrigger className="h-10 w-[3.75rem] shrink-0 gap-0.5 rounded-xl border border-amber-200/80 bg-background/50 px-2 text-sm font-medium shadow-none focus:ring-2 focus:ring-amber-500/20 dark:border-amber-700/50 [&>svg]:h-4 [&>svg]:w-4 sm:h-11 sm:w-[4.5rem] sm:gap-1 sm:px-2 sm:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableKeys.map((key) => (
+                            <SelectItem key={key} value={key}>
+                              {key}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40 sm:rounded-xl">
+                        <button
+                          type="button"
+                          className="flex h-10 w-10 items-center justify-center text-base text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9 sm:text-sm"
+                          onClick={() => onSetTransposeValue?.(Math.max(-11, transposeValue - 1))}
+                          disabled={transposeValue <= -11}
+                          aria-label="-"
+                        >
+                          −
+                        </button>
+                        <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400 sm:min-w-[2.4rem] sm:text-sm">
+                          {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                        </span>
+                        <button
+                          type="button"
+                          className="flex h-10 w-10 items-center justify-center text-base text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9 sm:text-sm"
+                          onClick={() => onSetTransposeValue?.(Math.min(11, transposeValue + 1))}
+                          disabled={transposeValue >= 11}
+                          aria-label="+"
+                        >
+                          +
+                        </button>
+                      </div>
                       <button
                         type="button"
-                        className="flex h-10 w-10 items-center justify-center text-base text-foreground transition-colors hover:bg-muted disabled:opacity-40 sm:h-10 sm:w-9 sm:text-sm"
-                        onClick={() => onSetTransposeValue?.(Math.min(11, transposeValue + 1))}
-                        disabled={transposeValue >= 11}
-                        aria-label="+"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowTransposeControls(false);
+                        }}
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600 sm:h-11 sm:w-11"
+                        aria-label={t('common.close')}
                       >
-                        +
+                        <XMarkIcon className="h-5 w-5 sm:h-5 sm:w-5" />
                       </button>
                     </div>
+                  )}
+                  </div>
+                  </div>
+
+                  {!hasOnlyEasyChords && onToggleEasyChordMode && (
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowTransposeControls(false);
-                      }}
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-red-500 transition-colors hover:bg-red-500/10 hover:text-red-600 sm:h-11 sm:w-11"
-                      aria-label={t('common.close')}
+                      onClick={onToggleEasyChordMode}
+                      className={toolPillClass(easyChordMode)}
                     >
-                      <XMarkIcon className="h-5 w-5 sm:h-5 sm:w-5" />
+                      {t('songHeader.easyChords')}
                     </button>
+                  )}
+
+                  <PracticeComingSoonChip
+                    visible={hasLyricPractice}
+                    practiceAvailable={hasLyricPractice}
+                    onStartPractice={
+                      hasLyricPractice ? onStartLyricPracticeTutorial : undefined
+                    }
+                  />
+                  {isAuthenticated ? (
+                    <RecordSongChip
+                      visible={recordPromoPhase === 'chip'}
+                      onDismiss={dismissRecordPromo}
+                    />
+                  ) : null}
                   </div>
-                )}
+
+                  {isAuthenticated && SONG_RECORDING_ENABLED ? (
+                    <SongRecordingPanel
+                      songId={transposedSong.id}
+                      lineCount={practiceLineCount}
+                      hidePromoBanner
+                      showFallbackStart={false}
+                      onControlsReady={handleRecordControlsReady}
+                      onRecordingReady={(recording, playbackUrl) => {
+                        setSelectedRecording(recording);
+                        setRecordingPlaybackUrl(playbackUrl);
+                        if (recording && recording.lineMarkers.length > 0 && playbackUrl) {
+                          setPracticeMode(true);
+                          setPracticeLineIndex(0);
+                        }
+                      }}
+                    />
+                  ) : null}
+
                 </div>
-                </div>
-
-                {!hasOnlyEasyChords && onToggleEasyChordMode && (
-                  <button
-                    type="button"
-                    onClick={onToggleEasyChordMode}
-                    className={toolPillClass(easyChordMode)}
-                  >
-                    {t('songHeader.easyChords')}
-                  </button>
-                )}
-
-                <PracticeComingSoonChip
-                  visible={hasLyricPractice}
-                  practiceAvailable={hasLyricPractice}
-                  onStartPractice={
-                    hasLyricPractice ? onStartLyricPracticeTutorial : undefined
-                  }
-                />
-                {isAuthenticated ? (
-                  <RecordSongChip
-                    visible={recordPromoPhase === 'chip'}
-                    onDismiss={dismissRecordPromo}
-                  />
-                ) : null}
-                </div>
-
-                {isAuthenticated && SONG_RECORDING_ENABLED ? (
-                  <SongRecordingPanel
-                    songId={transposedSong.id}
-                    lineCount={practiceLineCount}
-                    hidePromoBanner
-                    showFallbackStart={false}
-                    onControlsReady={handleRecordControlsReady}
-                    onRecordingReady={(recording, playbackUrl) => {
-                      setSelectedRecording(recording);
-                      setRecordingPlaybackUrl(playbackUrl);
-                      if (recording && recording.lineMarkers.length > 0 && playbackUrl) {
-                        setPracticeMode(true);
-                        setPracticeLineIndex(0);
-                      }
-                    }}
-                  />
-                ) : null}
-
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+              </CollapsibleContent>
+            </Collapsible>
+          </StackedRoundedSection>
 
           {sheetImageUrl ? (
             <Collapsible
@@ -1442,18 +1449,20 @@ export default function SongContent({
 
           {/* Song Content — portrait practice chrome; landscape uses fullscreen overlay */}
           {!landscapePracticeActive ? (
-            <StructuredSongContent
-              song={transposedSong}
-              onChordClick={onChordClick}
-              fontSize={fontSize}
-              practiceMode={practiceMode}
-              practiceLineIndex={practiceLineIndex}
-              youtubeLyricSeekEnabled={youtubeLyricSeekEnabled}
-              youtubeLyricSyncLookup={youtubeLyricSyncLookup}
-              youtubeActiveLyricKey={youtubeActiveLyricKey}
-              onYoutubeLyricLineClick={onYoutubeLyricLineClick}
-              autoScrollIsActive={autoScrollIsActive}
-            />
+            <StackedRoundedSection surfaceClassName="px-3 py-3 sm:px-3.5 sm:py-3.5">
+              <StructuredSongContent
+                song={transposedSong}
+                onChordClick={onChordClick}
+                fontSize={fontSize}
+                practiceMode={practiceMode}
+                practiceLineIndex={practiceLineIndex}
+                youtubeLyricSeekEnabled={youtubeLyricSeekEnabled}
+                youtubeLyricSyncLookup={youtubeLyricSyncLookup}
+                youtubeActiveLyricKey={youtubeActiveLyricKey}
+                onYoutubeLyricLineClick={onYoutubeLyricLineClick}
+                autoScrollIsActive={autoScrollIsActive}
+              />
+            </StackedRoundedSection>
           ) : null}
 
           {landscapePracticeActive ? (
@@ -1942,7 +1951,7 @@ function StructuredSongContent({
   const songHasHebrew = songTextDirection === 'rtl';
 
   return (
-    <div className="leading-relaxed space-y-1 w-full overflow-x-hidden" style={{ 
+    <div className="leading-relaxed space-y-2 w-full overflow-x-hidden" style={{ 
       fontSize: `${optimalFontSize}px`,
       lineHeight: optimalLineHeight,
       fontFamily: getSongLyricsFontFamily(songHasHebrew),
@@ -1968,15 +1977,18 @@ function StructuredSongContent({
             key={sectionIndex}
             open={isOpen}
             onOpenChange={(open) => toggleSection(sectionIndex, open)}
-            className="w-full"
-            style={{ maxWidth: '100%', overflow: 'hidden' }}
+            className="w-full overflow-hidden rounded-2xl border border-black/[0.05] bg-muted/25 dark:border-white/[0.06] dark:bg-white/[0.03]"
+            style={{ maxWidth: '100%' }}
           >
             <CollapsibleTrigger asChild>
               <div
                 role="button"
                 tabIndex={0}
                 dir={getTextDirection(section.name)}
-                className="w-full cursor-pointer select-none touch-manipulation rounded-md bg-muted px-3 py-2.5 text-start font-medium text-foreground hover:bg-muted/80"
+                className={cn(
+                  stackedSectionTriggerClassName,
+                  'min-h-[44px] rounded-2xl px-3 py-2.5 font-medium'
+                )}
                 style={{
                   fontSize: `${Math.min(optimalFontSize + 2, 16)}px`,
                   fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -1989,7 +2001,7 @@ function StructuredSongContent({
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="space-y-1 w-full pt-2" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+              <div className="space-y-1 w-full px-3 pb-3 pt-1" style={{ maxWidth: '100%', overflow: 'hidden' }}>
                 {renderSectionLines(section.lines, sectionStartOffsets[sectionIndex] ?? 0, sectionIndex)}
               </div>
             </CollapsibleContent>

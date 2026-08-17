@@ -13,6 +13,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import {
+  StackedRoundedSection,
+  stackedSectionTriggerClassName,
+} from './StackedRoundedSection'
 
 const CACHE_PREFIX = 'song-story:v2:'
 
@@ -159,73 +163,72 @@ export function SongStoryCard({
   if (failed && !story) return null
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="w-full">
-      <CollapsibleTrigger asChild>
-        <div
-          role="button"
-          tabIndex={0}
-          className={cn(
-            'flex w-full min-h-[48px] cursor-pointer select-none items-center touch-manipulation rounded-md bg-muted px-4 py-3 text-start font-semibold text-foreground hover:bg-muted/80',
-            UI_TEXT_ALIGN
-          )}
-          dir={isRtl ? 'rtl' : 'ltr'}
-        >
-          <BookOpenIcon className="me-2 h-5 w-5 shrink-0" />
-          <span className="min-w-0 flex-1">{t('songStory.title')}</span>
-          {loading && !story ? (
-            <span className="text-xs font-medium text-muted-foreground animate-pulse">
-              {t('songStory.loading')}
-            </span>
-          ) : null}
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div
-          className={cn(
-            'mt-2 space-y-3 rounded-md bg-muted/40 px-4 py-3 text-sm',
-            UI_TEXT_ALIGN
-          )}
-          dir={isRtl ? 'rtl' : 'ltr'}
-        >
-          {loading && !story ? (
-            <div className="space-y-2 animate-pulse">
-              <div className="h-3 rounded bg-muted" />
-              <div className="h-3 w-5/6 rounded bg-muted" />
-              <div className="h-3 w-4/6 rounded bg-muted" />
-            </div>
-          ) : story ? (
-            <>
-              <div>
-                <p className="text-foreground leading-relaxed whitespace-pre-line">{story.anecdotes}</p>
+    <StackedRoundedSection>
+      <Collapsible open={open} onOpenChange={setOpen} className="w-full">
+        <CollapsibleTrigger asChild>
+          <div
+            role="button"
+            tabIndex={0}
+            className={cn(stackedSectionTriggerClassName, UI_TEXT_ALIGN)}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            <BookOpenIcon className="me-2 h-5 w-5 shrink-0" />
+            <span className="min-w-0 flex-1">{t('songStory.title')}</span>
+            {loading && !story ? (
+              <span className="text-xs font-medium text-muted-foreground animate-pulse">
+                {t('songStory.loading')}
+              </span>
+            ) : null}
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div
+            className={cn(
+              'space-y-3 border-t border-black/[0.05] px-4 py-3.5 text-sm dark:border-white/[0.07]',
+              UI_TEXT_ALIGN
+            )}
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            {loading && !story ? (
+              <div className="space-y-2 animate-pulse">
+                <div className="h-3 rounded bg-muted" />
+                <div className="h-3 w-5/6 rounded bg-muted" />
+                <div className="h-3 w-4/6 rounded bg-muted" />
               </div>
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t('songStory.about')}
-                </p>
-                <p className="text-foreground leading-relaxed">{story.about}</p>
-              </div>
-              {story.meaning ? (
+            ) : story ? (
+              <>
+                <div>
+                  <p className="text-foreground leading-relaxed whitespace-pre-line">{story.anecdotes}</p>
+                </div>
                 <div>
                   <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('songStory.meaning')}
+                    {t('songStory.about')}
                   </p>
-                  <p className="text-foreground leading-relaxed">{story.meaning}</p>
+                  <p className="text-foreground leading-relaxed">{story.about}</p>
                 </div>
-              ) : null}
-              {story.chordsInsight ? (
-                <div>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t('songStory.chordsInsight')}
-                  </p>
-                  <p className="text-foreground leading-relaxed">
-                    {story.chordsInsight}
-                  </p>
-                </div>
-              ) : null}
-            </>
-          ) : null}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+                {story.meaning ? (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t('songStory.meaning')}
+                    </p>
+                    <p className="text-foreground leading-relaxed">{story.meaning}</p>
+                  </div>
+                ) : null}
+                {story.chordsInsight ? (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t('songStory.chordsInsight')}
+                    </p>
+                    <p className="text-foreground leading-relaxed">
+                      {story.chordsInsight}
+                    </p>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </StackedRoundedSection>
   )
 }

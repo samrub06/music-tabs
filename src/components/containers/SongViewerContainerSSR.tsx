@@ -466,13 +466,13 @@ export default function SongViewerContainerSSR({
     }
   };
 
-  const handleToggleAutoScroll = () => {
+  const handleToggleAutoScroll = useCallback(() => {
     setAutoScroll(prev => ({ ...prev, isActive: !prev.isActive }));
-  };
+  }, []);
 
-  const handleSetAutoScrollActive = (active: boolean) => {
+  const handleSetAutoScrollActive = useCallback((active: boolean) => {
     setAutoScroll((prev) => (prev.isActive === active ? prev : { ...prev, isActive: active }));
-  };
+  }, []);
 
   const resetScroll = () => {
     if (contentRef.current) {
