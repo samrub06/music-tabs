@@ -955,6 +955,7 @@
     "navSeeMoreArtist": "עוד מ{artist}",
     "navSeeMoreArtistShort": "עוד",
     "TOOLS_LABEL": "כלים",
+    "musicSettings": "אקורדים וטקסט",
     "CAPO_WITH_VALUE": "קאפו {capo}",
     "openSongQueue": "רשימת שירים",
     "songQueuePlaylistTitle": "פלייליסט",

@@ -75,8 +75,9 @@ export default function SongHeader({
           <div
             className={cn(
               'flex min-w-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 transition-all duration-300 ease-out motion-reduce:transition-none',
-              centerActive ? 'max-w-[20rem] flex-none' : 'max-w-full flex-1',
-              followMode && 'border-primary/40 bg-primary/10'
+              centerActive ? 'max-w-[20rem] flex-none' : 'shrink-0',
+              followMode && 'border-primary/40 bg-primary/10',
+              !centerActive && !followMode && 'max-w-none'
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
           >
@@ -129,13 +130,13 @@ export default function SongHeader({
                 type="button"
                 onClick={onToggleAutoScroll}
                 className={cn(
-                  'flex h-11 min-w-0 flex-1 items-center justify-center gap-2 px-3 text-sm font-medium text-foreground transition-colors sm:h-10',
+                  'flex h-11 w-11 shrink-0 items-center justify-center text-foreground transition-colors sm:h-10 sm:w-10',
                   'hover:bg-muted/50 active:bg-muted/70'
                 )}
                 title={t('songHeader.START_AUTO_SCROLL')}
+                aria-label={t('songHeader.START_AUTO_SCROLL')}
               >
-                <PlayIcon className={cn('h-4 w-4 shrink-0', isRtl && '-scale-x-100')} />
-                <span className="truncate">{t('songHeader.AUTO_SCROLL_LABEL')}</span>
+                <PlayIcon className={cn('h-5 w-5', isRtl && '-scale-x-100')} />
               </button>
             )}
 

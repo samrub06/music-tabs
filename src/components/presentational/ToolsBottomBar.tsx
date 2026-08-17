@@ -11,6 +11,8 @@ import {
   XMarkIcon,
   LinkIcon,
   CheckIcon,
+  ChevronDownIcon,
+  MusicalNoteIcon,
 } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { generateAllKeys } from '@/utils/chords';
@@ -29,6 +31,7 @@ import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
 import { useAuthContext } from '@/context/AuthContext';
 import { UserPlusIcon } from '@heroicons/react/24/outline';
 import { absoluteSongShareUrl, songPath } from '@/lib/seo/songPath';
+import { cn } from '@/lib/utils';
 import {
   type ChordSectionPref,
   readChordSectionPref,
@@ -45,14 +48,13 @@ function interpolate(template: string, vars: Record<string, string>) {
 const BAR_MIN_HEIGHT = 48;
 const BAR_MAX_HEIGHT_PERCENT = 92;
 
-/** Default open height — leave room for settings + sticky footer on short phones. */
+/** Default open height — compact so lyrics stay visible behind. */
 export function getDefaultToolsBarHeight(): number {
-  if (typeof window === 'undefined') return 520;
+  if (typeof window === 'undefined') return 360;
   const viewportHeight = window.innerHeight;
-  // Short phones need most of the viewport; taller phones stay around ~78%.
-  const ratio = viewportHeight < 780 ? 0.88 : 0.78;
   const maxH = viewportHeight * (BAR_MAX_HEIGHT_PERCENT / 100);
-  return Math.round(Math.min(maxH, Math.max(480, viewportHeight * ratio)));
+  // ~45% on phones; never taller than ~520 unless the viewport is huge.
+  return Math.round(Math.min(maxH, Math.max(300, viewportHeight * 0.45)));
 }
 
 interface ToolsBottomBarProps {
@@ -100,6 +102,7 @@ export default function ToolsBottomBar({
   const { user } = useAuthContext();
   const [linkCopied, setLinkCopied] = useState(false);
   const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false);
+  const [musicSettingsOpen, setMusicSettingsOpen] = useState(false);
   const [chordSectionPref, setChordSectionPref] = useState<ChordSectionPref>('auto');
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -218,174 +221,206 @@ export default function ToolsBottomBar({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3.5 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3">
-        {/* First card: row Text size + Easy chords, then Key · Transpose */}
+        {/* Chords & text — one control, expands on demand to save first-view space */}
         <div className={cardClass}>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-[160px] flex-1">
-              <p className={labelClass}>{t('songHeader.fontSize')}</p>
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={onDecreaseFontSize}
-                  disabled={fontSize <= 10}
-                  className="h-9 w-9 shrink-0 rounded-xl"
-                >
-                  <MinusIcon className="h-4 w-4" />
-                </Button>
-                <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
-                  {fontSize}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={onIncreaseFontSize}
-                  disabled={fontSize >= 24}
-                  className="h-9 w-9 shrink-0 rounded-xl"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onResetFontSize}
-                  className="h-9 w-9 shrink-0 rounded-xl"
-                >
-                  <EyeIcon className="h-4 w-4" />
-                </Button>
+          <button
+            type="button"
+            onClick={() => setMusicSettingsOpen((open) => !open)}
+            className="flex w-full items-center gap-3 text-start transition-colors duration-200"
+            aria-expanded={musicSettingsOpen}
+          >
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/70 text-foreground">
+              <MusicalNoteIcon className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-foreground">
+                {t('songHeader.musicSettings')}
+              </span>
+              <span className="block text-[11px] text-muted-foreground">
+                {t('songHeader.fontSize')} · {t('songHeader.instrument')} · {t('songHeader.keyTranspose')}
+              </span>
+            </span>
+            <ChevronDownIcon
+              className={cn(
+                'h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200',
+                musicSettingsOpen && 'rotate-180'
+              )}
+            />
+          </button>
+
+          {musicSettingsOpen ? (
+            <div className="mt-3.5 space-y-3.5 border-t border-border/60 pt-3.5">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[160px] flex-1">
+                  <p className={labelClass}>{t('songHeader.fontSize')}</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={onDecreaseFontSize}
+                      disabled={fontSize <= 10}
+                      className="h-9 w-9 shrink-0 rounded-xl"
+                    >
+                      <MinusIcon className="h-4 w-4" />
+                    </Button>
+                    <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                      {fontSize}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={onIncreaseFontSize}
+                      disabled={fontSize >= 24}
+                      className="h-9 w-9 shrink-0 rounded-xl"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={onResetFontSize}
+                      className="h-9 w-9 shrink-0 rounded-xl"
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {!hasOnlyEasyChords && (
+                  <div className="min-w-[150px] flex-shrink-0">
+                    <p className={labelClass}>{t('songHeader.easyChords')}</p>
+                    <button
+                      type="button"
+                      onClick={onToggleEasyChordMode}
+                      className={`min-h-[2.5rem] w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
+                        easyChordMode
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }`}
+                    >
+                      {t('songHeader.easyChords')}
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-            {!hasOnlyEasyChords && (
-              <div className="min-w-[150px] flex-shrink-0">
-                <p className={labelClass}>{t('songHeader.easyChords')}</p>
-                <button
-                  type="button"
-                  onClick={onToggleEasyChordMode}
-                  className={`min-h-[2.5rem] w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
-                    easyChordMode
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  {t('songHeader.easyChords')}
-                </button>
+
+              {(song.firstChord || song.key) && (
+                <div>
+                  <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
+                  <div className="flex items-center gap-2">
+                    <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
+                      <SelectTrigger className="h-10 flex-1 rounded-xl border border-amber-200/80 bg-background/50 focus:ring-amber-500/20 dark:border-amber-700/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableKeys.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-none"
+                        onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))}
+                        disabled={transposeValue <= -11}
+                      >
+                        <MinusIcon className="h-4 w-4" />
+                      </Button>
+                      <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+                        {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-none"
+                        onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))}
+                        disabled={transposeValue >= 11}
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {song.capo !== undefined && song.capo !== null && (
+                <div>
+                  <p className={labelClass}>{t('songHeader.capo')}</p>
+                  <div className={segmentClass}>
+                    <button
+                      type="button"
+                      onClick={() => onToggleCapo(true)}
+                      className={segmentOptionClass(useCapo)}
+                    >
+                      Capo {song.capo}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onToggleCapo(false)}
+                      className={segmentOptionClass(!useCapo)}
+                    >
+                      {t('songHeader.noCapo')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <p className={labelClass}>{t('songHeader.instrument')}</p>
+                <div className={segmentClass}>
+                  <button
+                    type="button"
+                    onClick={() => onSetSelectedInstrument('piano')}
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
+                      selectedInstrument === 'piano'
+                        ? 'bg-blue-500/15 text-blue-700 shadow-sm dark:text-blue-400'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Piano className="h-4 w-4 shrink-0" /> {t('songHeader.piano')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSetSelectedInstrument('guitar')}
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
+                      selectedInstrument === 'guitar'
+                        ? 'bg-amber-500/15 text-amber-700 shadow-sm dark:text-amber-400'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
-          {(song.firstChord || song.key) && (
-            <div className="mt-3">
-              <p className={labelClass}>{t('songHeader.keyTranspose')}</p>
-              <div className="flex items-center gap-2">
-                <Select value={currentKey || getBaseChord()} onValueChange={handleKeySelect}>
-                  <SelectTrigger className="h-10 flex-1 rounded-xl border border-amber-200/80 bg-background/50 focus:ring-amber-500/20 dark:border-amber-700/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableKeys.map((key) => (
-                      <SelectItem key={key} value={key}>
-                        {key}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/80 bg-muted/40">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-none"
-                    onClick={() => onSetTransposeValue(Math.max(-11, transposeValue - 1))}
-                    disabled={transposeValue <= -11}
-                  >
-                    <MinusIcon className="h-4 w-4" />
-                  </Button>
-                  <span className="min-w-[2.25rem] text-center text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
-                    {transposeValue > 0 ? `+${transposeValue}` : transposeValue}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-none"
-                    onClick={() => onSetTransposeValue(Math.min(11, transposeValue + 1))}
-                    disabled={transposeValue >= 11}
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
+
+              <div>
+                <p className={labelClass}>{t('songContent.chordSectionPref')}</p>
+                <div className={segmentClass}>
+                  {(
+                    [
+                      ['auto', 'chordSectionPrefAuto'],
+                      ['always_open', 'chordSectionPrefOpen'],
+                      ['always_collapsed', 'chordSectionPrefCollapsed'],
+                    ] as const
+                  ).map(([value, labelKey]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => handleChordSectionPref(value)}
+                      className={segmentOptionClass(chordSectionPref === value)}
+                    >
+                      {t(`songContent.${labelKey}`)}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
-        </div>
-        {song.capo !== undefined && song.capo !== null && (
-          <div className={cardClass}>
-            <p className={labelClass}>{t('songHeader.capo')}</p>
-            <div className={segmentClass}>
-              <button
-                type="button"
-                onClick={() => onToggleCapo(true)}
-                className={segmentOptionClass(useCapo)}
-              >
-                Capo {song.capo}
-              </button>
-              <button
-                type="button"
-                onClick={() => onToggleCapo(false)}
-                className={segmentOptionClass(!useCapo)}
-              >
-                {t('songHeader.noCapo')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className={cardClass}>
-          <p className={labelClass}>{t('songHeader.instrument')}</p>
-          <div className={segmentClass}>
-            <button
-              type="button"
-              onClick={() => onSetSelectedInstrument('piano')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
-                selectedInstrument === 'piano'
-                  ? 'bg-blue-500/15 text-blue-700 shadow-sm dark:text-blue-400'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Piano className="h-4 w-4 shrink-0" /> {t('songHeader.piano')}
-            </button>
-            <button
-              type="button"
-              onClick={() => onSetSelectedInstrument('guitar')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-all duration-200 ${
-                selectedInstrument === 'guitar'
-                  ? 'bg-amber-500/15 text-amber-700 shadow-sm dark:text-amber-400'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Guitar className="h-4 w-4 shrink-0" /> {t('songHeader.guitar')}
-            </button>
-          </div>
+          ) : null}
         </div>
 
-        <div className={cardClass}>
-          <p className={labelClass}>{t('songContent.chordSectionPref')}</p>
-          <div className={segmentClass}>
-            {(
-              [
-                ['auto', 'chordSectionPrefAuto'],
-                ['always_open', 'chordSectionPrefOpen'],
-                ['always_collapsed', 'chordSectionPrefCollapsed'],
-              ] as const
-            ).map(([value, labelKey]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleChordSectionPref(value)}
-                className={segmentOptionClass(chordSectionPref === value)}
-              >
-                {t(`songContent.${labelKey}`)}
-              </button>
-            ))}
-          </div>
-        </div>
         <div className={cardClass}>
           <p className={labelClass}>{t('songHeader.shareLink')}</p>
           <Button

@@ -955,6 +955,7 @@
     "navSeeMoreArtist": "Voir plus de {artist}",
     "navSeeMoreArtistShort": "Voir plus",
     "TOOLS_LABEL": "Outils",
+    "musicSettings": "Accords & texte",
     "CAPO_WITH_VALUE": "Capo {capo}",
     "openSongQueue": "Liste des chansons",
     "songQueuePlaylistTitle": "Playlist",

@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/context/LanguageContext'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { songRepo } from '@/lib/services/songRepo'
 import { SongThumbnail } from '@/components/presentational/SongThumbnail'
-import { BottomSheetDippedTop } from '@/components/ui/BottomSheetDippedTop'
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -195,97 +196,109 @@ export default function SongQueueSheet({
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        overlayClassName="backdrop-blur-sm"
-        className="!bottom-0 z-[60] flex max-h-[70vh] flex-col gap-0 overflow-visible rounded-t-[1.75rem] border-0 border-t-0 bg-transparent p-0 shadow-none"
+        overlayClassName="bg-black/35 dark:bg-black/50"
+        className={cn(
+          '!bottom-0 z-[60] flex h-auto max-h-[min(48vh,420px)] flex-col gap-0 overflow-hidden',
+          'rounded-t-[1.75rem] border border-b-0 border-black/[0.06] bg-background/95 p-0',
+          'shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] backdrop-blur-xl',
+          'dark:border-white/[0.08] dark:bg-background/98 dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]'
+        )}
       >
-        <BottomSheetDippedTop hideBorder showClose={false} />
-
-        <div className="flex max-h-[calc(70vh-2rem)] min-h-0 flex-1 flex-col overflow-hidden bg-background">
-          <div className="flex min-h-0 flex-1 flex-col px-4 pt-1 sm:px-6">
-            <SheetHeader className="pb-3">
-              <SheetTitle className="text-center text-lg">
-                {isPlaylist
-                  ? t('songHeader.songQueuePlaylistTitle')
-                  : t('songHeader.songQueueSongsTitle')}
-              </SheetTitle>
-            </SheetHeader>
-
-            {loading ? (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                {t('songHeader.songQueueLoading')}
-              </div>
-            ) : empty || items.length === 0 ? (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                {t('songHeader.songQueueEmpty')}
-              </div>
-            ) : (
-              <ul
-                className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pb-2"
-                dir={isRtl ? 'rtl' : 'ltr'}
-              >
-                {items.map((song, index) => {
-                  const isCurrent = song.id === currentSongId
-                  return (
-                    <li key={`${song.id}-${index}`}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectSong(song.id)}
-                        className={cn(
-                          'flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors',
-                          isCurrent
-                            ? 'bg-primary/10 text-foreground'
-                            : 'hover:bg-muted/70 active:bg-muted'
-                        )}
-                      >
-                        <SongThumbnail
-                          songImageUrl={song.songImageUrl}
-                          artistImageUrl={song.artistImageUrl}
-                          alt={song.title}
-                          size="sm"
-                          className="h-11 w-11 shrink-0 rounded-lg"
-                        />
-                        <div className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}>
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {song.title}
-                          </p>
-                          {song.author ? (
-                            <p className="truncate text-xs text-muted-foreground">
-                              {song.author}
-                            </p>
-                          ) : null}
-                        </div>
-                        {isCurrent ? (
-                          <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-primary">
-                            {t('songHeader.songQueueNowPlaying')}
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-
-            <div className="shrink-0 space-y-2 border-t border-border/70 bg-background pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-              <button
-                type="button"
-                onClick={() => {
-                  onOpenChange(false)
-                  router.push('/songs')
-                }}
-                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:bg-primary/80"
-              >
-                {t('songHeader.backToAllSongs')}
-              </button>
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="flex h-12 w-full items-center justify-center rounded-xl border border-border/80 bg-muted/50 text-sm font-semibold text-foreground transition-colors hover:bg-muted active:bg-muted/80"
-              >
-                {t('songHeader.close')}
-              </button>
-            </div>
+        <div className="flex shrink-0 items-center px-4 py-1.5">
+          <div className="flex-1" aria-hidden />
+          <div className="h-1 w-14 shrink-0 touch-none rounded-full bg-muted-foreground/25" />
+          <div className="flex flex-1 justify-end">
+            <SheetClose className="flex min-h-[24px] min-w-[24px] items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+              <XMarkIcon className="h-5 w-5" />
+              <span className="sr-only">{t('common.close')}</span>
+            </SheetClose>
           </div>
+        </div>
+
+        <SheetHeader className="shrink-0 space-y-1 px-5 pb-2 text-start sm:text-start">
+          <SheetTitle className="text-xl font-semibold">
+            {isPlaylist
+              ? t('songHeader.songQueuePlaylistTitle')
+              : t('songHeader.songQueueSongsTitle')}
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="flex min-h-0 flex-1 flex-col px-5">
+          {loading ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              {t('songHeader.songQueueLoading')}
+            </div>
+          ) : empty || items.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              {t('songHeader.songQueueEmpty')}
+            </div>
+          ) : (
+            <ul
+              className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pb-2"
+              dir={isRtl ? 'rtl' : 'ltr'}
+            >
+              {items.map((song, index) => {
+                const isCurrent = song.id === currentSongId
+                return (
+                  <li key={`${song.id}-${index}`}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectSong(song.id)}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-start transition-colors duration-200',
+                        isCurrent
+                          ? 'bg-primary/10 text-foreground'
+                          : 'hover:bg-muted/70 active:bg-muted'
+                      )}
+                    >
+                      <SongThumbnail
+                        songImageUrl={song.songImageUrl}
+                        artistImageUrl={song.artistImageUrl}
+                        alt={song.title}
+                        size="sm"
+                        className="h-11 w-11 shrink-0 rounded-lg"
+                      />
+                      <div className={cn('min-w-0 flex-1', UI_TEXT_ALIGN)}>
+                        <p className="truncate text-sm font-semibold text-foreground">
+                          {song.title}
+                        </p>
+                        {song.author ? (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {song.author}
+                          </p>
+                        ) : null}
+                      </div>
+                      {isCurrent ? (
+                        <span className="shrink-0 text-[10px] font-medium uppercase tracking-wide text-primary">
+                          {t('songHeader.songQueueNowPlaying')}
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="shrink-0 space-y-2 border-t border-black/[0.06] px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 dark:border-white/[0.08]">
+          <button
+            type="button"
+            onClick={() => {
+              onOpenChange(false)
+              router.push('/songs')
+            }}
+            className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary/90 active:bg-primary/80"
+          >
+            {t('songHeader.backToAllSongs')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="flex h-11 w-full items-center justify-center rounded-xl border border-black/[0.06] bg-muted/50 text-sm font-semibold text-foreground transition-colors duration-200 hover:bg-muted active:bg-muted/80 dark:border-white/[0.08]"
+          >
+            {t('songHeader.close')}
+          </button>
         </div>
       </SheetContent>
     </Sheet>

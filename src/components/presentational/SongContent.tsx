@@ -324,6 +324,7 @@ export default function SongContent({
       ? transposedSong.sheetImageUrl.trim()
       : null;
   const [showTransposeControls, setShowTransposeControls] = useState(false);
+  const [chordToolsOpen, setChordToolsOpen] = useState(false);
   const [metaDetailsOpen, setMetaDetailsOpen] = useState(!isAuthenticated);
   const [practiceMode, setPracticeMode] = useState(false);
   const [practiceLineIndex, setPracticeLineIndex] = useState(0);
@@ -1268,6 +1269,28 @@ export default function SongContent({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setChordToolsOpen((open) => !open)}
+                    className={cn(
+                      'inline-flex h-11 items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-3.5 text-sm font-medium text-foreground transition-colors duration-200',
+                      'hover:bg-muted/70',
+                      chordToolsOpen && 'bg-muted ring-1 ring-border/80'
+                    )}
+                    aria-expanded={chordToolsOpen}
+                  >
+                    <MusicalNoteIcon className="h-4 w-4 shrink-0" />
+                    <span>{t('songHeader.musicSettings')}</span>
+                    <ChevronDownIcon
+                      className={cn(
+                        'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+                        chordToolsOpen && 'rotate-180'
+                      )}
+                    />
+                  </button>
+
+                  {chordToolsOpen ? (
+                    <>
                   {/* Fixed height so expand/collapse does not shift sibling controls */}
                   <div className="flex h-12 shrink-0 items-center sm:h-11">
                   <div
@@ -1349,6 +1372,8 @@ export default function SongContent({
                       {t('songHeader.easyChords')}
                     </button>
                   )}
+                    </>
+                  ) : null}
 
                   <PracticeComingSoonChip
                     visible={hasLyricPractice}
