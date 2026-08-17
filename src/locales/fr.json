@@ -90,6 +90,8 @@
     "preferredInstrumentHint": "Utilisé par défaut pour les diagrammes d’accords sur les chansons (piano ou guitare).",
     "piano": "Piano",
     "guitar": "Guitare",
+    "chordSectionPref": "Section accords",
+    "chordSectionPrefHint": "Choisir si les diagrammes d’accords démarrent ouverts, repliés, ou en auto sur les pages de chanson.",
     "tsnioutFilter": "Filtre tsniout",
     "tsnioutFilterDescription": "Remplace les pochettes des chansons profanes par une image générique. Les chansons du catalogue religieux (songbook, playlists hébraïques) gardent leur illustration.",
     "updateError": "Erreur lors de la mise à jour du profil",

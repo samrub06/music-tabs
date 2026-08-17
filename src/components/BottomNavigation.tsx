@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useAuthContext } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useLandscapeMobile } from '@/lib/hooks/useLandscapeMobile';
@@ -34,11 +33,6 @@ export default function BottomNavigation() {
   const { t } = useLanguage();
   const isLandscapeMobile = useLandscapeMobile();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Expose clearance so sheets (e.g. More) can sit/animate above the floating nav.
   useEffect(() => {
@@ -105,27 +99,27 @@ export default function BottomNavigation() {
     isLandscapeMobile ? 'h-4 w-4' : 'h-5 w-5'
   );
 
-  const chrome = (
+  return (
     <>
       <nav
         aria-label={t('navigation.MENU')}
         className={cn(
-          'fixed inset-x-0 bottom-0 z-50 lg:hidden',
+          'pointer-events-none absolute inset-x-0 bottom-0 z-50 lg:hidden',
           'px-3 pb-[max(0.55rem,env(safe-area-inset-bottom,0px))]'
         )}
       >
         <div
           className={cn(
-            'relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',
-            'border border-white/25 bg-white/25 text-foreground backdrop-blur-2xl',
-            'dark:border-white/[0.12] dark:bg-white/[0.08]',
-            'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.10),0_10px_28px_-12px_rgba(0,0,0,0.12)]',
-            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.35),0_12px_32px_-14px_rgba(0,0,0,0.4)]'
+            'pointer-events-auto relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',
+            'border border-white/20 bg-white/10 text-foreground backdrop-blur-xl',
+            'dark:border-white/[0.10] dark:bg-white/[0.05]',
+            'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08),0_10px_28px_-12px_rgba(0,0,0,0.10)]',
+            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.28),0_12px_32px_-14px_rgba(0,0,0,0.32)]'
           )}
         >
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent dark:via-white/15"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/12"
           />
           <div
             className={cn(
@@ -199,10 +193,4 @@ export default function BottomNavigation() {
       />
     </>
   );
-
-  if (!mounted) {
-    return null;
-  }
-
-  return createPortal(chrome, document.body);
 }

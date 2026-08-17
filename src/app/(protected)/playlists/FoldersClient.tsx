@@ -403,9 +403,10 @@ export default function FoldersClient({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-4 sm:p-6">
-        <div className="relative z-20 shrink-0 bg-background/95 pb-3 backdrop-blur-md">
-          {/* Chips / actions stay sticky; full search sits above content in scroll. */}
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-4 sm:p-6">
+        <div className="pointer-events-none absolute inset-x-4 top-4 z-20 sm:inset-x-6 sm:top-6">
+          {/* Chips float over content so the page shows through */}
+          <div className="pointer-events-auto rounded-2xl bg-background/20 pb-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
           <div className="flex items-center gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-hide">
               {scopeChips.map((chip) => (
@@ -424,7 +425,7 @@ export default function FoldersClient({
                 type="button"
                 onClick={openFilterSheet}
                 className={cn(
-                  'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                  'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/15 p-3 text-muted-foreground backdrop-blur-md transition-all duration-200 hover:bg-white/25 hover:text-foreground dark:border-white/[0.14] dark:bg-white/[0.06]',
                   hasActiveFilters && 'border-primary/40 text-primary'
                 )}
                 aria-label={t('songs.advancedFilters')}
@@ -445,13 +446,14 @@ export default function FoldersClient({
               <PlusIcon className="h-5 w-5" />
             </button>
           </div>
+          </div>
         </div>
 
         <div
           ref={scrollContainerRef}
           data-main-scroll
           onScroll={handleScrollChrome}
-          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className="relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pt-14"
         >
           {/* Full search lives in the scroll flow above Israeli / mine content. */}
           <div

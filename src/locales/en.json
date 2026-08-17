@@ -90,6 +90,8 @@
     "preferredInstrumentHint": "Used as the default for chord diagrams on songs (piano or guitar).",
     "piano": "Piano",
     "guitar": "Guitar",
+    "chordSectionPref": "Chords section",
+    "chordSectionPrefHint": "Choose whether chord diagrams start open, collapsed, or auto on song pages.",
     "tsnioutFilter": "Tsniout filter",
     "tsnioutFilterDescription": "Replace secular song covers with a generic image. Religious catalog songs (songbook, Hebrew playlists) keep their artwork.",
     "updateError": "Error updating profile",

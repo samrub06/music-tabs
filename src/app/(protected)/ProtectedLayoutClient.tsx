@@ -65,22 +65,22 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
         {user && !isOnboardingRoute && <AppSidebar />}
         <SidebarInset
           className={cn(
-            'flex flex-col overflow-hidden bg-background',
+            'relative flex flex-col overflow-hidden bg-background',
             !isOnboardingRoute && 'lg:px-4 xl:px-5'
           )}
         >
           {!isOnboardingRoute ? <Header /> : null}
           <div
             className={cn(
-              'flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden',
+              'relative flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden',
               user && !isOnboardingRoute ? 'pb-20 lg:pb-0' : ''
             )}
           >
             {children}
+            {/* Absolute overlay so page content shows through the transparent pill */}
+            {user && !isOnboardingRoute ? <BottomNavigation /> : null}
           </div>
         </SidebarInset>
-        {/* Keep outside SidebarInset: overflow-hidden there clips position:fixed on mobile */}
-        {user && !isOnboardingRoute ? <BottomNavigation /> : null}
       </div>
     </SidebarProvider>
     </PageHeaderProvider>

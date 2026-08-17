@@ -123,13 +123,13 @@ export default function ExploreClient({
   }
 
   const viewToggle = (
-    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-border/60 bg-transparent p-0.5">
+    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-white/30 bg-white/15 p-0.5 backdrop-blur-md dark:border-white/[0.14] dark:bg-white/[0.06]">
       <button
         type="button"
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'gallery'
-            ? 'border border-primary/40 text-primary'
+            ? 'bg-white/40 text-primary dark:bg-white/15'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('gallery')}
@@ -143,7 +143,7 @@ export default function ExploreClient({
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'table'
-            ? 'border border-primary/40 text-primary'
+            ? 'bg-white/40 text-primary dark:bg-white/15'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('table')}
@@ -224,14 +224,13 @@ export default function ExploreClient({
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-3 sm:p-6">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-3 sm:p-6">
       <div
         ref={scrollContainerRef}
         data-main-scroll
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <div className="flex flex-col gap-4 pb-6">
-          <div className="flex flex-col gap-3">
+        <div className="sticky top-0 z-20 -mx-1 mb-3 space-y-3 rounded-2xl bg-background/20 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
             <div className="flex items-stretch gap-2">
             <div className="relative min-w-0 flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -246,7 +245,7 @@ export default function ExploreClient({
                   if (e.key === 'Enter') applySearch(localSearch)
                 }}
                 placeholder={t('explore.SEARCH_PLACEHOLDER')}
-                className="block w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:py-3 sm:pl-12 sm:pr-12 sm:text-base"
+                className="block w-full rounded-xl border border-white/30 bg-white/15 py-2.5 pl-10 pr-9 text-sm text-foreground backdrop-blur-md placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-white/[0.14] dark:bg-white/[0.06] sm:py-3 sm:pl-12 sm:pr-12 sm:text-base"
               />
               {localSearch && (
                 <button
@@ -267,7 +266,7 @@ export default function ExploreClient({
               type="button"
               onClick={openFilterSheet}
               className={cn(
-                'relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden',
+                'relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/15 text-muted-foreground backdrop-blur-md transition-colors hover:bg-white/25 hover:text-foreground dark:border-white/[0.14] dark:bg-white/[0.06] lg:hidden',
                 hasAdvancedFilters && 'border-primary/40 text-primary'
               )}
               aria-label={t('explore.ADVANCED_FILTERS')}
@@ -283,8 +282,9 @@ export default function ExploreClient({
 
             {genreFilters}
             {allFilterSections}
-          </div>
+        </div>
 
+        <div className="flex flex-col gap-4 pb-6">
           <div>{children}</div>
         </div>
       </div>

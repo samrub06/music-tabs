@@ -13,7 +13,6 @@ import {
   CheckIcon,
   MusicalNoteIcon,
   UserPlusIcon,
-  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { generateAllKeys } from '@/utils/chords';
@@ -32,11 +31,6 @@ import ShareWithFriendDialog from '@/components/social/ShareWithFriendDialog';
 import { useAuthContext } from '@/context/AuthContext';
 import { absoluteSongShareUrl, songPath } from '@/lib/seo/songPath';
 import { cn } from '@/lib/utils';
-import {
-  type ChordSectionPref,
-  readChordSectionPref,
-  writeChordSectionPref,
-} from '@/utils/chordSectionPrefs';
 
 function interpolate(template: string, vars: Record<string, string>) {
   return Object.entries(vars).reduce(
@@ -48,15 +42,7 @@ function interpolate(template: string, vars: Record<string, string>) {
 const BAR_MIN_HEIGHT = 48;
 const BAR_MAX_HEIGHT_PERCENT = 92;
 
-type ToolId =
-  | 'font'
-  | 'instrument'
-  | 'key'
-  | 'easy'
-  | 'capo'
-  | 'chordPref'
-  | 'share'
-  | 'friend';
+type ToolId = 'font' | 'instrument' | 'key' | 'easy' | 'capo';
 
 /** Default open height — enough for icon row + one expanded panel. */
 export function getDefaultToolsBarHeight(): number {
@@ -145,17 +131,7 @@ export default function ToolsBottomBar({
   const [linkCopied, setLinkCopied] = useState(false);
   const [shareWithFriendOpen, setShareWithFriendOpen] = useState(false);
   const [expandedTool, setExpandedTool] = useState<ToolId | null>('font');
-  const [chordSectionPref, setChordSectionPref] = useState<ChordSectionPref>('auto');
   const copyFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setChordSectionPref(readChordSectionPref());
-  }, []);
-
-  const handleChordSectionPref = (pref: ChordSectionPref) => {
-    setChordSectionPref(pref);
-    writeChordSectionPref(pref);
-  };
 
   useEffect(() => {
     return () => {
@@ -248,6 +224,8 @@ export default function ToolsBottomBar({
         : 'text-muted-foreground hover:text-foreground'
     }`;
 
+  const showFooter = Boolean(onToggleEdit || onDelete);
+
   return (
     <div
       className="flex flex-shrink-0 flex-col overflow-hidden rounded-t-[1.75rem] border border-b-0 border-border bg-background backdrop-blur-xl shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.5)]"
@@ -276,7 +254,7 @@ export default function ToolsBottomBar({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-3">
-        {/* All functions visible as icons; tap one to expand its controls */}
+        {/* Four chord tools as icons; tap one to expand */}
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
           <ToolIconButton
             active={expandedTool === 'font'}
@@ -327,36 +305,6 @@ export default function ToolsBottomBar({
               onClick={() => toggleTool('capo')}
             >
               <span className="text-xs font-bold leading-none">C{song.capo}</span>
-            </ToolIconButton>
-          ) : null}
-
-          <ToolIconButton
-            active={expandedTool === 'chordPref'}
-            label={t('songContent.chordSectionPref')}
-            onClick={() => toggleTool('chordPref')}
-          >
-            <Squares2X2Icon className="h-5 w-5" />
-          </ToolIconButton>
-
-          <ToolIconButton
-            active={expandedTool === 'share'}
-            label={t('songHeader.shareLink')}
-            onClick={() => toggleTool('share')}
-          >
-            {linkCopied ? (
-              <CheckIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
-            ) : (
-              <LinkIcon className="h-5 w-5" />
-            )}
-          </ToolIconButton>
-
-          {user ? (
-            <ToolIconButton
-              active={expandedTool === 'friend'}
-              label={t('friends.shareAction')}
-              onClick={() => toggleTool('friend')}
-            >
-              <UserPlusIcon className="h-5 w-5" />
             </ToolIconButton>
           ) : null}
         </div>
@@ -509,100 +457,71 @@ export default function ToolsBottomBar({
             </div>
           </div>
         ) : null}
+      </div>
 
-        {expandedTool === 'chordPref' ? (
-          <div className={panelClass}>
-            <p className={labelClass}>{t('songContent.chordSectionPref')}</p>
-            <div className={segmentClass}>
-              {(
-                [
-                  ['auto', 'chordSectionPrefAuto'],
-                  ['always_open', 'chordSectionPrefOpen'],
-                  ['always_collapsed', 'chordSectionPrefCollapsed'],
-                ] as const
-              ).map(([value, labelKey]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleChordSectionPref(value)}
-                  className={segmentOptionClass(chordSectionPref === value)}
-                >
-                  {t(`songContent.${labelKey}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {expandedTool === 'share' ? (
-          <div className={panelClass}>
-            <p className={labelClass}>{t('songHeader.shareLink')}</p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleShareLink}
-              className={`h-10 w-full rounded-xl font-medium transition-colors ${
-                linkCopied
-                  ? 'border-green-600/40 bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:border-green-400/40 dark:text-green-400'
-                  : ''
-              }`}
-              aria-live="polite"
-            >
-              {linkCopied ? (
-                <>
-                  <CheckIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-                  {t('songHeader.linkCopied')}
-                </>
-              ) : (
-                <>
-                  <LinkIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-                  {t('songHeader.shareLink')}
-                </>
-              )}
-            </Button>
-          </div>
-        ) : null}
-
-        {expandedTool === 'friend' && user ? (
-          <div className={panelClass}>
-            <p className={labelClass}>{t('friends.shareWithFriend')}</p>
+      <div className="shrink-0 space-y-2.5 border-t border-border/60 bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
+        <div className="flex gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleShareLink}
+            className={cn(
+              'h-11 min-h-[44px] flex-1 rounded-xl font-medium transition-colors',
+              linkCopied &&
+                'border-green-600/40 bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:border-green-400/40 dark:text-green-400'
+            )}
+            aria-live="polite"
+          >
+            {linkCopied ? (
+              <>
+                <CheckIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                {t('songHeader.linkCopied')}
+              </>
+            ) : (
+              <>
+                <LinkIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                {t('songHeader.shareLink')}
+              </>
+            )}
+          </Button>
+          {user ? (
             <Button
               type="button"
               variant="outline"
               onClick={() => setShareWithFriendOpen(true)}
-              className="h-10 w-full rounded-xl font-medium"
+              className="h-11 min-h-[44px] rounded-xl px-4 font-medium"
+              aria-label={t('friends.shareWithFriend')}
             >
-              <UserPlusIcon className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
-              {t('friends.shareAction')}
+              <UserPlusIcon className="h-4 w-4 shrink-0" aria-hidden />
             </Button>
+          ) : null}
+        </div>
+
+        {showFooter ? (
+          <div className="flex gap-2.5">
+            {onToggleEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleEdit}
+                className="h-11 min-h-[44px] flex-1 rounded-xl font-medium"
+              >
+                <PencilIcon className="mr-1.5 h-4 w-4" /> {t('songHeader.edit')}
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={onDelete}
+                className="h-11 min-h-[44px] rounded-xl px-4 font-medium"
+              >
+                <TrashIcon className="mr-1.5 h-4 w-4" /> {t('songHeader.delete')}
+              </Button>
+            )}
           </div>
         ) : null}
       </div>
-
-      {(onToggleEdit || onDelete) && (
-        <div className="flex shrink-0 gap-2.5 border-t border-border/60 bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]">
-          {onToggleEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleEdit}
-              className="h-11 min-h-[44px] flex-1 rounded-xl font-medium"
-            >
-              <PencilIcon className="mr-1.5 h-4 w-4" /> {t('songHeader.edit')}
-            </Button>
-          )}
-          {onDelete && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={onDelete}
-              className="h-11 min-h-[44px] rounded-xl px-4 font-medium"
-            >
-              <TrashIcon className="mr-1.5 h-4 w-4" /> {t('songHeader.delete')}
-            </Button>
-          )}
-        </div>
-      )}
 
       {user && (
         <ShareWithFriendDialog

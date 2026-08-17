@@ -18,6 +18,11 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { usePageHeader } from '@/context/PageHeaderContext'
+import {
+  type ChordSectionPref,
+  readChordSectionPref,
+  writeChordSectionPref,
+} from '@/utils/chordSectionPrefs'
 
 interface ProfileClientProps {
   initialProfile: Profile | null
@@ -46,6 +51,7 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const [tsnioutFilterEnabled, setTsnioutFilterEnabled] = useState(
     initialProfile?.tsnioutFilterEnabled ?? false
   )
+  const [chordSectionPref, setChordSectionPref] = useState<ChordSectionPref>('auto')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [stats, setStats] = useState<UserStats | null>(initialStats)
   const [activityCharts, setActivityCharts] = useState<UserActivityChartsData | null>(null)
@@ -53,6 +59,15 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   usePageHeader(t('navigation.profile'), '/')
+
+  useEffect(() => {
+    setChordSectionPref(readChordSectionPref())
+  }, [])
+
+  const handleChordSectionPref = (pref: ChordSectionPref) => {
+    setChordSectionPref(pref)
+    writeChordSectionPref(pref)
+  }
 
   // Load badges
   useEffect(() => {
@@ -411,6 +426,38 @@ export default function ProfileClient({ initialProfile, initialStats }: ProfileC
         {error && !isEditing && (
           <p className="mt-3 text-sm text-destructive">{error}</p>
         )}
+      </div>
+
+      <div className={sectionCardClass}>
+        <h2 className="text-base font-semibold text-foreground">
+          {t('profile.chordSectionPref')}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('profile.chordSectionPrefHint')}
+        </p>
+        <div className="mt-3 flex rounded-full bg-muted/80 p-0.5 gap-0.5">
+          {(
+            [
+              ['auto', 'chordSectionPrefAuto'],
+              ['always_open', 'chordSectionPrefOpen'],
+              ['always_collapsed', 'chordSectionPrefCollapsed'],
+            ] as const
+          ).map(([value, labelKey]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => handleChordSectionPref(value)}
+              className={cn(
+                'flex-1 rounded-full py-2 text-sm font-medium transition-all duration-200',
+                chordSectionPref === value
+                  ? 'bg-background text-foreground shadow-sm dark:bg-white/10'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {t(`songContent.${labelKey}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {activityCharts && (
