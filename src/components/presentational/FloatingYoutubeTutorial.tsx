@@ -712,25 +712,11 @@ export default function FloatingYoutubeTutorial({
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/20"
             />
 
-            {/* Top row — audio clock top-right */}
-            <div className="relative z-10 flex items-center justify-end px-3.5 pt-3">
-              {playerReady && (
-                <div
-                  className="min-w-0 truncate text-right text-[12px] font-semibold tabular-nums tracking-tight text-foreground"
-                  aria-live="polite"
-                >
-                  <span>{formatClock(currentTime)}</span>
-                  <span className="mx-0.5 font-medium text-muted-foreground/55">/</span>
-                  <span className="font-medium text-muted-foreground/80">{formatClock(duration)}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Scrubber — position figure follows the thumb */}
-            <div className="relative mx-3.5 mt-1 h-10">
+            {/* Scrubber — tooltip follows thumb; end time + close sit on that same line at the end */}
+            <div className="relative mx-3.5 mt-3 h-12">
               <div
                 className={cn(
-                  'pointer-events-none absolute bottom-[1.35rem] z-10 -translate-x-1/2',
+                  'pointer-events-none absolute bottom-[1.45rem] z-10 -translate-x-1/2',
                   'rounded-md border border-black/[0.08] bg-foreground px-1.5 py-0.5',
                   'text-[10px] font-semibold tabular-nums text-background shadow-md',
                   'dark:border-white/15',
@@ -747,6 +733,37 @@ export default function FloatingYoutubeTutorial({
                   )}
                 />
               </div>
+
+              <div
+                className={cn(
+                  'absolute bottom-[1.35rem] right-0 z-20 flex items-center gap-1.5 transition-opacity duration-200',
+                  progressPct >= 80 ? 'pointer-events-none opacity-0' : 'opacity-100'
+                )}
+              >
+                {playerReady ? (
+                  <span
+                    className="text-[11px] font-semibold tabular-nums tracking-tight text-muted-foreground"
+                    aria-live="polite"
+                  >
+                    {formatClock(duration)}
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => onClose()}
+                  className={cn(
+                    'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                    'border border-black/[0.06] bg-white/55 text-muted-foreground shadow-sm backdrop-blur-md',
+                    'transition-all duration-200 hover:bg-white/80 hover:text-foreground hover:shadow',
+                    'dark:border-white/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14]'
+                  )}
+                  aria-label={t('songHeader.close')}
+                  tabIndex={progressPct >= 80 ? -1 : 0}
+                >
+                  <XMarkIcon className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
               <div className="pointer-events-none absolute inset-x-0 bottom-2.5 h-1.5 overflow-hidden rounded-full bg-black/[0.07] dark:bg-white/12">
                 <div
                   className="h-full rounded-full bg-primary/90"
@@ -786,7 +803,7 @@ export default function FloatingYoutubeTutorial({
               />
             </div>
 
-            {/* Controls — play dead-center; close at right end, same row height */}
+            {/* Controls — play dead-center */}
             <div className="relative mx-auto flex h-[3.5rem] max-w-lg items-center justify-center px-2.5 pb-3 pt-0.5">
               <div className="flex items-center justify-center gap-1.5">
                 <button
@@ -859,19 +876,8 @@ export default function FloatingYoutubeTutorial({
                     15
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => onClose()}
-                  className={cn(
-                    'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full',
-                    'border border-black/[0.06] bg-white/55 text-muted-foreground shadow-sm backdrop-blur-md',
-                    'transition-all duration-200 hover:bg-white/80 hover:text-foreground hover:shadow',
-                    'dark:border-white/[0.08] dark:bg-white/[0.08] dark:hover:bg-white/[0.14]'
-                  )}
-                  aria-label={t('songHeader.close')}
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
+                {/* Balance restart so play stays geometrically centered */}
+                <div className="h-11 w-11 shrink-0" aria-hidden />
               </div>
             </div>
           </div>
