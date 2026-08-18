@@ -112,8 +112,8 @@ export default function BottomNavigation() {
         <div
           className={cn(
             'pointer-events-auto relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',
-            'border border-white/20 bg-white/10 text-foreground backdrop-blur-xl',
-            'dark:border-white/[0.10] dark:bg-white/[0.05]',
+            'border border-white/35 bg-white/55 text-foreground backdrop-blur-[2px]',
+            'dark:border-white/[0.14] dark:bg-white/[0.12]',
             'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08),0_10px_28px_-12px_rgba(0,0,0,0.10)]',
             'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.28),0_12px_32px_-14px_rgba(0,0,0,0.32)]'
           )}

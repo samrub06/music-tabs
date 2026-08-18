@@ -123,13 +123,13 @@ export default function ExploreClient({
   }
 
   const viewToggle = (
-    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-white/30 bg-white/15 p-0.5 backdrop-blur-md dark:border-white/[0.14] dark:bg-white/[0.06]">
+    <div className="flex shrink-0 items-center gap-0.5 rounded-full border border-white/35 bg-white/55 p-0.5 backdrop-blur-[2px] dark:border-white/[0.14] dark:bg-white/[0.12]">
       <button
         type="button"
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'gallery'
-            ? 'bg-white/40 text-primary dark:bg-white/15'
+            ? 'bg-white/70 text-primary dark:bg-white/20'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('gallery')}
@@ -143,7 +143,7 @@ export default function ExploreClient({
         className={cn(
           'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 sm:h-10 sm:w-10',
           view === 'table'
-            ? 'bg-white/40 text-primary dark:bg-white/15'
+            ? 'bg-white/70 text-primary dark:bg-white/20'
             : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('table')}
@@ -245,7 +245,7 @@ export default function ExploreClient({
                   if (e.key === 'Enter') applySearch(localSearch)
                 }}
                 placeholder={t('explore.SEARCH_PLACEHOLDER')}
-                className="block w-full rounded-xl border border-white/30 bg-white/15 py-2.5 pl-10 pr-9 text-sm text-foreground backdrop-blur-md placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-white/[0.14] dark:bg-white/[0.06] sm:py-3 sm:pl-12 sm:pr-12 sm:text-base"
+                className="block w-full rounded-xl border border-white/35 bg-white/55 py-2.5 pl-10 pr-9 text-sm text-foreground backdrop-blur-[2px] placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-white/[0.14] dark:bg-white/[0.12] sm:py-3 sm:pl-12 sm:pr-12 sm:text-base"
               />
               {localSearch && (
                 <button
@@ -266,7 +266,7 @@ export default function ExploreClient({
               type="button"
               onClick={openFilterSheet}
               className={cn(
-                'relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/15 text-muted-foreground backdrop-blur-md transition-colors hover:bg-white/25 hover:text-foreground dark:border-white/[0.14] dark:bg-white/[0.06] lg:hidden',
+                'relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/35 bg-white/55 text-muted-foreground backdrop-blur-[2px] transition-colors hover:bg-white/70 hover:text-foreground dark:border-white/[0.14] dark:bg-white/[0.12] lg:hidden',
                 hasAdvancedFilters && 'border-primary/40 text-primary'
               )}
               aria-label={t('explore.ADVANCED_FILTERS')}

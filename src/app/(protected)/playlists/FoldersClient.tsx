@@ -425,7 +425,7 @@ export default function FoldersClient({
                 type="button"
                 onClick={openFilterSheet}
                 className={cn(
-                  'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-white/30 bg-white/15 p-3 text-muted-foreground backdrop-blur-md transition-all duration-200 hover:bg-white/25 hover:text-foreground dark:border-white/[0.14] dark:bg-white/[0.06]',
+                  'relative flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border border-white/35 bg-white/55 p-3 text-muted-foreground backdrop-blur-[2px] transition-all duration-200 hover:bg-white/70 hover:text-foreground dark:border-white/[0.14] dark:bg-white/[0.12]',
                   hasActiveFilters && 'border-primary/40 text-primary'
                 )}
                 aria-label={t('songs.advancedFilters')}
