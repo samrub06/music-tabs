@@ -104,6 +104,7 @@ export default function BottomNavigation() {
       <nav
         aria-label={t('navigation.MENU')}
         className={cn(
+          // Sit on top of the layout client layer (not in a reserved bottom band).
           'pointer-events-none absolute inset-x-0 bottom-0 z-50 lg:hidden',
           'px-3 pb-[max(0.55rem,env(safe-area-inset-bottom,0px))]'
         )}

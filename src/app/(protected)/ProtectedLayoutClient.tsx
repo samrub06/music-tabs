@@ -70,16 +70,11 @@ function ProtectedLayoutContent({ children }: { children: React.ReactNode }) {
           )}
         >
           {!isOnboardingRoute ? <Header /> : null}
-          <div
-            className={cn(
-              'relative flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden',
-              user && !isOnboardingRoute ? 'pb-20 lg:pb-0' : ''
-            )}
-          >
+          <div className="relative flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden">
             {children}
-            {/* Absolute overlay so page content shows through the transparent pill */}
-            {user && !isOnboardingRoute ? <BottomNavigation /> : null}
           </div>
+          {/* Overlay on top of layout content — no reserved bottom strip */}
+          {user && !isOnboardingRoute ? <BottomNavigation /> : null}
         </SidebarInset>
       </div>
     </SidebarProvider>
