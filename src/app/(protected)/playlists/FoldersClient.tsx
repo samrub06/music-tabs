@@ -406,7 +406,7 @@ export default function FoldersClient({
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-background p-4 sm:p-6">
         <div className="pointer-events-none absolute inset-x-4 top-4 z-20 sm:inset-x-6 sm:top-6">
           {/* Chips float over content so the page shows through */}
-          <div className="pointer-events-auto rounded-2xl bg-background/20 pb-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
+          <div className="pointer-events-auto rounded-2xl bg-background/20 py-0.5 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
           <div className="flex items-center gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto scrollbar-hide">
               {scopeChips.map((chip) => (

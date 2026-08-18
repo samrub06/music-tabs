@@ -66,12 +66,12 @@ export function FilterChipRow({ title, children, className }: FilterChipRowProps
   return (
     <div className={className}>
       {title ? (
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {title}
         </h3>
       ) : null}
       <div
-        className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory -mx-1 px-1"
+        className="flex gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',

@@ -175,7 +175,7 @@ export default function ExploreClient({
   )
 
   const allFilterSections = (
-    <div className="hidden space-y-3 lg:block">
+    <div className="hidden space-y-2 lg:block">
       <FilterChipRow title={t('explore.GENRES_SECTION')}>
         <FilterChip active={!currentGenre} onClick={() => updateFilter('genre', null)}>
           {t('explore.ALL_FILTER')}
@@ -230,7 +230,7 @@ export default function ExploreClient({
         data-main-scroll
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
       >
-        <div className="sticky top-0 z-20 -mx-1 mb-3 space-y-3 rounded-2xl bg-background/20 px-1 py-2 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
+        <div className="sticky top-0 z-20 -mx-1 mb-2 space-y-1.5 rounded-2xl bg-background/20 px-1 py-0.5 backdrop-blur-md supports-[backdrop-filter]:bg-background/10">
             <div className="flex items-stretch gap-2">
             <div className="relative min-w-0 flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
