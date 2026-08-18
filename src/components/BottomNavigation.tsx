@@ -34,19 +34,20 @@ export default function BottomNavigation() {
   const isLandscapeMobile = useLandscapeMobile();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
-  // Expose clearance so sheets (e.g. More) can sit/animate above the floating nav.
+  // Clearance for sheets above the floating nav. Flush (no gap) while More is open.
   useEffect(() => {
     if (!user) return;
     const root = document.documentElement;
     const pill = isLandscapeMobile ? '2.5rem' : '4rem';
+    const gap = isMoreMenuOpen ? '0px' : '0.35rem';
     root.style.setProperty(
       '--bottom-nav-offset',
-      `calc(${pill} + max(0.55rem, env(safe-area-inset-bottom, 0px)) + 0.35rem)`
+      `calc(${pill} + max(0.55rem, env(safe-area-inset-bottom, 0px)) + ${gap})`
     );
     return () => {
       root.style.removeProperty('--bottom-nav-offset');
     };
-  }, [user, isLandscapeMobile]);
+  }, [user, isLandscapeMobile, isMoreMenuOpen]);
 
   if (!user) {
     return null;
@@ -104,24 +105,24 @@ export default function BottomNavigation() {
       <nav
         aria-label={t('navigation.MENU')}
         className={cn(
-          // Sit on top of the layout client layer (not in a reserved bottom band).
           'pointer-events-none absolute inset-x-0 bottom-0 z-50 lg:hidden',
           'px-3 pb-[max(0.55rem,env(safe-area-inset-bottom,0px))]'
         )}
       >
         <div
           className={cn(
-            'pointer-events-auto relative mx-auto max-w-lg overflow-hidden rounded-[1.75rem]',
-            'border border-white/35 bg-white/55 text-foreground backdrop-blur-[2px]',
-            'dark:border-white/[0.14] dark:bg-white/[0.12]',
+            'pointer-events-auto relative mx-auto max-w-lg overflow-hidden text-foreground',
+            'border border-black/[0.08] bg-white',
+            'dark:border-white/[0.10] dark:bg-zinc-950',
             'shadow-[0_-4px_24px_-6px_rgba(0,0,0,0.08),0_10px_28px_-12px_rgba(0,0,0,0.10)]',
-            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.28),0_12px_32px_-14px_rgba(0,0,0,0.32)]'
+            'dark:shadow-[0_-4px_28px_-8px_rgba(0,0,0,0.28),0_12px_32px_-14px_rgba(0,0,0,0.32)]',
+            'transition-[border-radius] duration-300 ease-out',
+            // Connected to More sheet: square top edge only while More is open.
+            isMoreMenuOpen
+              ? 'rounded-t-none rounded-b-[1.75rem] border-t-0'
+              : 'rounded-[1.75rem]'
           )}
         >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent dark:via-white/12"
-          />
           <div
             className={cn(
               'relative flex items-stretch px-1',

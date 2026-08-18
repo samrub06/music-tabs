@@ -95,10 +95,13 @@ export default function MoreMenu({ isOpen, onClose }: MoreMenuProps) {
           '![bottom:var(--bottom-nav-offset,4.9rem)]'
         )}
         className={cn(
-          'z-[60] flex max-h-[min(85vh,calc(100dvh-var(--bottom-nav-offset,4.9rem)))] flex-col gap-0 overflow-hidden',
-          'rounded-t-[1.75rem] border-0 border-t border-border bg-background p-0',
+          'z-[60] flex max-h-[min(85vh,calc(100dvh-var(--bottom-nav-offset,4.9rem)))] flex-col gap-0 overflow-hidden p-0',
+          // Same width / side inset as the bottom navigation pill.
+          '!left-3 !right-3 mx-auto w-auto max-w-lg',
+          // Flat bottom edge so it stacks flush on the nav (nav top corners go square while open).
+          'rounded-t-[1.75rem] rounded-b-none border-0 border-x border-t border-black/[0.08] bg-white',
+          'dark:border-white/[0.10] dark:bg-zinc-950',
           'shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_32px_-8px_rgba(0,0,0,0.4)]',
-          // Anchor above the bottom nav so enter/exit animation starts at the nav top.
           '![bottom:var(--bottom-nav-offset,4.9rem)] lg:![bottom:var(--bottom-nav-offset,4.9rem)]'
         )}
       >
